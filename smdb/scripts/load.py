@@ -322,17 +322,17 @@ class BaseLoader:
         if not mission.thumbnail_filename:
             raise FileExistsError(f"No thumbnail image found for {mission}")
         try:
-            im = Image.open(mission.thumbnail_filename)
+            with Image.open(mission.thumbnail_filename) as im:
+                width, height = im.size
+                nx = width // scale_factor
+                ny = height // scale_factor
+                self.logger.info(
+                    "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
+                )
+                new_im = im.resize((nx, ny))
         except (UnidentifiedImageError, FileNotFoundError) as e:
             self.logger.warning(f"{e}")
             return
-        width, height = im.size
-        nx = width // scale_factor
-        ny = height // scale_factor
-        self.logger.info(
-            "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
-        )
-        new_im = im.resize((nx, ny))
 
         new_name = "_".join(
             mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
