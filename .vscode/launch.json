@@ -41,7 +41,7 @@
       //"args": [ "-v", "1", "--clobber", "--noinput", "--skipuntil_regex", "--regex", "MappingAUVOps2014/Sentry_Loihi/2014-glazer/dives/sentry265/multibeam/mbari/ZTopo.grd$", "--limit", "1" ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2021/20210812m1/ZTopo.grd$", "--limit", "10" ],
       //"args": [ "-v", "1", "--clobber", "--skipuntil_regex", "--regex", "2022/20220202m1/ZTopo.grd$", "--limit", "12" ],
-      "args": ["-v", "1", "--limit", "5", "--clobber", "--noinput"],
+      //"args": ["-v", "1", "--limit", "5", "--clobber", "--noinput"],
       //"args": ["--bootstrap", "-v 1", "--clobber", "--limit", "5", "--noinput"],
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
       //"args": ["--notes", "-v 2", "--limit", "1"],
@@ -49,21 +49,26 @@
       //"args": ["--mbinfo", "-v", "2", "--skipuntil", "2021/20210326m1"],
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2022/20220206m2/ZTopo.grd$", "--limit", "1" ],
+      //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2023/20230402m1/ZTopo.grd$", "--limit", "1" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
+      //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "2023/20230310m1/ZTopo.grd$", "--limit", "1", "--noinput" ],
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2019/20190820m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2021/20210906d1/lidar"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2022/20220205m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2020/20200804m1"]
+      //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2023/20230310m1"]
       //"args": ["--fnv", "-v", "2"],
       //"args": [ "--compilation", "-v", "1", "--skipuntil", "swathdata/surveys/UH/kok0714", "--log_file", "compilation.txt" ],
       // Supporting Compilation load testing, first mission found in --compilation: 2019/20190627d1/multibeam
       // execute next line to build a fresh database, then the --compilation one can be used for testing
       //"args": ["--bootstrap", "--notes", "--fnv", "-v", "1", "--limit", "15", "--clobber"],
-      //"args": ["--compilation", "-v", "1", "--skipuntil", "2019/MorroBay/Figures", "--limit", "20"],
+      //"args": ["--compilation", "-v", "1", "--skipuntil", "2019/MorroBay/Figures", "--limit", "20", "--no_compilation_thumbnails"],
       //"args": ["--compilation", "-v", "1", "--filter", "2019/AxialSeamount/Figures_v2019Oct31", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2007/Axial2007old/Figures/", "--log_file", "compilation.txt"],
+      "args": ["--compilation", "-v", "2", "--skipuntil", "2023/MAR_FKt230303/Figures/", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
+      //"args": ["--compilation", "-v", "2", "--skipuntil", "MappingAUVOps2016/NorthernExpedition/Figures_old/Figures_Clague_old/DifferenceMaps_ship20m_UTMsq", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
       //"args": ["--compilation", "-v", "1"],
       "justMyCode": false
     }

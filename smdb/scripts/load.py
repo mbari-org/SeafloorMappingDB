@@ -189,6 +189,11 @@ class BaseLoader:
             action="store",
             help="Process only Compilation directories that match this text",
         )
+        parser.add_argument(
+            "--no_compilation_thumbnails",
+            action="store_true",
+            help="Do not process and save thumbnails for Compilations - for speeding up the process",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -1174,7 +1179,8 @@ class Compiler(BaseLoader):
         """Generate potential Compilation directory names, meaning
         there is no ZTopo.grd, but there is a Figure[s]*.cmd file.
         """
-        pattern = r"\/Figure[s]*.cmd$"
+        # Pattern needs to end with Figure...cmd with no intervening '/'
+        pattern = r"\/Figure[^\/]*.cmd$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
         start_processing = True
         if self.args.skipuntil:
@@ -1215,13 +1221,19 @@ class Compiler(BaseLoader):
             """,
             re.VERBOSE | re.MULTILINE,
         )
-        for ma in pattern.finditer(open(cmd_filename, errors="ignore").read()):
+        fd = open(cmd_filename, errors="ignore")
+        for ma in pattern.finditer(fd.read()):
             grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
-            thumbnail_filename = self._thumbnail_filename(
-                os.path.join(comp_dir, ma.group(2))
-            )
+            try:
+                grd_file_exists = pathlib.Path(grd_filename).exists()
+                thumbnail_filename = self._thumbnail_filename(
+                    os.path.join(comp_dir, ma.group(2))
+                )
+            except (PermissionError, FileNotFoundError) as e:
+                self.logger.warning(e)
+                continue
             datalist_filename = os.path.join(comp_dir, ma.group(1))
-            if pathlib.Path(grd_filename).exists():
+            if grd_file_exists:
                 mod_time = datetime.fromtimestamp(
                     pathlib.Path(grd_filename).stat().st_mtime
                 )
@@ -1256,6 +1268,7 @@ class Compiler(BaseLoader):
                     datalist_filename,
                     grd_filename,
                 )
+        fd.close()
         if compilations:
             self.logger.info(
                 "Collected %d Compilations from %s in %s",
@@ -1278,7 +1291,7 @@ class Compiler(BaseLoader):
                 mission_ids = []
                 if mission_names:
                     self.logger.info(
-                        "From %s/%s, Potential Missions: %s",
+                        "From %s %s, Potential Missions: %s",
                         datalist,
                         cmd_filename,
                         " ".join(mission_names),
@@ -1300,10 +1313,11 @@ class Compiler(BaseLoader):
                     for mission_id in mission_ids:
                         compilation.missions.add(Mission.objects.get(pk=mission_id))
                     compilation.save()
-                    try:
-                        self.save_thumbnail(compilation, scale_factor=16)
-                    except (FileExistsError, ValueError) as e:
-                        self.logger.warning(str(e))
+                    if not self.args.no_compilation_thumbnails:
+                        try:
+                            self.save_thumbnail(compilation, scale_factor=16)
+                        except (FileExistsError, ValueError) as e:
+                            self.logger.warning(str(e))
 
     def _thumbnail_filename(self, grd_filename: str) -> str:
         for ext in ("jpg", "jpeg", "png", "tif"):
@@ -1323,9 +1337,10 @@ class Compiler(BaseLoader):
                     last_mod_time = mod_time
                 return latest_thumb
 
-    def _examine_mb1_line(
-        self, path: str, datalist: str, item: str
-    ) -> Tuple[str, str,]:
+    def _examine_mb1_line(self, path: str, datalist: str, item: str) -> Tuple[
+        str,
+        str,
+    ]:
         if item == os.path.basename(datalist) or (
             datalist.endswith("datalist.mb-1") and item == "datalistp.mb-1"
         ):
