@@ -2,7 +2,7 @@
 
 *Make MBARI seafloor mapping datasets more accessible and useful*
 
-## Text from the proposal
+### Text from the proposal
 
 MBARI has now conducted hundreds of Mapping AUV missions and several dozen 
 low altitude survey ROV dives. Much of the resulting data have value to others 
@@ -20,4 +20,19 @@ data. The data will remain as files on the SeafloorMapping share on Titan.
 Because the Titan server is web-accessible, metadata and data products can be 
 mined for populating the database and viewed through the query interface.
 
+### Install a local development system using Docker
 
+Install [Docker](https://docker.io) and change directory to a location where 
+you will clone this repository. Clone the repo and start the services with
+these commands:
+
+```
+git clone git@github.com:mbari-org/SeafloorMappingDB.git
+cd SeafloorMappingDB
+export SMDB_HOME=$(pwd)
+export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
+docker-compose up -d
+```
+
+Then navigate to http:localhost:8000 to see the web application in local 
+development mode.
