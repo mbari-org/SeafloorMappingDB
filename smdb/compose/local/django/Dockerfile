@@ -53,6 +53,12 @@ COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
 	&& rm -rf /wheels/
 
+# To be able to generate schema diagrams with:
+# docker-compose run --rm django python manage.py graph_models -a -o smdb_schema.png
+RUN apt-get update && apt-get install -y \
+    gcc
+    graphviz-dev
+
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
