@@ -1,7 +1,5 @@
-ARG PYTHON_VERSION=3.9-slim-buster
-
-# define an alias for the specfic python version used in this file.
-FROM python:${PYTHON_VERSION} as python
+# Base the build off of recent stable GDAL image
+FROM osgeo/gdal:ubuntu-small-3.3.0 as python
 
 # Python build stage
 FROM python as python-build-stage
@@ -13,7 +11,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential \
   # psycopg2 dependencies
-  libpq-dev
+  libpq-dev \
+  python3-dev \
+  python3-pip
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
@@ -41,6 +41,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev \
   # Translations dependencies
   gettext \
+  python3-pip \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
