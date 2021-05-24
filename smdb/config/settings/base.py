@@ -76,6 +76,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "smdb.users.apps.UsersConfig",
     # Your stuff: custom apps go here
+    "smdb"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -288,3 +289,4 @@ REST_FRAMEWORK = {
 CORS_URLS_REGEX = r"^/api/.*$"
 # Your stuff...
 # ------------------------------------------------------------------------------
+GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH', default='/usr/lib/libgdal.so')
