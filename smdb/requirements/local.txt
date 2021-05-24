@@ -15,6 +15,8 @@ pytest-sugar==0.9.4  # https://github.com/Frozenball/pytest-sugar
 # ------------------------------------------------------------------------------
 sphinx==3.5.4  # https://github.com/sphinx-doc/sphinx
 sphinx-autobuild==2021.3.14 # https://github.com/GaretJax/sphinx-autobuild
+graphviz==0.16 # https://stackoverflow.com/a/13987392/1281657
+pygraphviz==1.7 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 
 # Code quality
 # ------------------------------------------------------------------------------

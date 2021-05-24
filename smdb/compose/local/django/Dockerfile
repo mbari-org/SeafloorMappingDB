@@ -10,6 +10,7 @@ ARG BUILD_ENVIRONMENT=local
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential \
+  graphviz-dev \
   # psycopg2 dependencies
   libpq-dev \
   python3-dev \
@@ -37,6 +38,8 @@ WORKDIR ${APP_HOME}
 
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
+  graphviz \
+  graphviz-dev \
   # psycopg2 dependencies
   libpq-dev \
   # Translations dependencies
