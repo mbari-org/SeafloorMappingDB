@@ -40,7 +40,7 @@ class Person(
     class Meta(object):
         app_label = 'smdb'
     def __str__(self):
-        return f"{firstname} {lastname}"
+        return f"{self.firstname} {self.lastname}"
 
 
 class PlatformType(
@@ -60,7 +60,7 @@ class Platform(
     class Meta(object):
         app_label = 'smdb'
     def __str__(self):
-        return f"{platform_name} ({operator_org_name})"
+        return f"{self.platform_name} ({self.operator_org_name})"
 
 class MissionType(
     models.Model
@@ -98,7 +98,7 @@ class Expedition(
     class Meta(object):
         app_label = 'smdb'
     def __str__(self):
-        return f"{expd_name}"
+        return f"{self.expd_name}"
 
 
 class Compilation(
@@ -142,7 +142,7 @@ class Mission(
     class Meta(object):
         app_label = 'smdb'
     def __str__(self):
-        return f"{mission_name}"
+        return f"{self.mission_name}"
 
 
 class SensorMission(
