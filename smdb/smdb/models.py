@@ -69,11 +69,18 @@ class SensorType(models.Model):
     uuid = UUIDField(editable=False)
     sensor_type_name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return f"{self.sensor_type_name}"
+
 
 class Sensor(models.Model):
-    sensortype = models.ForeignKey(SensorType, on_delete=models.CASCADE)
+    sensor_type = models.ForeignKey(SensorType, on_delete=models.CASCADE)
     model_name = models.CharField(max_length=128)
     comment = models.CharField(max_length=128)
+    missions = models.ManyToManyField("Mission")
+
+    def __str__(self):
+        return f"{self.sensor_type}: {self.model_name}"
 
 
 class Expedition(models.Model):
@@ -142,42 +149,44 @@ class Mission(models.Model):
     kml_filename = models.CharField(max_length=128, db_index=True)
     update_status = models.IntegerField(blank=True, null=True)
     compilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
+    sensors = models.ManyToManyField(Sensor)
+    data_archivals = models.ManyToManyField("DataArchival")
+    citations = models.ManyToManyField("Citation")
 
     def __str__(self):
         return f"{self.mission_name}"
 
+    def display_sensor(self):
+        return ", ".join(sensor.name for sensor in self.sensors.all()[:3])
 
-class SensorMission(models.Model):
-    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
+    display_sensor.short_description = "Sensor"
 
-    class Meta(object):
-        unique_together = ["sensor", "mission"]
+    def display_data_archival(self):
+        return ", ".join(
+            data_archival.doi for data_archival in self.data_archivals.all()[:3]
+        )
+
+    display_data_archival.short_description = "Data Archival"
+
+    def display_citation(self):
+        return ", ".join(citation.doi for citation in self.citations.all()[:3])
+
+    display_citation.short_description = "Citation"
 
 
 class DataArchival(models.Model):
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
+    missions = models.ManyToManyField(Mission)
     doi = models.CharField(max_length=256, db_index=True)
     archival_db_name = models.CharField(max_length=128, db_index=True)
 
-
-class DataArchivalMission(models.Model):
-    data_archival = models.ForeignKey(DataArchival, on_delete=models.CASCADE)
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
-
-    class Meta(object):
-        unique_together = ["data_archival", "mission"]
+    def __str__(self):
+        return self.doi
 
 
 class Citation(models.Model):
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
+    missions = models.ManyToManyField(Mission)
     doi = models.CharField(max_length=256, db_index=True)
     full_reference = models.CharField(max_length=256, db_index=True)
 
-
-class CitationMission(models.Model):
-    citation = models.ForeignKey(Citation, on_delete=models.CASCADE)
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
-
-    class Meta(object):
-        unique_together = ["citation", "mission"]
+    def __str__(self):
+        return self.doi
