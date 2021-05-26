@@ -47,6 +47,7 @@ class MissionTypeAdmin(GeoModelAdmin):
 
 @register(Person)
 class PersonAdmin(GeoModelAdmin):
+    list_display = ('last_name', 'first_name', 'institution_name')
     pass
 
 

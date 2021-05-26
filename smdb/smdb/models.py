@@ -31,15 +31,15 @@ class UUIDField(models.CharField):
 
 class Person(models.Model):
     uuid = UUIDField(editable=False)
-    firstname = models.CharField(max_length=128, db_index=True, unique=True)
-    lastname = models.CharField(max_length=128, db_index=True, unique=True)
+    first_name = models.CharField(max_length=128, db_index=True, unique=True)
+    last_name = models.CharField(max_length=128, db_index=True, unique=True)
     institution_name = models.CharField(max_length=256, blank=True, null=True)
 
     class Meta(object):
         verbose_name_plural = "People"
 
     def __str__(self):
-        return f"{self.lastname}, {self.firstname}"
+        return f"{self.last_name}, {self.first_name}"
 
 
 class PlatformType(models.Model):
@@ -72,14 +72,14 @@ class SensorType(models.Model):
 
 class Sensor(models.Model):
     sensortype = models.ForeignKey(SensorType, on_delete=models.CASCADE)
-    modelname = models.CharField(max_length=128)
+    model_name = models.CharField(max_length=128)
     comment = models.CharField(max_length=128)
 
 
 class Expedition(models.Model):
     uuid = UUIDField(editable=False)
-    startdate = models.DateTimeField(null=True)
-    enddate = models.DateTimeField(null=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
     expd_name = models.CharField(max_length=128, null=True)
     investigator = models.ForeignKey(
         Person,
@@ -120,15 +120,15 @@ class Compilation(models.Model):
 class Mission(models.Model):
     uuid = UUIDField(editable=False)
     expedtion = models.ForeignKey(Expedition, on_delete=models.CASCADE)
-    missiontype = models.ForeignKey(MissionType, on_delete=models.CASCADE)
+    mission_type = models.ForeignKey(MissionType, on_delete=models.CASCADE)
     platform = models.ForeignKey(Platform, on_delete=models.CASCADE)
     mission_name = models.CharField(max_length=128, db_index=True)
-    startdate = models.DateTimeField(null=True)
-    enddate = models.DateTimeField(null=True)
-    startpoint = models.PointField(
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    start_point = models.PointField(
         srid=4326, spatial_index=True, dim=2, blank=True, null=True
     )
-    startdepth = models.FloatField(blank=True, null=True)
+    start_depth = models.FloatField(blank=True, null=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
