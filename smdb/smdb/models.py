@@ -39,6 +39,7 @@ class Person(
     institution_name = models.CharField(max_length=256, blank=True, null=True)
     class Meta(object):
         app_label = 'smdb'
+        verbose_name_plural = 'People'
     def __str__(self):
         return f"{self.firstname} {self.lastname}"
 
@@ -48,6 +49,8 @@ class PlatformType(
 ):
     uuid = UUIDField(editable=False)
     platform_type_name = models.CharField(max_length=128)
+    def __str__(self) -> str:
+        return self.platform_type_name
 
 
 class Platform(
