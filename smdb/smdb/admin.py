@@ -2,10 +2,8 @@ from django.contrib.gis.admin import GeoModelAdmin, register
 
 from smdb.models import (
     Citation,
-    CitationMission,
     Compilation,
     DataArchival,
-    DataArchivalMission,
     Expedition,
     Mission,
     MissionType,
@@ -13,18 +11,12 @@ from smdb.models import (
     Platform,
     PlatformType,
     Sensor,
-    SensorMission,
     SensorType,
 )
 
 
 @register(Citation)
 class CitationAdmin(GeoModelAdmin):
-    pass
-
-
-@register(CitationMission)
-class CitationMissionAdmin(GeoModelAdmin):
     pass
 
 
@@ -35,11 +27,6 @@ class CompilationAdmin(GeoModelAdmin):
 
 @register(DataArchival)
 class DataArchivalAdmin(GeoModelAdmin):
-    pass
-
-
-@register(DataArchivalMission)
-class DataArchivalMissionAdmin(GeoModelAdmin):
     pass
 
 
@@ -76,11 +63,6 @@ class PlatformTypeAdmin(GeoModelAdmin):
 
 @register(Sensor)
 class SensorAdmin(GeoModelAdmin):
-    pass
-
-
-@register(SensorMission)
-class SensorMissionAdmin(GeoModelAdmin):
     pass
 
 
