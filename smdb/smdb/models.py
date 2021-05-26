@@ -64,13 +64,16 @@ class MissionType(models.Model):
     uuid = UUIDField(editable=False)
     mission_type_name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return self.mission_type_name
+
 
 class SensorType(models.Model):
     uuid = UUIDField(editable=False)
     sensor_type_name = models.CharField(max_length=128)
 
     def __str__(self):
-        return f"{self.sensor_type_name}"
+        return self.sensor_type_name
 
 
 class Sensor(models.Model):
@@ -123,6 +126,9 @@ class Compilation(models.Model):
     update_status = models.IntegerField(blank=True, null=True)
     proc_datalist_filename = models.CharField(max_length=128, db_index=True)
 
+    def __str__(self) -> str:
+        return f"{self.compilation_dir_name}"
+
 
 class Mission(models.Model):
     uuid = UUIDField(editable=False)
@@ -150,8 +156,8 @@ class Mission(models.Model):
     update_status = models.IntegerField(blank=True, null=True)
     compilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
     sensors = models.ManyToManyField(Sensor)
-    data_archivals = models.ManyToManyField("DataArchival")
-    citations = models.ManyToManyField("Citation")
+    data_archivals = models.ManyToManyField("DataArchival", blank=True)
+    citations = models.ManyToManyField("Citation", blank=True)
 
     def __str__(self):
         return f"{self.mission_name}"
