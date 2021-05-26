@@ -34,5 +34,5 @@ export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 docker-compose up -d
 ```
 
-Then navigate to http:localhost:8000 to see the web application in local 
+Then navigate to http://localhost:8000 to see the web application in local 
 development mode.
