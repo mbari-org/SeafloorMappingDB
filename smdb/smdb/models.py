@@ -38,7 +38,6 @@ class Person(
     lastname = models.CharField(max_length=128, db_index=True, unique=True)
     institution_name = models.CharField(max_length=256, blank=True, null=True)
     class Meta(object):
-        app_label = 'smdb'
         verbose_name_plural = 'People'
     def __str__(self):
         return f"{self.firstname} {self.lastname}"
@@ -60,8 +59,6 @@ class Platform(
     platform_type = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
     platform_name = models.CharField(max_length=128, db_index=True, unique=True)
     operator_org_name = models.CharField(max_length=128, blank=True, null=True)
-    class Meta(object):
-        app_label = 'smdb'
     def __str__(self):
         return f"{self.platform_name} ({self.operator_org_name})"
 
@@ -98,8 +95,6 @@ class Expedition(
     chiefscientist = models.ForeignKey(Person, blank=True, null=True, related_name='chiefscientist', on_delete=models.CASCADE)
     expd_path_name = models.CharField(max_length=256, null=True)
     expd_db_id = models.IntegerField(null=True)
-    class Meta(object):
-        app_label = 'smdb'
     def __str__(self):
         return f"{self.expd_name}"
 
@@ -142,8 +137,6 @@ class Mission(
     kml_filename = models.CharField(max_length=128, db_index=True)
     update_status = models.IntegerField(blank=True, null=True)
     comilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
-    class Meta(object):
-        app_label = 'smdb'
     def __str__(self):
         return f"{self.mission_name}"
 
