@@ -1,5 +1,3 @@
-from django.db import models
-
 """
 This is the SMDB database model. The database schema derives from this module.
 
