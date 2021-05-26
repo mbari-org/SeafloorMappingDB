@@ -39,7 +39,7 @@ class Person(models.Model):
         verbose_name_plural = "People"
 
     def __str__(self):
-        return f"{self.firstname} {self.lastname}"
+        return f"{self.lastname}, {self.firstname}"
 
 
 class PlatformType(models.Model):
@@ -141,7 +141,7 @@ class Mission(models.Model):
     thumbnail_filename = models.CharField(max_length=128, db_index=True)
     kml_filename = models.CharField(max_length=128, db_index=True)
     update_status = models.IntegerField(blank=True, null=True)
-    comilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
+    compilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.mission_name}"
