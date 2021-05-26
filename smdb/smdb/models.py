@@ -151,6 +151,9 @@ class SensorMission(models.Model):
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
 
+    class Meta(object):
+        unique_together = ["sensor", "mission"]
+
 
 class DataArchival(models.Model):
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
@@ -162,6 +165,9 @@ class DataArchivalMission(models.Model):
     data_archival = models.ForeignKey(DataArchival, on_delete=models.CASCADE)
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
 
+    class Meta(object):
+        unique_together = ["data_archival", "mission"]
+
 
 class Citation(models.Model):
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
@@ -172,3 +178,6 @@ class Citation(models.Model):
 class CitationMission(models.Model):
     citation = models.ForeignKey(Citation, on_delete=models.CASCADE)
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
+
+    class Meta(object):
+        unique_together = ["citation", "mission"]
