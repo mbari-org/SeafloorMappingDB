@@ -19,7 +19,7 @@ import logging
 import pathspec
 from netCDF4 import Dataset
 from django.contrib.gis.geos import Polygon
-from smdb.models import Mission, Compilation
+from smdb.models import Mission, Expedition
 
 instructions = f"""
 Can be run from smdb Docker environment thusly...
@@ -125,19 +125,26 @@ def run(*args):
     ignore_patterns = [
         "\.*",
     ]
-    for item in sc.traverse(sc.args.dir, ignore_patterns):
-        sc.logger.debug(f"file: {item}")
-        if item.endswith("ZTopo.grd"):
-            sc.logger.info(item)
-            ds = Dataset(item)
-            if "Projection: Geographic" in ds.description:
-                sc.logger.info(ds)
-                sc.logger.info(f"grid_bounds = {sc.extent(ds)}")
-                mission = Mission(
-                    mission_name=item.split("/")[-2], grid_bounds=sc.extent(ds)
-                )
-                mission.save()
-                breakpoint()
+    for fp in sc.traverse(sc.args.dir, ignore_patterns):
+        sc.logger.debug(f"file: {fp}")
+        if fp.endswith("ZTopo.grd"):
+            sc.logger.info(fp)
+            ds = Dataset(fp)
+            sc.logger.debug(ds)
+            if "Projection: Geographic" not in ds.description:
+                sc.logger.warn(f"{fp} is not Projection: Geographic")
+                continue
+            sc.logger.info(f"grid_bounds = {sc.extent(ds)}")
+            expedition, _ = Expedition.objects.get_or_create(
+                expd_path_name=os.path.dirname(fp)
+            )
+            mission = Mission(
+                mission_name=fp.split("/")[-2],
+                expedition=expedition,
+                grid_bounds=sc.extent(ds),
+            )
+            mission.save()
+            sc.logger.info(f"Saved {mission}")
 
 
 if __name__ == "__main__":
