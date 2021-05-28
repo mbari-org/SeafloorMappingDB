@@ -41,13 +41,11 @@ class Scanner:
     logger = logging.getLogger(__name__)
     _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
 
-    def traverse(self, path, ignore_files=None, include_files=None):
+    def traverse(self, path, ignore_files=None):
         if not os.path.exists(path):
             return
         if ignore_files is None:
             ignore_files = []
-        if include_files is None:
-            include_files = []
 
         for item in os.scandir(path):
             full_path = os.path.join(path, item.name)
@@ -63,10 +61,26 @@ class Scanner:
                 for result in self.traverse(item.path, ignore_files):
                     yield os.path.join(item.name, result)
             else:
-                if item.name in include_files:
-                    yield full_path
-                else:
-                    self.logger.debug(f"Skipping file: {full_path}")
+                yield full_path
+
+    def extent(self, ds):
+        if "x" in ds.variables and "y" in ds.variables:
+            X = "x"
+            Y = "y"
+        elif "lon" in ds.variables and "lat" in ds.variables:
+            X = "lon"
+            Y = "lat"
+        grid_bounds = Polygon(
+            (
+                (float(ds[X][0].data), float(ds[Y][0].data)),
+                (float(ds[X][0].data), float(ds[Y][-1].data)),
+                (float(ds[X][-1].data), float(ds[Y][-1].data)),
+                (float(ds[X][-1].data), float(ds[Y][0].data)),
+                (float(ds[X][0].data), float(ds[Y][0].data)),
+            ),
+            srid=4326,
+        )
+        return grid_bounds
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -113,22 +127,16 @@ def run(*args):
     ]
     for item in sc.traverse(sc.args.dir, ignore_patterns):
         sc.logger.debug(f"file: {item}")
-        if item.endswith(".grd"):
+        if item.endswith("ZTopo.grd"):
             sc.logger.info(item)
             ds = Dataset(item)
             if "Projection: Geographic" in ds.description:
                 sc.logger.info(ds)
-                grid_bounds = Polygon(
-                    (
-                        (float(ds["lon"][0].data), float(ds["lat"][0].data)),
-                        (float(ds["lon"][0].data), float(ds["lat"][-1].data)),
-                        (float(ds["lon"][-1].data), float(ds["lat"][-1].data)),
-                        (float(ds["lon"][-1].data), float(ds["lat"][0].data)),
-                        (float(ds["lon"][0].data), float(ds["lat"][0].data)),
-                    ),
-                    srid=4326,
+                sc.logger.info(f"grid_bounds = {sc.extent(ds)}")
+                mission = Mission(
+                    mission_name=item.split("/")[-2], grid_bounds=sc.extent(ds)
                 )
-                sc.logger.info(f"{grid_bounds}")
+                mission.save()
                 breakpoint()
 
 
