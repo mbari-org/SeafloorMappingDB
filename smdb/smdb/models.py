@@ -136,9 +136,9 @@ class Mission(models.Model):
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
-    expedtion = models.ForeignKey(Expedition, on_delete=models.CASCADE)
-    mission_type = models.ForeignKey(MissionType, on_delete=models.CASCADE)
-    platform = models.ForeignKey(Platform, on_delete=models.CASCADE)
+    expedition = models.ForeignKey(Expedition, on_delete=models.CASCADE, blank=True, null=True)
+    mission_type = models.ForeignKey(MissionType, on_delete=models.CASCADE, blank=True, null=True)
+    platform = models.ForeignKey(Platform, on_delete=models.CASCADE, blank=True, null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     start_depth = models.FloatField(blank=True, null=True)
@@ -153,7 +153,7 @@ class Mission(models.Model):
     site_detail = models.CharField(max_length=128, db_index=True)
     thumbnail_filename = models.CharField(max_length=128, db_index=True)
     kml_filename = models.CharField(max_length=128, db_index=True)
-    compilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
+    compilation = models.ForeignKey(Compilation, on_delete=models.CASCADE, blank=True, null=True)
     update_status = models.IntegerField(blank=True, null=True)
     sensors = models.ManyToManyField(Sensor)
     data_archivals = models.ManyToManyField("DataArchival", blank=True)
