@@ -8,6 +8,8 @@ import logging
 import os
 import pathspec
 import sys
+from netCDF4 import Dataset
+from django.contrib.gis.geos import Polygon, Point
 
 instructions = f"""
 Can be run from smdb Docker environment thusly...
@@ -26,7 +28,7 @@ Can be run from smdb Docker environment thusly...
 
 
 class Scanner:
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("Scanner")
     _handler = logging.StreamHandler()
     _formatter = logging.Formatter(
         "%(levelname)s %(asctime)s %(filename)s "
@@ -34,6 +36,7 @@ class Scanner:
     )
     _handler.setFormatter(_formatter)
     _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
+    logger.addHandler(_handler)
 
     def traverse(self, path, ignore_files=None):
         if not os.path.exists(path):
@@ -42,25 +45,20 @@ class Scanner:
             ignore_files = []
 
         for item in os.scandir(path):
-            self.logger.debug((f"Examing: {item.name}"))
-            if item.name.startswith("."):
-                continue
-
             full_path = os.path.join(path, item.name)
-            breakpoint()
             spec = pathspec.PathSpec.from_lines(
                 pathspec.patterns.GitWildMatchPattern, ignore_files
             )
+            self.logger.debug((f"Examing: {full_path}"))
             if spec.match_file(full_path):
-                logger.debug("Ignoring %s", item)
+                self.logger.debug("Ignoring %s", item)
                 continue
 
-            print((f"Examing: {item.name}"))
             if item.is_dir():
                 for result in self.traverse(item.path, ignore_files):
                     yield os.path.join(item.name, result)
             else:
-                yield item.name
+                yield full_path
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -101,6 +99,24 @@ if __name__ == "__main__":
     sc = Scanner()
     sc.process_command_line()
     sc.logger.info(f"Scanning directory {sc.args.dir}")
-    print(f"Walking directory {sc.args.dir}")
-    for item in sc.traverse(sc.args.dir):
-        sc.logger.info(item)
+    ignore_patterns = [
+        "\.*",
+    ]
+    for item in sc.traverse(sc.args.dir, ignore_patterns):
+        sc.logger.debug(f"file: {item}")
+        if item.endswith(".grd"):
+            sc.logger.info(item)
+            ds = Dataset(item)
+            if "Projection: Geographic" in ds.description:
+                sc.logger.info(ds)
+                grid_bounds = Polygon(
+                    (
+                        (float(ds["lon"][0].data), float(ds["lat"][0].data)),
+                        (float(ds["lon"][0].data), float(ds["lat"][-1].data)),
+                        (float(ds["lon"][-1].data), float(ds["lat"][-1].data)),
+                        (float(ds["lon"][-1].data), float(ds["lat"][0].data)),
+                        (float(ds["lon"][0].data), float(ds["lat"][0].data)),
+                    ),
+                    srid=4326,
+                )
+                breakpoint()
