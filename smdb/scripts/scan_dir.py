@@ -3,13 +3,23 @@
 Scan SeafloorMapping share for data to load into smdb
 """
 
-import argparse
-import logging
 import os
-import pathspec
 import sys
+
+parentDir = os.path.join(os.path.dirname(__file__), "../")
+sys.path.insert(0, parentDir)
+
+import argparse
+import django
+
+os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV']}"
+django.setup()
+
+import logging
+import pathspec
 from netCDF4 import Dataset
-from django.contrib.gis.geos import Polygon, Point
+from django.contrib.gis.geos import Polygon
+from smdb.models import Mission, Compilation
 
 instructions = f"""
 Can be run from smdb Docker environment thusly...
@@ -28,21 +38,16 @@ Can be run from smdb Docker environment thusly...
 
 
 class Scanner:
-    logger = logging.getLogger("Scanner")
-    _handler = logging.StreamHandler()
-    _formatter = logging.Formatter(
-        "%(levelname)s %(asctime)s %(filename)s "
-        "%(funcName)s():%(lineno)d %(message)s"
-    )
-    _handler.setFormatter(_formatter)
+    logger = logging.getLogger(__name__)
     _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
-    logger.addHandler(_handler)
 
-    def traverse(self, path, ignore_files=None):
+    def traverse(self, path, ignore_files=None, include_files=None):
         if not os.path.exists(path):
             return
         if ignore_files is None:
             ignore_files = []
+        if include_files is None:
+            include_files = []
 
         for item in os.scandir(path):
             full_path = os.path.join(path, item.name)
@@ -58,7 +63,10 @@ class Scanner:
                 for result in self.traverse(item.path, ignore_files):
                     yield os.path.join(item.name, result)
             else:
-                yield full_path
+                if item.name in include_files:
+                    yield full_path
+                else:
+                    self.logger.debug(f"Skipping file: {full_path}")
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -95,7 +103,8 @@ class Scanner:
         )
 
 
-if __name__ == "__main__":
+def run(*args):
+    print(" ".join(args))
     sc = Scanner()
     sc.process_command_line()
     sc.logger.info(f"Scanning directory {sc.args.dir}")
@@ -119,4 +128,9 @@ if __name__ == "__main__":
                     ),
                     srid=4326,
                 )
+                sc.logger.info(f"{grid_bounds}")
                 breakpoint()
+
+
+if __name__ == "__main__":
+    run()
