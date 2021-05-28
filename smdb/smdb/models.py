@@ -88,9 +88,9 @@ class Sensor(models.Model):
 
 class Expedition(models.Model):
     uuid = UUIDField(editable=False)
+    expd_name = models.CharField(max_length=128, null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
-    expd_name = models.CharField(max_length=128, null=True)
     investigator = models.ForeignKey(
         Person,
         blank=True,
@@ -109,22 +109,25 @@ class Expedition(models.Model):
     expd_db_id = models.IntegerField(null=True)
 
     def __str__(self):
-        return f"{self.expd_name}"
+        name = ''
+        if self.expd_name:
+            name = self.expd_name
+        return f"{self.expd_path_name} ({name})"
 
 
 class Compilation(models.Model):
     compilation_dir_name = models.CharField(max_length=128, db_index=True)
+    grid_bounds = models.PolygonField(
+        srid=4326, spatial_index=True, blank=True, null=True
+    )
     compilation_path_name = models.CharField(max_length=128, db_index=True)
     navadjust_dir_path = models.CharField(max_length=128, db_index=True)
     figures_dir_path = models.CharField(max_length=128, db_index=True)
     comment = models.TextField(blank=True, null=True)
-    grid_bounds = models.PolygonField(
-        srid=4326, spatial_index=True, blank=True, null=True
-    )
     thumbnail_filename = models.CharField(max_length=128, db_index=True)
     kml_filename = models.CharField(max_length=128, db_index=True)
-    update_status = models.IntegerField(blank=True, null=True)
     proc_datalist_filename = models.CharField(max_length=128, db_index=True)
+    update_status = models.IntegerField(blank=True, null=True)
 
     def __str__(self) -> str:
         return f"{self.compilation_dir_name}"
@@ -132,18 +135,24 @@ class Compilation(models.Model):
 
 class Mission(models.Model):
     uuid = UUIDField(editable=False)
-    expedtion = models.ForeignKey(Expedition, on_delete=models.CASCADE)
-    mission_type = models.ForeignKey(MissionType, on_delete=models.CASCADE)
-    platform = models.ForeignKey(Platform, on_delete=models.CASCADE)
     mission_name = models.CharField(max_length=128, db_index=True)
-    start_date = models.DateTimeField(null=True)
-    end_date = models.DateTimeField(null=True)
-    start_point = models.PointField(
-        srid=4326, spatial_index=True, dim=2, blank=True, null=True
-    )
-    start_depth = models.FloatField(blank=True, null=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
+    )
+    expedition = models.ForeignKey(
+        Expedition, on_delete=models.CASCADE, blank=True, null=True
+    )
+    mission_type = models.ForeignKey(
+        MissionType, on_delete=models.CASCADE, blank=True, null=True
+    )
+    platform = models.ForeignKey(
+        Platform, on_delete=models.CASCADE, blank=True, null=True
+    )
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    start_depth = models.FloatField(blank=True, null=True)
+    start_point = models.PointField(
+        srid=4326, spatial_index=True, dim=2, blank=True, null=True
     )
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
@@ -153,8 +162,10 @@ class Mission(models.Model):
     site_detail = models.CharField(max_length=128, db_index=True)
     thumbnail_filename = models.CharField(max_length=128, db_index=True)
     kml_filename = models.CharField(max_length=128, db_index=True)
+    compilation = models.ForeignKey(
+        Compilation, on_delete=models.CASCADE, blank=True, null=True
+    )
     update_status = models.IntegerField(blank=True, null=True)
-    compilation = models.ForeignKey(Compilation, on_delete=models.CASCADE)
     sensors = models.ManyToManyField(Sensor)
     data_archivals = models.ManyToManyField("DataArchival", blank=True)
     citations = models.ManyToManyField("Citation", blank=True)
