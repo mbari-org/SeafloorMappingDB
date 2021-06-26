@@ -15,16 +15,6 @@ entryPoints:
     # https
     address: ":443"
 
-certificatesResolvers:
-  letsencrypt:
-    # https://docs.traefik.io/master/https/acme/#lets-encrypt
-    acme:
-      email: "mccann@mbari.org"
-      storage: /etc/traefik/acme/acme.json
-      # https://docs.traefik.io/master/https/acme/#httpchallenge
-      httpChallenge:
-        entryPoint: web
-
 http:
   routers:
     web-secure-router:
@@ -34,9 +24,6 @@ http:
       middlewares:
         - csrf
       service: django
-      tls:
-        # https://docs.traefik.io/master/routing/routers/#certresolver
-        certResolver: letsencrypt
 
   middlewares:
     csrf:
@@ -51,6 +38,13 @@ http:
         servers:
           - url: http://django:5000
 
+tls:
+  certificates:
+    # https://doc.traefik.io/traefik/master/https/tls/
+    # Helpful example: https://gist.github.com/BretFisher/ede260ba033fabb3993062ae6e766f58
+    - certFile: /certs/smdb.crt
+      keyFile: /certs/smdb.key
+  routers:
 providers:
   # https://docs.traefik.io/master/providers/file/
   file:
