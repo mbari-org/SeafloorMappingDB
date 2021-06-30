@@ -36,3 +36,30 @@ docker-compose up -d
 
 Then navigate to http://localhost:8000 to see the web application in local 
 development mode.
+
+### Deploy a production instance of smdb
+
+1. Clone the repository in a location on your production server with an account that can run docker, e.g.:
+
+```
+sudo -u docker_user -i
+cd /opt
+git clone git@github.com:mbari-org/SeafloorMappingDB.git
+cd /opt/SeafloorMappingDB
+export SMDB_HOME=$(pwd)
+```
+
+2. Acquire certificate files, name them smdb.crt, and smdb.key and place them in `${SMDB_HOME}/compose/production/traefik`
+
+3. Start the app:
+
+```
+sudo -u docker_user -i
+cd /opt/SeafloorMappingDB
+export SMDB_HOME=$(pwd)
+export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
+docker-compose up -d
+```
+
+4. Navigate to https://smdb.shore.mbari.org to see the production web application (for example).
+
