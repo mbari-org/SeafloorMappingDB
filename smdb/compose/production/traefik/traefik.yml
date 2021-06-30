@@ -1,5 +1,5 @@
 log:
-  level: DEBUG
+  level: INFO
 
 entryPoints:
   web:
@@ -62,4 +62,4 @@ providers:
     filename: /etc/traefik/traefik.yml
     watch: true
 
-accessLog: {}
+##accessLog: {}
