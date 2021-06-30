@@ -8,10 +8,8 @@ RUN npm install && npm cache clean --force
 COPY . ${APP_HOME}
 RUN npm run build
 
-ARG PYTHON_VERSION=3.9-slim-buster
-
-# define an alias for the specfic python version used in this file.
-FROM python:${PYTHON_VERSION} as python
+# Base the build off of recent stable GDAL image
+FROM osgeo/gdal:ubuntu-small-3.3.0 as python
 
 # Python build stage
 FROM python as python-build-stage
@@ -22,8 +20,11 @@ ARG BUILD_ENVIRONMENT=production
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential \
+  graphviz-dev \
   # psycopg2 dependencies
-  libpq-dev
+  libpq-dev \
+  python3-dev \
+  python3-pip
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
@@ -51,10 +52,14 @@ RUN addgroup --system django \
 
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
+  graphviz \
+  graphviz-dev \
   # psycopg2 dependencies
   libpq-dev \
   # Translations dependencies
   gettext \
+  postgresql-client \
+  python3-pip \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -62,6 +67,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
 COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
+COPY --from=python-build-stage /usr/lib/libgdal* /usr/lib/
+RUN ldconfig
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
