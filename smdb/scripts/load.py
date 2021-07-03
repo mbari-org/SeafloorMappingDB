@@ -33,7 +33,7 @@ Can be run from smdb Docker environment thusly...
         cd SeafloorMappingDB
         export SMDB_HOME=$(pwd)
         export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-        docker-compose run --rm -u 399 -v /mbari/SeafloorMapping:/Volumes/SeafloorMapping django {__file__} -v
+        docker-compose run --rm -u 399 -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -v
         (Replace '399' with your MBARI user id, what `id -u` returns.)
 """
 
@@ -46,7 +46,9 @@ class Scanner:
     def _traverse(
         self,
         path=None,
-        ignore_files=['.TemporaryItems',],
+        ignore_files=[
+            ".TemporaryItems",
+        ],
     ):
         if not path:
             path = self.args.dir
@@ -75,12 +77,12 @@ class Scanner:
     def _file_list(self):
         self.logger.info(f"Reading files from file = {self.args.file}")
         for line in open(self.args.file, "r"):
+            line = line.strip()
             self.logger.debug(f"Checking existence of {line}")
-            if r'/mbari/' in line:
-                line = line.replace(r'/mbari/', r'/Volumes/').strip()
-                self.logger.debug(f"Renaming to {line}")
             if os.path.exists(line):
                 yield line.strip()
+            else:
+                self.logger.warning(f"File {repr(line)} does not exist")
 
     def ZTopo_files(self):
         if self.args.file:
@@ -88,13 +90,16 @@ class Scanner:
         else:
             return self._traverse()
 
-    def extent(self, ds):
+    def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
             X = "x"
             Y = "y"
         elif "lon" in ds.variables and "lat" in ds.variables:
             X = "lon"
             Y = "lat"
+        else:
+            raise ValueError(f"Did not find x/y nor lon/lat in file {file}")
+
         grid_bounds = Polygon(
             (
                 (float(ds[X][0].data), float(ds[Y][0].data)),
@@ -141,9 +146,7 @@ class Scanner:
             const=1,
             nargs="?",
             help="verbosity level: "
-            + ", ".join(
-                [f"{i}: {v}" for i, v, in enumerate(self._log_strings)]
-            ),
+            + ", ".join([f"{i}: {v}" for i, v, in enumerate(self._log_strings)]),
         )
         parser.add_argument(
             "-f",
@@ -158,8 +161,10 @@ class Scanner:
         # Override Django's logging so that we can setLevel() with --verbose
         logging.getLogger().handlers.clear()
         _handler = logging.StreamHandler()
-        _formatter = logging.Formatter("%(levelname)s %(asctime)s %(filename)s "
-            "%(funcName)s():%(lineno)d %(message)s")
+        _formatter = logging.Formatter(
+            "%(levelname)s %(asctime)s %(filename)s "
+            "%(funcName)s():%(lineno)d %(message)s"
+        )
         _handler.setFormatter(_formatter)
         self.logger.addHandler(_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
@@ -184,14 +189,21 @@ def run(*args):
             if not sc.is_geographic(ds):
                 sc.logger.warn(f"{fp} is not Projection: Geographic")
                 continue
-            sc.logger.info(f"grid_bounds: {sc.extent(ds)}")
+            try:
+                grid_bounds = sc.extent(ds, fp)
+            except ValueError as e:
+                sc.logger.warn(e)
+            sc.logger.info(f"grid_bounds: {grid_bounds:}")
+
             expedition, _ = Expedition.objects.get_or_create(
                 expd_path_name=os.path.dirname(fp)
             )
             mission = Mission(
-                mission_name=fp.split("/")[-2],
+                mission_name=fp.replace("/mbari/SeafloorMapping/", "").replace(
+                    "ZTopo.grd", ""
+                ),
                 expedition=expedition,
-                grid_bounds=sc.extent(ds),
+                grid_bounds=grid_bounds,
             )
             mission.save()
             sc.logger.info(f"Saved {mission}")
