@@ -135,7 +135,7 @@ class Compilation(models.Model):
 
 class Mission(models.Model):
     uuid = UUIDField(editable=False)
-    mission_name = models.CharField(max_length=128, db_index=True)
+    mission_name = models.CharField(max_length=256, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
