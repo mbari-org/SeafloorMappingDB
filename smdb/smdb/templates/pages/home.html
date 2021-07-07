@@ -1,1 +1,41 @@
 {% extends "base.html" %}
+{% load static %}
+
+<!-- Overview first - display a map of all grid_bounds -->
+<!-- https://www.paulox.net/2020/12/08/maps-with-django-part-1-geodjango-spatialite-and-leaflet/ -->
+<!-- https://docs.djangoproject.com/en/3.2/ref/templates/language/ -->
+
+{% block css %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/map.css' %}">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block title %}{{ section.title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ section.title }}</h1>
+  <div id="map"></div>
+  <script src="{% static 'js/map.js' %}"></script
+{% endblock %}
+
+<!--
+<html lang="en">
+<head>
+  <title>Markers Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="{% static 'map.css' %}">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="{% static 'map.js' %}"></script>
+</body>
+</html>
+-->
