@@ -20,6 +20,7 @@
 
 {% block content %}
   <h1>{{ section.title }}</h1>
+  {{ missions|json_script:"missions-data" }}
   <div id="map"></div>
   <script src="{% static 'js/map.js' %}"></script
 {% endblock %}
