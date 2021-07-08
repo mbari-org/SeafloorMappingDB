@@ -22,6 +22,7 @@ mined for populating the database and viewed through the query interface.
 
 ### Install a local development system using Docker
 
+#### First time
 Install [Docker](https://docker.io) and change directory to a location where 
 you will clone this repository. Clone the repo and start the services with
 these commands:
@@ -32,10 +33,23 @@ cd SeafloorMappingDB
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 docker-compose up -d
+docker-compose run --rm django python manage.py makemigrations
+docker-compose run --rm django python manage.py migrate
+docker-compose run --rm django python manage.py createsuperuser
 ```
 
 Then navigate to http://localhost:8000 to see the web application in local 
-development mode.
+development mode.  Log into the admin interface using the credentials you
+created in the last step above.
+
+#### Thereafter
+
+```
+cd ${SMDB_HOME}
+export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
+docker-compose up -d
+```
+
 
 ### Deploy a production instance of smdb
 
