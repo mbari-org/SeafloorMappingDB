@@ -13,7 +13,10 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
     <![endif]-->
 
+    <!-- If we come up with an icon for smdb replace the dummy with it here
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
+    -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
 
     {% block css %}
     <!-- Latest compiled and minified Bootstrap CSS -->
@@ -87,18 +90,16 @@
     </div>
 
     <div class="container">
-
       {% if messages %}
           {% for message in messages %}
               <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
           {% endfor %}
       {% endif %}
+    </div> <!-- /container -->
 
       {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
       {% endblock content %}
 
-    </div> <!-- /container -->
 
     {% block modal %}{% endblock modal %}
 
