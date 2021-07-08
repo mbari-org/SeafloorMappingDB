@@ -3,6 +3,7 @@
 Scan SeafloorMapping share for data to load into smdb
 """
 
+import math
 import os
 import sys
 
@@ -78,6 +79,9 @@ class Scanner:
         self.logger.info(f"Reading files from file = {self.args.file}")
         for line in open(self.args.file, "r"):
             line = line.strip()
+            if line.startswith("#"):
+                self.logger.debug(f"Skipping comment line: {line}")
+                continue
             self.logger.debug(f"Checking existence of {line}")
             if os.path.exists(line):
                 yield line.strip()
@@ -110,6 +114,26 @@ class Scanner:
             ),
             srid=4326,
         )
+        for point in grid_bounds[0]:
+            self.logger.debug(f"Checking if point is on Earth: {point}")
+            lon, lat = point
+            if lon < -180 or lon > 360:
+                raise ValueError(
+                    f"Bad longitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+            if lat < -90 or lat > 90:
+                raise ValueError(
+                    f"Bad latitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+            if math.isclose(lon, 0, abs_tol=1e-6):
+                raise ValueError(
+                    f"Near zero longitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+            if math.isclose(lat, 0, abs_tol=1e-6):
+                raise ValueError(
+                    f"Near zero latitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+
         return grid_bounds
 
     def is_geographic(self, ds):
@@ -192,7 +216,9 @@ def run(*args):
             try:
                 grid_bounds = sc.extent(ds, fp)
             except ValueError as e:
-                sc.logger.warn(e)
+                sc.logger.warning(e)
+                continue
+
             sc.logger.info(f"grid_bounds: {grid_bounds:}")
 
             expedition, _ = Expedition.objects.get_or_create(
