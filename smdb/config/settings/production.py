@@ -130,8 +130,8 @@ LOGGING = {
     "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
     "formatters": {
         "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s "
-            "%(process)d %(thread)d %(message)s"
+            "format": "%(levelname)s %(asctime)s %(filename)s "
+            "%(funcName)s:%(lineno)d %(message)s"
         }
     },
     "handlers": {
