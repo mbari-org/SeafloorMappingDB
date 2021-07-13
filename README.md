@@ -28,6 +28,8 @@ you will clone this repository. Clone the repo and start the services with
 these commands:
 
 ```
+# cd to a development directory, e.g. ~/dev
+mkdir docker_smdb_vol 
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB
 export SMDB_HOME=$(pwd)
@@ -58,6 +60,7 @@ docker-compose up -d
 ```
 sudo -u docker_user -i
 cd /opt
+mkdir docker_smdb_vol && chown docker_user docker_smdb_vol
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd /opt/SeafloorMappingDB
 export SMDB_HOME=$(pwd)
