@@ -22,6 +22,9 @@ services:
     ports:
       - "8000:8000"
     command: /start
+    volumes:
+      # Edit to use directory on your host
+      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
 
   postgres:
     build:

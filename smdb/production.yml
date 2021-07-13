@@ -18,6 +18,8 @@ services:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
+    volumes:
+      - /opt/docker_smdb_vol:/etc/smdb:z
 
   postgres:
     build:
