@@ -58,6 +58,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev \
   # Translations dependencies
   gettext \
+  # For quicker SeafloorMapping file finds
+  mlocate \
   postgresql-client \
   python3-pip \
   # cleaning up unused files
