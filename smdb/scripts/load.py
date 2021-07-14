@@ -3,7 +3,6 @@
 Scan SeafloorMapping share for data to load into smdb
 """
 
-import math
 import os
 import sys
 
@@ -12,6 +11,8 @@ sys.path.insert(0, parentDir)
 
 import argparse
 import django
+import math
+import subprocess
 
 os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV']}"
 django.setup()
@@ -43,56 +44,6 @@ class Scanner:
     logger = logging.getLogger(__name__)
     _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
     _log_strings = ("WARN", "INFO", "DEBUG")
-
-    def _traverse(
-        self,
-        path=None,
-        ignore_files=[
-            ".TemporaryItems",
-        ],
-    ):
-        if not path:
-            path = self.args.dir
-        self.logger.info(f"Scanning directory {path}")
-        if not os.path.exists(path):
-            return
-        if ignore_files is None:
-            ignore_files = []
-
-        for item in os.scandir(path):
-            full_path = os.path.join(path, item.name)
-            spec = pathspec.PathSpec.from_lines(
-                pathspec.patterns.GitWildMatchPattern, ignore_files
-            )
-            self.logger.debug((f"Examing: {full_path}"))
-            if spec.match_file(full_path):
-                self.logger.debug("Ignoring %s", item)
-                continue
-
-            if item.is_dir():
-                for result in self.traverse(item.path, ignore_files):
-                    yield os.path.join(item.name, result)
-            else:
-                yield full_path
-
-    def _file_list(self):
-        self.logger.info(f"Reading files from file = {self.args.file}")
-        for line in open(self.args.file, "r"):
-            line = line.strip()
-            if line.startswith("#"):
-                self.logger.debug(f"Skipping comment line: {line}")
-                continue
-            self.logger.debug(f"Checking existence of {line}")
-            if os.path.exists(line):
-                yield line.strip()
-            else:
-                self.logger.warning(f"File {repr(line)} does not exist")
-
-    def ZTopo_files(self):
-        if self.args.file:
-            return self._file_list()
-        else:
-            return self._traverse()
 
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
@@ -155,12 +106,6 @@ class Scanner:
             epilog=instructions,
         )
         parser.add_argument(
-            "--dir",
-            action="store",
-            help="Mount point for SeafloorMapping share",
-            default="/Volumes/SeafloorMapping",
-        )
-        parser.add_argument(
             "-v",
             "--verbose",
             type=int,
@@ -202,7 +147,10 @@ def run(*args):
     print(" ".join(args))
     sc = Scanner()
     sc.process_command_line()
-    for fp in sc.ZTopo_files():
+
+    # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
+    locate_cmd = ("locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'")
+    for fp in subprocess.getoutput(locate_cmd).split('\n'):
         sc.logger.info(f"file: {fp}")
         if fp.endswith("ZTopo.grd"):
             try:
