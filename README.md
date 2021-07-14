@@ -30,8 +30,10 @@ these commands:
 ```
 # cd to a development directory, e.g. ~/dev
 mkdir docker_smdb_vol 
+scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB
+# Edit smdb/local.yml with fully qualified location of docker_smdb_vol
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 docker-compose up -d
@@ -50,6 +52,11 @@ created in the last step above.
 cd ${SMDB_HOME}
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 docker-compose up -d
+```
+
+Mount smb://titan.shore.mbari.org/SeafloorMapping and load initial Mission data with:
+```
+docker-compose run --rm -u 399 -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py
 ```
 
 

@@ -3,7 +3,6 @@
 Scan SeafloorMapping share for data to load into smdb
 """
 
-import math
 import os
 import sys
 
@@ -12,6 +11,8 @@ sys.path.insert(0, parentDir)
 
 import argparse
 import django
+import math
+import subprocess
 
 os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV']}"
 django.setup()
@@ -43,56 +44,7 @@ class Scanner:
     logger = logging.getLogger(__name__)
     _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
     _log_strings = ("WARN", "INFO", "DEBUG")
-
-    def _traverse(
-        self,
-        path=None,
-        ignore_files=[
-            ".TemporaryItems",
-        ],
-    ):
-        if not path:
-            path = self.args.dir
-        self.logger.info(f"Scanning directory {path}")
-        if not os.path.exists(path):
-            return
-        if ignore_files is None:
-            ignore_files = []
-
-        for item in os.scandir(path):
-            full_path = os.path.join(path, item.name)
-            spec = pathspec.PathSpec.from_lines(
-                pathspec.patterns.GitWildMatchPattern, ignore_files
-            )
-            self.logger.debug((f"Examing: {full_path}"))
-            if spec.match_file(full_path):
-                self.logger.debug("Ignoring %s", item)
-                continue
-
-            if item.is_dir():
-                for result in self.traverse(item.path, ignore_files):
-                    yield os.path.join(item.name, result)
-            else:
-                yield full_path
-
-    def _file_list(self):
-        self.logger.info(f"Reading files from file = {self.args.file}")
-        for line in open(self.args.file, "r"):
-            line = line.strip()
-            if line.startswith("#"):
-                self.logger.debug(f"Skipping comment line: {line}")
-                continue
-            self.logger.debug(f"Checking existence of {line}")
-            if os.path.exists(line):
-                yield line.strip()
-            else:
-                self.logger.warning(f"File {repr(line)} does not exist")
-
-    def ZTopo_files(self):
-        if self.args.file:
-            return self._file_list()
-        else:
-            return self._traverse()
+    exclude_files = []
 
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
@@ -155,12 +107,6 @@ class Scanner:
             epilog=instructions,
         )
         parser.add_argument(
-            "--dir",
-            action="store",
-            help="Mount point for SeafloorMapping share",
-            default="/Volumes/SeafloorMapping",
-        )
-        parser.add_argument(
             "-v",
             "--verbose",
             type=int,
@@ -173,10 +119,15 @@ class Scanner:
             + ", ".join([f"{i}: {v}" for i, v, in enumerate(self._log_strings)]),
         )
         parser.add_argument(
-            "-f",
-            "--file",
+            "--clobber",
+            action="store_true",
+            help="Delete all Missions before loading",
+        )
+        parser.add_argument(
+            "--exclude",
             action="store",
-            help="Input file containing list of ZTopo.grd files",
+            help="Name of file containing Mission names to exclude",
+            default="/etc/smdb/exclude.list"
         )
 
         self.args = parser.parse_args()
@@ -193,6 +144,10 @@ class Scanner:
         self.logger.addHandler(_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
+        for line in open(self.args.exclude):
+            if not line.startswith("#"):
+                self.exclude_files.append(line.strip())
+
         self.logger.debug(
             f"Using database at DATABASE_URL =" f" {os.environ['DATABASE_URL']}"
         )
@@ -202,16 +157,28 @@ def run(*args):
     print(" ".join(args))
     sc = Scanner()
     sc.process_command_line()
-    for fp in sc.ZTopo_files():
-        sc.logger.info(f"file: {fp}")
-        if fp.endswith("ZTopo.grd"):
+
+    if sc.args.clobber:
+        ans = input('\nAre you sure you want to delete all existing Missions? [y/N] ')
+        if ans.lower() == 'y':
+            sc.logger.info(f"Deleting {Mission.objects.all().count()} Missions")
+            for miss in Mission.objects.all():
+                miss.delete()
+
+    # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
+    locate_cmd = ("locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'")
+    for fp in subprocess.getoutput(locate_cmd).split('\n'):
+        sc.logger.debug(f"file: {fp}")
+        if fp in sc.exclude_files:
+            sc.logger.info(f"Excluding file: {fp}")
+        else:
             try:
                 ds = Dataset(fp)
                 sc.logger.debug(ds)
             except PermissionError as e:
                 sc.logger.warning(f"{e}")
             if not sc.is_geographic(ds):
-                sc.logger.warn(f"{fp} is not Projection: Geographic")
+                sc.logger.warning(f"{fp} is not Projection: Geographic")
                 continue
             try:
                 grid_bounds = sc.extent(ds, fp)
@@ -219,7 +186,7 @@ def run(*args):
                 sc.logger.warning(e)
                 continue
 
-            sc.logger.info(f"grid_bounds: {grid_bounds:}")
+            sc.logger.debug(f"grid_bounds: {grid_bounds:}")
 
             expedition, _ = Expedition.objects.get_or_create(
                 expd_path_name=os.path.dirname(fp)
@@ -232,7 +199,7 @@ def run(*args):
                 grid_bounds=grid_bounds,
             )
             mission.save()
-            sc.logger.info(f"Saved {mission}")
+            sc.logger.debug(f"Saved {mission}")
 
 
 if __name__ == "__main__":
