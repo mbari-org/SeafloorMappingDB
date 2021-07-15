@@ -18,7 +18,6 @@ os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV'
 django.setup()
 
 import logging
-import pathspec
 from netCDF4 import Dataset
 from django.contrib.gis.geos import Polygon
 from smdb.models import Mission, Expedition
@@ -127,7 +126,7 @@ class Scanner:
             "--exclude",
             action="store",
             help="Name of file containing Mission names to exclude",
-            default="/etc/smdb/exclude.list"
+            default="/etc/smdb/exclude.list",
         )
 
         self.args = parser.parse_args()
@@ -154,20 +153,21 @@ class Scanner:
 
 
 def run(*args):
-    print(" ".join(args))
     sc = Scanner()
     sc.process_command_line()
+    # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
+    sc.logger.debug(f"Arguments passed to run(): {' '.join(args)}")
 
     if sc.args.clobber:
-        ans = input('\nAre you sure you want to delete all existing Missions? [y/N] ')
-        if ans.lower() == 'y':
+        ans = input("\nAre you sure you want to delete all existing Missions? [y/N] ")
+        if ans.lower() == "y":
             sc.logger.info(f"Deleting {Mission.objects.all().count()} Missions")
             for miss in Mission.objects.all():
                 miss.delete()
 
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
-    locate_cmd = ("locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'")
-    for fp in subprocess.getoutput(locate_cmd).split('\n'):
+    locate_cmd = "locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'"
+    for fp in subprocess.getoutput(locate_cmd).split("\n"):
         sc.logger.debug(f"file: {fp}")
         if fp in sc.exclude_files:
             sc.logger.info(f"Excluding file: {fp}")
