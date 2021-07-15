@@ -28,16 +28,17 @@ you will clone this repository. Clone the repo and start the services with
 these commands:
 
 ```
-# cd to a development directory, e.g. ~/dev
-mkdir docker_smdb_vol 
+# In your home directory or other preferred location copy the file locate database
+mkdir docker_smdb_vol
 scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
+scp smdb.shore.mbari.org:/opt/docker_smdb_vol/exclude.list docker_smdb_vol
+# cd to a development directory, e.g. ~/GitHub
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB
 # Edit smdb/local.yml with fully qualified location of docker_smdb_vol
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 docker-compose up -d
-docker-compose run --rm django python manage.py makemigrations
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
 ```
@@ -51,12 +52,16 @@ created in the last step above.
 ```
 cd ${SMDB_HOME}
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-docker-compose up -d
+# Shut down the services
+docker-compose down
+# Bring back up - must be done to use new edits, e.g. in scripts/load.py
+docker-compose up -d --build
 ```
 
 Mount smb://titan.shore.mbari.org/SeafloorMapping and load initial Mission data with:
 ```
-docker-compose run --rm -u 399 -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py
+# Replace <uid> with return from 'id -u'
+docker-compose run --rm -u <uid> -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py -v
 ```
 
 
@@ -75,7 +80,7 @@ export SMDB_HOME=$(pwd)
 
 2. Acquire certificate files, name them smdb.crt, and smdb.key and place them in `${SMDB_HOME}/compose/production/traefik`
 
-3. Start the app:
+3. Start the app and load some data:
 
 ```
 sudo -u docker_user -i
@@ -83,7 +88,22 @@ cd /opt/SeafloorMappingDB
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
 docker-compose up -d
+docker-compose run --rm django python manage.py migrate
+docker-compose run --rm django python manage.py createsuperuser
+# Replace <uid> with return from 'id -u'
+docker-compose run --rm -u <uid> -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py -v
 ```
 
 4. Navigate to https://smdb.shore.mbari.org to see the production web application (for example).
+
+5. To drop the database data and start over:
+```
+docker-compose exec postgres -U <dba> -d postgres
+drop database smdb;
+docker volume rm $(docker volume ls -q)
+git pull
+docker-compose up -d --build
+docker-compose run --rm django python manage.py migrate
+docker-compose run --rm django python manage.py createsuperuser
+```
 
