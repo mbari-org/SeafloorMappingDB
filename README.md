@@ -28,16 +28,16 @@ you will clone this repository. Clone the repo and start the services with
 these commands:
 
 ```
-# cd to a development directory, e.g. ~/dev
-mkdir docker_smdb_vol 
+# In your home directory or other preferred location copy the file locate database
+mkdir docker_smdb_vol
 scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
+# cd to a development directory, e.g. ~/GitHub
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB
 # Edit smdb/local.yml with fully qualified location of docker_smdb_vol
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 docker-compose up -d
-docker-compose run --rm django python manage.py makemigrations
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
 ```
@@ -83,7 +83,20 @@ cd /opt/SeafloorMappingDB
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
 docker-compose up -d
+docker-compose run --rm django python manage.py migrate
+docker-compose run --rm django python manage.py createsuperuser
 ```
 
 4. Navigate to https://smdb.shore.mbari.org to see the production web application (for example).
+
+5. To drop the database data and start over:
+```
+docker-compose exec postgres -U <dba> -d postgres
+drop database smdb;
+docker volume rm $(docker volume ls -q)
+git pull
+docker-compose up -d --build
+docker-compose run --rm django python manage.py migrate
+docker-compose run --rm django python manage.py createsuperuser
+```
 
