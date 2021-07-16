@@ -58,7 +58,7 @@ docker-compose down
 docker-compose up -d --build
 ```
 
-Mount smb://titan.shore.mbari.org/SeafloorMapping and load initial Mission data with:
+Mount `smb://titan.shore.mbari.org/SeafloorMapping` and load initial Mission data with:
 ```
 # Replace <uid> with return from 'id -u'
 docker-compose run --rm -u <uid> -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py -v
@@ -94,7 +94,7 @@ docker-compose run --rm django python manage.py createsuperuser
 docker-compose run --rm -u <uid> -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py -v
 ```
 
-4. Navigate to https://smdb.shore.mbari.org to see the production web application (for example).
+4. Navigate to https://smdb.shore.mbari.org (for example) to see the production web application.
 
 5. To drop the database data and start over:
 ```
