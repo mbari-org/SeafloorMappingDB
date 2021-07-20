@@ -20,6 +20,12 @@ data. The data will remain as files on the SeafloorMapping share on Titan.
 Because the Titan server is web-accessible, metadata and data products can be 
 mined for populating the database and viewed through the query interface.
 
+Seafloor mapping database: A relational database with geographic capability,
+a geo-spatially enabled web query interface on Canyon Head, load scripts for
+mining data from the SeafloorMapping archive, and user interfaces for testing
+and manually adding data, will be built in Python with Django and PostgreSQL
+using the PostGIS extension. The entire software stack is free and open source.
+
 ### Install a local development system using Docker
 
 #### First time
