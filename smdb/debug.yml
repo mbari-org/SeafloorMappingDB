@@ -15,7 +15,7 @@ services:
       - postgres
       - mailhog
     volumes:
-       # Edit to use directory on your host
+      # Edit to use directory on your host
       - /Users/mccann/docker_smdb_vol:/etc/smdb:z
       - .:/app:z
     env_file:
