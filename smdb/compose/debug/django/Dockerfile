@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # For quicker SeafloorMapping file finds
   mlocate \
   # Install here rather than from .devcontainer/devcontainer.json
-  git zsh wget \
+  git less wget zsh \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -78,13 +78,3 @@ RUN chmod +x /start
 COPY . ${APP_HOME}
 
 ENTRYPOINT ["/entrypoint"]
-
-
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser ${APP_HOME}
-USER appuser
-
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-# File wsgi.py was not found in subfolder: 'SeafloorMappingDB'. Please enter the Python path to wsgi file.
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "smdb.wsgi"]
