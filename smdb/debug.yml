@@ -22,10 +22,11 @@ services:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
+      # VS Code debug launch uses 8000, command: /start uses 8001
       - "8000:8000"
+      - "8001:8001"
       - "5678:5678"
     command: /start
-    ##command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 smdb/manage.py runserver_plus 0.0.0.0:8000 --nothreading --noreload"]
      
   postgres:
     build:
