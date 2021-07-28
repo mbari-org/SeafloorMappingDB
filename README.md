@@ -91,7 +91,7 @@ and wait for the containers to build and run.
 4. Run the server in VS Code's debugger:
 
     In the Debug panel click the play button next to the "Debug runserver_plus" item in the pick list at top.
-    You may set breakpoints and examine variables in the application's view code using VS Code.
+    You may set breakpoints and examine variables while the application's view code executes web requests.
 
 
 ### Deploy a production instance of smdb
