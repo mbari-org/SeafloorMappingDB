@@ -70,6 +70,29 @@ Mount `smb://titan.shore.mbari.org/SeafloorMapping` and load initial Mission dat
 docker-compose run --rm -u <uid> -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py -v
 ```
 
+### Work on the code with VS Code
+
+1. Install [VS Code](https://code.visualstudio.com/download) and the
+[Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+extension.
+
+2. From VS Code: File -> Open and select your SMDB_HOME directory. The devcontainer.json
+file will be detected and you will be prompted to "Reopen in Container". Click the button
+and wait for the containers to build and run.
+
+3. Run an IPython shell giving access through Django to the database:
+
+    In the Debug panel click the play button next to the "manage.py shell_plus" item in the pick list at top.
+    A "In [1]:" prompt should appear in the Terminal pane - test by printing all the Missions in the database:
+```
+    In [1]: Mission.objects.all()
+```
+
+4. Run the server in VS Code's debugger:
+
+    In the Debug panel click the play button next to the "Debug runserver_plus" item in the pick list at top.
+    You may set breakpoints and examine variables in the application's view code using VS Code.
+
 
 ### Deploy a production instance of smdb
 
