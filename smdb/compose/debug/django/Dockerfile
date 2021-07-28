@@ -21,7 +21,7 @@ COPY ./requirements .
 
 # Create Python Dependency and Sub-Dependency Wheels.
 RUN pip wheel --wheel-dir /usr/src/app/wheels  \
-  -r ${BUILD_ENVIRONMENT}.txt
+  -r local.txt
 
 
 # Python 'run' stage
@@ -68,7 +68,7 @@ COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
-COPY ./compose/local/django/start /start
+COPY ./compose/debug/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
