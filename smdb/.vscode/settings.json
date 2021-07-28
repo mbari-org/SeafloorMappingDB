@@ -1,0 +1,4 @@
+{
+  "python.pythonPath": "/bin/python"
+  "terminal.integrated.defaultProfile.linux": "zsh"
+}

@@ -34,8 +34,10 @@ Can be run from smdb Docker environment thusly...
         cd SeafloorMappingDB
         export SMDB_HOME=$(pwd)
         export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-        docker-compose run --rm -u 399 -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -v
-        (Replace '399' with your MBARI user id, what `id -u` returns.)
+        docker-compose run --rm -u $UID -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -v
+        -- or, on production --
+        export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
+        docker-compose run --rm -u $UID -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -v
 """
 
 
