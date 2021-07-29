@@ -15,8 +15,10 @@ services:
       - postgres
       - mailhog
     volumes:
-      # Edit to use directory on your host
+      # Edit source path to use directory on your host
       - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      # Mount smb://titan.shore.mbari.org/SeafloorMapping on your Mac
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
       - .:/app:z
     env_file:
       - ./.envs/.local/.django
