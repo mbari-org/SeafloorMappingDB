@@ -109,7 +109,7 @@ class Expedition(models.Model):
     expd_db_id = models.IntegerField(null=True)
 
     def __str__(self):
-        name = ''
+        name = ""
         if self.expd_name:
             name = self.expd_name
         return f"{self.expd_path_name} ({name})"
@@ -157,7 +157,7 @@ class Mission(models.Model):
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
-    notes_filename = models.CharField(max_length=128, db_index=True)
+    notes_filename = models.CharField(max_length=128, db_index=True, null=True)
     region_name = models.CharField(max_length=128, db_index=True)
     site_detail = models.CharField(max_length=128, db_index=True)
     thumbnail_filename = models.CharField(max_length=128, db_index=True)
@@ -207,3 +207,12 @@ class Citation(models.Model):
 
     def __str__(self):
         return self.doi
+
+
+class Note(models.Model):
+    text = models.TextField()
+    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Notes for {self.mission.mission_name}"
+

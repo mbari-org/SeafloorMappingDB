@@ -7,6 +7,7 @@ from smdb.models import (
     Expedition,
     Mission,
     MissionType,
+    Note,
     Person,
     Platform,
     PlatformType,
@@ -37,7 +38,9 @@ class ExpeditionAdmin(GeoModelAdmin):
 
 @register(Mission)
 class MissionAdmin(GeoModelAdmin):
-    search_fields = ['mission_name',]
+    search_fields = [
+        "mission_name",
+    ]
 
 
 @register(MissionType)
@@ -69,3 +72,8 @@ class SensorAdmin(GeoModelAdmin):
 @register(SensorType)
 class SensorTypeAdmin(GeoModelAdmin):
     pass
+
+
+@register(Note)
+class NoteAdmin(GeoModelAdmin):
+    search_fields = ["text"]
