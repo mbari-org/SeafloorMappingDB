@@ -9,18 +9,20 @@ import sys
 parentDir = os.path.join(os.path.dirname(__file__), "../")
 sys.path.insert(0, parentDir)
 
-import argparse
-import django
-import math
-import subprocess
+import argparse  # noqa F402
+import django  # noqa F402
+import math  # noqa F402
+import re  # noqa F402
+import subprocess  # noqa F402
 
 os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV']}"
 django.setup()
 
-import logging
-from netCDF4 import Dataset
-from django.contrib.gis.geos import Polygon
-from smdb.models import Mission, Expedition
+import logging  # noqa F402
+from glob import glob  # noqa F402
+from netCDF4 import Dataset  # noqa F402
+from django.contrib.gis.geos import Polygon  # noqa F402
+from smdb.models import Expedition, Mission, Note  # noqa F402
 
 instructions = f"""
 Can be run from smdb Docker environment thusly...
@@ -30,14 +32,18 @@ Can be run from smdb Docker environment thusly...
         export SMDB_HOME=$(pwd)
         export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
         docker-compose up -d
-    Thereafter:
+    Thereafter, on command line:
         cd SeafloorMappingDB
         export SMDB_HOME=$(pwd)
         export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-        docker-compose run --rm -u $UID -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -v
+        docker-compose run --rm -u $UID -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -h
         -- or, on production --
         export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
-        docker-compose run --rm -u $UID -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -v
+        docker-compose run --rm -u $UID -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -h
+    From VS Code:
+        - Mount smb://titan.shore.mbari.org/SeafloorMapping
+        - Open zsh terminal, at ➜  /app prompt:
+          scripts/load.py -h
 """
 
 
@@ -45,6 +51,7 @@ class Scanner:
     logger = logging.getLogger(__name__)
     _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
     _log_strings = ("WARN", "INFO", "DEBUG")
+    commandline = None
     exclude_files = []
 
     def extent(self, ds, file):
@@ -99,7 +106,45 @@ class Scanner:
             if "Projection: Geographic" in ds.source:
                 return True
         else:
-            self.logger.warn(f"{fp} does not have attribute descrtion nor source")
+            self.logger.warning("% does not have attribute descrtion nor source", ds)
+
+        return False
+
+    def notes_filename(self, sm_dir):
+        locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{sm_dir}.*Notes.txt'"
+        notes_file = None
+        for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
+            self.logger.debug("Potential notes file: %s", txt_file)
+            notes_file = txt_file
+
+        if not notes_file:
+            # Try parent directory
+            parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
+            locate_cmd = (
+                f"locate -d /etc/smdb/SeafloorMapping.db -r '{parent_dir}.*Notes.txt'"
+            )
+            for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
+                self.logger.debug("Potential notes file: %s", txt_file)
+                notes_file = txt_file
+
+        return notes_file
+
+    def save_notes(self, mission):
+        if not mission.notes_filename:
+            raise FileExistsError(f"No Notes for {mission.mission_name}")
+        note_text = ""
+        with open(mission.notes_filename) as fh:
+            for line in fh.readlines():
+                if "password" in line:
+                    # Blank out actual passwords
+                    line = line.split("password")[0] + "password: **********"
+                note_text += line
+
+        note = Note(
+            mission=mission,
+            text=note_text,
+        )
+        note.save()
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -130,8 +175,14 @@ class Scanner:
             help="Name of file containing Mission names to exclude",
             default="/etc/smdb/exclude.list",
         )
+        parser.add_argument(
+            "--regex",
+            action="store",
+            help="Load only ZTopo.grd files that have this regular expression in their path",
+            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)\/",
+        )
 
-        self.args = parser.parse_args()
+        self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
 
         # Override Django's logging so that we can setLevel() with --verbose
@@ -150,7 +201,7 @@ class Scanner:
                 self.exclude_files.append(line.strip())
 
         self.logger.debug(
-            f"Using database at DATABASE_URL =" f" {os.environ['DATABASE_URL']}"
+            "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
         )
 
 
@@ -158,50 +209,62 @@ def run(*args):
     sc = Scanner()
     sc.process_command_line()
     # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
-    sc.logger.debug(f"Arguments passed to run(): {' '.join(args)}")
+    sc.logger.debug("Arguments passed to run(): %s", " ".join(args))
 
     if sc.args.clobber:
         ans = input("\nAre you sure you want to delete all existing Missions? [y/N] ")
         if ans.lower() == "y":
-            sc.logger.info(f"Deleting {Mission.objects.all().count()} Missions")
+            sc.logger.info("Deleting %s Missions", Mission.objects.all().count())
             for miss in Mission.objects.all():
                 miss.delete()
 
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = "locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'"
+    miss_count = 0
     for fp in subprocess.getoutput(locate_cmd).split("\n"):
-        sc.logger.debug(f"file: {fp}")
+        sc.logger.debug("file: %s", fp)
+        if sc.args.regex:
+            if not re.search(re.compile(sc.args.regex), fp):
+                sc.logger.debug("%s does not match --regex '%s'", fp, sc.args.regex)
+                continue
+
         if fp in sc.exclude_files:
-            sc.logger.info(f"Excluding file: {fp}")
+            sc.logger.debug("Excluding file: %s", fp)
         else:
             try:
                 ds = Dataset(fp)
                 sc.logger.debug(ds)
             except PermissionError as e:
-                sc.logger.warning(f"{e}")
+                sc.logger.warning(str(e))
             if not sc.is_geographic(ds):
-                sc.logger.warning(f"{fp} is not Projection: Geographic")
+                sc.logger.warning("%s is not Projection: Geographic", fp)
                 continue
             try:
                 grid_bounds = sc.extent(ds, fp)
             except ValueError as e:
                 sc.logger.warning(e)
                 continue
+            sc.logger.debug("grid_bounds: %s", grid_bounds)
 
-            sc.logger.debug(f"grid_bounds: {grid_bounds:}")
+            notes_filename = sc.notes_filename(os.path.dirname(fp))
 
             expedition, _ = Expedition.objects.get_or_create(
                 expd_path_name=os.path.dirname(fp)
             )
             mission = Mission(
-                mission_name=fp.replace("/mbari/SeafloorMapping/", "").replace(
-                    "ZTopo.grd", ""
-                ),
+                mission_name=os.path.dirname(fp).replace("/mbari/SeafloorMapping/", ""),
                 expedition=expedition,
                 grid_bounds=grid_bounds,
+                notes_filename=notes_filename,
             )
             mission.save()
-            sc.logger.debug(f"Saved {mission}")
+            try:
+                sc.save_notes(mission)
+            except FileExistsError as e:
+                sc.logger.warning(str(e))
+
+            miss_count += 1
+            sc.logger.info("%3d. Saved %s", miss_count, mission)
 
 
 if __name__ == "__main__":
