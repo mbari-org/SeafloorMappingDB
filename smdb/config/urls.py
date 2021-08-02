@@ -5,7 +5,7 @@ from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 from rest_framework.authtoken.views import obtain_auth_token
-from views import MissionOverView
+from smdb.views import MissionOverView
 
 urlpatterns = [
     path("", MissionOverView.as_view(), name="home"),
