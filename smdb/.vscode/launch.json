@@ -21,5 +21,14 @@
       "args": ["shell_plus"],
       "justMyCode": false
     }
+    {
+      "name": "load.py",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/load.py",
+      "console": "integratedTerminal",
+      "args": ["-v 2", "--regex", "MappingAUVOps2015/20150312m2/ZTopo.grd$"],
+      "justMyCode": false
+    }
   ]
 }
