@@ -131,14 +131,20 @@ class Scanner:
 
     def save_notes(self, mission):
         if not mission.notes_filename:
-            raise FileExistsError(f"No Notes for {mission.mission_name}")
+            raise FileExistsError(f"No Notes found for {mission.mission_name}")
         note_text = ""
         with open(mission.notes_filename) as fh:
-            for line in fh.readlines():
-                if "password" in line:
-                    # Blank out actual passwords
-                    line = line.split("password")[0] + "password: **********"
-                note_text += line
+            try:
+                for line in fh.readlines():
+                    if "password" in line:
+                        # Blank out actual passwords
+                        line = line.split("password")[0] + "password: **********"
+                    note_text += line
+            except UnicodeDecodeError as e:
+                self.logger.warning(
+                    "Cannot read Notes file: %s", mission.notes_filename
+                )
+                self.logger.error(str(e))
 
         note = Note(
             mission=mission,
