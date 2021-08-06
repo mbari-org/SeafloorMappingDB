@@ -143,9 +143,11 @@ class Scanner:
         with open(mission.notes_filename) as fh:
             try:
                 for line in fh.readlines():
-                    if "password" in line:
+                    if "password" in line.lower():
                         # Blank out actual passwords
-                        line = line.split("password")[0] + "password: **********"
+                        line = (
+                            line.lower().split("password")[0] + "password: **********"
+                        )
                     note_text += line
             except UnicodeDecodeError as e:
                 self.logger.warning(
