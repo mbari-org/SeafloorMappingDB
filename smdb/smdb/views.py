@@ -1,7 +1,6 @@
 import json
 import logging
 
-from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.core.serializers import serialize
 from django.db import connection
@@ -23,16 +22,17 @@ class MissionOverView(TemplateView):
         else:
             missions = Mission.objects.all()
 
-        self.logger.info(f"Serializing {missions.count()} missions to geojson...")
+        self.logger.info("Serializing %s missions to geojson...", missions.count())
         context["missions"] = json.loads(
             serialize("geojson", missions, fields=("id", "grid_bounds", "mission_name"))
         )
-        self.logger.info(f"# of Queries: {len(connection.queries)}")
+        self.logger.info("# of Queries: %s", len(connection.queries))
         self.logger.info(
-            (f"Size of context['missions']: {len(str(context['missions']))}")
+            ("Size of context['missions']: %s", len(str(context["missions"])))
         )
         self.logger.debug(
-            f"context['missions'] = { json.dumps(context['missions'], indent=4, sort_keys=True)}"
+            "context['missions'] = %s",
+            json.dumps(context["missions"], indent=4, sort_keys=True),
         )
 
         if search_string:

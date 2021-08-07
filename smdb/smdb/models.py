@@ -62,10 +62,10 @@ class Platform(models.Model):
 
 class MissionType(models.Model):
     uuid = UUIDField(editable=False)
-    mission_type_name = models.CharField(max_length=128)
+    missiontype_name = models.CharField(max_length=128)
 
     def __str__(self):
-        return self.mission_type_name
+        return self.missiontype_name
 
 
 class SensorType(models.Model):
@@ -142,7 +142,7 @@ class Mission(models.Model):
     expedition = models.ForeignKey(
         Expedition, on_delete=models.CASCADE, blank=True, null=True
     )
-    mission_type = models.ForeignKey(
+    missiontype = models.ForeignKey(
         MissionType, on_delete=models.CASCADE, blank=True, null=True
     )
     platform = models.ForeignKey(
@@ -215,4 +215,3 @@ class Note(models.Model):
 
     def __str__(self):
         return f"Notes for {self.mission.mission_name}"
-
