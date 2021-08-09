@@ -3,7 +3,7 @@ from rest_framework_gis.serializers import (
     GeoFeatureModelSerializer,
     GeometrySerializerMethodField,
 )
-from smdb.models import Mission, MissionType
+from smdb.models import Mission, MissionType, Person
 
 
 class MissionTypeSerializer(serializers.ModelSerializer):
@@ -14,6 +14,18 @@ class MissionTypeSerializer(serializers.ModelSerializer):
             "url": {
                 "view_name": "api:missiontype-detail",
                 "lookup_field": "missiontype_name",
+            }
+        }
+
+
+class PersonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Person
+        fields = ["first_name", "last_name", "institution_name", "url"]
+        extra_kwargs = {
+            "url": {
+                "view_name": "api:person-detail",
+                "lookup_field": "last_name",
             }
         }
 

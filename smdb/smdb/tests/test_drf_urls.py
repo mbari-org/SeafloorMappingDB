@@ -1,7 +1,7 @@
 import pytest
 from django.urls import resolve, reverse
 
-from smdb.models import MissionType
+from smdb.models import MissionType, Person
 
 pytestmark = pytest.mark.django_db
 
@@ -23,6 +23,22 @@ def test_missiontype_detail(missiontype: MissionType):
         resolve(f"/api/missiontypes/{missiontype.missiontype_name}/").view_name
         == "api:missiontype-detail"
     )
+
+
+def test_person_list():
+    assert reverse("api:person-list") == "/api/persons/"
+    assert resolve("/api/persons/").view_name == "api:person-list"
+
+
+def test_person_detail(person: Person):
+    assert (
+        reverse(
+            "api:person-detail",
+            kwargs={"pk": person.pk},
+        )
+        == f"/api/persons/{person.pk}/"
+    )
+    assert resolve(f"/api/persons/{person.pk}/").view_name == "api:person-detail"
 
 
 """ Waiting for proper serialization

@@ -7,17 +7,17 @@ pytestmark = pytest.mark.django_db
 
 
 class TestAdmin:
-    def test_changelist(self, admin_client):
-        url = reverse("admin:smdb_mission_changelist")
+    def test_missiontype_changelist(self, admin_client):
+        url = reverse("admin:smdb_missiontype_changelist")
         response = admin_client.get(url)
         assert response.status_code == 200
 
-    def test_search(self, admin_client):
-        url = reverse("admin:smdb_mission_changelist")
+    def test_missiontype_search(self, admin_client):
+        url = reverse("admin:smdb_missiontype_changelist")
         response = admin_client.get(url, data={"q": "test"})
         assert response.status_code == 200
 
-    def test_add_missiontype(self, admin_client):
+    def test_missiontype_add(self, admin_client):
         url = reverse("admin:smdb_missiontype_add")
         response = admin_client.get(url)
         assert response.status_code == 200
@@ -30,6 +30,12 @@ class TestAdmin:
         )
         assert response.status_code == 302
         assert MissionType.objects.filter(missiontype_name="test").exists()
+
+    def test_missiontype_change(self, admin_client):
+        user = MissionType.objects.get(pk=1)
+        url = reverse("admin:smdb_missiontype_change", kwargs={"object_id": user.pk})
+        response = admin_client.get(url)
+        assert response.status_code == 20
 
     """
     def test_add_mission(self, admin_client):
