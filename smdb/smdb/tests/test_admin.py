@@ -31,12 +31,6 @@ class TestAdmin:
         assert response.status_code == 302
         assert MissionType.objects.filter(missiontype_name="test").exists()
 
-    def test_missiontype_change(self, admin_client):
-        user = MissionType.objects.get(pk=1)
-        url = reverse("admin:smdb_missiontype_change", kwargs={"object_id": user.pk})
-        response = admin_client.get(url)
-        assert response.status_code == 20
-
     """
     def test_add_mission(self, admin_client):
         # Adding a Mission requires several more fields than just mission_name
