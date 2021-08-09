@@ -5,32 +5,12 @@ Mike McCann
 MBARI 20 May 2021
 """
 
-import uuid
+import uuid as uuid_lib
 from django.contrib.gis.db import models
 
 
-class UUIDField(models.CharField):
-    """Major classes in the model have been given a uuid field,
-    which may prove helpful as web accessible resource identifiers.
-    """
-
-    def __init__(self, *args, **kwargs):
-        kwargs["max_length"] = kwargs.get("max_length", 32)
-        models.CharField.__init__(self, *args, **kwargs)
-
-    def pre_save(self, model_instance, add):
-        if add:
-            value = getattr(model_instance, self.attname)
-            if not value:
-                value = str(uuid.uuid4()).replace("-", "")
-            setattr(model_instance, self.attname, value)
-            return value
-        else:
-            return super(UUIDField, self).pre_save(model_instance, add)
-
-
 class Person(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     first_name = models.CharField(max_length=128, db_index=True, unique=True)
     last_name = models.CharField(max_length=128, db_index=True, unique=True)
     institution_name = models.CharField(max_length=256, blank=True, null=True)
@@ -43,7 +23,7 @@ class Person(models.Model):
 
 
 class PlatformType(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     platform_type_name = models.CharField(max_length=128)
 
     def __str__(self) -> str:
@@ -51,7 +31,7 @@ class PlatformType(models.Model):
 
 
 class Platform(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     platform_type = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
     platform_name = models.CharField(max_length=128, db_index=True, unique=True)
     operator_org_name = models.CharField(max_length=128, blank=True, null=True)
@@ -61,7 +41,7 @@ class Platform(models.Model):
 
 
 class MissionType(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     missiontype_name = models.CharField(max_length=128)
 
     def __str__(self):
@@ -69,7 +49,7 @@ class MissionType(models.Model):
 
 
 class SensorType(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     sensor_type_name = models.CharField(max_length=128)
 
     def __str__(self):
@@ -77,6 +57,7 @@ class SensorType(models.Model):
 
 
 class Sensor(models.Model):
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     sensor_type = models.ForeignKey(SensorType, on_delete=models.CASCADE)
     model_name = models.CharField(max_length=128)
     comment = models.CharField(max_length=128)
@@ -87,7 +68,7 @@ class Sensor(models.Model):
 
 
 class Expedition(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     expd_name = models.CharField(max_length=128, null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
@@ -116,6 +97,7 @@ class Expedition(models.Model):
 
 
 class Compilation(models.Model):
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     compilation_dir_name = models.CharField(max_length=128, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
@@ -134,7 +116,7 @@ class Compilation(models.Model):
 
 
 class Mission(models.Model):
-    uuid = UUIDField(editable=False)
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     mission_name = models.CharField(max_length=256, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
@@ -192,6 +174,7 @@ class Mission(models.Model):
 
 
 class DataArchival(models.Model):
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     missions = models.ManyToManyField(Mission)
     doi = models.CharField(max_length=256, db_index=True)
     archival_db_name = models.CharField(max_length=128, db_index=True)
@@ -201,6 +184,7 @@ class DataArchival(models.Model):
 
 
 class Citation(models.Model):
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     missions = models.ManyToManyField(Mission)
     doi = models.CharField(max_length=256, db_index=True)
     full_reference = models.CharField(max_length=256, db_index=True)
@@ -210,6 +194,7 @@ class Citation(models.Model):
 
 
 class Note(models.Model):
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     text = models.TextField()
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
 
