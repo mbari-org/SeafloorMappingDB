@@ -34,11 +34,11 @@ def test_person_detail(person: Person):
     assert (
         reverse(
             "api:person-detail",
-            kwargs={"pk": person.pk},
+            kwargs={"uuid": person.uuid},
         )
-        == f"/api/persons/{person.pk}/"
+        == f"/api/persons/{person.uuid}/"
     )
-    assert resolve(f"/api/persons/{person.pk}/").view_name == "api:person-detail"
+    assert resolve(f"/api/persons/{person.uuid}/").view_name == "api:person-detail"
 
 
 """ Waiting for proper serialization

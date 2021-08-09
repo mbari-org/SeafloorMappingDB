@@ -40,7 +40,7 @@ class PersonViewSet(
 ):
     serializer_class = PersonSerializer
     queryset = Person.objects.all()
-    lookup_field = "pk"
+    lookup_field = "uuid"
 
 
 """ Waiting for better serializer implementaion

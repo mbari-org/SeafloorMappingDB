@@ -125,13 +125,16 @@ docker-compose run --rm -u <uid> -v /mbari/SeafloorMapping:/mbari/SeafloorMappin
 
 4. Navigate to https://smdb.shore.mbari.org (for example) to see the production web application.
 
-5. To drop the database data and start over:
+5. To drop the database data and start over - use with caution:
 ```
-docker-compose exec postgres -U <dba> -d postgres
-drop database smdb;
-docker volume rm $(docker volume ls -q)
+docker-compose stop django
+docker-compose exec postgres psql -U <dba> -d postgres
+drop database smdb; \q
+docker-compose down
+docker volume rm $(docker volume ls -q)     # for good measure
 git pull
 docker-compose up -d --build
+docker-compose run --rm django python manage.py makemigrations
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
 ```
