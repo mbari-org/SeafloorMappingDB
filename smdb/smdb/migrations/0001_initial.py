@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
             name='Expedition',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('expd_name', models.CharField(max_length=128, null=True)),
                 ('start_date', models.DateTimeField(null=True)),
                 ('end_date', models.DateTimeField(null=True)),
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
             name='Mission',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('mission_name', models.CharField(db_index=True, max_length=128)),
                 ('grid_bounds', django.contrib.gis.db.models.fields.PolygonField(blank=True, null=True, srid=4326)),
                 ('start_date', models.DateTimeField(null=True)),
@@ -88,7 +88,7 @@ class Migration(migrations.Migration):
             name='MissionType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('mission_type_name', models.CharField(max_length=128)),
             ],
         ),
@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
             name='Person',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('first_name', models.CharField(db_index=True, max_length=128, unique=True)),
                 ('last_name', models.CharField(db_index=True, max_length=128, unique=True)),
                 ('institution_name', models.CharField(blank=True, max_length=256, null=True)),
@@ -109,7 +109,7 @@ class Migration(migrations.Migration):
             name='PlatformType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('platform_type_name', models.CharField(max_length=128)),
             ],
         ),
@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
             name='SensorType',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('sensor_type_name', models.CharField(max_length=128)),
             ],
         ),
@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
             name='Platform',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', smdb.models.UUIDField(editable=False, max_length=32)),
+                ('uuid', models.UUIDField(editable=False, max_length=32)),
                 ('platform_name', models.CharField(db_index=True, max_length=128, unique=True)),
                 ('operator_org_name', models.CharField(blank=True, max_length=128, null=True)),
                 ('platform_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='smdb.platformtype')),
