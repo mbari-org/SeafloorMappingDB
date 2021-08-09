@@ -11,28 +11,10 @@ from rest_framework.mixins import (
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ViewSet
-from smdb.models import MissionType
-from .serializers import MissionTypeSerializer
+from smdb.models import MissionType, Person
+from .serializers import MissionTypeSerializer, PersonSerializer
 
 User = get_user_model()
-
-# https://www.django-rest-framework.org/api-guide/viewsets/
-class UserViewSet(ViewSet):
-    """
-    A simple ViewSet for listing or retrieving users.
-    """
-
-    def list(self, request):
-        queryset = User.objects.all()
-        serializer = UserSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, pk=None):
-        queryset = User.objects.all()
-        user = get_object_or_404(queryset, pk=pk)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
 
 # Modeled after UserViewSet
 class MissionTypeViewSet(
@@ -46,6 +28,19 @@ class MissionTypeViewSet(
     serializer_class = MissionTypeSerializer
     queryset = MissionType.objects.all()
     lookup_field = "missiontype_name"
+
+
+class PersonViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+):
+    serializer_class = PersonSerializer
+    queryset = Person.objects.all()
+    lookup_field = "pk"
 
 
 """ Waiting for better serializer implementaion
