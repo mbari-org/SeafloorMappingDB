@@ -42,7 +42,7 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
-DATABASES["default"]["ENGINE"] = 'django.contrib.gis.db.backends.postgis'
+DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 
 # URLS
 # ------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "smdb.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    "smdb"
+    "smdb",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -293,4 +293,5 @@ REST_FRAMEWORK = {
 CORS_URLS_REGEX = r"^/api/.*$"
 # Your stuff...
 # ------------------------------------------------------------------------------
-GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH', default='/usr/lib/libgdal.so')
+GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="/usr/lib/libgdal.so")
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
