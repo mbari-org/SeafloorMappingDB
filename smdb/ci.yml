@@ -16,9 +16,15 @@ services:
       - mailhog
     volumes:
       - .:/app:z
-    env_file:
-      - ./.envs/.local/.django
-      - ./.envs/.local/.postgres
+    environment:
+      USE_DOCKER=yes
+      IPYTHONDIR=/app/.ipython
+      POSTGRES_HOST=postgres
+      POSTGRES_PORT=5432
+      POSTGRES_DB=smdb
+      POSTGRES_USER=ci_user
+      POSTGRES_PASSWORD=ci_password
+      DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
     ports:
       # VS Code debug launch uses 8000, command: /start uses 8001
       - "8000:8000"
@@ -34,8 +40,13 @@ services:
     volumes:
       - local_postgres_data:/var/lib/postgresql/data:Z
       - local_postgres_data_backups:/backups:z
-    env_file:
-      - ./.envs/.local/.postgres
+    environment:
+      POSTGRES_HOST=postgres
+      POSTGRES_PORT=5432
+      POSTGRES_DB=smdb
+      POSTGRES_USER=ci_user
+      POSTGRES_PASSWORD=ci_password
+      DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
 
   mailhog:
     image: mailhog/mailhog:v1.0.0
