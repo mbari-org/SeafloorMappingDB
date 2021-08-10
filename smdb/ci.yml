@@ -1,0 +1,73 @@
+version: '3'
+
+volumes:
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/debug/django/Dockerfile
+    image: smdb_debug_django
+    container_name: django
+    depends_on:
+      - postgres
+      - mailhog
+    volumes:
+      - .:/app:z
+    environment:
+      - USE_DOCKER=yes
+      - IPYTHONDIR=/app/.ipython
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=smdb
+      - POSTGRES_USER=ci_user
+      - POSTGRES_PASSWORD=ci_password
+      - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
+    ports:
+      # VS Code debug launch uses 8000, command: /start uses 8001
+      - "8000:8000"
+      - "8001:8001"
+    command: /start
+     
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: smdb_production_postgres
+    container_name: postgres
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data:Z
+      - local_postgres_data_backups:/backups:z
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=smdb
+      - POSTGRES_USER=ci_user
+      - POSTGRES_PASSWORD=ci_password
+      - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.0
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+
+  node:
+    build:
+      context: .
+      dockerfile: ./compose/local/node/Dockerfile
+    image: smdb_local_node
+    container_name: node
+    depends_on:
+      - django
+    volumes:
+      - .:/app:z
+      # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
+      - /app/node_modules
+    command: npm run dev
+    ports:
+      - "3000:3000"
+      # Expose browsersync UI: https://www.browsersync.io/docs/options/#option-ui
+      - "3001:3001"
