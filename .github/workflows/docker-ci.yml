@@ -10,7 +10,7 @@ jobs:
         uses: actions/checkout@v2
       - name: docker-compose -f smdb/ci.yml up -d --build
         run: docker-compose -f smdb/ci.yml up -d --build
-      - name: Django tests
+      - name: docker-compose -f smdb/ci.yml run --rm django pytest --cov
         run: docker-compose -f smdb/ci.yml run --rm django pytest --cov
       - run: echo "🍏 This job's status is now ${{ job.status }}."
 
