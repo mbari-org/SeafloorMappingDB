@@ -8,11 +8,9 @@ jobs:
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - name: Docker build and run detatched
+      - name: docker-compose -f smdb/ci.yml up -d --build
         run: docker-compose -f smdb/ci.yml up -d --build
-      - run: echo "🍏 This job's status is ${{ job.status }}."
       - name: Django tests
-        run: docker-compose run --rm django pytest --cov
+        run: docker-compose -f smdb/ci.yml run --rm django pytest --cov
       - run: echo "🍏 This job's status is now ${{ job.status }}."
 
