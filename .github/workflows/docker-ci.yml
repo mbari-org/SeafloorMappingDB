@@ -9,12 +9,8 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls -la ${{ github.workspace }}
       - name: Docker build and run detatched
-        run: docker-compose -f smdb/ci.yml -d --build
+        run: docker-compose -f smdb/ci.yml up -d --build
       - run: echo "🍏 This job's status is ${{ job.status }}."
       - name: Django tests
         run: docker-compose run --rm django pytest --cov
