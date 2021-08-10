@@ -34,7 +34,7 @@
     "esbenp.prettier-vscode"
   ],
   // Uncomment the next line if you want start specific services in your Docker Compose config.
-  "runServices": ["postgres", "node"],
+  //"runServices": ["postgres", "node"],
   // Uncomment the next line if you want to keep your containers running after VS Code shuts down.
   // "shutdownAction": "none",
   // Uncomment the next line to run commands after the container is created - for example installing git.
