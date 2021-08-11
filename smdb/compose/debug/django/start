@@ -5,5 +5,5 @@ set -o pipefail
 set -o nounset
 
 
-python manage.py migrate
-python manage.py runserver_plus 0.0.0.0:8001
+python smdb/manage.py migrate
+python smdb/manage.py runserver_plus 0.0.0.0:8001
