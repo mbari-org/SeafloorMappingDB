@@ -35,7 +35,7 @@ def main():
 def test_merge(tmpdir_factory, merged_file_count: int, append_linesep: bool):
     tmp_dir_path = Path(str(tmpdir_factory.getbasetemp()))
 
-    output_file_path = tmp_dir_path / ".env"
+    output_file_path = tmp_dir_path / "production.env"
 
     expected_output_file_content = ""
     merged_file_paths = []
