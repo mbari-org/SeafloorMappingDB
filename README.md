@@ -2,7 +2,7 @@
 
 _Make MBARI seafloor mapping datasets more accessible and useful_
 
-![smdb tests](https://github.com/mbari-org/SeafloorMappingDB/actions/workflows/docker-ci.yml/badge.svg)
+![smdb tests](https://github.com/mbari-org/SeafloorMappingDB/actions/workflows/ci.yml/badge.svg)
 
 ### Text from the proposal
 
