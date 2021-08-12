@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # For quicker SeafloorMapping file finds
   mlocate \
   # Install here rather than from .devcontainer/devcontainer.json
-  git less wget zsh \
+  git less wget zsh ssh-client \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
