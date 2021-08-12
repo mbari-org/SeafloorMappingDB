@@ -8,24 +8,31 @@
       "name": "Django runserver_plus",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/manage.py",
-      "args": ["runserver_plus", "0.0.0.0:8000", "--settings", "config.settings.local"],
-      "django": true
+      "cwd": "${workspaceFolder}/smdb",
+      "program": "${workspaceFolder}/smdb/manage.py",
+      "args": [
+        "runserver_plus",
+        "0.0.0.0:8000",
+        "--settings",
+        "config.settings.local"
+      ],
+      "django": true,
+      "justMyCode": false
     },
     {
       "name": "manage.py shell_plus",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/manage.py",
+      "program": "${workspaceFolder}/smdb/manage.py",
       "console": "integratedTerminal",
       "args": ["shell_plus"],
       "justMyCode": false
-    }
+    },
     {
       "name": "load.py",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/scripts/load.py",
+      "program": "${workspaceFolder}/smdb/scripts/load.py",
       "console": "integratedTerminal",
       "args": ["-v 2", "--regex", "mbsystem/Data/2019/20191106m3/ZTopo.grd$"],
       "justMyCode": false

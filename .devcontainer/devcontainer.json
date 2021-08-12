@@ -21,7 +21,7 @@
       "editor.rulers": [120]
     },
     "editor.formatOnSave": true,
-    "python.pythonPath": "/usr/local/bin/python",
+    "python.pythonPath": "/usr/bin/python",
     "python.linting.pylintEnabled": true,
     "python.formatting.provider": "black",
     "python.linting.flake8Enabled": true,
