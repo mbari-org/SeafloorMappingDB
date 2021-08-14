@@ -1,6 +1,6 @@
 from factory import Faker, post_generation
 from factory.django import DjangoModelFactory
-from smdb.models import Mission, MissionType, Person
+from smdb.models import Mission, MissionType, Person, PlatformType
 from typing import Any, Sequence
 
 from django.contrib.auth import get_user_model
@@ -21,6 +21,13 @@ class PersonFactory(DjangoModelFactory):
 
     class Meta:
         model = Person
+
+
+class PlatformTypeFactory(DjangoModelFactory):
+    platformtype_name = Faker("company")
+
+    class Meta:
+        model = PlatformType
 
 
 """ Waiting for serialization

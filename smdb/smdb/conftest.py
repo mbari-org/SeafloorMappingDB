@@ -1,11 +1,11 @@
 import pytest
 
-from smdb.models import MissionType, Person
+from smdb.models import MissionType, Person, PlatformType
 from smdb.users.models import User
 
 from smdb.users.tests.factories import UserFactory
 
-from smdb.tests.factories import MissionTypeFactory, PersonFactory
+from smdb.tests.factories import MissionTypeFactory, PersonFactory, PlatformTypeFactory
 
 ##from smdb.tests.factories import MissionFactory
 
@@ -28,6 +28,11 @@ def missiontype() -> MissionType:
 @pytest.fixture
 def person() -> Person:
     return PersonFactory()
+
+
+@pytest.fixture
+def platformtype() -> PlatformType:
+    return PlatformTypeFactory()
 
 
 """ Waiting for serialization
