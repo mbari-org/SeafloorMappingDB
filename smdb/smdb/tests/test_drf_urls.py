@@ -1,7 +1,7 @@
 import pytest
 from django.urls import resolve, reverse
 
-from smdb.models import MissionType, Person
+from smdb.models import MissionType, Person, PlatformType
 
 pytestmark = pytest.mark.django_db
 
@@ -39,6 +39,25 @@ def test_person_detail(person: Person):
         == f"/api/persons/{person.uuid}/"
     )
     assert resolve(f"/api/persons/{person.uuid}/").view_name == "api:person-detail"
+
+
+def test_platformtype_list():
+    assert reverse("api:platformtype-list") == "/api/platformtypes/"
+    assert resolve("/api/platformtypes/").view_name == "api:platformtype-list"
+
+
+def test_platformtype_detail(platformtype: PlatformType):
+    assert (
+        reverse(
+            "api:platformtype-detail",
+            kwargs={"uuid": platformtype.uuid},
+        )
+        == f"/api/platformtypes/{platformtype.uuid}/"
+    )
+    assert (
+        resolve(f"/api/platformtypes/{platformtype.uuid}/").view_name
+        == "api:platformtype-detail"
+    )
 
 
 """ Waiting for proper serialization
