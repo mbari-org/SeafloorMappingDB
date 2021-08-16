@@ -39,3 +39,6 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# Got error when running pytest with loaddata in the django_db_setup fixture:
+# E               django.core.exceptions.ImproperlyConfigured: '/app/smdb/smdb/fixtures' is a default fixture directory for the 'smdb' app and cannot be listed in settings.FIXTURE_DIRS.
+FIXTURE_DIRS = ()
