@@ -48,7 +48,7 @@ jobs:
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
       - name: Run Django Tests
-        run: docker-compose -f smdb/ci.yml run django pytest --cov
+        run: docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
 
       - name: Tear down the Stack
         run: docker-compose -f smdb/ci.yml down
