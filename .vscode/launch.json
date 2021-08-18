@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Django runserver_plus",
+      "name": "runserver_plus",
       "type": "python",
       "request": "launch",
       "cwd": "${workspaceFolder}/smdb",
@@ -20,7 +20,7 @@
       "justMyCode": false
     },
     {
-      "name": "manage.py shell_plus",
+      "name": "shell_plus",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/smdb/manage.py",
