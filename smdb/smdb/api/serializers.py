@@ -25,7 +25,7 @@ class PersonSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "url": {
                 "view_name": "api:person-detail",
-                "lookup_field": "last_name",
+                "lookup_field": "uuid",
             }
         }
 
