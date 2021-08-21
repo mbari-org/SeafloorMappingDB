@@ -32,3 +32,4 @@ netCDF4==1.5.7 # https://pypi.org/project/netCDF4/
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
 pygraphviz==1.7 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==2.12.1 # Referred by https://djangostars.com/blog/django-pytest-testing/
+pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
