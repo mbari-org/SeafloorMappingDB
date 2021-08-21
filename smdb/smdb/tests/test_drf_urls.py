@@ -7,8 +7,8 @@ pytestmark = pytest.mark.django_db
 
 
 def test_missiontype_list():
-    assert reverse("api:missiontype-list") == "/api/missiontypes/"
-    assert resolve("/api/missiontypes/").view_name == "api:missiontype-list"
+    assert reverse("api:missiontype-list") == "/api/missiontype/"
+    assert resolve("/api/missiontype/").view_name == "api:missiontype-list"
 
 
 def test_missiontype_detail(missiontype: MissionType):
@@ -17,10 +17,10 @@ def test_missiontype_detail(missiontype: MissionType):
             "api:missiontype-detail",
             kwargs={"missiontype_name": missiontype.missiontype_name},
         )
-        == f"/api/missiontypes/{missiontype.missiontype_name}/"
+        == f"/api/missiontype/{missiontype.missiontype_name}/"
     )
     assert (
-        resolve(f"/api/missiontypes/{missiontype.missiontype_name}/").view_name
+        resolve(f"/api/missiontype/{missiontype.missiontype_name}/").view_name
         == "api:missiontype-detail"
     )
 
