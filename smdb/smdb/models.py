@@ -27,7 +27,7 @@ class PlatformType(models.Model):
     platformtype_name = models.CharField(max_length=128)
 
     def __str__(self) -> str:
-        return self.platform_type_name
+        return self.platformtype_name
 
 
 class Platform(models.Model):
@@ -50,10 +50,10 @@ class MissionType(models.Model):
 
 class SensorType(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    sensor_type_name = models.CharField(max_length=128, unique=True)
+    sensortype_name = models.CharField(max_length=128, unique=True)
 
     def __str__(self):
-        return self.sensor_type_name
+        return self.sensortype_name
 
 
 class Sensor(models.Model):
