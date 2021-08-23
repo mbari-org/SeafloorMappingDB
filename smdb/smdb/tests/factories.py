@@ -24,7 +24,7 @@ class PersonFactory(DjangoModelFactory):
 
 
 class PlatformTypeFactory(DjangoModelFactory):
-    platformtype_name = Faker("company")
+    platformtype_name = Faker("user_name")
 
     class Meta:
         model = PlatformType

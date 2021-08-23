@@ -37,7 +37,7 @@ class PlatformTypeSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "url": {
                 "view_name": "api:platformtype-detail",
-                "lookup_field": "platformtytpe_name",
+                "lookup_field": "platformtype_name",
             }
         }
 

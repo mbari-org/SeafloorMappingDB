@@ -42,20 +42,20 @@ def test_person_detail(person: Person):
 
 
 def test_platformtype_list():
-    assert reverse("api:platformtype-list") == "/api/platformtypes/"
-    assert resolve("/api/platformtypes/").view_name == "api:platformtype-list"
+    assert reverse("api:platformtype-list") == "/api/platformtype/"
+    assert resolve("/api/platformtype/").view_name == "api:platformtype-list"
 
 
 def test_platformtype_detail(platformtype: PlatformType):
     assert (
         reverse(
             "api:platformtype-detail",
-            kwargs={"uuid": platformtype.uuid},
+            kwargs={"platformtype_name": platformtype.platformtype_name},
         )
-        == f"/api/platformtypes/{platformtype.uuid}/"
+        == f"/api/platformtype/{platformtype.platformtype_name}/"
     )
     assert (
-        resolve(f"/api/platformtypes/{platformtype.uuid}/").view_name
+        resolve(f"/api/platformtype/{platformtype.platformtype_name}/").view_name
         == "api:platformtype-detail"
     )
 

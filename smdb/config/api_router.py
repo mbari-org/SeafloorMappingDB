@@ -17,7 +17,7 @@ router.register("users", UserViewSet)
 ##router.register("missions", MissionViewSet)
 router.register("missiontype", MissionTypeViewSet, basename="missiontype")
 router.register("persons", PersonViewSet)
-router.register("platformtypes", PlatformTypeViewSet)
+router.register("platformtype", PlatformTypeViewSet)
 
 
 app_name = "api"
