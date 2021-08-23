@@ -71,7 +71,7 @@ def express_person(person: Person) -> Dict[str, Any]:
 express_persons = pluralized(express_person)
 
 
-class TestMissionType(ViewSetTest, AsUser("tester")):
+class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
     """Modeled after 'But I mainly use ViewSets, not APIViews!'
     section at https://pypi.org/project/pytest-drf/"""
 
@@ -102,7 +102,7 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             autouse=True,
         )
 
-        def test_it_returns_missiontypes(self, missiontypes, results):
+        def it_returns_missiontypes(self, missiontypes, results):
             expected = express_missiontypes(
                 sorted(
                     missiontypes, key=lambda missiontype: missiontype.missiontype_name
@@ -127,12 +127,12 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             lambda: set(MissionType.objects.values_list("missiontype_name", flat=True))
         )
 
-        def test_it_creates_new_missiontype(self, initial_missiontype, json):
+        def it_creates_new_missiontype(self, initial_missiontype, json):
             expected = initial_missiontype | {json["missiontype_name"]}
             actual = set(MissionType.objects.values_list("missiontype_name", flat=True))
             assert expected == actual
 
-        def test_it_sets_expected_attrs(self, data, json):
+        def it_sets_expected_attrs(self, data, json):
             missiontype = MissionType.objects.get(
                 missiontype_name=json["missiontype_name"]
             )
@@ -140,7 +140,7 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             expected = data
             assert_model_attrs(missiontype, expected)
 
-        def test_it_returns_missiontype(self, json):
+        def it_returns_missiontype(self, json):
             missiontype = MissionType.objects.get(
                 missiontype_name=json["missiontype_name"]
             )
@@ -158,7 +158,7 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             lambda: MissionType.objects.create(missiontype_name="dive")
         )
 
-        def test_it_returns_missiontype(self, missiontype, json):
+        def it_returns_missiontype(self, missiontype, json):
             expected = express_missiontype(missiontype)
             actual = json
             assert expected == actual
@@ -177,7 +177,7 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             }
         )
 
-        def test_it_sets_expected_attrs(self, data, missiontype):
+        def it_sets_expected_attrs(self, data, missiontype):
             # We must tell Django to grab fresh data from the database, or we'll
             # see our stale initial data and think our endpoint is broken!
             missiontype.refresh_from_db()
@@ -185,7 +185,7 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             expected = data
             assert_model_attrs(missiontype, expected)
 
-        def test_it_returns_missiontype(self, missiontype, json):
+        def it_returns_missiontype(self, missiontype, json):
             missiontype.refresh_from_db()
 
             expected = express_missiontype(missiontype)
@@ -207,13 +207,13 @@ class TestMissionType(ViewSetTest, AsUser("tester")):
             )
         )
 
-        def test_it_deletes_missiontype(self, initial_missiontype, missiontype):
+        def it_deletes_missiontype(self, initial_missiontype, missiontype):
             expected = initial_missiontype - {missiontype.missiontype_name}
             actual = set(MissionType.objects.values_list("missiontype_name", flat=True))
             assert expected == actual
 
 
-class TestPerson(ViewSetTest, AsUser("tester")):
+class TestPersonViewSet(ViewSetTest, AsUser("tester")):
     """Modeled after 'But I mainly use ViewSets, not APIViews!'
     section at https://pypi.org/project/pytest-drf/"""
 
@@ -244,7 +244,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             autouse=True,
         )
 
-        def test_it_returns_persons(self, persons, results):
+        def it_returns_persons(self, persons, results):
             expected = express_persons(
                 sorted(persons, key=lambda person: str(person.uuid))
             )
@@ -269,7 +269,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             lambda: set(Person.objects.values_list("uuid", flat=True))
         )
 
-        def test_it_creates_new_person(self, initial_person, json):
+        def it_creates_new_person(self, initial_person, json):
             expected = initial_person | {json["uuid"]}
             actual = set((str(Person.objects.values_list("uuid", flat=True)[0]),))
             assert expected == actual
@@ -283,7 +283,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             # E         UUID('968e03be-9b7d-4cf5-95a6-4377a9796479')
             assert_model_attrs(person, expected)
 
-        def test_it_returns_person(self, json):
+        def it_returns_person(self, json):
             person = Person.objects.get(uuid=json["uuid"])
 
             expected = express_person(person)
@@ -301,7 +301,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             )
         )
 
-        def test_it_returns_person(self, person, json):
+        def it_returns_person(self, person, json):
             expected = express_person(person)
             actual = json
             assert expected == actual
@@ -324,7 +324,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             }
         )
 
-        def test_it_sets_expected_attrs(self, data, person):
+        def it_sets_expected_attrs(self, data, person):
             # We must tell Django to grab fresh data from the database, or we'll
             # see our stale initial data and think our endpoint is broken!
             person.refresh_from_db()
@@ -332,7 +332,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             expected = data
             assert_model_attrs(person, expected)
 
-        def test_it_returns_person(self, person, json):
+        def it_returns_person(self, person, json):
             person.refresh_from_db()
 
             expected = express_person(person)
@@ -356,7 +356,7 @@ class TestPerson(ViewSetTest, AsUser("tester")):
             )
         )
 
-        def test_it_deletes_person(self, initial_person, person):
+        def it_deletes_person(self, initial_person, person):
             expected = initial_person - {person.uuid}
             actual = set(Person.objects.values_list("uuid", flat=True))
             assert expected == actual
