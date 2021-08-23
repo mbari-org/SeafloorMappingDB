@@ -14,7 +14,6 @@ from rest_framework.viewsets import GenericViewSet, ViewSet
 from smdb.models import MissionType, Person, PlatformType
 from .serializers import MissionTypeSerializer, PersonSerializer, PlatformTypeSerializer
 
-User = get_user_model()
 
 # Modeled after UserViewSet
 class MissionTypeViewSet(

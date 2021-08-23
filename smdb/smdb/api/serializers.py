@@ -21,11 +21,11 @@ class MissionTypeSerializer(serializers.ModelSerializer):
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
-        fields = ["first_name", "last_name", "institution_name", "url"]
+        fields = ["uuid", "first_name", "last_name", "institution_name", "url"]
         extra_kwargs = {
             "url": {
                 "view_name": "api:person-detail",
-                "lookup_field": "last_name",
+                "lookup_field": "uuid",
             }
         }
 
