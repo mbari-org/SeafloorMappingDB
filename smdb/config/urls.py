@@ -6,6 +6,8 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 from rest_framework.authtoken.views import obtain_auth_token
 from smdb.views import MissionOverView
+from smdb.api.base import router as api_v1_router
+
 
 urlpatterns = [
     path("", MissionOverView.as_view(), name="home"),
@@ -23,7 +25,7 @@ urlpatterns = [
 # API URLS
 urlpatterns += [
     # API base url
-    path("api/", include("config.api_router")),
+    path("api/v1/", include(api_v1_router)),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
 ]

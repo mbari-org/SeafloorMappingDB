@@ -7,8 +7,8 @@ pytestmark = pytest.mark.django_db
 
 
 def test_missiontype_list():
-    assert reverse("api:missiontype-list") == "/api/missiontype/"
-    assert resolve("/api/missiontype/").view_name == "api:missiontype-list"
+    assert reverse("api:missiontype-list") == "/api/v1/missiontype/"
+    assert resolve("/api/v1/missiontype/").view_name == "api:missiontype-list"
 
 
 def test_missiontype_detail(missiontype: MissionType):
@@ -17,17 +17,17 @@ def test_missiontype_detail(missiontype: MissionType):
             "api:missiontype-detail",
             kwargs={"missiontype_name": missiontype.missiontype_name},
         )
-        == f"/api/missiontype/{missiontype.missiontype_name}/"
+        == f"/api/v1/missiontype/{missiontype.missiontype_name}/"
     )
     assert (
-        resolve(f"/api/missiontype/{missiontype.missiontype_name}/").view_name
+        resolve(f"/api/v1/missiontype/{missiontype.missiontype_name}/").view_name
         == "api:missiontype-detail"
     )
 
 
 def test_person_list():
-    assert reverse("api:person-list") == "/api/persons/"
-    assert resolve("/api/persons/").view_name == "api:person-list"
+    assert reverse("api:person-list") == "/api/v1/persons/"
+    assert resolve("/api/v1/persons/").view_name == "api:person-list"
 
 
 def test_person_detail(person: Person):
@@ -36,14 +36,14 @@ def test_person_detail(person: Person):
             "api:person-detail",
             kwargs={"uuid": person.uuid},
         )
-        == f"/api/persons/{person.uuid}/"
+        == f"/api/v1/persons/{person.uuid}/"
     )
-    assert resolve(f"/api/persons/{person.uuid}/").view_name == "api:person-detail"
+    assert resolve(f"/api/v1/persons/{person.uuid}/").view_name == "api:person-detail"
 
 
 def test_platformtype_list():
-    assert reverse("api:platformtype-list") == "/api/platformtype/"
-    assert resolve("/api/platformtype/").view_name == "api:platformtype-list"
+    assert reverse("api:platformtype-list") == "/api/v1/platformtype/"
+    assert resolve("/api/v1/platformtype/").view_name == "api:platformtype-list"
 
 
 def test_platformtype_detail(platformtype: PlatformType):
@@ -52,27 +52,27 @@ def test_platformtype_detail(platformtype: PlatformType):
             "api:platformtype-detail",
             kwargs={"platformtype_name": platformtype.platformtype_name},
         )
-        == f"/api/platformtype/{platformtype.platformtype_name}/"
+        == f"/api/v1/platformtype/{platformtype.platformtype_name}/"
     )
     assert (
-        resolve(f"/api/platformtype/{platformtype.platformtype_name}/").view_name
+        resolve(f"/api/v1/platformtype/{platformtype.platformtype_name}/").view_name
         == "api:platformtype-detail"
     )
 
 
 """ Waiting for proper serialization
 def test_mission_list():
-    assert reverse("api:mission-list") == "/api/missions/"
-    assert resolve("/api/missions/").view_name == "api:mission-list"
+    assert reverse("api:mission-list") == "/api/v1/missions/"
+    assert resolve("/api/v1/missions/").view_name == "api:mission-list"
 
 
 def test_mission_detail(mission: Mission):
     assert (
         reverse("api:mission-detail", kwargs={"mission_name": mission.mission_name})
-        == f"/api/missions/{mission.mission_name}/"
+        == f"/api/v1/missions/{mission.mission_name}/"
     )
     assert (
-        resolve(f"/api/mission/{mission.mission_name}/").view_name
+        resolve(f"/api/v1/mission/{mission.mission_name}/").view_name
         == "api:mission-detail"
     )
 """
