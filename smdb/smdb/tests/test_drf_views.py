@@ -22,7 +22,7 @@ from pytest_drf.util import pluralized, url_for
 from pytest_lambda import lambda_fixture, static_fixture
 from rest_framework.test import APIRequestFactory
 
-from smdb.models import MissionType, Person
+from smdb.models import MissionType, Person, PlatformType
 from smdb.users.models import User
 
 pytestmark = pytest.mark.django_db
@@ -49,6 +49,23 @@ def express_missiontype(missiontype: MissionType) -> Dict[str, Any]:
 
 
 express_missiontypes = pluralized(express_missiontype)
+
+
+def express_platformtype(platformtype: PlatformType) -> Dict[str, Any]:
+    factory = APIRequestFactory()
+    request = factory.get("api:platformtype-detail")
+    return {
+        "platformtype_name": platformtype.platformtype_name,
+        "url": request.build_absolute_uri(
+            reverse(
+                "api:platformtype-detail",
+                kwargs={"platformtype_name": platformtype.platformtype_name},
+            )
+        ),
+    }
+
+
+express_platformtypes = pluralized(express_platformtype)
 
 
 def express_person(person: Person) -> Dict[str, Any]:
@@ -359,4 +376,161 @@ class TestPersonViewSet(ViewSetTest, AsUser("tester")):
         def it_deletes_person(self, initial_person, person):
             expected = initial_person - {person.uuid}
             actual = set(Person.objects.values_list("uuid", flat=True))
+            assert expected == actual
+
+
+class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
+    """Modeled after 'But I mainly use ViewSets, not APIViews!'
+    section at https://pypi.org/project/pytest-drf/"""
+
+    @pytest.fixture
+    def results(self, json):
+        """Override 'return json["results"]' in
+        /usr/local/lib/python3.8/dist-packages/pytest_drf/views.py"""
+        return json
+
+    list_url = lambda_fixture(lambda: url_for("api:platformtype-list"))
+
+    detail_url = lambda_fixture(
+        lambda platformtype: url_for(
+            "api:platformtype-detail", str(platformtype.platformtype_name)
+        )
+    )
+
+    class TestList(
+        UsesGetMethod,
+        UsesListEndpoint,
+        Returns200,
+    ):
+        platformtypes = lambda_fixture(
+            lambda: [
+                PlatformType.objects.create(platformtype_name="AUV"),
+                PlatformType.objects.create(platformtype_name="ship"),
+            ],
+            autouse=True,
+        )
+
+        def it_returns_platformtypes(self, platformtypes, results):
+            expected = express_platformtypes(
+                sorted(
+                    platformtypes,
+                    key=lambda platformtype: platformtype.platformtype_name,
+                )
+            )
+            actual = sorted(results, key=lambda k: k["platformtype_name"])
+
+    class TestCreate(
+        UsesPostMethod,
+        UsesListEndpoint,
+        Returns201,
+    ):
+        """Use platformtype_name for lookups"""
+
+        data = static_fixture(
+            {
+                "platformtype_name": "ROV",
+            }
+        )
+        initial_platformtype = precondition_fixture(
+            lambda: set(
+                PlatformType.objects.values_list("platformtype_name", flat=True)
+            )
+        )
+
+        def it_creates_new_platformtype(self, initial_platformtype, json):
+            expected = initial_platformtype | {json["platformtype_name"]}
+            actual = set(
+                (
+                    str(
+                        PlatformType.objects.values_list(
+                            "platformtype_name", flat=True
+                        )[0]
+                    ),
+                )
+            )
+            assert expected == actual
+
+        def a_test_it_sets_expected_attrs(self, data, json):
+            platformtype = PlatformType.objects.get(
+                platformtype_name=json["platformtype_name"]
+            )
+
+            expected = data
+            breakpoint()
+            # E         Extra items in the right set:
+            # E         UUID('968e03be-9b7d-4cf5-95a6-4377a9796479')
+            assert_model_attrs(platformtype, expected)
+
+        def it_returns_platformtype(self, json):
+            platformtype = PlatformType.objects.get(
+                platformtype_name=json["platformtype_name"]
+            )
+
+            expected = express_platformtype(platformtype)
+            actual = json
+            assert expected == actual
+
+    class TestRetrieve(
+        UsesGetMethod,
+        UsesDetailEndpoint,
+        Returns200,
+    ):
+        platformtype = lambda_fixture(
+            lambda: PlatformType.objects.create(platformtype_name="Sonar")
+        )
+
+        def it_returns_platformtype(self, platformtype, json):
+            expected = express_platformtype(platformtype)
+            actual = json
+            assert expected == actual
+
+    class TestUpdate(
+        UsesPatchMethod,
+        UsesDetailEndpoint,
+        Returns200,
+    ):
+        platformtype = lambda_fixture(
+            lambda: PlatformType.objects.create(platformtype_name="Drone")
+        )
+        data = static_fixture(
+            {
+                "platformtype_name": "LRAUV",
+            }
+        )
+
+        def it_sets_expected_attrs(self, data, platformtype):
+            # We must tell Django to grab fresh data from the database, or we'll
+            # see our stale initial data and think our endpoint is broken!
+            platformtype.refresh_from_db()
+
+            expected = data
+            assert_model_attrs(platformtype, expected)
+
+        def it_returns_platformtype(self, platformtype, json):
+            platformtype.refresh_from_db()
+
+            expected = express_platformtype(platformtype)
+            actual = json
+            assert expected == actual
+
+    class TestDestroy(
+        UsesDeleteMethod,
+        UsesDetailEndpoint,
+        Returns204,
+    ):
+        platformtype = lambda_fixture(
+            lambda: PlatformType.objects.create(platformtype_name="Glider")
+        )
+
+        initial_platformtype = precondition_fixture(
+            lambda platformtype: set(  # ensure our to-be-deleted PlatformType exists in our set
+                PlatformType.objects.values_list("platformtype_name", flat=True)
+            )
+        )
+
+        def it_deletes_platformtype(self, initial_platformtype, platformtype):
+            expected = initial_platformtype - {platformtype.platformtype_name}
+            actual = set(
+                PlatformType.objects.values_list("platformtype_name", flat=True)
+            )
             assert expected == actual

@@ -52,7 +52,7 @@ class PlatformTypeViewSet(
 ):
     serializer_class = PlatformTypeSerializer
     queryset = PlatformType.objects.all()
-    lookup_field = "uuid"
+    lookup_field = "platformtype_name"
 
 
 """ Waiting for better serializer implementaion
