@@ -53,16 +53,6 @@ class Query(graphene.ObjectType):
 
 # https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
 class CreateMissionType(graphene.Mutation):
-    """Example creation query:
-    mutation {
-        create_missiontype(missiontype_name: "graphQL-Test") {
-            missiontype {
-            missiontype_name
-            }
-        }
-    }
-    """
-
     class Arguments:
         missiontype_name = graphene.String()
 
@@ -78,16 +68,6 @@ class CreateMissionType(graphene.Mutation):
 
 
 class UpdateMissionType(graphene.Mutation):
-    """Example update query:
-    mutation {
-        update_missiontype(missiontype_name: "graphQL-Test", new_missiontype_name: "updated-graphQL-Test") {
-            missiontype {
-            missiontype_name
-            }
-        }
-    }
-    """
-
     class Arguments:
         missiontype_name = graphene.String(required=True)
         new_missiontype_name = graphene.String(required=True)
@@ -104,16 +84,6 @@ class UpdateMissionType(graphene.Mutation):
 
 
 class DeleteMissionType(graphene.Mutation):
-    """Example deletion query:
-    mutation {
-        delete_missiontype(missiontype_name: "updated-graphQL-Test") {
-            missiontype {
-            missiontype_name
-            }
-        }
-    }
-    """
-
     class Arguments:
         missiontype_name = graphene.String()
 
