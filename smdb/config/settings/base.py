@@ -76,6 +76,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_bleach",
     "graphene_django",
+    "graphene_graphiql_explorer",
 ]
 
 LOCAL_APPS = [
