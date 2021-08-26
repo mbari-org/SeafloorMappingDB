@@ -5,7 +5,7 @@ import json
 import pytest
 from graphene.test import Client
 
-from smdb.models import MissionType, Person
+from smdb.models import MissionType, Person, PlatformType
 from smdb.schema import schema
 
 pytestmark = pytest.mark.django_db
@@ -36,7 +36,16 @@ create_person_mutation_uuid = """mutation {
         }
     }"""
 
+create_platformtype_mutation = """mutation {
+        create_platformtype(platformtype_name: "Initial") {
+            platformtype {
+                platformtype_name
+            }
+        }
+    }"""
 
+
+# ===== MissionType Tests =====
 def test_all_missiontypes_empty(snapshot):
     client = Client(schema)
     snapshot.assert_match(
@@ -51,7 +60,6 @@ def test_all_missiontypes_empty(snapshot):
     )
 
 
-# ===== MissionType Tests =====
 def test_create_missiontype(snapshot):
     client = Client(schema)
     snapshot.assert_match(client.execute(create_missiontype_mutation))
@@ -68,7 +76,7 @@ def test_update_missiontype(snapshot):
             """mutation {
                 update_missiontype(missiontype_name: "Initial", new_missiontype_name: "Updated") {
                     missiontype {
-                    missiontype_name
+                        missiontype_name
                     }
                 }
             }"""
@@ -85,7 +93,7 @@ def test_delete_missiontype(snapshot):
             """mutation {
                 delete_missiontype(missiontype_name: "Initial") {
                     missiontype {
-                    missiontype_name
+                        missiontype_name
                     }
                 }
             }"""
@@ -95,6 +103,22 @@ def test_delete_missiontype(snapshot):
 
 
 # ===== Person Tests =====
+def test_all_persons_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                all_persons {
+                    uuid
+                    first_name
+                    last_name
+                    institution_name
+                  }
+                }"""
+        )
+    )
+
+
 def test_create_person(snapshot):
     client = Client(schema)
     snapshot.assert_match(client.execute(create_person_mutation))
@@ -147,3 +171,60 @@ def test_delete_person(snapshot):
         )
     )
     assert Person.objects.all().count() == 0
+
+
+# ===== PlatformType Tests =====
+def test_all_platformtypes_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                all_platformtypes {
+                    platformtype_name
+                    uuid
+                  }
+                }"""
+        )
+    )
+
+
+def test_create_platformtype(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(client.execute(create_platformtype_mutation))
+    assert PlatformType.objects.all()[0].platformtype_name == "Initial"
+
+
+def test_update_platformtype(snapshot):
+    client = Client(schema)
+    client.execute(create_platformtype_mutation)
+    assert PlatformType.objects.all()[0].platformtype_name == "Initial"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation {
+                update_platformtype(platformtype_name: "Initial", new_platformtype_name: "Updated") {
+                    platformtype {
+                        platformtype_name
+                    }
+                }
+            }"""
+        )
+    )
+    assert PlatformType.objects.all()[0].platformtype_name == "Updated"
+
+
+def test_delete_platformtype(snapshot):
+    client = Client(schema)
+    client.execute(create_platformtype_mutation)
+    snapshot.assert_match(
+        client.execute(
+            """mutation {
+                delete_platformtype(platformtype_name: "Initial") {
+                    platformtype {
+                        platformtype_name
+                    }
+                }
+            }"""
+        )
+    )
+    assert PlatformType.objects.all().count() == 0

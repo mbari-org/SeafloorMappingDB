@@ -150,6 +150,53 @@ class DeletePerson(graphene.Mutation):
         return DeletePerson(person=person)
 
 
+# ===== PlatformType =====
+class CreatePlatformType(graphene.Mutation):
+    class Arguments:
+        platformtype_name = graphene.String()
+
+    platformtype = graphene.Field(PlatformTypeType)
+
+    def mutate(self, info, platformtype_name):
+        platformtype = PlatformType.objects.create(
+            platformtype_name=platformtype_name,
+        )
+
+        platformtype.save()
+        return CreatePlatformType(platformtype=platformtype)
+
+
+class UpdatePlatformType(graphene.Mutation):
+    class Arguments:
+        platformtype_name = graphene.String(required=True)
+        new_platformtype_name = graphene.String(required=True)
+
+    platformtype = graphene.Field(PlatformTypeType)
+
+    def mutate(self, info, platformtype_name, new_platformtype_name):
+        platformtype = PlatformType.objects.get(
+            platformtype_name=platformtype_name,
+        )
+        platformtype.platformtype_name = new_platformtype_name
+        platformtype.save()
+        return UpdatePlatformType(platformtype=platformtype)
+
+
+class DeletePlatformType(graphene.Mutation):
+    class Arguments:
+        platformtype_name = graphene.String()
+
+    platformtype = graphene.Field(PlatformTypeType)
+
+    def mutate(self, info, platformtype_name):
+        platformtype = PlatformType.objects.get(
+            platformtype_name=platformtype_name,
+        )
+
+        platformtype.delete()
+        return DeletePlatformType(platformtype=platformtype)
+
+
 class Mutation(graphene.ObjectType):
     create_missiontype = CreateMissionType.Field()
     update_missiontype = UpdateMissionType.Field()
@@ -159,7 +206,9 @@ class Mutation(graphene.ObjectType):
     update_person = UpdatePerson.Field()
     delete_person = DeletePerson.Field()
 
+    create_platformtype = CreatePlatformType.Field()
+    update_platformtype = UpdatePlatformType.Field()
+    delete_platformtype = DeletePlatformType.Field()
 
-schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

@@ -14,6 +14,20 @@ snapshots['test_all_missiontypes_empty 1'] = {
     }
 }
 
+snapshots['test_all_persons_empty 1'] = {
+    'data': {
+        'all_persons': [
+        ]
+    }
+}
+
+snapshots['test_all_platformtypes_empty 1'] = {
+    'data': {
+        'all_platformtypes': [
+        ]
+    }
+}
+
 snapshots['test_create_missiontype 1'] = {
     'data': {
         'create_missiontype': {
@@ -31,6 +45,16 @@ snapshots['test_create_person 1'] = {
                 'first_name': 'Jane',
                 'institution_name': 'MBARI',
                 'last_name': 'Doe'
+            }
+        }
+    }
+}
+
+snapshots['test_create_platformtype 1'] = {
+    'data': {
+        'create_platformtype': {
+            'platformtype': {
+                'platformtype_name': 'Initial'
             }
         }
     }
@@ -58,6 +82,16 @@ snapshots['test_delete_person 1'] = {
     }
 }
 
+snapshots['test_delete_platformtype 1'] = {
+    'data': {
+        'delete_platformtype': {
+            'platformtype': {
+                'platformtype_name': 'Initial'
+            }
+        }
+    }
+}
+
 snapshots['test_update_missiontype 1'] = {
     'data': {
         'update_missiontype': {
@@ -75,6 +109,16 @@ snapshots['test_update_person 1'] = {
                 'first_name': 'Jim',
                 'institution_name': 'SIO',
                 'last_name': 'Roe'
+            }
+        }
+    }
+}
+
+snapshots['test_update_platformtype 1'] = {
+    'data': {
+        'update_platformtype': {
+            'platformtype': {
+                'platformtype_name': 'Updated'
             }
         }
     }
