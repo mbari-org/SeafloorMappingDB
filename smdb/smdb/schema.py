@@ -1,3 +1,5 @@
+import uuid as uuid_lib
+
 import graphene
 from graphene_django import DjangoObjectType
 
@@ -49,4 +51,87 @@ class Query(graphene.ObjectType):
             return None
 
 
-schema = graphene.Schema(query=Query)
+# https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
+class CreateMissionType(graphene.Mutation):
+    """Example creation query:
+    mutation {
+        create_missiontype(missiontype_name: "graphQL-Test") {
+            missiontype {
+            missiontype_name
+            }
+        }
+    }
+    """
+
+    class Arguments:
+        missiontype_name = graphene.String()
+
+    missiontype = graphene.Field(MissionTypeType)
+
+    def mutate(self, info, missiontype_name):
+        missiontype = MissionType.objects.create(
+            missiontype_name=missiontype_name,
+        )
+
+        missiontype.save()
+        return CreateMissionType(missiontype=missiontype)
+
+
+class UpdateMissionType(graphene.Mutation):
+    """Example update query:
+    mutation {
+        update_missiontype(missiontype_name: "graphQL-Test", new_missiontype_name: "updated-graphQL-Test") {
+            missiontype {
+            missiontype_name
+            }
+        }
+    }
+    """
+
+    class Arguments:
+        missiontype_name = graphene.String(required=True)
+        new_missiontype_name = graphene.String(required=True)
+
+    missiontype = graphene.Field(MissionTypeType)
+
+    def mutate(self, info, missiontype_name, new_missiontype_name):
+        missiontype = MissionType.objects.get(
+            missiontype_name=missiontype_name,
+        )
+        missiontype.missiontype_name = new_missiontype_name
+        missiontype.save()
+        return UpdateMissionType(missiontype=missiontype)
+
+
+class DeleteMissionType(graphene.Mutation):
+    """Example deletion query:
+    mutation {
+        delete_missiontype(missiontype_name: "updated-graphQL-Test") {
+            missiontype {
+            missiontype_name
+            }
+        }
+    }
+    """
+
+    class Arguments:
+        missiontype_name = graphene.String()
+
+    missiontype = graphene.Field(MissionTypeType)
+
+    def mutate(self, info, missiontype_name):
+        missiontype = MissionType.objects.get(
+            missiontype_name=missiontype_name,
+        )
+
+        missiontype.delete()
+        return DeleteMissionType(missiontype=missiontype)
+
+
+class Mutation(graphene.ObjectType):
+    create_missiontype = CreateMissionType.Field()
+    update_missiontype = UpdateMissionType.Field()
+    delete_missiontype = DeleteMissionType.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

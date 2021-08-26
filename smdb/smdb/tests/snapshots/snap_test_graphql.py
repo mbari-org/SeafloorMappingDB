@@ -9,7 +9,37 @@ snapshots = Snapshot()
 
 snapshots['test_all_missiontypes_empty 1'] = {
     'data': {
-        'allMissiontypes': [
+        'all_missiontypes': [
         ]
+    }
+}
+
+snapshots['test_create_missiontype 1'] = {
+    'data': {
+        'create_missiontype': {
+            'missiontype': {
+                'missiontype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_delete_missiontype 1'] = {
+    'data': {
+        'delete_missiontype': {
+            'missiontype': {
+                'missiontype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_update_missiontype 1'] = {
+    'data': {
+        'update_missiontype': {
+            'missiontype': {
+                'missiontype_name': 'Updated'
+            }
+        }
     }
 }
