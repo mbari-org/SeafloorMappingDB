@@ -24,6 +24,18 @@ snapshots['test_create_missiontype 1'] = {
     }
 }
 
+snapshots['test_create_person 1'] = {
+    'data': {
+        'create_person': {
+            'person': {
+                'first_name': 'Jane',
+                'institution_name': 'MBARI',
+                'last_name': 'Doe'
+            }
+        }
+    }
+}
+
 snapshots['test_delete_missiontype 1'] = {
     'data': {
         'delete_missiontype': {
@@ -34,11 +46,35 @@ snapshots['test_delete_missiontype 1'] = {
     }
 }
 
+snapshots['test_delete_person 1'] = {
+    'data': {
+        'delete_person': {
+            'person': {
+                'first_name': 'Jane',
+                'institution_name': 'MBARI',
+                'last_name': 'Doe'
+            }
+        }
+    }
+}
+
 snapshots['test_update_missiontype 1'] = {
     'data': {
         'update_missiontype': {
             'missiontype': {
                 'missiontype_name': 'Updated'
+            }
+        }
+    }
+}
+
+snapshots['test_update_person 1'] = {
+    'data': {
+        'update_person': {
+            'person': {
+                'first_name': 'Jim',
+                'institution_name': 'SIO',
+                'last_name': 'Roe'
             }
         }
     }

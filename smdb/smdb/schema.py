@@ -52,6 +52,7 @@ class Query(graphene.ObjectType):
 
 
 # https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
+# ===== MissionType =====
 class CreateMissionType(graphene.Mutation):
     class Arguments:
         missiontype_name = graphene.String()
@@ -98,10 +99,67 @@ class DeleteMissionType(graphene.Mutation):
         return DeleteMissionType(missiontype=missiontype)
 
 
+# ===== Person =====
+class CreatePerson(graphene.Mutation):
+    class Arguments:
+        first_name = graphene.String()
+        last_name = graphene.String()
+        institution_name = graphene.String()
+
+    person = graphene.Field(PersonType)
+
+    def mutate(self, info, first_name, last_name, institution_name):
+        person = Person.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            institution_name=institution_name,
+        )
+
+        person.save()
+        return CreatePerson(person=person)
+
+
+class UpdatePerson(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.String(required=True)
+        first_name = graphene.String()
+        last_name = graphene.String()
+        institution_name = graphene.String()
+
+    person = graphene.Field(PersonType)
+
+    def mutate(self, info, uuid, first_name, last_name, institution_name):
+        person = Person.objects.get(uuid=uuid)
+        person.first_name = first_name
+        person.last_name = last_name
+        person.institution_name = institution_name
+        person.save()
+        return UpdatePerson(person=person)
+
+
+class DeletePerson(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.String()
+
+    person = graphene.Field(PersonType)
+
+    def mutate(self, info, uuid):
+        person = Person.objects.get(uuid=uuid)
+
+        person.delete()
+        return DeletePerson(person=person)
+
+
 class Mutation(graphene.ObjectType):
     create_missiontype = CreateMissionType.Field()
     update_missiontype = UpdateMissionType.Field()
     delete_missiontype = DeleteMissionType.Field()
 
+    create_person = CreatePerson.Field()
+    update_person = UpdatePerson.Field()
+    delete_person = DeletePerson.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)
