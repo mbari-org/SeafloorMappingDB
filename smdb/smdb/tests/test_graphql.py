@@ -5,7 +5,7 @@ import json
 import pytest
 from graphene.test import Client
 
-from smdb.models import MissionType, Person, PlatformType
+from smdb.models import MissionType, Person, PlatformType, Platform
 from smdb.schema import schema
 
 pytestmark = pytest.mark.django_db
@@ -39,7 +39,28 @@ create_person_mutation_uuid = """mutation {
 create_platformtype_mutation = """mutation {
         create_platformtype(platformtype_name: "Initial") {
             platformtype {
-                platformtype_name
+                platform_name
+                operator_org_name
+            }
+        }
+    }"""
+
+create_platform_mutation = """mutation {
+        create_platform(input: {
+            platform_name: "Dorado",
+            platformtypes: [
+                {
+                    platformtype_name: "AUV"
+                }
+            ]
+            operator_org_name: "MBARI"
+        }) {
+            platform {
+                platform_name
+                operator_org_name
+                platform_type {
+                    platformtype_name
+                }
             }
         }
     }"""
@@ -228,3 +249,63 @@ def test_delete_platformtype(snapshot):
         )
     )
     assert PlatformType.objects.all().count() == 0
+
+
+# ===== Platform Tests =====
+def test_all_platforms_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                all_platforms {
+                    platform_name
+                    uuid
+                  }
+                }"""
+        )
+    )
+
+
+def test_create_platform(snapshot):
+    client = Client(schema)
+    result = client.execute(create_platform_mutation)
+    breakpoint()
+    snapshot.assert_match(client.execute(create_platform_mutation))
+    assert Platform.objects.all()[0].platform_name == "Initial"
+    assert Platform.objects.all()[0].operator_org_name == "MBARI"
+
+
+def test_update_platform(snapshot):
+    client = Client(schema)
+    client.execute(create_platform_mutation)
+    assert Platform.objects.all()[0].platform_name == "Initial"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation {
+                update_platform(platform_name: "Initial", new_platform_name: "Updated") {
+                    platform {
+                        platform_name
+                    }
+                }
+            }"""
+        )
+    )
+    assert Platform.objects.all()[0].platform_name == "Updated"
+
+
+def test_delete_platform(snapshot):
+    client = Client(schema)
+    client.execute(create_platform_mutation)
+    snapshot.assert_match(
+        client.execute(
+            """mutation {
+                delete_platform(platform_name: "Initial") {
+                    platform {
+                        platform_name
+                    }
+                }
+            }"""
+        )
+    )
+    assert Platform.objects.all().count() == 0

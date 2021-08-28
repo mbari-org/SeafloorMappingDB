@@ -1,9 +1,7 @@
-import uuid as uuid_lib
-
 import graphene
 from graphene_django import DjangoObjectType
 
-from smdb.models import MissionType, Person, PlatformType
+from smdb.models import MissionType, Person, PlatformType, Platform
 
 
 class MissionTypeType(DjangoObjectType):
@@ -21,9 +19,17 @@ class PersonType(DjangoObjectType):
 class PlatformTypeType(DjangoObjectType):
     class Meta:
         model = PlatformType
+        fields = ("uuid", "platformtype_name", "platforms")
+
+
+class PlatformType(DjangoObjectType):
+    class Meta:
+        model = Platform
         fields = (
             "uuid",
-            "platformtype_name",
+            "platform_name",
+            "operator_org_name",
+            "platform_type",
         )
 
 
@@ -31,6 +37,8 @@ class Query(graphene.ObjectType):
     all_missiontypes = graphene.List(MissionTypeType)
     all_persons = graphene.List(PersonType)
     all_platformtypes = graphene.List(PlatformTypeType)
+    all_platforms = graphene.List(PlatformType)
+
     missiontype_by_name = graphene.Field(
         MissionTypeType, name=graphene.String(required=True)
     )
@@ -43,6 +51,9 @@ class Query(graphene.ObjectType):
 
     def resolve_all_platformtypes(root, info):
         return PlatformType.objects.all()
+
+    def resolve_all_platforms(root, info):
+        return Platform.objects.all()
 
     def resolve_missiontype_by_name(root, info, name):
         try:
@@ -197,6 +208,75 @@ class DeletePlatformType(graphene.Mutation):
         return DeletePlatformType(platformtype=platformtype)
 
 
+# ===== Platform =====
+class PlatformTypeInput(graphene.InputObjectType):
+    platformtype_name = graphene.String(required=True)
+
+
+class PlatformInput(graphene.InputObjectType):
+    platform_name = graphene.String(required=True)
+    platformtypes = graphene.List(PlatformTypeInput)
+    operator_org_name = graphene.String(required=True)
+
+
+class CreatePlatform(graphene.Mutation):
+    class Arguments:
+        input = PlatformInput(required=True)
+
+    platform = graphene.Field(PlatformType)
+
+    @staticmethod
+    def mutate(self, info, input):
+        for platformtype in input.platformtypes:
+            platformtype, _ = PlatformType.objects.get_or_create(
+                platformtype_name=platformtype.platformtype_name
+            )
+        breakpoint()
+        platform = Platform.objects.create(
+            platform_name=input.platform_name,
+            platform_type=platformtype,
+            operator_org_name=input.operator_org_name,
+        )
+        breakpoint()
+        platform.save()
+        return CreatePlatform(platform=platform)
+
+
+class UpdatePlatform(graphene.Mutation):
+    class Arguments:
+        platform_name = graphene.String(required=True)
+        new_platform_name = graphene.String(required=True)
+
+    platform = graphene.Field(PlatformType)
+
+    def mutate(self, info, platform_name, new_platform_name, new_operator_org_name):
+        platform = Platform.objects.get(
+            platform_name=platform_name,
+        )
+        platform.platform_name = new_platform_name
+        platform.operator_org_name = new_operator_org_name
+        platform.save()
+        return UpdatePlatform(platform=platform)
+
+
+class DeletePlatform(graphene.Mutation):
+    class Arguments:
+        platform_name = graphene.String()
+
+    platform = graphene.Field(PlatformType)
+
+    def mutate(self, info, platform_name):
+        platform = Platform.objects.get(
+            platform_name=platform_name,
+        )
+
+        platform.delete()
+        return DeletePlatform(platform=platform)
+
+
+# =====
+
+
 class Mutation(graphene.ObjectType):
     create_missiontype = CreateMissionType.Field()
     update_missiontype = UpdateMissionType.Field()
@@ -209,6 +289,10 @@ class Mutation(graphene.ObjectType):
     create_platformtype = CreatePlatformType.Field()
     update_platformtype = UpdatePlatformType.Field()
     delete_platformtype = DeletePlatformType.Field()
+
+    create_platform = CreatePlatform.Field()
+    update_platform = UpdatePlatform.Field()
+    delete_platform = DeletePlatform.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)
