@@ -39,8 +39,7 @@ create_person_mutation_uuid = """mutation {
 create_platformtype_mutation = """mutation {
         create_platformtype(platformtype_name: "Initial") {
             platformtype {
-                platform_name
-                operator_org_name
+                platformtype_name
             }
         }
     }"""
@@ -268,22 +267,20 @@ def test_all_platforms_empty(snapshot):
 
 def test_create_platform(snapshot):
     client = Client(schema)
-    result = client.execute(create_platform_mutation)
-    breakpoint()
     snapshot.assert_match(client.execute(create_platform_mutation))
-    assert Platform.objects.all()[0].platform_name == "Initial"
+    assert Platform.objects.all()[0].platform_name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
 
 
 def test_update_platform(snapshot):
     client = Client(schema)
     client.execute(create_platform_mutation)
-    assert Platform.objects.all()[0].platform_name == "Initial"
+    assert Platform.objects.all()[0].platform_name == "Dorado"
 
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_platform(platform_name: "Initial", new_platform_name: "Updated") {
+                update_platform(platform_name: "Dorado", new_platform_name: "Updated", new_operator_org_name: "SIO") {
                     platform {
                         platform_name
                     }
@@ -292,6 +289,7 @@ def test_update_platform(snapshot):
         )
     )
     assert Platform.objects.all()[0].platform_name == "Updated"
+    assert Platform.objects.all()[0].operator_org_name == "SIO"
 
 
 def test_delete_platform(snapshot):
@@ -300,7 +298,7 @@ def test_delete_platform(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_platform(platform_name: "Initial") {
+                delete_platform(platform_name: "Dorado") {
                     platform {
                         platform_name
                     }

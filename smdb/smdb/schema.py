@@ -1,28 +1,28 @@
 import graphene
-from graphene_django import DjangoObjectType
+from graphene_django import DjangoObjectType as DjangoObjectNode
 
 from smdb.models import MissionType, Person, PlatformType, Platform
 
 
-class MissionTypeType(DjangoObjectType):
+class MissionTypeNode(DjangoObjectNode):
     class Meta:
         model = MissionType
         fields = ("uuid", "missiontype_name")
 
 
-class PersonType(DjangoObjectType):
+class PersonNode(DjangoObjectNode):
     class Meta:
         model = Person
         fields = ("uuid", "first_name", "last_name", "institution_name")
 
 
-class PlatformTypeType(DjangoObjectType):
+class PlatformTypeNode(DjangoObjectNode):
     class Meta:
         model = PlatformType
         fields = ("uuid", "platformtype_name", "platforms")
 
 
-class PlatformType(DjangoObjectType):
+class PlatformNode(DjangoObjectNode):
     class Meta:
         model = Platform
         fields = (
@@ -34,13 +34,13 @@ class PlatformType(DjangoObjectType):
 
 
 class Query(graphene.ObjectType):
-    all_missiontypes = graphene.List(MissionTypeType)
-    all_persons = graphene.List(PersonType)
-    all_platformtypes = graphene.List(PlatformTypeType)
-    all_platforms = graphene.List(PlatformType)
+    all_missiontypes = graphene.List(MissionTypeNode)
+    all_persons = graphene.List(PersonNode)
+    all_platformtypes = graphene.List(PlatformTypeNode)
+    all_platforms = graphene.List(PlatformNode)
 
     missiontype_by_name = graphene.Field(
-        MissionTypeType, name=graphene.String(required=True)
+        MissionTypeNode, name=graphene.String(required=True)
     )
 
     def resolve_all_missiontypes(root, info):
@@ -68,7 +68,7 @@ class CreateMissionType(graphene.Mutation):
     class Arguments:
         missiontype_name = graphene.String()
 
-    missiontype = graphene.Field(MissionTypeType)
+    missiontype = graphene.Field(MissionTypeNode)
 
     def mutate(self, info, missiontype_name):
         missiontype = MissionType.objects.create(
@@ -84,7 +84,7 @@ class UpdateMissionType(graphene.Mutation):
         missiontype_name = graphene.String(required=True)
         new_missiontype_name = graphene.String(required=True)
 
-    missiontype = graphene.Field(MissionTypeType)
+    missiontype = graphene.Field(MissionTypeNode)
 
     def mutate(self, info, missiontype_name, new_missiontype_name):
         missiontype = MissionType.objects.get(
@@ -99,7 +99,7 @@ class DeleteMissionType(graphene.Mutation):
     class Arguments:
         missiontype_name = graphene.String()
 
-    missiontype = graphene.Field(MissionTypeType)
+    missiontype = graphene.Field(MissionTypeNode)
 
     def mutate(self, info, missiontype_name):
         missiontype = MissionType.objects.get(
@@ -117,7 +117,7 @@ class CreatePerson(graphene.Mutation):
         last_name = graphene.String()
         institution_name = graphene.String()
 
-    person = graphene.Field(PersonType)
+    person = graphene.Field(PersonNode)
 
     def mutate(self, info, first_name, last_name, institution_name):
         person = Person.objects.create(
@@ -137,7 +137,7 @@ class UpdatePerson(graphene.Mutation):
         last_name = graphene.String()
         institution_name = graphene.String()
 
-    person = graphene.Field(PersonType)
+    person = graphene.Field(PersonNode)
 
     def mutate(self, info, uuid, first_name, last_name, institution_name):
         person = Person.objects.get(uuid=uuid)
@@ -152,7 +152,7 @@ class DeletePerson(graphene.Mutation):
     class Arguments:
         uuid = graphene.String()
 
-    person = graphene.Field(PersonType)
+    person = graphene.Field(PersonNode)
 
     def mutate(self, info, uuid):
         person = Person.objects.get(uuid=uuid)
@@ -166,7 +166,7 @@ class CreatePlatformType(graphene.Mutation):
     class Arguments:
         platformtype_name = graphene.String()
 
-    platformtype = graphene.Field(PlatformTypeType)
+    platformtype = graphene.Field(PlatformTypeNode)
 
     def mutate(self, info, platformtype_name):
         platformtype = PlatformType.objects.create(
@@ -182,7 +182,7 @@ class UpdatePlatformType(graphene.Mutation):
         platformtype_name = graphene.String(required=True)
         new_platformtype_name = graphene.String(required=True)
 
-    platformtype = graphene.Field(PlatformTypeType)
+    platformtype = graphene.Field(PlatformTypeNode)
 
     def mutate(self, info, platformtype_name, new_platformtype_name):
         platformtype = PlatformType.objects.get(
@@ -197,7 +197,7 @@ class DeletePlatformType(graphene.Mutation):
     class Arguments:
         platformtype_name = graphene.String()
 
-    platformtype = graphene.Field(PlatformTypeType)
+    platformtype = graphene.Field(PlatformTypeNode)
 
     def mutate(self, info, platformtype_name):
         platformtype = PlatformType.objects.get(
@@ -223,7 +223,7 @@ class CreatePlatform(graphene.Mutation):
     class Arguments:
         input = PlatformInput(required=True)
 
-    platform = graphene.Field(PlatformType)
+    platform = graphene.Field(PlatformNode)
 
     @staticmethod
     def mutate(self, info, input):
@@ -231,13 +231,11 @@ class CreatePlatform(graphene.Mutation):
             platformtype, _ = PlatformType.objects.get_or_create(
                 platformtype_name=platformtype.platformtype_name
             )
-        breakpoint()
         platform = Platform.objects.create(
             platform_name=input.platform_name,
             platform_type=platformtype,
             operator_org_name=input.operator_org_name,
         )
-        breakpoint()
         platform.save()
         return CreatePlatform(platform=platform)
 
@@ -245,9 +243,10 @@ class CreatePlatform(graphene.Mutation):
 class UpdatePlatform(graphene.Mutation):
     class Arguments:
         platform_name = graphene.String(required=True)
-        new_platform_name = graphene.String(required=True)
+        new_platform_name = graphene.String()
+        new_operator_org_name = graphene.String()
 
-    platform = graphene.Field(PlatformType)
+    platform = graphene.Field(PlatformNode)
 
     def mutate(self, info, platform_name, new_platform_name, new_operator_org_name):
         platform = Platform.objects.get(
@@ -263,7 +262,7 @@ class DeletePlatform(graphene.Mutation):
     class Arguments:
         platform_name = graphene.String()
 
-    platform = graphene.Field(PlatformType)
+    platform = graphene.Field(PlatformNode)
 
     def mutate(self, info, platform_name):
         platform = Platform.objects.get(

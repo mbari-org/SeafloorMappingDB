@@ -21,6 +21,13 @@ snapshots['test_all_persons_empty 1'] = {
     }
 }
 
+snapshots['test_all_platforms_empty 1'] = {
+    'data': {
+        'all_platforms': [
+        ]
+    }
+}
+
 snapshots['test_all_platformtypes_empty 1'] = {
     'data': {
         'all_platformtypes': [
@@ -45,6 +52,20 @@ snapshots['test_create_person 1'] = {
                 'first_name': 'Jane',
                 'institution_name': 'MBARI',
                 'last_name': 'Doe'
+            }
+        }
+    }
+}
+
+snapshots['test_create_platform 1'] = {
+    'data': {
+        'create_platform': {
+            'platform': {
+                'operator_org_name': 'MBARI',
+                'platform_name': 'Dorado',
+                'platform_type': {
+                    'platformtype_name': 'AUV'
+                }
             }
         }
     }
@@ -82,6 +103,16 @@ snapshots['test_delete_person 1'] = {
     }
 }
 
+snapshots['test_delete_platform 1'] = {
+    'data': {
+        'delete_platform': {
+            'platform': {
+                'platform_name': 'Dorado'
+            }
+        }
+    }
+}
+
 snapshots['test_delete_platformtype 1'] = {
     'data': {
         'delete_platformtype': {
@@ -109,6 +140,16 @@ snapshots['test_update_person 1'] = {
                 'first_name': 'Jim',
                 'institution_name': 'SIO',
                 'last_name': 'Roe'
+            }
+        }
+    }
+}
+
+snapshots['test_update_platform 1'] = {
+    'data': {
+        'update_platform': {
+            'platform': {
+                'platform_name': 'Updated'
             }
         }
     }
