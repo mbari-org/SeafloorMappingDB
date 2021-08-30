@@ -1,7 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType as DjangoObjectNode
 
-from smdb.models import MissionType, Person, PlatformType, Platform
+from smdb.models import MissionType, Person, PlatformType, Platform, SensorType
 
 
 class MissionTypeNode(DjangoObjectNode):
@@ -19,7 +19,7 @@ class PersonNode(DjangoObjectNode):
 class PlatformTypeNode(DjangoObjectNode):
     class Meta:
         model = PlatformType
-        fields = ("uuid", "platformtype_name", "platforms")
+        fields = ("uuid", "platformtype_name")
 
 
 class PlatformNode(DjangoObjectNode):
@@ -33,16 +33,24 @@ class PlatformNode(DjangoObjectNode):
         )
 
 
+class SensorTypeNode(DjangoObjectNode):
+    class Meta:
+        model = SensorType
+        fields = ("uuid", "sensortype_name")
+
+
 class Query(graphene.ObjectType):
     all_missiontypes = graphene.List(MissionTypeNode)
     all_persons = graphene.List(PersonNode)
     all_platformtypes = graphene.List(PlatformTypeNode)
     all_platforms = graphene.List(PlatformNode)
+    all_sensortypes = graphene.List(SensorTypeNode)
 
     missiontype_by_name = graphene.Field(
         MissionTypeNode, name=graphene.String(required=True)
     )
 
+    # Queries for all_ objects
     def resolve_all_missiontypes(root, info):
         return MissionType.objects.all()
 
@@ -55,6 +63,10 @@ class Query(graphene.ObjectType):
     def resolve_all_platforms(root, info):
         return Platform.objects.all()
 
+    def resolve_all_sensortypes(root, info):
+        return SensorType.objects.all()
+
+    # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
             return MissionType.objects.get(missiontype_name=name)
@@ -116,6 +128,7 @@ class DeleteMissionType(graphene.Mutation):
 
 # ===== Person =====
 class PersonInput(graphene.InputObjectType):
+    uuid = graphene.ID()
     first_name = graphene.String(required=True)
     last_name = graphene.String(required=True)
     institution_name = graphene.String()
@@ -235,7 +248,6 @@ class CreatePlatform(graphene.Mutation):
 
     platform = graphene.Field(PlatformNode)
 
-    @staticmethod
     def mutate(self, info, input):
         for platformtype in input.platformtypes:
             platformtype, _ = PlatformType.objects.get_or_create(
@@ -283,6 +295,57 @@ class DeletePlatform(graphene.Mutation):
         return DeletePlatform(platform=platform)
 
 
+# ===== SensorType =====
+class SensorTypeInput(graphene.InputObjectType):
+    sensortype_name = graphene.String(required=True)
+
+
+class CreateSensorType(graphene.Mutation):
+    class Arguments:
+        sensortype_name = graphene.String()
+
+    sensortype = graphene.Field(SensorTypeNode)
+
+    def mutate(self, info, sensortype_name):
+        sensortype = SensorType.objects.create(
+            sensortype_name=sensortype_name,
+        )
+
+        sensortype.save()
+        return CreateSensorType(sensortype=sensortype)
+
+
+class UpdateSensorType(graphene.Mutation):
+    class Arguments:
+        sensortype_name = graphene.String(required=True)
+        new_sensortype_name = graphene.String(required=True)
+
+    sensortype = graphene.Field(SensorTypeNode)
+
+    def mutate(self, info, sensortype_name, new_sensortype_name):
+        sensortype = SensorType.objects.get(
+            sensortype_name=sensortype_name,
+        )
+        sensortype.sensortype_name = new_sensortype_name
+        sensortype.save()
+        return UpdateSensorType(sensortype=sensortype)
+
+
+class DeleteSensorType(graphene.Mutation):
+    class Arguments:
+        sensortype_name = graphene.String()
+
+    sensortype = graphene.Field(SensorTypeNode)
+
+    def mutate(self, info, sensortype_name):
+        sensortype = SensorType.objects.get(
+            sensortype_name=sensortype_name,
+        )
+
+        sensortype.delete()
+        return DeleteSensorType(sensortype=sensortype)
+
+
 # =====
 
 
@@ -302,6 +365,10 @@ class Mutation(graphene.ObjectType):
     create_platform = CreatePlatform.Field()
     update_platform = UpdatePlatform.Field()
     delete_platform = DeletePlatform.Field()
+
+    create_sensortype = CreateSensorType.Field()
+    update_sensortype = UpdateSensorType.Field()
+    delete_sensortype = DeleteSensorType.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

@@ -14,6 +14,18 @@ snapshots['test_all_missiontypes_empty 1'] = {
     }
 }
 
+snapshots['test_all_persons 1'] = {
+    'data': {
+        'all_persons': [
+            {
+                'first_name': 'Jane',
+                'institution_name': 'MBARI',
+                'last_name': 'Doe'
+            }
+        ]
+    }
+}
+
 snapshots['test_all_persons_empty 1'] = {
     'data': {
         'all_persons': [
@@ -31,6 +43,23 @@ snapshots['test_all_platforms_empty 1'] = {
 snapshots['test_all_platformtypes_empty 1'] = {
     'data': {
         'all_platformtypes': [
+        ]
+    }
+}
+
+snapshots['test_all_sensortypes 1'] = {
+    'data': {
+        'all_sensortypes': [
+            {
+                'sensortype_name': 'Initial'
+            }
+        ]
+    }
+}
+
+snapshots['test_all_sensortypes_empty 1'] = {
+    'data': {
+        'all_sensortypes': [
         ]
     }
 }
@@ -81,6 +110,16 @@ snapshots['test_create_platformtype 1'] = {
     }
 }
 
+snapshots['test_create_sensortype 1'] = {
+    'data': {
+        'create_sensortype': {
+            'sensortype': {
+                'sensortype_name': 'Initial'
+            }
+        }
+    }
+}
+
 snapshots['test_delete_missiontype 1'] = {
     'data': {
         'delete_missiontype': {
@@ -123,6 +162,16 @@ snapshots['test_delete_platformtype 1'] = {
     }
 }
 
+snapshots['test_delete_sensortype 1'] = {
+    'data': {
+        'delete_sensortype': {
+            'sensortype': {
+                'sensortype_name': 'Initial'
+            }
+        }
+    }
+}
+
 snapshots['test_update_missiontype 1'] = {
     'data': {
         'update_missiontype': {
@@ -160,6 +209,16 @@ snapshots['test_update_platformtype 1'] = {
         'update_platformtype': {
             'platformtype': {
                 'platformtype_name': 'Updated'
+            }
+        }
+    }
+}
+
+snapshots['test_update_sensortype 1'] = {
+    'data': {
+        'update_sensortype': {
+            'sensortype': {
+                'sensortype_name': 'Updated'
             }
         }
     }
