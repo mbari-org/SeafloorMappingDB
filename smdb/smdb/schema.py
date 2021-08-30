@@ -1,7 +1,9 @@
 import graphene
 from graphene_django import DjangoObjectType as DjangoObjectNode
+from graphene_django.debug import DjangoDebug
+from graphql import GraphQLError
 
-from smdb.models import MissionType, Person, PlatformType, Platform, SensorType
+from smdb.models import MissionType, Person, Platform, PlatformType, SensorType
 
 
 class MissionTypeNode(DjangoObjectNode):
@@ -40,6 +42,7 @@ class SensorTypeNode(DjangoObjectNode):
 
 
 class Query(graphene.ObjectType):
+    debug = graphene.Field(DjangoDebug, name="_debug")
     all_missiontypes = graphene.List(MissionTypeNode)
     all_persons = graphene.List(PersonNode)
     all_platformtypes = graphene.List(PlatformTypeNode)
@@ -87,10 +90,11 @@ class CreateMissionType(graphene.Mutation):
     missiontype = graphene.Field(MissionTypeNode)
 
     def mutate(self, info, missiontype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.create(
             missiontype_name=missiontype_name,
         )
-
         missiontype.save()
         return CreateMissionType(missiontype=missiontype)
 
@@ -103,6 +107,8 @@ class UpdateMissionType(graphene.Mutation):
     missiontype = graphene.Field(MissionTypeNode)
 
     def mutate(self, info, missiontype_name, new_missiontype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.get(
             missiontype_name=missiontype_name,
         )
@@ -118,10 +124,11 @@ class DeleteMissionType(graphene.Mutation):
     missiontype = graphene.Field(MissionTypeNode)
 
     def mutate(self, info, missiontype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.get(
             missiontype_name=missiontype_name,
         )
-
         missiontype.delete()
         return DeleteMissionType(missiontype=missiontype)
 
@@ -143,12 +150,13 @@ class CreatePerson(graphene.Mutation):
     person = graphene.Field(PersonNode)
 
     def mutate(self, info, first_name, last_name, institution_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         person = Person.objects.create(
             first_name=first_name,
             last_name=last_name,
             institution_name=institution_name,
         )
-
         person.save()
         return CreatePerson(person=person)
 
@@ -163,6 +171,8 @@ class UpdatePerson(graphene.Mutation):
     person = graphene.Field(PersonNode)
 
     def mutate(self, info, uuid, first_name, last_name, institution_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         person = Person.objects.get(uuid=uuid)
         person.first_name = first_name
         person.last_name = last_name
@@ -178,8 +188,9 @@ class DeletePerson(graphene.Mutation):
     person = graphene.Field(PersonNode)
 
     def mutate(self, info, uuid):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         person = Person.objects.get(uuid=uuid)
-
         person.delete()
         return DeletePerson(person=person)
 
@@ -196,10 +207,11 @@ class CreatePlatformType(graphene.Mutation):
     platformtype = graphene.Field(PlatformTypeNode)
 
     def mutate(self, info, platformtype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.create(
             platformtype_name=platformtype_name,
         )
-
         platformtype.save()
         return CreatePlatformType(platformtype=platformtype)
 
@@ -212,6 +224,8 @@ class UpdatePlatformType(graphene.Mutation):
     platformtype = graphene.Field(PlatformTypeNode)
 
     def mutate(self, info, platformtype_name, new_platformtype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.get(
             platformtype_name=platformtype_name,
         )
@@ -227,10 +241,11 @@ class DeletePlatformType(graphene.Mutation):
     platformtype = graphene.Field(PlatformTypeNode)
 
     def mutate(self, info, platformtype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.get(
             platformtype_name=platformtype_name,
         )
-
         platformtype.delete()
         return DeletePlatformType(platformtype=platformtype)
 
@@ -249,6 +264,8 @@ class CreatePlatform(graphene.Mutation):
     platform = graphene.Field(PlatformNode)
 
     def mutate(self, info, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         for platformtype in input.platformtypes:
             platformtype, _ = PlatformType.objects.get_or_create(
                 platformtype_name=platformtype.platformtype_name
@@ -271,6 +288,8 @@ class UpdatePlatform(graphene.Mutation):
     platform = graphene.Field(PlatformNode)
 
     def mutate(self, info, platform_name, new_platform_name, new_operator_org_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         platform = Platform.objects.get(
             platform_name=platform_name,
         )
@@ -287,10 +306,11 @@ class DeletePlatform(graphene.Mutation):
     platform = graphene.Field(PlatformNode)
 
     def mutate(self, info, platform_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         platform = Platform.objects.get(
             platform_name=platform_name,
         )
-
         platform.delete()
         return DeletePlatform(platform=platform)
 
@@ -307,10 +327,11 @@ class CreateSensorType(graphene.Mutation):
     sensortype = graphene.Field(SensorTypeNode)
 
     def mutate(self, info, sensortype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.create(
             sensortype_name=sensortype_name,
         )
-
         sensortype.save()
         return CreateSensorType(sensortype=sensortype)
 
@@ -323,6 +344,8 @@ class UpdateSensorType(graphene.Mutation):
     sensortype = graphene.Field(SensorTypeNode)
 
     def mutate(self, info, sensortype_name, new_sensortype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.get(
             sensortype_name=sensortype_name,
         )
@@ -338,10 +361,11 @@ class DeleteSensorType(graphene.Mutation):
     sensortype = graphene.Field(SensorTypeNode)
 
     def mutate(self, info, sensortype_name):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.get(
             sensortype_name=sensortype_name,
         )
-
         sensortype.delete()
         return DeleteSensorType(sensortype=sensortype)
 
