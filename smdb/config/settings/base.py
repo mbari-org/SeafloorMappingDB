@@ -297,5 +297,10 @@ CORS_URLS_REGEX = r"^/api/.*$"
 # ------------------------------------------------------------------------------
 GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="/usr/lib/libgdal.so")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-GRAPHENE = {"SCHEMA": "smdb.schema.schema"}
+GRAPHENE = {
+    "SCHEMA": "smdb.schema.schema",
+    "MIDDLEWARE": [
+        "graphene_django.debug.DjangoDebugMiddleware",
+    ]
+}
 TEST_RUNNER = "snapshottest.django.TestRunner"
