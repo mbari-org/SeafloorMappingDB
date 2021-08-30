@@ -76,6 +76,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_bleach",
     "graphene_django",
+    "graphene_graphiql_explorer",
 ]
 
 LOCAL_APPS = [
@@ -297,3 +298,4 @@ CORS_URLS_REGEX = r"^/api/.*$"
 GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="/usr/lib/libgdal.so")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 GRAPHENE = {"SCHEMA": "smdb.schema.schema"}
+TEST_RUNNER = "snapshottest.django.TestRunner"

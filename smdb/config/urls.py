@@ -3,12 +3,15 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views import defaults as default_views
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from graphene_django.views import GraphQLView
 from rest_framework.authtoken.views import obtain_auth_token
 
 from smdb.api.base import router as api_v1_router
 from smdb.views import MissionOverView
+
+GraphQLView.graphiql_template = "graphene_graphiql_explorer/graphiql.html"
 
 urlpatterns = [
     path("", MissionOverView.as_view(), name="home"),
@@ -29,7 +32,7 @@ urlpatterns += [
     path("api/v1/", include(api_v1_router)),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
-    path("graphql", GraphQLView.as_view(graphiql=True)),
+    path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
 
 if settings.DEBUG:
