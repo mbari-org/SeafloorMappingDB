@@ -40,6 +40,16 @@ snapshots['test_all_platforms_empty 1'] = {
     }
 }
 
+snapshots['test_all_platformtypes 1'] = {
+    'data': {
+        'all_platformtypes': [
+            {
+                'platformtype_name': 'Initial'
+            }
+        ]
+    }
+}
+
 snapshots['test_all_platformtypes_empty 1'] = {
     'data': {
         'all_platformtypes': [

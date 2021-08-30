@@ -2,13 +2,26 @@
 # https://github.com/syrusakbary/snapshottest/#reasons-to-use-this-package
 
 import json
+
 import pytest
+from django.test import RequestFactory
+from django.contrib.auth.models import AnonymousUser
 from graphene.test import Client
 
-from smdb.models import MissionType, Person, PlatformType, Platform, SensorType
+from smdb.models import MissionType, Person, Platform, PlatformType, SensorType
 from smdb.schema import schema
+from smdb.users.models import User
 
 pytestmark = pytest.mark.django_db
+
+
+def user_authenticated():
+    rf = RequestFactory()
+    user, _ = User.objects.get_or_create(username="tester")
+    request = rf.post("/graphql/")
+    request.user = user
+
+    return request
 
 
 # ===== MissionType Tests =====
@@ -37,13 +50,15 @@ def test_all_missiontypes_empty(snapshot):
 
 def test_create_missiontype(snapshot):
     client = Client(schema)
-    snapshot.assert_match(client.execute(create_missiontype_mutation))
+    snapshot.assert_match(
+        client.execute(create_missiontype_mutation, context=user_authenticated())
+    )
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
 
 
 def test_all_sensortypes(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation)
+    client.execute(create_sensortype_mutation, context=user_authenticated())
     response = client.execute(
         """{
                 all_sensortypes {
@@ -57,9 +72,19 @@ def test_all_sensortypes(snapshot):
 
 def test_update_missiontype(snapshot):
     client = Client(schema)
-    client.execute(create_missiontype_mutation)
+    client.execute(create_missiontype_mutation, context=user_authenticated())
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
 
+    update_missiontype_mutation = """mutation {
+                update_missiontype(missiontype_name: "Initial", new_missiontype_name: "Updated") {
+                    missiontype {
+                        missiontype_name
+                    }
+                }
+            }"""
+    ##breakpoint()
+    ##result = client.execute(update_missiontype_mutation, context=user_authenticated())
+    ##breakpoint()
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -68,7 +93,8 @@ def test_update_missiontype(snapshot):
                         missiontype_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert MissionType.objects.all()[0].missiontype_name == "Updated"
@@ -76,7 +102,7 @@ def test_update_missiontype(snapshot):
 
 def test_delete_missiontype(snapshot):
     client = Client(schema)
-    client.execute(create_missiontype_mutation)
+    client.execute(create_missiontype_mutation, context=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -85,7 +111,8 @@ def test_delete_missiontype(snapshot):
                         missiontype_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert MissionType.objects.all().count() == 0
@@ -97,7 +124,7 @@ create_person_mutation = """mutation {
             person {
                 first_name
                 last_name
-                institution_name
+               institution_name
             }
         }
     }"""
@@ -129,7 +156,9 @@ def test_all_persons_empty(snapshot):
 
 def test_create_person(snapshot):
     client = Client(schema)
-    snapshot.assert_match(client.execute(create_person_mutation))
+    snapshot.assert_match(
+        client.execute(create_person_mutation, context=user_authenticated())
+    )
     assert Person.objects.all()[0].first_name == "Jane"
     assert Person.objects.all()[0].last_name == "Doe"
     assert Person.objects.all()[0].institution_name == "MBARI"
@@ -137,7 +166,7 @@ def test_create_person(snapshot):
 
 def test_all_persons(snapshot):
     client = Client(schema)
-    client.execute(create_person_mutation)
+    client.execute(create_person_mutation, context=user_authenticated())
     response = client.execute(
         """{
                 all_persons {
@@ -156,9 +185,8 @@ def test_all_persons(snapshot):
 # https://medium.com/@jamesvaresamuel/mutation-and-query-in-graphql-using-python-django-part-2-79d9852a1092
 def test_update_person(snapshot):
     client = Client(schema)
-    response = client.execute(create_person_mutation_uuid)
+    response = client.execute(create_person_mutation_uuid, context=user_authenticated())
     uuid = response["data"]["create_person"]["person"]["uuid"]
-
     snapshot.assert_match(
         client.execute(
             """mutation UpdatePerson($uuid: String!) {
@@ -171,6 +199,7 @@ def test_update_person(snapshot):
             }
         }""",
             variables={"uuid": uuid},
+            context=user_authenticated(),
         )
     )
     assert Person.objects.all()[0].first_name == "Jim"
@@ -180,7 +209,7 @@ def test_update_person(snapshot):
 
 def test_delete_person(snapshot):
     client = Client(schema)
-    response = client.execute(create_person_mutation_uuid)
+    response = client.execute(create_person_mutation_uuid, context=user_authenticated())
     uuid = response["data"]["create_person"]["person"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -194,6 +223,7 @@ def test_delete_person(snapshot):
             }
         }""",
             variables={"uuid": uuid},
+            context=user_authenticated(),
         )
     )
     assert Person.objects.all().count() == 0
@@ -225,27 +255,29 @@ def test_all_platformtypes_empty(snapshot):
 
 def test_create_platformtype(snapshot):
     client = Client(schema)
-    snapshot.assert_match(client.execute(create_platformtype_mutation))
+    snapshot.assert_match(
+        client.execute(create_platformtype_mutation, context=user_authenticated())
+    )
     assert PlatformType.objects.all()[0].platformtype_name == "Initial"
 
 
-def test_all_sensortypes(snapshot):
+def test_all_platformtypes(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation)
+    client.execute(create_platformtype_mutation, context=user_authenticated())
     response = client.execute(
         """{
-                all_sensortypes {
-                    sensortype_name
+                all_platformtypes {
+                    platformtype_name
                   }
                 }"""
     )
-    assert response["data"]["all_sensortypes"][0]["sensortype_name"] == "Initial"
+    assert response["data"]["all_platformtypes"][0]["platformtype_name"] == "Initial"
     snapshot.assert_match(response)
 
 
 def test_update_platformtype(snapshot):
     client = Client(schema)
-    client.execute(create_platformtype_mutation)
+    client.execute(create_platformtype_mutation, context=user_authenticated())
     assert PlatformType.objects.all()[0].platformtype_name == "Initial"
 
     snapshot.assert_match(
@@ -256,7 +288,8 @@ def test_update_platformtype(snapshot):
                         platformtype_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert PlatformType.objects.all()[0].platformtype_name == "Updated"
@@ -264,7 +297,7 @@ def test_update_platformtype(snapshot):
 
 def test_delete_platformtype(snapshot):
     client = Client(schema)
-    client.execute(create_platformtype_mutation)
+    client.execute(create_platformtype_mutation, context=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -273,7 +306,8 @@ def test_delete_platformtype(snapshot):
                         platformtype_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert PlatformType.objects.all().count() == 0
@@ -317,14 +351,16 @@ def test_all_platforms_empty(snapshot):
 
 def test_create_platform(snapshot):
     client = Client(schema)
-    snapshot.assert_match(client.execute(create_platform_mutation))
+    snapshot.assert_match(
+        client.execute(create_platform_mutation, context=user_authenticated())
+    )
     assert Platform.objects.all()[0].platform_name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
 
 
 def test_all_sensortypes(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation)
+    client.execute(create_sensortype_mutation, context=user_authenticated())
     response = client.execute(
         """{
                 all_sensortypes {
@@ -338,7 +374,7 @@ def test_all_sensortypes(snapshot):
 
 def test_update_platform(snapshot):
     client = Client(schema)
-    client.execute(create_platform_mutation)
+    client.execute(create_platform_mutation, context=user_authenticated())
     assert Platform.objects.all()[0].platform_name == "Dorado"
 
     snapshot.assert_match(
@@ -349,7 +385,8 @@ def test_update_platform(snapshot):
                         platform_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert Platform.objects.all()[0].platform_name == "Updated"
@@ -358,7 +395,7 @@ def test_update_platform(snapshot):
 
 def test_delete_platform(snapshot):
     client = Client(schema)
-    client.execute(create_platform_mutation)
+    client.execute(create_platform_mutation, context=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -367,7 +404,8 @@ def test_delete_platform(snapshot):
                         platform_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert Platform.objects.all().count() == 0
@@ -399,13 +437,15 @@ def test_all_sensortypes_empty(snapshot):
 
 def test_create_sensortype(snapshot):
     client = Client(schema)
-    snapshot.assert_match(client.execute(create_sensortype_mutation))
+    snapshot.assert_match(
+        client.execute(create_sensortype_mutation, context=user_authenticated())
+    )
     assert SensorType.objects.all()[0].sensortype_name == "Initial"
 
 
 def test_all_sensortypes(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation)
+    client.execute(create_sensortype_mutation, context=user_authenticated())
     response = client.execute(
         """{
                 all_sensortypes {
@@ -419,7 +459,7 @@ def test_all_sensortypes(snapshot):
 
 def test_update_sensortype(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation)
+    client.execute(create_sensortype_mutation, context=user_authenticated())
     assert SensorType.objects.all()[0].sensortype_name == "Initial"
 
     snapshot.assert_match(
@@ -430,7 +470,8 @@ def test_update_sensortype(snapshot):
                         sensortype_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert SensorType.objects.all()[0].sensortype_name == "Updated"
@@ -438,7 +479,7 @@ def test_update_sensortype(snapshot):
 
 def test_delete_sensortype(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation)
+    client.execute(create_sensortype_mutation, context=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -447,7 +488,8 @@ def test_delete_sensortype(snapshot):
                         sensortype_name
                     }
                 }
-            }"""
+            }""",
+            context=user_authenticated(),
         )
     )
     assert SensorType.objects.all().count() == 0
