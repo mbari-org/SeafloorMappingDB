@@ -64,6 +64,10 @@ class Query(graphene.ObjectType):
 
 # https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
 # ===== MissionType =====
+class MissionTypeInput(graphene.InputObjectType):
+    missiontype_name = graphene.String(required=True)
+
+
 class CreateMissionType(graphene.Mutation):
     class Arguments:
         missiontype_name = graphene.String()
@@ -111,6 +115,12 @@ class DeleteMissionType(graphene.Mutation):
 
 
 # ===== Person =====
+class PersonInput(graphene.InputObjectType):
+    first_name = graphene.String(required=True)
+    last_name = graphene.String(required=True)
+    institution_name = graphene.String()
+
+
 class CreatePerson(graphene.Mutation):
     class Arguments:
         first_name = graphene.String()
@@ -162,6 +172,10 @@ class DeletePerson(graphene.Mutation):
 
 
 # ===== PlatformType =====
+class PlatformTypeInput(graphene.InputObjectType):
+    platformtype_name = graphene.String(required=True)
+
+
 class CreatePlatformType(graphene.Mutation):
     class Arguments:
         platformtype_name = graphene.String()
@@ -209,10 +223,6 @@ class DeletePlatformType(graphene.Mutation):
 
 
 # ===== Platform =====
-class PlatformTypeInput(graphene.InputObjectType):
-    platformtype_name = graphene.String(required=True)
-
-
 class PlatformInput(graphene.InputObjectType):
     platform_name = graphene.String(required=True)
     platformtypes = graphene.List(PlatformTypeInput)
