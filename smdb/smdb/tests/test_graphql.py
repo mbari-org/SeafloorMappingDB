@@ -10,6 +10,8 @@ from smdb.schema import schema
 
 pytestmark = pytest.mark.django_db
 
+
+# ===== MissionType Tests =====
 create_missiontype_mutation = """mutation {
         create_missiontype(missiontype_name: "Initial") {
             missiontype {
@@ -18,54 +20,7 @@ create_missiontype_mutation = """mutation {
         }
     }"""
 
-create_person_mutation = """mutation {
-        create_person(first_name: "Jane", last_name: "Doe", institution_name: "MBARI") {
-            person {
-                first_name
-                last_name
-                institution_name
-            }
-        }
-    }"""
 
-create_person_mutation_uuid = """mutation {
-        create_person(first_name: "Jane", last_name: "Doe", institution_name: "MBARI") {
-            person {
-                uuid
-            }
-        }
-    }"""
-
-create_platformtype_mutation = """mutation {
-        create_platformtype(platformtype_name: "Initial") {
-            platformtype {
-                platformtype_name
-            }
-        }
-    }"""
-
-create_platform_mutation = """mutation {
-        create_platform(input: {
-            platform_name: "Dorado",
-            platformtypes: [
-                {
-                    platformtype_name: "AUV"
-                }
-            ]
-            operator_org_name: "MBARI"
-        }) {
-            platform {
-                platform_name
-                operator_org_name
-                platform_type {
-                    platformtype_name
-                }
-            }
-        }
-    }"""
-
-
-# ===== MissionType Tests =====
 def test_all_missiontypes_empty(snapshot):
     client = Client(schema)
     snapshot.assert_match(
@@ -123,6 +78,25 @@ def test_delete_missiontype(snapshot):
 
 
 # ===== Person Tests =====
+create_person_mutation = """mutation {
+        create_person(first_name: "Jane", last_name: "Doe", institution_name: "MBARI") {
+            person {
+                first_name
+                last_name
+                institution_name
+            }
+        }
+    }"""
+
+create_person_mutation_uuid = """mutation {
+        create_person(first_name: "Jane", last_name: "Doe", institution_name: "MBARI") {
+            person {
+                uuid
+            }
+        }
+    }"""
+
+
 def test_all_persons_empty(snapshot):
     client = Client(schema)
     snapshot.assert_match(
@@ -194,6 +168,15 @@ def test_delete_person(snapshot):
 
 
 # ===== PlatformType Tests =====
+create_platformtype_mutation = """mutation {
+        create_platformtype(platformtype_name: "Initial") {
+            platformtype {
+                platformtype_name
+            }
+        }
+    }"""
+
+
 def test_all_platformtypes_empty(snapshot):
     client = Client(schema)
     snapshot.assert_match(
@@ -251,6 +234,27 @@ def test_delete_platformtype(snapshot):
 
 
 # ===== Platform Tests =====
+create_platform_mutation = """mutation {
+        create_platform(input: {
+            platform_name: "Dorado",
+            platformtypes: [
+                {
+                    platformtype_name: "AUV"
+                }
+            ]
+            operator_org_name: "MBARI"
+        }) {
+            platform {
+                platform_name
+                operator_org_name
+                platform_type {
+                    platformtype_name
+                }
+            }
+        }
+    }"""
+
+
 def test_all_platforms_empty(snapshot):
     client = Client(schema)
     snapshot.assert_match(
