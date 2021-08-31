@@ -4,11 +4,11 @@
 import json
 
 import pytest
-from django.test import RequestFactory
 from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory
 from graphene.test import Client
 
-from smdb.models import MissionType, Person, Platform, PlatformType, SensorType
+from smdb.models import MissionType, Person, Platform, PlatformType, Sensor, SensorType
 from smdb.schema import schema
 from smdb.users.models import User
 
@@ -325,6 +325,7 @@ create_platform_mutation = """mutation {
             operator_org_name: "MBARI"
         }) {
             platform {
+                uuid
                 platform_name
                 operator_org_name
                 platform_type {
@@ -358,38 +359,39 @@ def test_create_platform(snapshot):
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
 
 
-def test_all_sensortypes(snapshot):
-    client = Client(schema)
-    client.execute(create_sensortype_mutation, context=user_authenticated())
-    response = client.execute(
-        """{
-                all_sensortypes {
-                    sensortype_name
-                  }
-                }"""
-    )
-    assert response["data"]["all_sensortypes"][0]["platform_name"] == "Dorado"
-    sensortype.assert_match(response)
-
-
 def test_update_platform(snapshot):
     client = Client(schema)
-    client.execute(create_platform_mutation, context=user_authenticated())
+    response = client.execute(create_platform_mutation, context=user_authenticated())
+    uuid = response["data"]["create_platform"]["platform"]["uuid"]
     assert Platform.objects.all()[0].platform_name == "Dorado"
 
     snapshot.assert_match(
         client.execute(
-            """mutation {
-                update_platform(platform_name: "Dorado", new_platform_name: "Updated", new_operator_org_name: "SIO") {
+            """mutation UpdatePlatform($uuid: ID!) {
+                update_platform(uuid: $uuid, input: {
+                    platform_name: "Updated",
+                    platformtypes: [
+                        {
+                            platformtype_name: "LRAUV"
+                        }
+                    ]
+                    operator_org_name: "SIO"
+                }) {
                     platform {
                         platform_name
+                        platform_type {
+                            platformtype_name
+                        }
+                        operator_org_name
                     }
                 }
             }""",
+            variables={"uuid": uuid},
             context=user_authenticated(),
         )
     )
     assert Platform.objects.all()[0].platform_name == "Updated"
+    assert Platform.objects.all()[0].platform_type.platformtype_name == "LRAUV"
     assert Platform.objects.all()[0].operator_org_name == "SIO"
 
 
@@ -493,3 +495,107 @@ def test_delete_sensortype(snapshot):
         )
     )
     assert SensorType.objects.all().count() == 0
+
+
+# ===== Sensor Tests =====
+create_sensor_mutation = """mutation {
+        create_sensor(input: {
+            sensortypes: [
+                {
+                    sensortype_name: "Sonar"
+                }
+            ],
+            model_name: "Initial",
+            comment: "Initial comment"
+        }) {
+            sensor {
+                uuid
+                model_name
+                comment
+                sensor_type {
+                    sensortype_name
+                }
+            }
+        }
+    }"""
+
+
+def test_all_sensors_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                all_sensors {
+                    uuid
+                    model_name
+                    comment
+                  }
+                }"""
+        )
+    )
+
+
+def test_create_sensor(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(create_sensor_mutation, context=user_authenticated())
+    )
+    assert Sensor.objects.all()[0].model_name == "Initial"
+
+
+def test_all_sensors(snapshot):
+    client = Client(schema)
+    client.execute(create_sensor_mutation, context=user_authenticated())
+    response = client.execute(
+        """{
+                all_sensors {
+                    model_name
+                    comment
+                  }
+                }"""
+    )
+    assert response["data"]["all_sensors"][0]["model_name"] == "Initial"
+    snapshot.assert_match(response)
+
+
+def test_update_sensor(snapshot):
+    client = Client(schema)
+    response = client.execute(create_sensor_mutation, context=user_authenticated())
+    uuid = response["data"]["create_sensor"]["sensor"]["uuid"]
+    assert Sensor.objects.all()[0].model_name == "Initial"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateSensor($uuid: ID) {
+                update_sensor(uuid: $uuid, model_name: "Updated", comment: "New comment") {
+                    sensor {
+                        model_name
+                        comment
+                    }
+                }
+            }""",
+            context=user_authenticated(),
+        )
+    )
+    assert Sensor.objects.all()[0].model_name == "Updated"
+    assert Sensor.objects.all()[0].comment == "New comment"
+
+
+def test_delete_sensor(snapshot):
+    client = Client(schema)
+    response = client.execute(create_sensor_mutation, context=user_authenticated())
+    uuid = response["data"]["create_sensor"]["sensor"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteSensor($uuid: ID) {
+                delete_sensor(uuid: $uuid) {
+                    sensor {
+                        model_name
+                        comment
+                    }
+                }
+            }""",
+            context=user_authenticated(),
+        )
+    )
+    assert Sensor.objects.all().count() == 0

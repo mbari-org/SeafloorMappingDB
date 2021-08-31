@@ -57,6 +57,24 @@ snapshots['test_all_platformtypes_empty 1'] = {
     }
 }
 
+snapshots['test_all_sensors 1'] = {
+    'data': {
+        'all_sensors': [
+            {
+                'comment': 'Initial comment',
+                'model_name': 'Initial'
+            }
+        ]
+    }
+}
+
+snapshots['test_all_sensors_empty 1'] = {
+    'data': {
+        'all_sensors': [
+        ]
+    }
+}
+
 snapshots['test_all_sensortypes 1'] = {
     'data': {
         'all_sensortypes': [
@@ -104,7 +122,8 @@ snapshots['test_create_platform 1'] = {
                 'platform_name': 'Dorado',
                 'platform_type': {
                     'platformtype_name': 'AUV'
-                }
+                },
+                'uuid': '2f2d839a-d716-459d-8261-dc1d21232640'
             }
         }
     }
@@ -115,6 +134,21 @@ snapshots['test_create_platformtype 1'] = {
         'create_platformtype': {
             'platformtype': {
                 'platformtype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_create_sensor 1'] = {
+    'data': {
+        'create_sensor': {
+            'sensor': {
+                'comment': 'Initial comment',
+                'model_name': 'Initial',
+                'sensor_type': {
+                    'sensortype_name': 'Sonar'
+                },
+                'uuid': 'c98d9bcd-a823-4fcd-a633-20770f6cb6d2'
             }
         }
     }
@@ -172,6 +206,26 @@ snapshots['test_delete_platformtype 1'] = {
     }
 }
 
+snapshots['test_delete_sensor 1'] = {
+    'data': {
+        'delete_sensor': None
+    },
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 17,
+                    'line': 2
+                }
+            ],
+            'message': "mutate() missing 1 required positional argument: 'sensor_name'",
+            'path': [
+                'delete_sensor'
+            ]
+        }
+    ]
+}
+
 snapshots['test_delete_sensortype 1'] = {
     'data': {
         'delete_sensortype': {
@@ -208,7 +262,11 @@ snapshots['test_update_platform 1'] = {
     'data': {
         'update_platform': {
             'platform': {
-                'platform_name': 'Updated'
+                'operator_org_name': 'SIO',
+                'platform_name': 'Updated',
+                'platform_type': {
+                    'platformtype_name': 'LRAUV'
+                }
             }
         }
     }
@@ -222,6 +280,26 @@ snapshots['test_update_platformtype 1'] = {
             }
         }
     }
+}
+
+snapshots['test_update_sensor 1'] = {
+    'data': {
+        'update_sensor': None
+    },
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 17,
+                    'line': 2
+                }
+            ],
+            'message': "mutate() missing 1 required positional argument: 'sensortypes'",
+            'path': [
+                'update_sensor'
+            ]
+        }
+    ]
 }
 
 snapshots['test_update_sensortype 1'] = {
