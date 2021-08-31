@@ -77,6 +77,7 @@ THIRD_PARTY_APPS = [
     "django_bleach",
     "graphene_django",
     "graphene_graphiql_explorer",
+    "graphene_gis",
 ]
 
 LOCAL_APPS = [
@@ -301,6 +302,6 @@ GRAPHENE = {
     "SCHEMA": "smdb.schema.schema",
     "MIDDLEWARE": [
         "graphene_django.debug.DjangoDebugMiddleware",
-    ]
+    ],
 }
 TEST_RUNNER = "snapshottest.django.TestRunner"
