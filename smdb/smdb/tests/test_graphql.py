@@ -1,12 +1,10 @@
 # Snapshot testing referenced here: https://docs.graphene-python.org/en/latest/testing/
 # https://github.com/syrusakbary/snapshottest/#reasons-to-use-this-package
-
-import json
-
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 from graphene.test import Client
+from jinja2 import Template
 
 from smdb.models import MissionType, Person, Platform, PlatformType, Sensor, SensorType
 from smdb.schema import schema
@@ -119,23 +117,22 @@ def test_delete_missiontype(snapshot):
 
 
 # ===== Person Tests =====
-create_person_mutation = """mutation {
-        create_person(first_name: "Jane", last_name: "Doe", institution_name: "MBARI") {
+create_person_template = Template(
+    """mutation {
+        create_person(input: {
+            first_name: "Jane",
+            last_name: "Doe",
+            institution_name: "MBARI"
+        }) {
             person {
+                {{ uuid }}
                 first_name
                 last_name
-               institution_name
+                institution_name
             }
         }
     }"""
-
-create_person_mutation_uuid = """mutation {
-        create_person(first_name: "Jane", last_name: "Doe", institution_name: "MBARI") {
-            person {
-                uuid
-            }
-        }
-    }"""
+)
 
 
 def test_all_persons_empty(snapshot):
@@ -156,6 +153,7 @@ def test_all_persons_empty(snapshot):
 
 def test_create_person(snapshot):
     client = Client(schema)
+    create_person_mutation = create_person_template.render(uuid="")
     snapshot.assert_match(
         client.execute(create_person_mutation, context=user_authenticated())
     )
@@ -166,6 +164,7 @@ def test_create_person(snapshot):
 
 def test_all_persons(snapshot):
     client = Client(schema)
+    create_person_mutation = create_person_template.render(uuid="")
     client.execute(create_person_mutation, context=user_authenticated())
     response = client.execute(
         """{
@@ -185,12 +184,17 @@ def test_all_persons(snapshot):
 # https://medium.com/@jamesvaresamuel/mutation-and-query-in-graphql-using-python-django-part-2-79d9852a1092
 def test_update_person(snapshot):
     client = Client(schema)
-    response = client.execute(create_person_mutation_uuid, context=user_authenticated())
+    create_person_mutation = create_person_template.render(uuid="uuid")
+    response = client.execute(create_person_mutation, context=user_authenticated())
     uuid = response["data"]["create_person"]["person"]["uuid"]
     snapshot.assert_match(
         client.execute(
-            """mutation UpdatePerson($uuid: String!) {
-            update_person(uuid: $uuid, first_name: "Jim", last_name: "Roe", institution_name: "SIO") {
+            """mutation UpdatePerson($uuid: ID!) {
+            update_person(uuid: $uuid, input: {
+                first_name: "Jim",
+                last_name: "Roe",
+                institution_name: "SIO"
+            }) {
                 person {
                     first_name
                     last_name
@@ -209,11 +213,12 @@ def test_update_person(snapshot):
 
 def test_delete_person(snapshot):
     client = Client(schema)
-    response = client.execute(create_person_mutation_uuid, context=user_authenticated())
+    create_person_mutation = create_person_template.render(uuid="uuid")
+    response = client.execute(create_person_mutation, context=user_authenticated())
     uuid = response["data"]["create_person"]["person"]["uuid"]
     snapshot.assert_match(
         client.execute(
-            """mutation DeletePerson($uuid: String!) {
+            """mutation DeletePerson($uuid: ID!) {
             delete_person(uuid: $uuid) {
                 person {
                     first_name
@@ -314,7 +319,8 @@ def test_delete_platformtype(snapshot):
 
 
 # ===== Platform Tests =====
-create_platform_mutation = """mutation {
+create_platform_template = Template(
+    """mutation {
         create_platform(input: {
             platform_name: "Dorado",
             platformtypes: [
@@ -325,7 +331,7 @@ create_platform_mutation = """mutation {
             operator_org_name: "MBARI"
         }) {
             platform {
-                uuid
+                {{ uuid }}
                 platform_name
                 operator_org_name
                 platform_type {
@@ -334,6 +340,7 @@ create_platform_mutation = """mutation {
             }
         }
     }"""
+)
 
 
 def test_all_platforms_empty(snapshot):
@@ -352,6 +359,7 @@ def test_all_platforms_empty(snapshot):
 
 def test_create_platform(snapshot):
     client = Client(schema)
+    create_platform_mutation = create_platform_template.render(uuid="")
     snapshot.assert_match(
         client.execute(create_platform_mutation, context=user_authenticated())
     )
@@ -361,6 +369,7 @@ def test_create_platform(snapshot):
 
 def test_update_platform(snapshot):
     client = Client(schema)
+    create_platform_mutation = create_platform_template.render(uuid="uuid")
     response = client.execute(create_platform_mutation, context=user_authenticated())
     uuid = response["data"]["create_platform"]["platform"]["uuid"]
     assert Platform.objects.all()[0].platform_name == "Dorado"
@@ -397,16 +406,19 @@ def test_update_platform(snapshot):
 
 def test_delete_platform(snapshot):
     client = Client(schema)
-    client.execute(create_platform_mutation, context=user_authenticated())
+    create_platform_mutation = create_platform_template.render(uuid="uuid")
+    response = client.execute(create_platform_mutation, context=user_authenticated())
+    uuid = response["data"]["create_platform"]["platform"]["uuid"]
     snapshot.assert_match(
         client.execute(
-            """mutation {
-                delete_platform(platform_name: "Dorado") {
+            """mutation DeletePlatform($uuid: ID!) {
+                delete_platform(uuid: $uuid) {
                     platform {
                         platform_name
                     }
                 }
             }""",
+            variables={"uuid": uuid},
             context=user_authenticated(),
         )
     )
@@ -498,7 +510,8 @@ def test_delete_sensortype(snapshot):
 
 
 # ===== Sensor Tests =====
-create_sensor_mutation = """mutation {
+create_sensor_template = Template(
+    """mutation {
         create_sensor(input: {
             sensortypes: [
                 {
@@ -509,7 +522,7 @@ create_sensor_mutation = """mutation {
             comment: "Initial comment"
         }) {
             sensor {
-                uuid
+                {{ uuid }}
                 model_name
                 comment
                 sensor_type {
@@ -518,6 +531,7 @@ create_sensor_mutation = """mutation {
             }
         }
     }"""
+)
 
 
 def test_all_sensors_empty(snapshot):
@@ -537,6 +551,7 @@ def test_all_sensors_empty(snapshot):
 
 def test_create_sensor(snapshot):
     client = Client(schema)
+    create_sensor_mutation = create_sensor_template.render(uuid="")
     snapshot.assert_match(
         client.execute(create_sensor_mutation, context=user_authenticated())
     )
@@ -545,6 +560,7 @@ def test_create_sensor(snapshot):
 
 def test_all_sensors(snapshot):
     client = Client(schema)
+    create_sensor_mutation = create_sensor_template.render(uuid="")
     client.execute(create_sensor_mutation, context=user_authenticated())
     response = client.execute(
         """{
@@ -560,6 +576,7 @@ def test_all_sensors(snapshot):
 
 def test_update_sensor(snapshot):
     client = Client(schema)
+    create_sensor_mutation = create_sensor_template.render(uuid="uuid")
     response = client.execute(create_sensor_mutation, context=user_authenticated())
     uuid = response["data"]["create_sensor"]["sensor"]["uuid"]
     assert Sensor.objects.all()[0].model_name == "Initial"
@@ -567,13 +584,17 @@ def test_update_sensor(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation UpdateSensor($uuid: ID) {
-                update_sensor(uuid: $uuid, model_name: "Updated", comment: "New comment") {
+                update_sensor(uuid: $uuid, input: {
+                    model_name: "Updated",
+                    comment: "New comment"
+                }) {
                     sensor {
                         model_name
                         comment
                     }
                 }
             }""",
+            variables={"uuid": uuid},
             context=user_authenticated(),
         )
     )
@@ -583,6 +604,7 @@ def test_update_sensor(snapshot):
 
 def test_delete_sensor(snapshot):
     client = Client(schema)
+    create_sensor_mutation = create_sensor_template.render(uuid="uuid")
     response = client.execute(create_sensor_mutation, context=user_authenticated())
     uuid = response["data"]["create_sensor"]["sensor"]["uuid"]
     snapshot.assert_match(
@@ -595,6 +617,7 @@ def test_delete_sensor(snapshot):
                     }
                 }
             }""",
+            variables={"uuid": uuid},
             context=user_authenticated(),
         )
     )

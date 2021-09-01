@@ -153,7 +153,6 @@ class DeleteMissionType(graphene.Mutation):
 
 # ===== Person =====
 class PersonInput(graphene.InputObjectType):
-    uuid = graphene.ID()
     first_name = graphene.String(required=True)
     last_name = graphene.String(required=True)
     institution_name = graphene.String()
@@ -161,19 +160,21 @@ class PersonInput(graphene.InputObjectType):
 
 class CreatePerson(graphene.Mutation):
     class Arguments:
+        input = PersonInput(required=True)
+
         first_name = graphene.String()
         last_name = graphene.String()
         institution_name = graphene.String()
 
     person = graphene.Field(PersonNode)
 
-    def mutate(self, info, first_name, last_name, institution_name):
+    def mutate(self, info, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
         person = Person.objects.create(
-            first_name=first_name,
-            last_name=last_name,
-            institution_name=institution_name,
+            first_name=input.first_name,
+            last_name=input.last_name,
+            institution_name=input.institution_name,
         )
         person.save()
         return CreatePerson(person=person)
@@ -181,27 +182,25 @@ class CreatePerson(graphene.Mutation):
 
 class UpdatePerson(graphene.Mutation):
     class Arguments:
-        uuid = graphene.String(required=True)
-        first_name = graphene.String()
-        last_name = graphene.String()
-        institution_name = graphene.String()
+        uuid = graphene.ID(required=True)
+        input = PersonInput(required=True)
 
     person = graphene.Field(PersonNode)
 
-    def mutate(self, info, uuid, first_name, last_name, institution_name):
+    def mutate(self, info, uuid, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
         person = Person.objects.get(uuid=uuid)
-        person.first_name = first_name
-        person.last_name = last_name
-        person.institution_name = institution_name
+        person.first_name = input.first_name
+        person.last_name = input.last_name
+        person.institution_name = input.institution_name
         person.save()
         return UpdatePerson(person=person)
 
 
 class DeletePerson(graphene.Mutation):
     class Arguments:
-        uuid = graphene.String()
+        uuid = graphene.ID()
 
     person = graphene.Field(PersonNode)
 
@@ -322,16 +321,14 @@ class UpdatePlatform(graphene.Mutation):
 
 class DeletePlatform(graphene.Mutation):
     class Arguments:
-        platform_name = graphene.String()
+        uuid = graphene.ID()
 
     platform = graphene.Field(PlatformNode)
 
-    def mutate(self, info, platform_name):
+    def mutate(self, info, uuid):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        platform = Platform.objects.get(
-            platform_name=platform_name,
-        )
+        platform = Platform.objects.get(uuid=uuid)
         platform.delete()
         return DeletePlatform(platform=platform)
 
@@ -467,20 +464,16 @@ class CreateSensor(graphene.Mutation):
 class UpdateSensor(graphene.Mutation):
     class Arguments:
         uuid = graphene.ID()
-        sensortypes = graphene.List(SensorTypeInput)
-        model_name = graphene.String()
-        comment = graphene.String()
+        input = SensorInput(required=True)
 
     sensor = graphene.Field(SensorNode)
 
-    def mutate(self, info, sensortypes, model_name, comment):
+    def mutate(self, info, uuid, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        sensor = Sensor.objects.get(
-            sensor_name=sensor_name,
-        )
-        sensor.model_name = model_name
-        sensor.comment = comment
+        sensor = Sensor.objects.get(uuid=uuid)
+        sensor.model_name = input.model_name
+        sensor.comment = input.comment
         sensor.save()
         return UpdateSensor(sensor=sensor)
 
@@ -491,12 +484,10 @@ class DeleteSensor(graphene.Mutation):
 
     sensor = graphene.Field(SensorNode)
 
-    def mutate(self, info, sensor_name):
+    def mutate(self, info, uuid):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        sensor = Sensor.objects.get(
-            sensor_name=sensor_name,
-        )
+        sensor = Sensor.objects.get(uuid=uuid)
         sensor.delete()
         return DeleteSensor(sensor=sensor)
 
