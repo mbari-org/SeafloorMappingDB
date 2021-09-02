@@ -263,6 +263,29 @@ snapshots['test_create_sensortype 1'] = {
     }
 }
 
+snapshots['test_delete_expedition 1'] = {
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 4
+                }
+            ],
+            'message': 'Cannot query field "model_name" on type "ExpeditionNode". Did you mean "expd_name"?'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 5
+                }
+            ],
+            'message': 'Cannot query field "comment" on type "ExpeditionNode".'
+        }
+    ]
+}
+
 snapshots['test_delete_missiontype 1'] = {
     'data': {
         'delete_missiontype': {
@@ -321,6 +344,27 @@ snapshots['test_delete_sensortype 1'] = {
         'delete_sensortype': {
             'sensortype': {
                 'sensortype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_update_expedition 1'] = {
+    'data': {
+        'update_expedition': {
+            'expedition': {
+                'chiefscientist': {
+                    'first_name': 'Jane',
+                    'last_name': 'Roe'
+                },
+                'end_date': '2021-02-02T00:00:00',
+                'expd_name': 'Updated',
+                'expd_path_name': '/a/directory/path',
+                'investigator': {
+                    'first_name': 'John',
+                    'last_name': 'Doe'
+                },
+                'start_date': '2020-01-01T00:00:00'
             }
         }
     }

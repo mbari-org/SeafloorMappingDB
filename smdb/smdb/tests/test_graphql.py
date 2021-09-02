@@ -633,7 +633,6 @@ def test_delete_sensor(snapshot):
 
 
 # ===== Expedition Tests =====
-
 create_expedition_template = Template(
     """mutation {
         create_expedition(input: {
@@ -644,6 +643,7 @@ create_expedition_template = Template(
             end_date_iso: "1998-07-20",
             expd_name: "Initial"}) {
             expedition {
+                {{ uuid }}
                 expd_name
                 start_date
                 end_date
@@ -710,18 +710,40 @@ def test_update_expedition(snapshot):
     create_expedition_mutation = create_expedition_template.render(uuid="uuid")
     response = client.execute(create_expedition_mutation, context=user_authenticated())
     uuid = response["data"]["create_expedition"]["expedition"]["uuid"]
-    assert Expedition.objects.all()[0].model_name == "Initial"
+    assert Expedition.objects.get(expd_name="Initial").expd_name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdateExpedition($uuid: ID) {
                 update_expedition(uuid: $uuid, input: {
-                    model_name: "Updated",
-                    comment: "New comment"
+                    expd_name: "Updated"
+                    start_date_iso: "2020-01-01"
+                    end_date_iso: "2021-02-02"
+                    investigator: {
+                        first_name: "John"
+                        last_name: "Doe"
+                        institution_name: "Tester"
+                    }
+                    chiefscientist: {
+                        first_name: "Jane"
+                        last_name: "Roe"
+                        institution_name: "Tester"
+                    }
+                    expd_path_name: "/a/directory/path"
                 }) {
                     expedition {
-                        model_name
-                        comment
+                        expd_name
+                        start_date
+                        end_date
+                        investigator {
+                            first_name
+                            last_name
+                        }
+                        chiefscientist {
+                            first_name
+                            last_name
+                        }
+                        expd_path_name
                     }
                 }
             }""",
@@ -729,8 +751,7 @@ def test_update_expedition(snapshot):
             context=user_authenticated(),
         )
     )
-    assert Expedition.objects.all()[0].model_name == "Updated"
-    assert Expedition.objects.all()[0].comment == "New comment"
+    assert Expedition.objects.get(expd_name="Updated").expd_name == "Updated"
 
 
 def test_delete_expedition(snapshot):

@@ -582,9 +582,21 @@ class UpdateExpedition(graphene.Mutation):
     def mutate(self, info, uuid, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
+        investigator, _ = Person.objects.get_or_create(
+            first_name=input.investigator.first_name,
+            last_name=input.investigator.last_name,
+        )
+        chiefscientist, _ = Person.objects.get_or_create(
+            first_name=input.chiefscientist.first_name,
+            last_name=input.chiefscientist.last_name,
+        )
         expedition = Expedition.objects.get(uuid=uuid)
-        expedition.model_name = input.model_name
-        expedition.comment = input.comment
+        expedition.expd_name = input.expd_name
+        expedition.start_date = parse(input.start_date_iso)
+        expedition.end_date = parse(input.end_date_iso)
+        expedition.investigator = investigator
+        expedition.chiefscientist = chiefscientist
+        expedition.expd_path_name = input.expd_path_name
         expedition.save()
         return UpdateExpedition(expedition=expedition)
 
