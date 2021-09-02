@@ -361,62 +361,48 @@ snapshots['test_create_sensortype 1'] = {
 }
 
 snapshots['test_delete_compilation 1'] = {
-    'errors': [
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 4
-                }
-            ],
-            'message': 'Cannot query field "expd_name" on type "CompilationNode".'
-        },
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 5
-                }
-            ],
-            'message': 'Cannot query field "start_date" on type "CompilationNode".'
-        },
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 6
-                }
-            ],
-            'message': 'Cannot query field "end_date" on type "CompilationNode".'
-        },
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 7
-                }
-            ],
-            'message': 'Cannot query field "investigator" on type "CompilationNode".'
-        },
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 11
-                }
-            ],
-            'message': 'Cannot query field "chiefscientist" on type "CompilationNode".'
-        },
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 15
-                }
-            ],
-            'message': 'Cannot query field "expd_path_name" on type "CompilationNode". Did you mean "compilation_path_name"?'
+    'data': {
+        'delete_compilation': {
+            'compilation': {
+                'comment': 'Initial comment.',
+                'compilation_dir_name': '/a/dir/name',
+                'compilation_path_name': '/a/path/name',
+                'figures_dir_path': '/figures/path',
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.94,
+                                36.69
+                            ],
+                            [
+                                -121.94,
+                                36.69
+                            ],
+                            [
+                                -121.93,
+                                36.69
+                            ],
+                            [
+                                -121.93,
+                                36.69
+                            ],
+                            [
+                                -121.94,
+                                36.69
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'file.kml',
+                'navadjust_dir_path': '/nav/adjust/path/',
+                'proc_datalist_filename': 'proc.datalist-1',
+                'thumbnail_filename': 'thumbnail.png',
+                'update_status': 10
+            }
         }
-    ]
+    }
 }
 
 snapshots['test_delete_expedition 1'] = {
@@ -498,6 +484,51 @@ snapshots['test_delete_sensortype 1'] = {
         'delete_sensortype': {
             'sensortype': {
                 'sensortype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_update_compilation 1'] = {
+    'data': {
+        'update_compilation': {
+            'compilation': {
+                'comment': 'Updated comment.',
+                'compilation_dir_name': '/b/dir/name',
+                'compilation_path_name': '/b/path/name',
+                'figures_dir_path': '/figures/path2',
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.775
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'file2.kml',
+                'navadjust_dir_path': '/new/adjust/path/',
+                'proc_datalist_filename': 'proc.datalist-2',
+                'thumbnail_filename': 'thumbnail2.png',
+                'update_status': 10
             }
         }
     }

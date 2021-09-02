@@ -693,21 +693,17 @@ class UpdateCompilation(graphene.Mutation):
     def mutate(self, info, uuid, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        investigator, _ = Person.objects.get_or_create(
-            first_name=input.investigator.first_name,
-            last_name=input.investigator.last_name,
-        )
-        chiefscientist, _ = Person.objects.get_or_create(
-            first_name=input.chiefscientist.first_name,
-            last_name=input.chiefscientist.last_name,
-        )
         compilation = Compilation.objects.get(uuid=uuid)
-        compilation.expd_name = input.expd_name
-        compilation.start_date = parse(input.start_date_iso)
-        compilation.end_date = parse(input.end_date_iso)
-        compilation.investigator = investigator
-        compilation.chiefscientist = chiefscientist
-        compilation.expd_path_name = input.expd_path_name
+        compilation.compilation_dir_name = input.compilation_dir_name
+        compilation.grid_bounds = input.grid_bounds
+        compilation.compilation_path_name = input.compilation_path_name
+        compilation.navadjust_dir_path = input.navadjust_dir_path
+        compilation.figures_dir_path = input.figures_dir_path
+        compilation.comment = input.comment
+        compilation.thumbnail_filename = input.thumbnail_filename
+        compilation.kml_filename = input.kml_filename
+        compilation.proc_datalist_filename = input.proc_datalist_filename
+        compilation.update_status = input.update_status
         compilation.save()
         return UpdateCompilation(compilation=compilation)
 

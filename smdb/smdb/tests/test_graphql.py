@@ -861,48 +861,41 @@ def test_update_compilation(snapshot):
     create_compilation_mutation = create_compilation_template.render(uuid="uuid")
     response = client.execute(create_compilation_mutation, context=user_authenticated())
     uuid = response["data"]["create_compilation"]["compilation"]["uuid"]
-    assert Compilation.objects.get(expd_name="Initial").expd_name == "Initial"
+    assert Compilation.objects.all()[0].comment == "Initial comment."
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdateCompilation($uuid: ID) {
-                update_compilation(uuid: $uuid, input: {
-                    expd_name: "Updated"
-                    start_date_iso: "2020-01-01"
-                    end_date_iso: "2021-02-02"
-                    investigator: {
-                        first_name: "John"
-                        last_name: "Doe"
-                        institution_name: "Tester"
-                    }
-                    chiefscientist: {
-                        first_name: "Jane"
-                        last_name: "Roe"
-                        institution_name: "Tester"
-                    }
-                    expd_path_name: "/a/directory/path"
-                }) {
-                    compilation {
-                        expd_name
-                        start_date
-                        end_date
-                        investigator {
-                            first_name
-                            last_name
-                        }
-                        chiefscientist {
-                            first_name
-                            last_name
-                        }
-                        expd_path_name
-                    }
-                }
-            }""",
+        update_compilation(uuid: $uuid, input: {
+            comment: "Updated comment.",
+            compilation_dir_name: "/b/dir/name",
+            compilation_path_name: "/b/path/name",
+            figures_dir_path: "/figures/path2",
+            grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
+            kml_filename: "file2.kml",
+            navadjust_dir_path: "/new/adjust/path/",
+            proc_datalist_filename: "proc.datalist-2",
+            thumbnail_filename: "thumbnail2.png",
+            update_status: 10}) {
+            compilation {
+                comment
+                compilation_dir_name
+                compilation_path_name
+                figures_dir_path
+                grid_bounds
+                kml_filename
+                navadjust_dir_path
+                proc_datalist_filename
+                thumbnail_filename
+                update_status
+            }
+        }
+    }""",
             variables={"uuid": uuid},
             context=user_authenticated(),
         )
     )
-    assert Compilation.objects.get(expd_name="Updated").expd_name == "Updated"
+    assert Compilation.objects.all()[0].comment == "Updated comment."
 
 
 def test_delete_compilation(snapshot):
@@ -915,18 +908,16 @@ def test_delete_compilation(snapshot):
             """mutation DeleteCompilation($uuid: ID) {
                 delete_compilation(uuid: $uuid) {
                     compilation {
-                        expd_name
-                        start_date
-                        end_date
-                        investigator {
-                            first_name
-                            last_name
-                        }
-                        chiefscientist {
-                            first_name
-                            last_name
-                        }
-                        expd_path_name
+                        comment
+                        compilation_dir_name
+                        compilation_path_name
+                        figures_dir_path
+                        grid_bounds
+                        kml_filename
+                        navadjust_dir_path
+                        proc_datalist_filename
+                        thumbnail_filename
+                        update_status
                     }
                 }
             }""",
@@ -934,4 +925,4 @@ def test_delete_compilation(snapshot):
             context=user_authenticated(),
         )
     )
-    assert Compilation.objects.filter(expd_name="Initial").count() == 0
+    assert Compilation.objects.all().count() == 0
