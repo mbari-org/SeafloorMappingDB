@@ -6,11 +6,19 @@ from django.test import RequestFactory
 from graphene.test import Client
 from jinja2 import Template
 
-from smdb.models import MissionType, Person, Platform, PlatformType, Sensor, SensorType
+from smdb.models import (
+    Expedition,
+    MissionType,
+    Person,
+    Platform,
+    PlatformType,
+    Sensor,
+    SensorType,
+)
 from smdb.schema import schema
 from smdb.users.models import User
 
-pytestmark = pytest.mark.django_db
+pytestmark = pytest.mark.django_db()
 
 
 def user_authenticated():
@@ -622,3 +630,126 @@ def test_delete_sensor(snapshot):
         )
     )
     assert Sensor.objects.all().count() == 0
+
+
+# ===== Expedition Tests =====
+
+create_expedition_template = Template(
+    """mutation {
+        create_expedition(input: {
+            chiefscientist: {first_name: "Walter", last_name: "Munk", institution_name: "SIO"},
+            expd_path_name: "/mbari/SeafloorMapping/2019/20190308m1",
+            investigator: {first_name: "Henry", last_name: "Stommel", institution_name: "SIO"},
+            start_date_iso: "1998-07-01",
+            end_date_iso: "1998-07-20",
+            expd_name: "Initial"}) {
+            expedition {
+                expd_name
+                start_date
+                end_date
+                investigator {
+                    first_name
+                    last_name
+                }
+                chiefscientist {
+                    first_name
+                    last_name
+                }
+                expd_path_name
+            }
+        }
+    }"""
+)
+
+
+def test_all_expeditions_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                all_expeditions {
+                    expd_name
+                    start_date
+                    end_date
+                    expd_path_name
+                  }
+                }"""
+        )
+    )
+
+
+def test_create_expedition(snapshot):
+    client = Client(schema)
+    create_expedition_mutation = create_expedition_template.render(uuid="")
+    snapshot.assert_match(
+        client.execute(create_expedition_mutation, context=user_authenticated())
+    )
+    assert Expedition.objects.filter(expd_name="Initial")[0].expd_name == "Initial"
+
+
+def test_all_expeditions(snapshot):
+    client = Client(schema)
+    create_expedition_mutation = create_expedition_template.render(uuid="")
+    client.execute(create_expedition_mutation, context=user_authenticated())
+    response = client.execute(
+        """{
+                all_expeditions {
+                    expd_name
+                    start_date
+                    end_date
+                    expd_path_name
+                  }
+                }"""
+    )
+    assert response["data"]["all_expeditions"][-1]["expd_name"] == "Initial"
+    snapshot.assert_match(response)
+
+
+def test_update_expedition(snapshot):
+    client = Client(schema)
+    create_expedition_mutation = create_expedition_template.render(uuid="uuid")
+    response = client.execute(create_expedition_mutation, context=user_authenticated())
+    uuid = response["data"]["create_expedition"]["expedition"]["uuid"]
+    assert Expedition.objects.all()[0].model_name == "Initial"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateExpedition($uuid: ID) {
+                update_expedition(uuid: $uuid, input: {
+                    model_name: "Updated",
+                    comment: "New comment"
+                }) {
+                    expedition {
+                        model_name
+                        comment
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert Expedition.objects.all()[0].model_name == "Updated"
+    assert Expedition.objects.all()[0].comment == "New comment"
+
+
+def test_delete_expedition(snapshot):
+    client = Client(schema)
+    create_expedition_mutation = create_expedition_template.render(uuid="uuid")
+    response = client.execute(create_expedition_mutation, context=user_authenticated())
+    uuid = response["data"]["create_expedition"]["expedition"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteExpedition($uuid: ID) {
+                delete_expedition(uuid: $uuid) {
+                    expedition {
+                        model_name
+                        comment
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert Expedition.objects.all().count() == 0

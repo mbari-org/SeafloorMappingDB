@@ -1,11 +1,20 @@
 import graphene
+from dateutil.parser import parse
 from graphene_django import DjangoObjectType as DjangoObjectNode
 from graphene_django.debug import DjangoDebug
 from graphene_gis import scalars
 from graphene_gis.converter import gis_converter
 from graphql import GraphQLError
 
-from smdb.models import MissionType, Person, Platform, PlatformType, Sensor, SensorType
+from smdb.models import (
+    Expedition,
+    MissionType,
+    Person,
+    Platform,
+    PlatformType,
+    Sensor,
+    SensorType,
+)
 
 
 class MissionTypeNode(DjangoObjectNode):
@@ -55,6 +64,21 @@ class SensorNode(DjangoObjectNode):
         )
 
 
+class ExpeditionNode(DjangoObjectNode):
+    class Meta:
+        model = Expedition
+        fields = (
+            "uuid",
+            "expd_name",
+            "start_date",
+            "end_date",
+            "investigator",
+            "chiefscientist",
+            "expd_path_name",
+            "expd_db_id",
+        )
+
+
 class Query(graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name="_debug")
     all_missiontypes = graphene.List(MissionTypeNode)
@@ -63,9 +87,14 @@ class Query(graphene.ObjectType):
     all_platforms = graphene.List(PlatformNode)
     all_sensortypes = graphene.List(SensorTypeNode)
     all_sensors = graphene.List(SensorNode)
+    all_expeditions = graphene.List(ExpeditionNode)
 
     missiontype_by_name = graphene.Field(
         MissionTypeNode, name=graphene.String(required=True)
+    )
+
+    expedition_by_name = graphene.Field(
+        ExpeditionNode, expd_name=graphene.String(required=True)
     )
 
     # Queries for all_ objects
@@ -87,11 +116,20 @@ class Query(graphene.ObjectType):
     def resolve_all_sensors(root, info):
         return Sensor.objects.all()
 
+    def resolve_all_expeditions(root, info):
+        return Expedition.objects.all()
+
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
             return MissionType.objects.get(missiontype_name=name)
         except MissionType.DoesNotExist:
+            return None
+
+    def resolve_expedition_by_name(root, info, expd_name):
+        try:
+            return Expedition.objects.get(expd_name=expd_name)
+        except Expedition.DoesNotExist:
             return None
 
 
@@ -492,6 +530,79 @@ class DeleteSensor(graphene.Mutation):
         return DeleteSensor(sensor=sensor)
 
 
+# ===== Expedition =====
+class ExpeditionInput(graphene.InputObjectType):
+    expd_name = graphene.String()
+    start_date_iso = graphene.String()
+    end_date_iso = graphene.String()
+    investigator = graphene.Field(PersonInput)
+    chiefscientist = graphene.Field(PersonInput)
+    expd_path_name = graphene.String()
+    expd_db_id = graphene.Int()
+
+
+class CreateExpedition(graphene.Mutation):
+    class Arguments:
+        input = ExpeditionInput(required=True)
+
+    expedition = graphene.Field(ExpeditionNode)
+
+    def mutate(self, info, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+
+        investigator, _ = Person.objects.get_or_create(
+            first_name=input.investigator.first_name,
+            last_name=input.investigator.last_name,
+        )
+        chiefscientist, _ = Person.objects.get_or_create(
+            first_name=input.chiefscientist.first_name,
+            last_name=input.chiefscientist.last_name,
+        )
+        expedition = Expedition.objects.create(
+            expd_name=input.expd_name,
+            start_date=parse(input.start_date_iso),
+            end_date=parse(input.end_date_iso),
+            investigator=investigator,
+            chiefscientist=chiefscientist,
+            expd_path_name=input.expd_path_name,
+            expd_db_id=input.expd_db_id,
+        )
+        expedition.save()
+        return CreateExpedition(expedition=expedition)
+
+
+class UpdateExpedition(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+        input = ExpeditionInput(required=True)
+
+    expedition = graphene.Field(ExpeditionNode)
+
+    def mutate(self, info, uuid, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        expedition = Expedition.objects.get(uuid=uuid)
+        expedition.model_name = input.model_name
+        expedition.comment = input.comment
+        expedition.save()
+        return UpdateExpedition(expedition=expedition)
+
+
+class DeleteExpedition(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+
+    expedition = graphene.Field(ExpeditionNode)
+
+    def mutate(self, info, uuid):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        expedition = Expedition.objects.get(uuid=uuid)
+        expedition.delete()
+        return DeleteExpedition(expedition=expedition)
+
+
 # =====
 
 
@@ -519,6 +630,10 @@ class Mutation(graphene.ObjectType):
     create_sensor = CreateSensor.Field()
     update_sensor = UpdateSensor.Field()
     delete_sensor = DeleteSensor.Field()
+
+    create_expedition = CreateExpedition.Field()
+    update_expedition = UpdateExpedition.Field()
+    delete_expedition = DeleteExpedition.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

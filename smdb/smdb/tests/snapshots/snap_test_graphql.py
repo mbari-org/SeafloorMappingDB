@@ -7,6 +7,86 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots['test_all_expeditions 1'] = {
+    'data': {
+        'all_expeditions': [
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
+                'start_date': None
+            },
+            {
+                'end_date': '1998-07-20T00:00:00+00:00',
+                'expd_name': 'Initial',
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'start_date': '1998-07-01T00:00:00+00:00'
+            }
+        ]
+    }
+}
+
+snapshots['test_all_expeditions_empty 1'] = {
+    'data': {
+        'all_expeditions': [
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'expd_name': None,
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
+                'start_date': None
+            }
+        ]
+    }
+}
+
 snapshots['test_all_missiontypes_empty 1'] = {
     'data': {
         'all_missiontypes': [
@@ -89,6 +169,27 @@ snapshots['test_all_sensortypes_empty 1'] = {
     'data': {
         'all_sensortypes': [
         ]
+    }
+}
+
+snapshots['test_create_expedition 1'] = {
+    'data': {
+        'create_expedition': {
+            'expedition': {
+                'chiefscientist': {
+                    'first_name': 'Walter',
+                    'last_name': 'Munk'
+                },
+                'end_date': '1998-07-20T00:00:00',
+                'expd_name': 'Initial',
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'investigator': {
+                    'first_name': 'Henry',
+                    'last_name': 'Stommel'
+                },
+                'start_date': '1998-07-01T00:00:00'
+            }
+        }
     }
 }
 
