@@ -764,8 +764,18 @@ def test_delete_expedition(snapshot):
             """mutation DeleteExpedition($uuid: ID) {
                 delete_expedition(uuid: $uuid) {
                     expedition {
-                        model_name
-                        comment
+                        expd_name
+                        start_date
+                        end_date
+                        investigator {
+                            first_name
+                            last_name
+                        }
+                        chiefscientist {
+                            first_name
+                            last_name
+                        }
+                        expd_path_name
                     }
                 }
             }""",
@@ -773,4 +783,4 @@ def test_delete_expedition(snapshot):
             context=user_authenticated(),
         )
     )
-    assert Expedition.objects.all().count() == 0
+    assert Expedition.objects.filter(expd_name="Initial").count() == 0

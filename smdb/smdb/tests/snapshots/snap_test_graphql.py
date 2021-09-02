@@ -264,26 +264,24 @@ snapshots['test_create_sensortype 1'] = {
 }
 
 snapshots['test_delete_expedition 1'] = {
-    'errors': [
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 4
-                }
-            ],
-            'message': 'Cannot query field "model_name" on type "ExpeditionNode". Did you mean "expd_name"?'
-        },
-        {
-            'locations': [
-                {
-                    'column': 25,
-                    'line': 5
-                }
-            ],
-            'message': 'Cannot query field "comment" on type "ExpeditionNode".'
+    'data': {
+        'delete_expedition': {
+            'expedition': {
+                'chiefscientist': {
+                    'first_name': 'Walter',
+                    'last_name': 'Munk'
+                },
+                'end_date': '1998-07-20T00:00:00+00:00',
+                'expd_name': 'Initial',
+                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'investigator': {
+                    'first_name': 'Henry',
+                    'last_name': 'Stommel'
+                },
+                'start_date': '1998-07-01T00:00:00+00:00'
+            }
         }
-    ]
+    }
 }
 
 snapshots['test_delete_missiontype 1'] = {
