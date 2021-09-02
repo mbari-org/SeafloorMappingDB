@@ -7,6 +7,7 @@ from graphene_gis.converter import gis_converter
 from graphql import GraphQLError
 
 from smdb.models import (
+    Compilation,
     Expedition,
     MissionType,
     Person,
@@ -79,6 +80,24 @@ class ExpeditionNode(DjangoObjectNode):
         )
 
 
+class CompilationNode(DjangoObjectNode):
+    class Meta:
+        model = Compilation
+        fields = (
+            "uuid",
+            "compilation_dir_name",
+            "grid_bounds",
+            "compilation_path_name",
+            "navadjust_dir_path",
+            "figures_dir_path",
+            "comment",
+            "thumbnail_filename",
+            "kml_filename",
+            "proc_datalist_filename",
+            "update_status",
+        )
+
+
 class Query(graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name="_debug")
     all_missiontypes = graphene.List(MissionTypeNode)
@@ -88,6 +107,7 @@ class Query(graphene.ObjectType):
     all_sensortypes = graphene.List(SensorTypeNode)
     all_sensors = graphene.List(SensorNode)
     all_expeditions = graphene.List(ExpeditionNode)
+    all_compilations = graphene.List(CompilationNode)
 
     missiontype_by_name = graphene.Field(
         MissionTypeNode, name=graphene.String(required=True)
@@ -119,6 +139,9 @@ class Query(graphene.ObjectType):
     def resolve_all_expeditions(root, info):
         return Expedition.objects.all()
 
+    def resolve_all_compilations(root, info):
+        return Compilation.objects.all()
+
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
@@ -130,6 +153,12 @@ class Query(graphene.ObjectType):
         try:
             return Expedition.objects.get(expd_name=expd_name)
         except Expedition.DoesNotExist:
+            return None
+
+    def resolve_compilation_by_name(root, info, expd_name):
+        try:
+            return Compilation.objects.get(expd_name=expd_name)
+        except Compilation.DoesNotExist:
             return None
 
 
@@ -615,6 +644,88 @@ class DeleteExpedition(graphene.Mutation):
         return DeleteExpedition(expedition=expedition)
 
 
+# ===== Compilation =====
+class CompilationInput(graphene.InputObjectType):
+    compilation_dir_name = graphene.String()
+    grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
+    compilation_path_name = graphene.String()
+    navadjust_dir_path = graphene.String()
+    figures_dir_path = graphene.String()
+    comment = graphene.String()
+    thumbnail_filename = graphene.String()
+    kml_filename = graphene.String()
+    proc_datalist_filename = graphene.String()
+    update_status = graphene.Int()
+
+
+class CreateCompilation(graphene.Mutation):
+    class Arguments:
+        input = CompilationInput(required=True)
+
+    compilation = graphene.Field(CompilationNode)
+
+    def mutate(self, info, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        compilation = Compilation.objects.create(
+            compilation_dir_name=input.compilation_dir_name,
+            grid_bounds=input.grid_bounds,
+            compilation_path_name=input.compilation_path_name,
+            navadjust_dir_path=input.navadjust_dir_path,
+            figures_dir_path=input.figures_dir_path,
+            comment=input.comment,
+            thumbnail_filename=input.thumbnail_filename,
+            kml_filename=input.kml_filename,
+            proc_datalist_filename=input.proc_datalist_filename,
+            update_status=input.update_status,
+        )
+        compilation.save()
+        return CreateCompilation(compilation=compilation)
+
+
+class UpdateCompilation(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+        input = CompilationInput(required=True)
+
+    compilation = graphene.Field(CompilationNode)
+
+    def mutate(self, info, uuid, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        investigator, _ = Person.objects.get_or_create(
+            first_name=input.investigator.first_name,
+            last_name=input.investigator.last_name,
+        )
+        chiefscientist, _ = Person.objects.get_or_create(
+            first_name=input.chiefscientist.first_name,
+            last_name=input.chiefscientist.last_name,
+        )
+        compilation = Compilation.objects.get(uuid=uuid)
+        compilation.expd_name = input.expd_name
+        compilation.start_date = parse(input.start_date_iso)
+        compilation.end_date = parse(input.end_date_iso)
+        compilation.investigator = investigator
+        compilation.chiefscientist = chiefscientist
+        compilation.expd_path_name = input.expd_path_name
+        compilation.save()
+        return UpdateCompilation(compilation=compilation)
+
+
+class DeleteCompilation(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+
+    compilation = graphene.Field(CompilationNode)
+
+    def mutate(self, info, uuid):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        compilation = Compilation.objects.get(uuid=uuid)
+        compilation.delete()
+        return DeleteCompilation(compilation=compilation)
+
+
 # =====
 
 
@@ -646,6 +757,10 @@ class Mutation(graphene.ObjectType):
     create_expedition = CreateExpedition.Field()
     update_expedition = UpdateExpedition.Field()
     delete_expedition = DeleteExpedition.Field()
+
+    create_compilation = CreateCompilation.Field()
+    update_compilation = UpdateCompilation.Field()
+    delete_compilation = DeleteCompilation.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

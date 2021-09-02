@@ -7,6 +7,7 @@ from graphene.test import Client
 from jinja2 import Template
 
 from smdb.models import (
+    Compilation,
     Expedition,
     MissionType,
     Person,
@@ -784,3 +785,153 @@ def test_delete_expedition(snapshot):
         )
     )
     assert Expedition.objects.filter(expd_name="Initial").count() == 0
+
+
+# ===== Compilation Tests =====
+create_compilation_template = Template(
+    """mutation {
+        create_compilation(input: {
+            comment: "Initial comment.",
+            compilation_dir_name: "/a/dir/name",
+            compilation_path_name: "/a/path/name",
+            figures_dir_path: "/figures/path",
+            grid_bounds: "SRID=4326;POLYGON ((-121.94 36.69, -121.94 36.69, -121.93 36.69, -121.93 36.69, -121.94 36.69))",
+            kml_filename: "file.kml",
+            navadjust_dir_path: "/nav/adjust/path/",
+            proc_datalist_filename: "proc.datalist-1",
+            thumbnail_filename: "thumbnail.png",
+            update_status: 10}) {
+            compilation {
+                {{ uuid }}
+                comment
+                compilation_dir_name
+                compilation_path_name
+                figures_dir_path
+                grid_bounds
+                kml_filename
+                navadjust_dir_path
+                proc_datalist_filename
+                thumbnail_filename
+                update_status
+            }
+        }
+    }"""
+)
+compilation_query = """{
+                all_compilations {
+                    comment
+                    compilation_dir_name
+                    compilation_path_name
+                    figures_dir_path
+                    grid_bounds
+                    kml_filename
+                    navadjust_dir_path
+                    proc_datalist_filename
+                    thumbnail_filename
+                    update_status
+                  }
+                }"""
+
+
+def test_all_compilations_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(client.execute(compilation_query))
+
+
+def test_create_compilation(snapshot):
+    client = Client(schema)
+    create_compilation_mutation = create_compilation_template.render(uuid="")
+    snapshot.assert_match(
+        client.execute(create_compilation_mutation, context=user_authenticated())
+    )
+    assert Compilation.objects.all()[0].comment == "Initial comment."
+
+
+def test_all_compilations(snapshot):
+    client = Client(schema)
+    create_compilation_mutation = create_compilation_template.render(uuid="")
+    client.execute(create_compilation_mutation, context=user_authenticated())
+    response = client.execute(compilation_query)
+    assert response["data"]["all_compilations"][0]["comment"] == "Initial comment."
+    snapshot.assert_match(response)
+
+
+def test_update_compilation(snapshot):
+    client = Client(schema)
+    create_compilation_mutation = create_compilation_template.render(uuid="uuid")
+    response = client.execute(create_compilation_mutation, context=user_authenticated())
+    uuid = response["data"]["create_compilation"]["compilation"]["uuid"]
+    assert Compilation.objects.get(expd_name="Initial").expd_name == "Initial"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateCompilation($uuid: ID) {
+                update_compilation(uuid: $uuid, input: {
+                    expd_name: "Updated"
+                    start_date_iso: "2020-01-01"
+                    end_date_iso: "2021-02-02"
+                    investigator: {
+                        first_name: "John"
+                        last_name: "Doe"
+                        institution_name: "Tester"
+                    }
+                    chiefscientist: {
+                        first_name: "Jane"
+                        last_name: "Roe"
+                        institution_name: "Tester"
+                    }
+                    expd_path_name: "/a/directory/path"
+                }) {
+                    compilation {
+                        expd_name
+                        start_date
+                        end_date
+                        investigator {
+                            first_name
+                            last_name
+                        }
+                        chiefscientist {
+                            first_name
+                            last_name
+                        }
+                        expd_path_name
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert Compilation.objects.get(expd_name="Updated").expd_name == "Updated"
+
+
+def test_delete_compilation(snapshot):
+    client = Client(schema)
+    create_compilation_mutation = create_compilation_template.render(uuid="uuid")
+    response = client.execute(create_compilation_mutation, context=user_authenticated())
+    uuid = response["data"]["create_compilation"]["compilation"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteCompilation($uuid: ID) {
+                delete_compilation(uuid: $uuid) {
+                    compilation {
+                        expd_name
+                        start_date
+                        end_date
+                        investigator {
+                            first_name
+                            last_name
+                        }
+                        chiefscientist {
+                            first_name
+                            last_name
+                        }
+                        expd_path_name
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert Compilation.objects.filter(expd_name="Initial").count() == 0

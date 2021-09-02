@@ -7,6 +7,58 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots['test_all_compilations 1'] = {
+    'data': {
+        'all_compilations': [
+            {
+                'comment': 'Initial comment.',
+                'compilation_dir_name': '/a/dir/name',
+                'compilation_path_name': '/a/path/name',
+                'figures_dir_path': '/figures/path',
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.94,
+                                36.69
+                            ],
+                            [
+                                -121.94,
+                                36.69
+                            ],
+                            [
+                                -121.93,
+                                36.69
+                            ],
+                            [
+                                -121.93,
+                                36.69
+                            ],
+                            [
+                                -121.94,
+                                36.69
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'file.kml',
+                'navadjust_dir_path': '/nav/adjust/path/',
+                'proc_datalist_filename': 'proc.datalist-1',
+                'thumbnail_filename': 'thumbnail.png',
+                'update_status': 10
+            }
+        ]
+    }
+}
+
+snapshots['test_all_compilations_empty 1'] = {
+    'data': {
+        'all_compilations': [
+        ]
+    }
+}
+
 snapshots['test_all_expeditions 1'] = {
     'data': {
         'all_expeditions': [
@@ -172,6 +224,51 @@ snapshots['test_all_sensortypes_empty 1'] = {
     }
 }
 
+snapshots['test_create_compilation 1'] = {
+    'data': {
+        'create_compilation': {
+            'compilation': {
+                'comment': 'Initial comment.',
+                'compilation_dir_name': '/a/dir/name',
+                'compilation_path_name': '/a/path/name',
+                'figures_dir_path': '/figures/path',
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.94,
+                                36.69
+                            ],
+                            [
+                                -121.94,
+                                36.69
+                            ],
+                            [
+                                -121.93,
+                                36.69
+                            ],
+                            [
+                                -121.93,
+                                36.69
+                            ],
+                            [
+                                -121.94,
+                                36.69
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'file.kml',
+                'navadjust_dir_path': '/nav/adjust/path/',
+                'proc_datalist_filename': 'proc.datalist-1',
+                'thumbnail_filename': 'thumbnail.png',
+                'update_status': 10
+            }
+        }
+    }
+}
+
 snapshots['test_create_expedition 1'] = {
     'data': {
         'create_expedition': {
@@ -261,6 +358,65 @@ snapshots['test_create_sensortype 1'] = {
             }
         }
     }
+}
+
+snapshots['test_delete_compilation 1'] = {
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 4
+                }
+            ],
+            'message': 'Cannot query field "expd_name" on type "CompilationNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 5
+                }
+            ],
+            'message': 'Cannot query field "start_date" on type "CompilationNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 6
+                }
+            ],
+            'message': 'Cannot query field "end_date" on type "CompilationNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 7
+                }
+            ],
+            'message': 'Cannot query field "investigator" on type "CompilationNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 11
+                }
+            ],
+            'message': 'Cannot query field "chiefscientist" on type "CompilationNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 15
+                }
+            ],
+            'message': 'Cannot query field "expd_path_name" on type "CompilationNode". Did you mean "compilation_path_name"?'
+        }
+    ]
 }
 
 snapshots['test_delete_expedition 1'] = {
