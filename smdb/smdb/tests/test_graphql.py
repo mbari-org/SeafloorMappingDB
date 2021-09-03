@@ -964,7 +964,6 @@ mission_query = """{
                     kml_filename
                     thumbnail_filename
                     update_status
-                    uuid
                   }
                 }"""
 
@@ -1001,37 +1000,36 @@ def test_update_mission(snapshot):
 
     snapshot.assert_match(
         client.execute(
-            """mutation UpdateMission($uuid: ID) {
-        update_mission(uuid: $uuid, input: {
-            comment: "Updated comment.",
-            compilation_dir_name: "/b/dir/name",
-            compilation_path_name: "/b/path/name",
-            figures_dir_path: "/figures/path2",
-            grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
-            kml_filename: "file2.kml",
-            navadjust_dir_path: "/new/adjust/path/",
-            proc_datalist_filename: "proc.datalist-2",
-            thumbnail_filename: "thumbnail2.png",
-            update_status: 10}) {
-            compilation {
-                comment
-                compilation_dir_name
-                compilation_path_name
-                figures_dir_path
-                grid_bounds
-                kml_filename
-                navadjust_dir_path
-                proc_datalist_filename
-                thumbnail_filename
-                update_status
-            }
-        }
-    }""",
+            """mutation {
+                create_mission(input: {
+                    mission_name: "Updated",
+                    comment: "Updates comment.",
+                    end_date: "2021-05-04",
+                    notes_filename: "file2.notes",
+                    quality_comment: "R",
+                    region_name: "region2"
+                    repeat_survey: true,
+                    site_detail: "site detail 2",
+                    start_date: "2021-04-04",
+                    start_depth: 1700,
+                    thumbnail_filename: "tumbnail2.png",
+                    update_status: 6,
+                    grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
+                    }) {
+                    mission {
+                        comment
+                        grid_bounds
+                        kml_filename
+                        thumbnail_filename
+                        update_status
+                    }
+                }
+            }""",
             variables={"uuid": uuid},
             context=user_authenticated(),
         )
     )
-    assert Mission.objects.all()[0].comment == "Updated comment."
+    assert Mission.objects.filter(mission_name="Updated")[0].mission_name == "Updated"
 
 
 def test_delete_mission(snapshot):
@@ -1045,13 +1043,8 @@ def test_delete_mission(snapshot):
                 delete_mission(uuid: $uuid) {
                     mission {
                         comment
-                        compilation_dir_name
-                        compilation_path_name
-                        figures_dir_path
                         grid_bounds
                         kml_filename
-                        navadjust_dir_path
-                        proc_datalist_filename
                         thumbnail_filename
                         update_status
                     }
@@ -1061,4 +1054,4 @@ def test_delete_mission(snapshot):
             context=user_authenticated(),
         )
     )
-    assert Mission.objects.all().count() == 0
+    assert Mission.objects.filter(mission_name="Initial").count() == 0
