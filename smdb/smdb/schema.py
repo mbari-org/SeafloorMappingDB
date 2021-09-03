@@ -7,8 +7,11 @@ from graphene_gis.converter import gis_converter
 from graphql import GraphQLError
 
 from smdb.models import (
+    Citation,
     Compilation,
+    DataArchival,
     Expedition,
+    Mission,
     MissionType,
     Person,
     Platform,
@@ -98,6 +101,36 @@ class CompilationNode(DjangoObjectNode):
         )
 
 
+class MissionNode(DjangoObjectNode):
+    class Meta:
+        model = Mission
+        fields = (
+            "uuid",
+            "mission_name",
+            "grid_bounds",
+            "expedition",
+            "missiontype",
+            "platform",
+            "start_date",
+            "end_date",
+            "start_depth",
+            "start_point",
+            "quality_comment",
+            "repeat_survey",
+            "comment",
+            "notes_filename",
+            "region_name",
+            "site_detail",
+            "thumbnail_filename",
+            "kml_filename",
+            "compilation",
+            "update_status",
+            "sensors",
+            "data_archivals",
+            "citations",
+        )
+
+
 class Query(graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name="_debug")
     all_missiontypes = graphene.List(MissionTypeNode)
@@ -108,6 +141,7 @@ class Query(graphene.ObjectType):
     all_sensors = graphene.List(SensorNode)
     all_expeditions = graphene.List(ExpeditionNode)
     all_compilations = graphene.List(CompilationNode)
+    all_missions = graphene.List(MissionNode)
 
     missiontype_by_name = graphene.Field(
         MissionTypeNode, name=graphene.String(required=True)
@@ -142,6 +176,9 @@ class Query(graphene.ObjectType):
     def resolve_all_compilations(root, info):
         return Compilation.objects.all()
 
+    def resolve_all_missions(root, info):
+        return Mission.objects.all()
+
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
@@ -153,12 +190,6 @@ class Query(graphene.ObjectType):
         try:
             return Expedition.objects.get(expd_name=expd_name)
         except Expedition.DoesNotExist:
-            return None
-
-    def resolve_compilation_by_name(root, info, expd_name):
-        try:
-            return Compilation.objects.get(expd_name=expd_name)
-        except Compilation.DoesNotExist:
             return None
 
 
@@ -456,48 +487,6 @@ class DeleteSensorType(graphene.Mutation):
 
 
 # ===== Sensor =====
-class MissionInput(graphene.InputObjectType):
-
-    mission_name = graphene.String(required=True)
-    grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
-
-    """
-    grid_bounds = models.PolygonField(
-        srid=4326, spatial_index=True, blank=True, null=True
-    )
-    expedition = models.ForeignKey(
-        Expedition, on_delete=models.CASCADE, blank=True, null=True
-    )
-    missiontype = models.ForeignKey(
-        MissionType, on_delete=models.CASCADE, blank=True, null=True
-    )
-    platform = models.ForeignKey(
-        Platform, on_delete=models.CASCADE, blank=True, null=True
-    )
-    start_date = models.DateTimeField(null=True)
-    end_date = models.DateTimeField(null=True)
-    start_depth = models.FloatField(blank=True, null=True)
-    start_point = models.PointField(
-        srid=4326, spatial_index=True, dim=2, blank=True, null=True
-    )
-    quality_comment = models.TextField(blank=True, null=True)
-    repeat_survey = models.BooleanField(blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)
-    notes_filename = models.CharField(max_length=128, db_index=True, null=True)
-    region_name = models.CharField(max_length=128, db_index=True)
-    site_detail = models.CharField(max_length=128, db_index=True)
-    thumbnail_filename = models.CharField(max_length=128, db_index=True)
-    kml_filename = models.CharField(max_length=128, db_index=True)
-    compilation = models.ForeignKey(
-        Compilation, on_delete=models.CASCADE, blank=True, null=True
-    )
-    update_status = models.IntegerField(blank=True, null=True)
-    sensors = models.ManyToManyField(Sensor)
-    data_archivals = models.ManyToManyField("DataArchival", blank=True)
-    citations = models.ManyToManyField("Citation", blank=True)
-    """
-
-
 class SensorInput(graphene.InputObjectType):
     sensortypes = graphene.List(SensorTypeInput)
     model_name = graphene.String()
@@ -722,6 +711,115 @@ class DeleteCompilation(graphene.Mutation):
         return DeleteCompilation(compilation=compilation)
 
 
+# ===== Mission =====
+class MissionInput(graphene.InputObjectType):
+    mission_name = graphene.String(required=True)
+    grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
+    expedition = graphene.Field(ExpeditionInput)
+    missiontype = graphene.Field(MissionTypeInput)
+    platform = graphene.Field(PlatformInput)
+    start_date = graphene.String()
+    end_date = graphene.String()
+    start_depth = graphene.Float()
+    start_point = graphene.Field(graphene.String, to=scalars.PointScalar())
+    quality_comment = graphene.String()
+    repeat_survey = graphene.Boolean()
+    comment = graphene.String()
+    notes_filename = graphene.String()
+    region_name = graphene.String()
+    site_detail = graphene.String()
+    thumbnail_filename = graphene.String()
+    kml_filename = graphene.String()
+    compilation = graphene.Field(CompilationInput)
+    update_status = graphene.Int()
+    sensors = graphene.List(SensorInput)
+    data_archivals = graphene.List(lambda: DataArchivalInput)
+    citations = graphene.List(CompilationInput)
+
+
+class CreateMission(graphene.Mutation):
+    class Arguments:
+        input = MissionInput(required=True)
+
+    mission = graphene.Field(MissionNode)
+
+    def mutate(self, info, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        mission = Mission.objects.create(
+            mission_name=input.mission_name,
+            grid_bounds=input.grid_bounds,
+            expedition=input.expedition,
+            missiontype=input.missiontype,
+            platform=input.platform,
+            start_date=input.start_date,
+            end_date=input.end_date,
+            start_depth=input.start_depth,
+            start_point=input.start_point,
+            quality_comment=input.quality_comment,
+            repeat_survey=input.repeat_survey,
+            comment=input.comment,
+            notes_filename=input.notes_filename,
+            region_name=input.region_name,
+            site_detail=input.site_detail,
+            thumbnail_filename=input.thumbnail_filename,
+            kml_filename=input.kml_filename,
+            compilation=input.compilation,
+            update_status=input.update_status,
+            ##sensors=input.sensors,
+            # 'Direct assignment to the forward side of a many-to-many set is prohibited. Use data_archivals.set() instead.
+            ##data_archivals=input.data_archivals,
+            ##citations=input.citations,
+        )
+        mission.save()
+        return CreateMission(mission=mission)
+
+
+class UpdateMission(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+        input = MissionInput(required=True)
+
+    mission = graphene.Field(MissionNode)
+
+    def mutate(self, info, uuid, input):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        mission = Mission.objects.get(uuid=uuid)
+        mission.mission_dir_name = input.mission_dir_name
+        mission.grid_bounds = input.grid_bounds
+        mission.mission_path_name = input.mission_path_name
+        mission.navadjust_dir_path = input.navadjust_dir_path
+        mission.figures_dir_path = input.figures_dir_path
+        mission.comment = input.comment
+        mission.thumbnail_filename = input.thumbnail_filename
+        mission.kml_filename = input.kml_filename
+        mission.proc_datalist_filename = input.proc_datalist_filename
+        mission.update_status = input.update_status
+        mission.save()
+        return UpdateMission(mission=mission)
+
+
+class DeleteMission(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+
+    mission = graphene.Field(MissionNode)
+
+    def mutate(self, info, uuid):
+        if not info.context.user.is_authenticated:
+            raise GraphQLError("You must be logged in")
+        mission = Mission.objects.get(uuid=uuid)
+        mission.delete()
+        return DeleteMission(mission=mission)
+
+
+class DataArchivalInput(graphene.InputObjectType):
+    missions = graphene.List(MissionInput)
+    doi = graphene.String()
+    archival_db_name = graphene.String()
+
+
 # =====
 
 
@@ -757,6 +855,10 @@ class Mutation(graphene.ObjectType):
     create_compilation = CreateCompilation.Field()
     update_compilation = UpdateCompilation.Field()
     delete_compilation = DeleteCompilation.Field()
+
+    create_mission = CreateMission.Field()
+    update_mission = UpdateMission.Field()
+    delete_mission = DeleteMission.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)

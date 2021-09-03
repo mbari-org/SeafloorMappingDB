@@ -139,6 +139,368 @@ snapshots['test_all_expeditions_empty 1'] = {
     }
 }
 
+snapshots['test_all_missions 1'] = {
+    'data': {
+        'all_missions': [
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.945672127,
+                                36.692478839
+                            ],
+                            [
+                                -121.945672127,
+                                36.69939862
+                            ],
+                            [
+                                -121.936047424,
+                                36.69939862
+                            ],
+                            [
+                                -121.936047424,
+                                36.692478839
+                            ],
+                            [
+                                -121.945672127,
+                                36.692478839
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': '9ce4006a-4648-4f0c-a356-5f3e8016c466'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893889754,
+                                36.775318037
+                            ],
+                            [
+                                -121.893889754,
+                                36.794786063
+                            ],
+                            [
+                                -121.869546184,
+                                36.794786063
+                            ],
+                            [
+                                -121.869546184,
+                                36.775318037
+                            ],
+                            [
+                                -121.893889754,
+                                36.775318037
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': '035895a0-e407-4381-b589-e1eddc8ef57c'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893000566,
+                                36.778004247
+                            ],
+                            [
+                                -121.893000566,
+                                36.795133122
+                            ],
+                            [
+                                -121.870634333,
+                                36.795133122
+                            ],
+                            [
+                                -121.870634333,
+                                36.778004247
+                            ],
+                            [
+                                -121.893000566,
+                                36.778004247
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': 'c61c87b6-7e12-4c12-9275-95b40f85d356'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.87456349,
+                                36.776214476
+                            ],
+                            [
+                                -121.87456349,
+                                36.781282764
+                            ],
+                            [
+                                -121.866131021,
+                                36.781282764
+                            ],
+                            [
+                                -121.866131021,
+                                36.776214476
+                            ],
+                            [
+                                -121.87456349,
+                                36.776214476
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': 'f79ff49a-5fd7-4b09-804c-c0cea79efeb2'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.892778682,
+                                36.777594169
+                            ],
+                            [
+                                -121.892778682,
+                                36.795013157
+                            ],
+                            [
+                                -121.870777136,
+                                36.795013157
+                            ],
+                            [
+                                -121.870777136,
+                                36.777594169
+                            ],
+                            [
+                                -121.892778682,
+                                36.777594169
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': '4697c530-b73a-4dfc-81ed-2fa2e821c33f'
+            },
+            {
+                'comment': 'Initial comment.',
+                'grid_bounds': None,
+                'kml_filename': None,
+                'thumbnail_filename': 'tumbnail.png',
+                'update_status': 5,
+                'uuid': '8ff1147c-b648-41a6-9b6b-2e9e4501df50'
+            }
+        ]
+    }
+}
+
+snapshots['test_all_missions_empty 1'] = {
+    'data': {
+        'all_missions': [
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.945672127,
+                                36.692478839
+                            ],
+                            [
+                                -121.945672127,
+                                36.69939862
+                            ],
+                            [
+                                -121.936047424,
+                                36.69939862
+                            ],
+                            [
+                                -121.936047424,
+                                36.692478839
+                            ],
+                            [
+                                -121.945672127,
+                                36.692478839
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': '9ce4006a-4648-4f0c-a356-5f3e8016c466'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893889754,
+                                36.775318037
+                            ],
+                            [
+                                -121.893889754,
+                                36.794786063
+                            ],
+                            [
+                                -121.869546184,
+                                36.794786063
+                            ],
+                            [
+                                -121.869546184,
+                                36.775318037
+                            ],
+                            [
+                                -121.893889754,
+                                36.775318037
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': '035895a0-e407-4381-b589-e1eddc8ef57c'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893000566,
+                                36.778004247
+                            ],
+                            [
+                                -121.893000566,
+                                36.795133122
+                            ],
+                            [
+                                -121.870634333,
+                                36.795133122
+                            ],
+                            [
+                                -121.870634333,
+                                36.778004247
+                            ],
+                            [
+                                -121.893000566,
+                                36.778004247
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': 'c61c87b6-7e12-4c12-9275-95b40f85d356'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.87456349,
+                                36.776214476
+                            ],
+                            [
+                                -121.87456349,
+                                36.781282764
+                            ],
+                            [
+                                -121.866131021,
+                                36.781282764
+                            ],
+                            [
+                                -121.866131021,
+                                36.776214476
+                            ],
+                            [
+                                -121.87456349,
+                                36.776214476
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': 'f79ff49a-5fd7-4b09-804c-c0cea79efeb2'
+            },
+            {
+                'comment': None,
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.892778682,
+                                36.777594169
+                            ],
+                            [
+                                -121.892778682,
+                                36.795013157
+                            ],
+                            [
+                                -121.870777136,
+                                36.795013157
+                            ],
+                            [
+                                -121.870777136,
+                                36.777594169
+                            ],
+                            [
+                                -121.892778682,
+                                36.777594169
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': '',
+                'thumbnail_filename': '',
+                'update_status': None,
+                'uuid': '4697c530-b73a-4dfc-81ed-2fa2e821c33f'
+            }
+        ]
+    }
+}
+
 snapshots['test_all_missiontypes_empty 1'] = {
     'data': {
         'all_missiontypes': [
@@ -290,6 +652,20 @@ snapshots['test_create_expedition 1'] = {
     }
 }
 
+snapshots['test_create_mission 1'] = {
+    'data': {
+        'create_mission': {
+            'mission': {
+                'comment': 'Initial comment.',
+                'grid_bounds': None,
+                'kml_filename': None,
+                'thumbnail_filename': 'tumbnail.png',
+                'update_status': 5
+            }
+        }
+    }
+}
+
 snapshots['test_create_missiontype 1'] = {
     'data': {
         'create_missiontype': {
@@ -426,6 +802,56 @@ snapshots['test_delete_expedition 1'] = {
     }
 }
 
+snapshots['test_delete_mission 1'] = {
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 5
+                }
+            ],
+            'message': 'Cannot query field "compilation_dir_name" on type "MissionNode". Did you mean "compilation" or "mission_name"?'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 6
+                }
+            ],
+            'message': 'Cannot query field "compilation_path_name" on type "MissionNode". Did you mean "compilation"?'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 7
+                }
+            ],
+            'message': 'Cannot query field "figures_dir_path" on type "MissionNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 10
+                }
+            ],
+            'message': 'Cannot query field "navadjust_dir_path" on type "MissionNode".'
+        },
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 11
+                }
+            ],
+            'message': 'Cannot query field "proc_datalist_filename" on type "MissionNode". Did you mean "notes_filename" or "thumbnail_filename"?'
+        }
+    ]
+}
+
 snapshots['test_delete_missiontype 1'] = {
     'data': {
         'delete_missiontype': {
@@ -553,6 +979,35 @@ snapshots['test_update_expedition 1'] = {
             }
         }
     }
+}
+
+snapshots['test_update_mission 1'] = {
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 44,
+                    'line': 2
+                }
+            ],
+            'message': '''Argument "input" has invalid value {comment: "Updated comment.", compilation_dir_name: "/b/dir/name", compilation_path_name: "/b/path/name", figures_dir_path: "/figures/path2", grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))", kml_filename: "file2.kml", navadjust_dir_path: "/new/adjust/path/", proc_datalist_filename: "proc.datalist-2", thumbnail_filename: "thumbnail2.png", update_status: 10}.
+In field "compilation_dir_name": Unknown field.
+In field "compilation_path_name": Unknown field.
+In field "figures_dir_path": Unknown field.
+In field "navadjust_dir_path": Unknown field.
+In field "proc_datalist_filename": Unknown field.
+In field "mission_name": Expected "String!", found null.'''
+        },
+        {
+            'locations': [
+                {
+                    'column': 13,
+                    'line': 13
+                }
+            ],
+            'message': 'Cannot query field "compilation" on type "UpdateMission".'
+        }
+    ]
 }
 
 snapshots['test_update_missiontype 1'] = {

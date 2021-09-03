@@ -9,6 +9,7 @@ from jinja2 import Template
 from smdb.models import (
     Compilation,
     Expedition,
+    Mission,
     MissionType,
     Person,
     Platform,
@@ -926,3 +927,138 @@ def test_delete_compilation(snapshot):
         )
     )
     assert Compilation.objects.all().count() == 0
+
+
+# ===== Mission Tests =====
+create_mission_template = Template(
+    """mutation {
+        create_mission(input: {
+            mission_name: "Initial",
+            comment: "Initial comment.",
+            end_date: "2021-04-04",
+            notes_filename: "file.notes",
+            quality_comment: "Q",
+            region_name: "region1"
+            repeat_survey: false,
+            site_detail: "site detail",
+            start_date: "2021-03-03",
+            start_depth: 1500,
+            thumbnail_filename: "tumbnail.png",
+            update_status: 5,
+            grid_bounds: ""}) {
+            mission {
+                {{ uuid }}
+                comment
+                grid_bounds
+                kml_filename
+                thumbnail_filename
+                update_status
+            }
+        }
+    }"""
+)
+mission_query = """{
+                all_missions {
+                    comment
+                    grid_bounds
+                    kml_filename
+                    thumbnail_filename
+                    update_status
+                    uuid
+                  }
+                }"""
+
+
+def test_all_missions_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(client.execute(mission_query))
+
+
+def test_create_mission(snapshot):
+    client = Client(schema)
+    create_mission_mutation = create_mission_template.render(uuid="")
+    snapshot.assert_match(
+        client.execute(create_mission_mutation, context=user_authenticated())
+    )
+    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+
+
+def test_all_missions(snapshot):
+    client = Client(schema)
+    create_mission_mutation = create_mission_template.render(uuid="")
+    client.execute(create_mission_mutation, context=user_authenticated())
+    response = client.execute(mission_query)
+    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    snapshot.assert_match(response)
+
+
+def test_update_mission(snapshot):
+    client = Client(schema)
+    create_mission_mutation = create_mission_template.render(uuid="uuid")
+    response = client.execute(create_mission_mutation, context=user_authenticated())
+    uuid = response["data"]["create_mission"]["mission"]["uuid"]
+    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateMission($uuid: ID) {
+        update_mission(uuid: $uuid, input: {
+            comment: "Updated comment.",
+            compilation_dir_name: "/b/dir/name",
+            compilation_path_name: "/b/path/name",
+            figures_dir_path: "/figures/path2",
+            grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
+            kml_filename: "file2.kml",
+            navadjust_dir_path: "/new/adjust/path/",
+            proc_datalist_filename: "proc.datalist-2",
+            thumbnail_filename: "thumbnail2.png",
+            update_status: 10}) {
+            compilation {
+                comment
+                compilation_dir_name
+                compilation_path_name
+                figures_dir_path
+                grid_bounds
+                kml_filename
+                navadjust_dir_path
+                proc_datalist_filename
+                thumbnail_filename
+                update_status
+            }
+        }
+    }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert Mission.objects.all()[0].comment == "Updated comment."
+
+
+def test_delete_mission(snapshot):
+    client = Client(schema)
+    create_mission_mutation = create_mission_template.render(uuid="uuid")
+    response = client.execute(create_mission_mutation, context=user_authenticated())
+    uuid = response["data"]["create_mission"]["mission"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteMission($uuid: ID) {
+                delete_mission(uuid: $uuid) {
+                    mission {
+                        comment
+                        compilation_dir_name
+                        compilation_path_name
+                        figures_dir_path
+                        grid_bounds
+                        kml_filename
+                        navadjust_dir_path
+                        proc_datalist_filename
+                        thumbnail_filename
+                        update_status
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert Mission.objects.all().count() == 0
