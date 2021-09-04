@@ -309,9 +309,35 @@ snapshots['test_all_missions 1'] = {
             },
             {
                 'comment': 'Initial comment.',
-                'grid_bounds': None,
-                'kml_filename': None,
-                'thumbnail_filename': 'tumbnail.png',
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.775
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'kml_file.kml',
+                'thumbnail_filename': 'thumbnail.png',
                 'update_status': 5
             }
         ]
@@ -646,9 +672,71 @@ snapshots['test_create_mission 1'] = {
         'create_mission': {
             'mission': {
                 'comment': 'Initial comment.',
-                'grid_bounds': None,
-                'kml_filename': None,
-                'thumbnail_filename': 'tumbnail.png',
+                'compilation': {
+                    'compilation_dir_name': 'Initial compilation'
+                },
+                'end_date': '2021-04-04T00:00:00',
+                'expedition': {
+                    'expd_name': 'Initial expedition name'
+                },
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.775
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'kml_file.kml',
+                'mission_name': 'Initial',
+                'missiontype': {
+                    'missiontype_name': 'Initial missiontype'
+                },
+                'notes_filename': 'file.notes',
+                'platform': {
+                    'platform_name': 'Initial platform'
+                },
+                'quality_comment': 'Q',
+                'region_name': 'region1',
+                'repeat_survey': False,
+                'sensors': [
+                    {
+                        'model_name': 'M',
+                        'sensor_type': {
+                            'sensortype_name': 'ST1'
+                        }
+                    }
+                ],
+                'site_detail': 'site detail',
+                'start_date': '2021-03-03T00:00:00',
+                'start_depth': 1500.0,
+                'start_point': {
+                    'coordinates': [
+                        -121.893,
+                        36.775
+                    ],
+                    'type': 'Point'
+                },
+                'thumbnail_filename': 'thumbnail.png',
                 'update_status': 5
             }
         }
@@ -796,9 +884,35 @@ snapshots['test_delete_mission 1'] = {
         'delete_mission': {
             'mission': {
                 'comment': 'Initial comment.',
-                'grid_bounds': None,
-                'kml_filename': None,
-                'thumbnail_filename': 'tumbnail.png',
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.775
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'kml_file.kml',
+                'thumbnail_filename': 'thumbnail.png',
                 'update_status': 5
             }
         }
@@ -938,7 +1052,14 @@ snapshots['test_update_mission 1'] = {
     'data': {
         'create_mission': {
             'mission': {
-                'comment': 'Updates comment.',
+                'comment': 'Initial comment.',
+                'compilation': {
+                    'compilation_dir_name': 'Initial compilation'
+                },
+                'end_date': '2021-04-04T00:00:00',
+                'expedition': {
+                    'expd_name': 'Initial expedition name'
+                },
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -966,7 +1087,113 @@ snapshots['test_update_mission 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': None,
+                'kml_filename': 'kml_file.kml',
+                'mission_name': 'Initial',
+                'missiontype': {
+                    'missiontype_name': 'Initial missiontype'
+                },
+                'notes_filename': 'file.notes',
+                'platform': {
+                    'platform_name': 'Initial platform'
+                },
+                'quality_comment': 'Q',
+                'region_name': 'region1',
+                'repeat_survey': False,
+                'sensors': [
+                    {
+                        'model_name': 'M',
+                        'sensor_type': {
+                            'sensortype_name': 'ST1'
+                        }
+                    }
+                ],
+                'site_detail': 'site detail',
+                'start_date': '2021-03-03T00:00:00',
+                'start_depth': 1500.0,
+                'start_point': {
+                    'coordinates': [
+                        -121.893,
+                        36.775
+                    ],
+                    'type': 'Point'
+                },
+                'thumbnail_filename': 'thumbnail.png',
+                'update_status': 5,
+                'uuid': '9decb1be-f64f-4da5-bf71-f00cd8c1ead0'
+            }
+        }
+    }
+}
+
+snapshots['test_update_mission 2'] = {
+    'data': {
+        'update_mission': {
+            'mission': {
+                'comment': 'Updates comment.',
+                'compilation': {
+                    'compilation_dir_name': 'Updated compilation'
+                },
+                'end_date': '2021-06-06T00:00:00',
+                'expedition': {
+                    'expd_name': 'Added expedition'
+                },
+                'grid_bounds': {
+                    'coordinates': [
+                        [
+                            [
+                                -121.893,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.794
+                            ],
+                            [
+                                -121.869,
+                                36.775
+                            ],
+                            [
+                                -121.893,
+                                36.775
+                            ]
+                        ]
+                    ],
+                    'type': 'Polygon'
+                },
+                'kml_filename': 'Added kml_file.kml',
+                'mission_name': 'Updated',
+                'missiontype': {
+                    'missiontype_name': 'Added missiontype'
+                },
+                'notes_filename': 'file2.notes',
+                'platform': {
+                    'platform_name': 'Added platform'
+                },
+                'quality_comment': 'R',
+                'region_name': 'region2',
+                'repeat_survey': True,
+                'sensors': [
+                    {
+                        'model_name': 'M',
+                        'sensor_type': {
+                            'sensortype_name': 'T1'
+                        }
+                    }
+                ],
+                'site_detail': 'site detail 2',
+                'start_date': '2021-05-05T00:00:00',
+                'start_depth': 1700.0,
+                'start_point': {
+                    'coordinates': [
+                        -121.993,
+                        36.875
+                    ],
+                    'type': 'Point'
+                },
                 'thumbnail_filename': 'tumbnail2.png',
                 'update_status': 6
             }

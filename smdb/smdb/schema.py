@@ -368,8 +368,8 @@ class DeletePlatformType(graphene.Mutation):
 # ===== Platform =====
 class PlatformInput(graphene.InputObjectType):
     platform_name = graphene.String(required=True)
-    platformtypes = graphene.List(PlatformTypeInput)
-    operator_org_name = graphene.String(required=True)
+    platformtype = graphene.Field(PlatformTypeInput)
+    operator_org_name = graphene.String()
 
 
 class CreatePlatform(graphene.Mutation):
@@ -381,10 +381,9 @@ class CreatePlatform(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        for platformtype in input.platformtypes:
-            platformtype, _ = PlatformType.objects.get_or_create(
-                platformtype_name=platformtype.platformtype_name
-            )
+        platformtype, _ = PlatformType.objects.get_or_create(
+            platformtype_name=input.platformtype.platformtype_name
+        )
         platform = Platform.objects.create(
             platform_name=input.platform_name,
             platform_type=platformtype,
@@ -405,12 +404,10 @@ class UpdatePlatform(graphene.Mutation):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
         platform = Platform.objects.get(uuid=uuid)
-        for platformtype_input in input.platformtypes:
-            platformtype, _ = PlatformType.objects.get_or_create(
-                platformtype_name=platformtype_input.platformtype_name
-            )
-            platform.platform_type = platformtype
-            break  # Assign first platformtype_input encountered
+        platformtype, _ = PlatformType.objects.get_or_create(
+            platformtype_name=input.platformtype.platformtype_name
+        )
+        platform.platform_type = platformtype
         platform.platform_name = input.platform_name
         platform.operator_org_name = input.operator_org_name
         platform.save()
@@ -488,7 +485,7 @@ class DeleteSensorType(graphene.Mutation):
 
 # ===== Sensor =====
 class SensorInput(graphene.InputObjectType):
-    sensortypes = graphene.List(SensorTypeInput)
+    sensortype = graphene.Field(SensorTypeInput)
     model_name = graphene.String()
     comment = graphene.String()
     # missions is many-to-many, input will happen from Mission
@@ -504,10 +501,9 @@ class CreateSensor(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        for sensortype in input.sensortypes:
-            sensortype, _ = SensorType.objects.get_or_create(
-                sensortype_name=sensortype.sensortype_name
-            )
+        sensortype, _ = SensorType.objects.get_or_create(
+            sensortype_name=input.sensortype.sensortype_name
+        )
         sensor = Sensor.objects.create(
             sensor_type=sensortype,
             model_name=input.model_name,
@@ -715,7 +711,7 @@ class DeleteCompilation(graphene.Mutation):
 class MissionInput(graphene.InputObjectType):
     mission_name = graphene.String(required=True)
     grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
-    expedition = graphene.Field(ExpeditionInput)
+    expedition = graphene.Field(ExpeditionInput, required=True)
     missiontype = graphene.Field(MissionTypeInput)
     platform = graphene.Field(PlatformInput)
     start_date = graphene.String()
@@ -734,7 +730,7 @@ class MissionInput(graphene.InputObjectType):
     update_status = graphene.Int()
     sensors = graphene.List(SensorInput)
     data_archivals = graphene.List(lambda: DataArchivalInput)
-    citations = graphene.List(CompilationInput)
+    citations = graphene.List(lambda: CitationInput)
 
 
 class CreateMission(graphene.Mutation):
@@ -746,14 +742,58 @@ class CreateMission(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
+
+        expedition, _ = Expedition.objects.get_or_create(
+            expd_name=input.expedition.expd_name,
+        )
+        missiontype, _ = MissionType.objects.get_or_create(
+            missiontype_name=input.missiontype.missiontype_name,
+        )
+        platformtype, _ = PlatformType.objects.get_or_create(
+            platformtype_name=input.platform.platformtype.platformtype_name,
+        )
+        platform, _ = Platform.objects.get_or_create(
+            platform_name=input.platform.platform_name,
+            platform_type=platformtype,
+        )
+        sensors = []
+        for sensor_input in input.sensors or ():
+            sensortype, _ = SensorType.objects.get_or_create(
+                sensortype_name=sensor_input.sensortype.sensortype_name,
+            )
+            sensor, _ = Sensor.objects.get_or_create(
+                comment=sensor_input.comment,
+                model_name=sensor_input.model_name,
+                sensor_type=sensortype,
+            )
+            sensors.append(sensor)
+
+        compilation, _ = Compilation.objects.get_or_create(
+            compilation_dir_name=input.compilation.compilation_dir_name,
+        )
+        data_archivals = []
+        for data_archival_input in input.data_archivals or ():
+            data_archival, _ = DataArchival.objects.get_or_create(
+                doi=data_archival_input.doi,
+                archival_db_name=data_archival_input.archival_db_name,
+            )
+            data_archivals.append(data_archival)
+        citations = []
+        for citation_input in input.citations or ():
+            citation, _ = Citation.objects.get_or_create(
+                doi=citation_input.doi,
+                full_reference=citation_input.full_reference,
+            )
+            citations.append(citation)
+
         mission = Mission.objects.create(
             mission_name=input.mission_name,
             grid_bounds=input.grid_bounds,
-            expedition=input.expedition,
-            missiontype=input.missiontype,
-            platform=input.platform,
-            start_date=input.start_date,
-            end_date=input.end_date,
+            expedition=expedition,
+            missiontype=missiontype,
+            platform=platform,
+            start_date=parse(input.start_date),
+            end_date=parse(input.end_date),
             start_depth=input.start_depth,
             start_point=input.start_point,
             quality_comment=input.quality_comment,
@@ -764,13 +804,12 @@ class CreateMission(graphene.Mutation):
             site_detail=input.site_detail,
             thumbnail_filename=input.thumbnail_filename,
             kml_filename=input.kml_filename,
-            compilation=input.compilation,
             update_status=input.update_status,
-            ##sensors=input.sensors,
-            # 'Direct assignment to the forward side of a many-to-many set is prohibited. Use data_archivals.set() instead.
-            ##data_archivals=input.data_archivals,
-            ##citations=input.citations,
+            compilation=compilation,
         )
+        mission.sensors.set(sensors)
+        mission.data_archivals.set(data_archivals)
+        mission.citations.set(citations)
         mission.save()
         return CreateMission(mission=mission)
 
@@ -785,17 +824,72 @@ class UpdateMission(graphene.Mutation):
     def mutate(self, info, uuid, input):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
+
+        expedition, _ = Expedition.objects.get_or_create(
+            expd_name=input.expedition.expd_name,
+        )
+        missiontype, _ = MissionType.objects.get_or_create(
+            missiontype_name=input.missiontype.missiontype_name,
+        )
+        platformtype, _ = PlatformType.objects.get_or_create(
+            platformtype_name=input.platform.platformtype.platformtype_name,
+        )
+        platform, _ = Platform.objects.get_or_create(
+            platform_name=input.platform.platform_name,
+            platform_type=platformtype,
+        )
+        sensors = []
+        for sensor_input in input.sensors or ():
+            sensortype, _ = SensorType.objects.get_or_create(
+                sensortype_name=sensor_input.sensortype.sensortype_name,
+            )
+            sensor, _ = Sensor.objects.get_or_create(
+                comment=sensor_input.comment,
+                model_name=sensor_input.model_name,
+                sensor_type=sensortype,
+            )
+            sensors.append(sensor)
+        compilation, _ = Compilation.objects.get_or_create(
+            compilation_dir_name=input.compilation.compilation_dir_name,
+        )
+        data_archivals = []
+        for data_archival_input in input.data_archivals or ():
+            data_archival, _ = DataArchival.objects.get_or_create(
+                doi=data_archival_input.doi,
+                archival_db_name=data_archival_input.archival_db_name,
+            )
+            data_archivals.append(data_archival)
+        citations = []
+        for citation_input in input.citations or ():
+            citation, _ = Citation.objects.get_or_create(
+                doi=citation_input.doi,
+                full_reference=citation_input.full_reference,
+            )
+            citations.append(citation)
+
         mission = Mission.objects.get(uuid=uuid)
-        mission.mission_dir_name = input.mission_dir_name
+        mission.mission_name = input.mission_name
         mission.grid_bounds = input.grid_bounds
-        mission.mission_path_name = input.mission_path_name
-        mission.navadjust_dir_path = input.navadjust_dir_path
-        mission.figures_dir_path = input.figures_dir_path
+        mission.expedition = expedition
+        mission.missiontype = missiontype
+        mission.platform = platform
+        mission.start_date = parse(input.start_date)
+        mission.end_date = parse(input.end_date)
+        mission.start_depth = input.start_depth
+        mission.start_point = input.start_point
+        mission.quality_comment = input.quality_comment
+        mission.repeat_survey = input.repeat_survey
         mission.comment = input.comment
+        mission.notes_filename = input.notes_filename
+        mission.region_name = input.region_name
+        mission.site_detail = input.site_detail
         mission.thumbnail_filename = input.thumbnail_filename
         mission.kml_filename = input.kml_filename
-        mission.proc_datalist_filename = input.proc_datalist_filename
         mission.update_status = input.update_status
+        mission.compilation = compilation
+        mission.sensors.set(sensors)
+        mission.data_archivals.set(data_archivals)
+        mission.citations.set(citations)
         mission.save()
         return UpdateMission(mission=mission)
 
@@ -818,6 +912,12 @@ class DataArchivalInput(graphene.InputObjectType):
     missions = graphene.List(MissionInput)
     doi = graphene.String()
     archival_db_name = graphene.String()
+
+
+class CitationInput(graphene.InputObjectType):
+    missions = graphene.List(MissionInput)
+    doi = graphene.String()
+    full_reference = graphene.String()
 
 
 # =====

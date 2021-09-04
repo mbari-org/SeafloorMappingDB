@@ -333,11 +333,9 @@ create_platform_template = Template(
     """mutation {
         create_platform(input: {
             platform_name: "Dorado",
-            platformtypes: [
-                {
+            platformtype: {
                     platformtype_name: "AUV"
-                }
-            ]
+            }
             operator_org_name: "MBARI"
         }) {
             platform {
@@ -389,11 +387,9 @@ def test_update_platform(snapshot):
             """mutation UpdatePlatform($uuid: ID!) {
                 update_platform(uuid: $uuid, input: {
                     platform_name: "Updated",
-                    platformtypes: [
-                        {
+                    platformtype: {
                             platformtype_name: "LRAUV"
-                        }
-                    ]
+                    }
                     operator_org_name: "SIO"
                 }) {
                     platform {
@@ -523,11 +519,9 @@ def test_delete_sensortype(snapshot):
 create_sensor_template = Template(
     """mutation {
         create_sensor(input: {
-            sensortypes: [
-                {
-                    sensortype_name: "Sonar"
-                }
-            ],
+            sensortype: {
+                sensortype_name: "Sonar"
+            },
             model_name: "Initial",
             comment: "Initial comment"
         }) {
@@ -934,25 +928,73 @@ create_mission_template = Template(
     """mutation {
         create_mission(input: {
             mission_name: "Initial",
-            comment: "Initial comment.",
-            end_date: "2021-04-04",
-            notes_filename: "file.notes",
-            quality_comment: "Q",
-            region_name: "region1"
-            repeat_survey: false,
-            site_detail: "site detail",
+            grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
+            expedition: {expd_name: "Initial expedition name"},
+            missiontype: {missiontype_name: "Initial missiontype"},
+            platform: {platform_name: "Initial platform", platformtype: {platformtype_name: "PT1"}},
             start_date: "2021-03-03",
+            end_date: "2021-04-04",
             start_depth: 1500,
-            thumbnail_filename: "tumbnail.png",
+            start_point: "SRID=4326;POINT (-121.893 36.775)",
+            quality_comment: "Q",
+            repeat_survey: false,
+            comment: "Initial comment.",
+            notes_filename: "file.notes",
+            region_name: "region1"
+            site_detail: "site detail",
+            thumbnail_filename: "thumbnail.png",
+            kml_filename: "kml_file.kml",
+            compilation: {compilation_dir_name: "Initial compilation"},
             update_status: 5,
-            grid_bounds: ""}) {
+            sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "ST1"}},
+            #data_archivals {
+            #    archival_db_name
+            #}
+            #citations {
+            #    full_reference
+            #}
+            }) {
             mission {
                 {{ uuid }}
-                comment
+                mission_name
                 grid_bounds
-                kml_filename
+                expedition {
+                    expd_name
+                }
+                missiontype {
+                    missiontype_name
+                }
+                platform {
+                    platform_name
+                }
+                start_date
+                end_date
+                start_depth
+                start_point
+                quality_comment
+                repeat_survey
+                comment
+                notes_filename
+                region_name
+                site_detail
                 thumbnail_filename
+                kml_filename
+                compilation {
+                    compilation_dir_name
+                }
                 update_status
+                sensors {
+                    sensor_type {
+                        sensortype_name
+                    }
+                    model_name
+                }
+                #data_archivals {
+                #    archival_db_name
+                #}
+                #citations {
+                #   full_reference
+                #}
             }
         }
     }"""
@@ -995,33 +1037,81 @@ def test_update_mission(snapshot):
     client = Client(schema)
     create_mission_mutation = create_mission_template.render(uuid="uuid")
     response = client.execute(create_mission_mutation, context=user_authenticated())
+    snapshot.assert_match(response)
     uuid = response["data"]["create_mission"]["mission"]["uuid"]
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
 
     snapshot.assert_match(
         client.execute(
-            """mutation {
-                create_mission(input: {
+            """mutation UpdateMission($uuid: ID!) {
+                update_mission(uuid: $uuid, input: {
                     mission_name: "Updated",
-                    comment: "Updates comment.",
-                    end_date: "2021-05-04",
-                    notes_filename: "file2.notes",
-                    quality_comment: "R",
-                    region_name: "region2"
-                    repeat_survey: true,
-                    site_detail: "site detail 2",
-                    start_date: "2021-04-04",
-                    start_depth: 1700,
-                    thumbnail_filename: "tumbnail2.png",
-                    update_status: 6,
                     grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
+                    expedition: {expd_name: "Added expedition"},
+                    missiontype: {missiontype_name: "Added missiontype"},
+                    platform: {platform_name: "Added platform", platformtype: {platformtype_name: "PT2"}},
+                    start_date: "2021-05-05",
+                    end_date: "2021-06-06",
+                    start_depth: 1700,
+                    start_point: "SRID=4326;POINT (-121.993 36.875)",
+                    quality_comment: "R",
+                    repeat_survey: true,
+                    comment: "Updates comment.",
+                    notes_filename: "file2.notes",
+                    region_name: "region2",
+                    site_detail: "site detail 2",
+                    thumbnail_filename: "tumbnail2.png",
+                    kml_filename: "Added kml_file.kml",
+                    compilation: {compilation_dir_name: "Updated compilation"},
+                    update_status: 6,
+                    sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "T1"}},
+                    #data_archivals {
+                    #    archival_db_name
+                    #}
+                    #citations {
+                    #    full_reference
+                    #}
                     }) {
                     mission {
-                        comment
+                        mission_name
                         grid_bounds
-                        kml_filename
+                        expedition {
+                            expd_name
+                        }
+                        missiontype {
+                            missiontype_name
+                        }
+                        platform {
+                            platform_name
+                        }
+                        start_date
+                        end_date
+                        start_depth
+                        start_point
+                        quality_comment
+                        repeat_survey
+                        comment
+                        notes_filename
+                        region_name
+                        site_detail
                         thumbnail_filename
+                        kml_filename
+                        compilation {
+                            compilation_dir_name
+                        }
                         update_status
+                        sensors {
+                            sensor_type {
+                                sensortype_name
+                            }
+                            model_name
+                        }
+                        #data_archivals {
+                        #    archival_db_name
+                        #}
+                        #citations {
+                        #   full_reference
+                        #}
                     }
                 }
             }""",
