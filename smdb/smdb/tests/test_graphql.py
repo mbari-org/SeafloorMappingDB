@@ -1037,7 +1037,6 @@ def test_update_mission(snapshot):
     client = Client(schema)
     create_mission_mutation = create_mission_template.render(uuid="uuid")
     response = client.execute(create_mission_mutation, context=user_authenticated())
-    snapshot.assert_match(response)
     uuid = response["data"]["create_mission"]["mission"]["uuid"]
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
 
