@@ -1,5 +1,6 @@
 # Snapshot testing referenced here: https://docs.graphene-python.org/en/latest/testing/
 # https://github.com/syrusakbary/snapshottest/#reasons-to-use-this-package
+import graphql
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
@@ -23,11 +24,14 @@ from smdb.users.models import User
 pytestmark = pytest.mark.django_db()
 
 
-def user_authenticated():
+def user_authenticated(anonymous_user=False):
     rf = RequestFactory()
     user, _ = User.objects.get_or_create(username="tester")
     request = rf.post("/graphql/")
-    request.user = user
+    if anonymous_user:
+        request.user = AnonymousUser()
+    else:
+        request.user = user
 
     return request
 
@@ -56,6 +60,16 @@ def test_all_missiontypes_empty(snapshot):
     )
 
 
+def test_create_missiontype_not_authenticated(snapshot):
+    client = Client(schema)
+    response = client.execute(
+        create_missiontype_mutation, context=user_authenticated(anonymous_user=True)
+    )
+    snapshot.assert_match(response)
+    assert MissionType.objects.all().count() == 0
+    assert "You must be logged in" == response["errors"][0]["message"]
+
+
 def test_create_missiontype(snapshot):
     client = Client(schema)
     snapshot.assert_match(
@@ -66,6 +80,7 @@ def test_create_missiontype(snapshot):
 
 def test_all_sensortypes(snapshot):
     client = Client(schema)
+
     client.execute(create_sensortype_mutation, context=user_authenticated())
     response = client.execute(
         """{

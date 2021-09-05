@@ -753,6 +753,26 @@ snapshots['test_create_missiontype 1'] = {
     }
 }
 
+snapshots['test_create_missiontype_not_authenticated 1'] = {
+    'data': {
+        'create_missiontype': None
+    },
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 9,
+                    'line': 2
+                }
+            ],
+            'message': 'You must be logged in',
+            'path': [
+                'create_missiontype'
+            ]
+        }
+    ]
+}
+
 snapshots['test_create_person 1'] = {
     'data': {
         'create_person': {
