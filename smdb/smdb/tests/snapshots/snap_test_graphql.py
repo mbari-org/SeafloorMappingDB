@@ -59,6 +59,40 @@ snapshots['test_all_compilations_empty 1'] = {
     }
 }
 
+snapshots['test_all_dataarchivals 1'] = {
+    'data': {
+        'all_dataarchivals': [
+            {
+                'archival_db_name': 'Initial Archival',
+                'doi': 'doi://123456/hello',
+                'missions': [
+                    {
+                        'expedition': {
+                            'expd_name': 'EN1',
+                            'expd_path_name': 'PN1'
+                        },
+                        'mission_name': 'M1'
+                    },
+                    {
+                        'expedition': {
+                            'expd_name': 'EN2',
+                            'expd_path_name': 'PN2'
+                        },
+                        'mission_name': 'M2'
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+snapshots['test_all_dataarchivals_empty 1'] = {
+    'data': {
+        'all_dataarchivals': [
+        ]
+    }
+}
+
 snapshots['test_all_expeditions 1'] = {
     'data': {
         'all_expeditions': [
@@ -646,6 +680,33 @@ snapshots['test_create_compilation 1'] = {
     }
 }
 
+snapshots['test_create_dataarchival 1'] = {
+    'data': {
+        'create_dataarchival': {
+            'dataarchival': {
+                'archival_db_name': 'Initial Archival',
+                'doi': 'doi://123456/hello',
+                'missions': [
+                    {
+                        'expedition': {
+                            'expd_name': 'EN1',
+                            'expd_path_name': 'PN1'
+                        },
+                        'mission_name': 'M1'
+                    },
+                    {
+                        'expedition': {
+                            'expd_name': 'EN2',
+                            'expd_path_name': 'PN2'
+                        },
+                        'mission_name': 'M2'
+                    }
+                ]
+            }
+        }
+    }
+}
+
 snapshots['test_create_expedition 1'] = {
     'data': {
         'create_expedition': {
@@ -878,6 +939,30 @@ snapshots['test_delete_compilation 1'] = {
     }
 }
 
+snapshots['test_delete_dataarchival 1'] = {
+    'data': {
+        'delete_dataarchival': {
+            'dataarchival': None
+        }
+    },
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 6
+                }
+            ],
+            'message': '"<DataArchival: doi://123456/hello>" needs to have a value for field "id" before this many-to-many relationship can be used.',
+            'path': [
+                'delete_dataarchival',
+                'dataarchival',
+                'missions'
+            ]
+        }
+    ]
+}
+
 snapshots['test_delete_expedition 1'] = {
     'data': {
         'delete_expedition': {
@@ -1042,6 +1127,33 @@ snapshots['test_update_compilation 1'] = {
                 'proc_datalist_filename': 'proc.datalist-2',
                 'thumbnail_filename': 'thumbnail2.png',
                 'update_status': 10
+            }
+        }
+    }
+}
+
+snapshots['test_update_dataarchival 1'] = {
+    'data': {
+        'update_dataarchival': {
+            'dataarchival': {
+                'archival_db_name': 'Updated Archival',
+                'doi': 'doi://7890/hello',
+                'missions': [
+                    {
+                        'expedition': {
+                            'expd_name': 'EN3',
+                            'expd_path_name': 'PN3'
+                        },
+                        'mission_name': 'M3'
+                    },
+                    {
+                        'expedition': {
+                            'expd_name': 'EN4',
+                            'expd_path_name': 'PN4'
+                        },
+                        'mission_name': 'M4'
+                    }
+                ]
             }
         }
     }

@@ -9,6 +9,7 @@ from jinja2 import Template
 
 from smdb.models import (
     Compilation,
+    DataArchival,
     Expedition,
     Mission,
     MissionType,
@@ -97,17 +98,6 @@ def test_update_missiontype(snapshot):
     client = Client(schema)
     client.execute(create_missiontype_mutation, context=user_authenticated())
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
-
-    update_missiontype_mutation = """mutation {
-                update_missiontype(missiontype_name: "Initial", new_missiontype_name: "Updated") {
-                    missiontype {
-                        missiontype_name
-                    }
-                }
-            }"""
-    ##breakpoint()
-    ##result = client.execute(update_missiontype_mutation, context=user_authenticated())
-    ##breakpoint()
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -1159,3 +1149,136 @@ def test_delete_mission(snapshot):
         )
     )
     assert Mission.objects.filter(mission_name="Initial").count() == 0
+
+
+# ===== DataArchival Tests =====
+create_dataarchival_template = Template(
+    """mutation {
+        create_dataarchival(input: {
+            doi: "doi://123456/hello",
+            archival_db_name: "Initial Archival",
+            missions: [ {mission_name: "M1", expedition: {expd_name: "EN1", expd_path_name: "PN1"}},
+                        {mission_name: "M2", expedition: {expd_name: "EN2", expd_path_name: "PN2"}},
+                      ],
+            }) {
+            dataarchival {
+                {{ uuid }}
+                doi
+                archival_db_name
+                missions {
+                    mission_name
+                    expedition {
+                        expd_name
+                        expd_path_name
+                    }
+                }
+            }
+        }
+    }"""
+)
+dataarchival_query = """{
+                all_dataarchivals {
+                    doi
+                    archival_db_name
+                    missions {
+                        mission_name
+                        expedition {
+                            expd_name
+                            expd_path_name
+                        }
+                    }
+                  }
+                }"""
+
+
+def test_all_dataarchivals_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(client.execute(dataarchival_query))
+
+
+def test_create_dataarchival(snapshot):
+    client = Client(schema)
+    create_dataarchival_mutation = create_dataarchival_template.render(uuid="")
+    snapshot.assert_match(
+        client.execute(create_dataarchival_mutation, context=user_authenticated())
+    )
+    assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
+
+
+def test_all_dataarchivals(snapshot):
+    client = Client(schema)
+    create_dataarchival_mutation = create_dataarchival_template.render(uuid="")
+    client.execute(create_dataarchival_mutation, context=user_authenticated())
+    response = client.execute(dataarchival_query)
+    assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
+    snapshot.assert_match(response)
+
+
+def test_update_dataarchival(snapshot):
+    client = Client(schema)
+    create_dataarchival_mutation = create_dataarchival_template.render(uuid="uuid")
+    response = client.execute(
+        create_dataarchival_mutation, context=user_authenticated()
+    )
+    uuid = response["data"]["create_dataarchival"]["dataarchival"]["uuid"]
+    assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateDataArchival($uuid: ID!) {
+                update_dataarchival(uuid: $uuid, input: {
+                    doi: "doi://7890/hello",
+                    archival_db_name: "Updated Archival",
+                    missions: [ {mission_name: "M3", expedition: {expd_name: "EN3", expd_path_name: "PN3"}},
+                                {mission_name: "M4", expedition: {expd_name: "EN4", expd_path_name: "PN4"}},
+                            ],
+                    }) {
+                    dataarchival {
+                        doi
+                        archival_db_name
+                        missions {
+                            mission_name
+                            expedition {
+                                expd_name
+                                expd_path_name
+                            }
+                        }
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert DataArchival.objects.all()[0].doi == "doi://7890/hello"
+
+
+def test_delete_dataarchival(snapshot):
+    client = Client(schema)
+    create_dataarchival_mutation = create_dataarchival_template.render(uuid="uuid")
+    response = client.execute(
+        create_dataarchival_mutation, context=user_authenticated()
+    )
+    uuid = response["data"]["create_dataarchival"]["dataarchival"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteDataArchival($uuid: ID) {
+                delete_dataarchival(uuid: $uuid) {
+                    dataarchival {
+                        doi
+                        archival_db_name
+                        missions {
+                            mission_name
+                            expedition {
+                                expd_name
+                                expd_path_name
+                            }
+                        }
+                    }
+                }
+            }""",
+            variables={"uuid": uuid},
+            context=user_authenticated(),
+        )
+    )
+    assert DataArchival.objects.count() == 0

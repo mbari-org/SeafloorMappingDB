@@ -131,6 +131,17 @@ class MissionNode(DjangoObjectNode):
         )
 
 
+class DataArchivalNode(DjangoObjectNode):
+    class Meta:
+        model = DataArchival
+        fields = (
+            "uuid",
+            "missions",
+            "doi",
+            "archival_db_name",
+        )
+
+
 class Query(graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name="_debug")
     all_missiontypes = graphene.List(MissionTypeNode)
@@ -142,6 +153,7 @@ class Query(graphene.ObjectType):
     all_expeditions = graphene.List(ExpeditionNode)
     all_compilations = graphene.List(CompilationNode)
     all_missions = graphene.List(MissionNode)
+    all_dataarchivals = graphene.List(DataArchivalNode)
 
     missiontype_by_name = graphene.Field(
         MissionTypeNode, name=graphene.String(required=True)
@@ -178,6 +190,9 @@ class Query(graphene.ObjectType):
 
     def resolve_all_missions(root, info):
         return Mission.objects.all()
+
+    def resolve_all_dataarchivals(root, info):
+        return DataArchival.objects.all()
 
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
@@ -743,6 +758,7 @@ class CreateMission(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
 
+        # DRY warning - these calls repeated in UpdateMission()
         expedition, _ = Expedition.objects.get_or_create(
             expd_name=input.expedition.expd_name,
         )
@@ -785,6 +801,7 @@ class CreateMission(graphene.Mutation):
                 full_reference=citation_input.full_reference,
             )
             citations.append(citation)
+        # End DRY warning
 
         mission = Mission.objects.create(
             mission_name=input.mission_name,
@@ -825,6 +842,7 @@ class UpdateMission(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
 
+        # DRY warning - these calls repeated in CreateMission()
         expedition, _ = Expedition.objects.get_or_create(
             expd_name=input.expedition.expd_name,
         )
@@ -866,6 +884,7 @@ class UpdateMission(graphene.Mutation):
                 full_reference=citation_input.full_reference,
             )
             citations.append(citation)
+        # End DRY warning
 
         mission = Mission.objects.get(uuid=uuid)
         mission.mission_name = input.mission_name
@@ -908,10 +927,83 @@ class DeleteMission(graphene.Mutation):
         return DeleteMission(mission=mission)
 
 
+# ===== DataArchival =====
 class DataArchivalInput(graphene.InputObjectType):
     missions = graphene.List(MissionInput)
     doi = graphene.String()
     archival_db_name = graphene.String()
+
+
+class CreateDataArchival(graphene.Mutation):
+    class Arguments:
+        input = DataArchivalInput(required=True)
+
+    dataarchival = graphene.Field(DataArchivalNode)
+
+    def mutate(self, info, input):
+        if not info.context.user.is_authenticated:  # pragma: no cover
+            raise GraphQLError("You must be logged in")
+        missions = []
+        for mission_input in input.missions:
+            expedition, _ = Expedition.objects.get_or_create(
+                expd_name=mission_input.expedition.expd_name,
+                expd_path_name=mission_input.expedition.expd_path_name,
+            )
+            mission, _ = Mission.objects.get_or_create(
+                mission_name=mission_input.mission_name,
+                expedition=expedition,
+            )
+            missions.append(mission)
+        dataarchival = DataArchival.objects.create(
+            doi=input.doi,
+            archival_db_name=input.archival_db_name,
+        )
+        dataarchival.missions.set(missions)
+        dataarchival.save()
+        return CreateDataArchival(dataarchival=dataarchival)
+
+
+class UpdateDataArchival(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+        input = DataArchivalInput(required=True)
+
+    dataarchival = graphene.Field(DataArchivalNode)
+
+    def mutate(self, info, uuid, input):
+        if not info.context.user.is_authenticated:  # pragma: no cover
+            raise GraphQLError("You must be logged in")
+        missions = []
+        for mission_input in input.missions:
+            expedition, _ = Expedition.objects.get_or_create(
+                expd_name=mission_input.expedition.expd_name,
+                expd_path_name=mission_input.expedition.expd_path_name,
+            )
+            mission, _ = Mission.objects.get_or_create(
+                mission_name=mission_input.mission_name,
+                expedition=expedition,
+            )
+            missions.append(mission)
+        dataarchival = DataArchival.objects.get(uuid=uuid)
+        dataarchival.doi = input.doi
+        dataarchival.archival_db_name = input.archival_db_name
+        dataarchival.missions.set(missions)
+        dataarchival.save()
+        return UpdateDataArchival(dataarchival=dataarchival)
+
+
+class DeleteDataArchival(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+
+    dataarchival = graphene.Field(DataArchivalNode)
+
+    def mutate(self, info, uuid):
+        if not info.context.user.is_authenticated:  # pragma: no cover
+            raise GraphQLError("You must be logged in")
+        dataarchival = DataArchival.objects.get(uuid=uuid)
+        dataarchival.delete()
+        return DeleteDataArchival(dataarchival=dataarchival)
 
 
 class CitationInput(graphene.InputObjectType):
@@ -959,6 +1051,10 @@ class Mutation(graphene.ObjectType):
     create_mission = CreateMission.Field()
     update_mission = UpdateMission.Field()
     delete_mission = DeleteMission.Field()
+
+    create_dataarchival = CreateDataArchival.Field()
+    update_dataarchival = UpdateDataArchival.Field()
+    delete_dataarchival = DeleteDataArchival.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)
