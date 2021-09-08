@@ -958,10 +958,7 @@ class CreateDataArchival(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        dataarchival = DataArchival.objects.create(
-            doi=input.doi,
-            archival_db_name=input.archival_db_name,
-        )
+        missions = []
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
                 expd_name=mission_input.expedition.expd_name,
@@ -971,7 +968,12 @@ class CreateDataArchival(graphene.Mutation):
                 mission_name=mission_input.mission_name,
                 expedition=expedition,
             )
-            dataarchival.mission_set.add(mission)
+            missions.append(mission)
+        dataarchival = DataArchival.objects.create(
+            doi=input.doi,
+            archival_db_name=input.archival_db_name,
+        )
+        dataarchival.missions.set(missions)
         dataarchival.save()
         return CreateDataArchival(dataarchival=dataarchival)
 
@@ -986,8 +988,7 @@ class UpdateDataArchival(graphene.Mutation):
     def mutate(self, info, uuid, input):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        dataarchival = DataArchival.objects.get(uuid=uuid)
-        # TODO: Update existing missions, rather than just add them
+        missions = []
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
                 expd_name=mission_input.expedition.expd_name,
@@ -997,10 +998,12 @@ class UpdateDataArchival(graphene.Mutation):
                 mission_name=mission_input.mission_name,
                 expedition=expedition,
             )
-            dataarchival.mission_set.add(mission)
+            missions.append(mission)
 
+        dataarchival = DataArchival.objects.get(uuid=uuid)
         dataarchival.doi = input.doi
         dataarchival.archival_db_name = input.archival_db_name
+        dataarchival.missions.set(missions)
         dataarchival.save()
         return UpdateDataArchival(dataarchival=dataarchival)
 
@@ -1014,7 +1017,6 @@ class DeleteDataArchival(graphene.Mutation):
     def mutate(self, info, uuid):
 
         dataarchival = DataArchival.objects.get(uuid=uuid)
-        dataarchival.mission_set.clear()
         dataarchival.delete()
         return DeleteDataArchival(dataarchival=dataarchival)
 
