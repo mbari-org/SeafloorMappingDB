@@ -793,10 +793,30 @@ snapshots['test_create_mission 1'] = {
     'data': {
         'create_mission': {
             'mission': {
+                'citations': [
+                    {
+                        'doi': 'doi://c_initial/1',
+                        'full_reference': 'C Initial 1'
+                    },
+                    {
+                        'doi': 'doi://c_initial/2',
+                        'full_reference': 'C Initial 2'
+                    }
+                ],
                 'comment': 'Initial comment.',
                 'compilation': {
                     'compilation_dir_name': 'Initial compilation'
                 },
+                'data_archivals': [
+                    {
+                        'archival_db_name': 'DA Initial 1',
+                        'doi': 'doi://da_initial/1'
+                    },
+                    {
+                        'archival_db_name': 'DA Initial 2',
+                        'doi': 'doi://da_initial/2'
+                    }
+                ],
                 'end_date': '2021-04-04T00:00:00',
                 'expedition': {
                     'expd_name': 'Initial expedition name'
@@ -1324,10 +1344,30 @@ snapshots['test_update_mission 1'] = {
     'data': {
         'update_mission': {
             'mission': {
+                'citations': [
+                    {
+                        'doi': 'doi://c_updated/1',
+                        'full_reference': 'C Updated 1'
+                    },
+                    {
+                        'doi': 'doi://c_updated/2',
+                        'full_reference': 'C Updated 2'
+                    }
+                ],
                 'comment': 'Updates comment.',
                 'compilation': {
                     'compilation_dir_name': 'Updated compilation'
                 },
+                'data_archivals': [
+                    {
+                        'archival_db_name': 'DA Updated 1',
+                        'doi': 'doi://da_updated/1'
+                    },
+                    {
+                        'archival_db_name': 'DA Updated 2',
+                        'doi': 'doi://da_updated/2'
+                    }
+                ],
                 'end_date': '2021-06-06T00:00:00',
                 'expedition': {
                     'expd_name': 'Added expedition'

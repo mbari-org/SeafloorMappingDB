@@ -1032,12 +1032,12 @@ create_mission_template = Template(
             compilation: {compilation_dir_name: "Initial compilation"},
             update_status: 5,
             sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "ST1"}},
-            #data_archivals {
-            #    archival_db_name
-            #}
-            #citations {
-            #    full_reference
-            #}
+            data_archivals: [ {doi: "doi://da_initial/1", archival_db_name: "DA Initial 1"},
+                              {doi: "doi://da_initial/2", archival_db_name: "DA Initial 2"},
+                            ],
+            citations: [ {doi: "doi://c_initial/1", full_reference: "C Initial 1"},
+                         {doi: "doi://c_initial/2", full_reference: "C Initial 2"},
+                       ],
             }) {
             mission {
                 {{ uuid }}
@@ -1074,12 +1074,14 @@ create_mission_template = Template(
                     }
                     model_name
                 }
-                #data_archivals {
-                #    archival_db_name
-                #}
-                #citations {
-                #   full_reference
-                #}
+                data_archivals {
+                    doi
+                    archival_db_name
+                }
+                citations {
+                    doi
+                    full_reference
+                }
             }
         }
     }"""
@@ -1151,12 +1153,12 @@ def test_update_mission(snapshot):
                     compilation: {compilation_dir_name: "Updated compilation"},
                     update_status: 6,
                     sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "T1"}},
-                    #data_archivals {
-                    #    archival_db_name
-                    #}
-                    #citations {
-                    #    full_reference
-                    #}
+                    data_archivals: [ {doi: "doi://da_updated/1", archival_db_name: "DA Updated 1"},
+                                      {doi: "doi://da_updated/2", archival_db_name: "DA Updated 2"},
+                                    ],
+                    citations: [ {doi: "doi://c_updated/1", full_reference: "C Updated 1"},
+                                 {doi: "doi://c_updated/2", full_reference: "C Updated 2"},
+                               ],
                     }) {
                     mission {
                         mission_name
@@ -1192,12 +1194,14 @@ def test_update_mission(snapshot):
                             }
                             model_name
                         }
-                        #data_archivals {
-                        #    archival_db_name
-                        #}
-                        #citations {
-                        #   full_reference
-                        #}
+                        data_archivals {
+                            doi
+                            archival_db_name
+                        }
+                        citations {
+                            doi
+                            full_reference
+                        }
                     }
                 }
             }""",
