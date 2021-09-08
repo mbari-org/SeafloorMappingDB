@@ -14,6 +14,7 @@ from smdb.models import (
     Expedition,
     Mission,
     MissionType,
+    Note,
     Person,
     Platform,
     PlatformType,
@@ -95,6 +96,7 @@ def test_missiontype_by_name(snapshot):
     )
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
 
+
 def test_missiontype_by_name_does_not_exist(snapshot):
     client = Client(schema)
     snapshot.assert_match(
@@ -107,6 +109,7 @@ def test_missiontype_by_name_does_not_exist(snapshot):
         )
     )
     assert MissionType.objects.count() == 0
+
 
 def test_all_sensortypes(snapshot):
     client = Client(schema)
@@ -413,6 +416,7 @@ def test_create_platform(snapshot):
     )
     assert Platform.objects.all()[0].platform_name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
+
 
 def test_all_platforms(snapshot):
     client = Client(schema)
@@ -795,7 +799,10 @@ def test_all_expeditions(snapshot):
     )
     assert response["data"]["all_expeditions"][-1]["expd_name"] == "Initial"
     snapshot.assert_match(response)
-    assert repr(Expedition.objects.filter(expd_name="Initial")[0]) == "<Expedition: /mbari/SeafloorMapping/2019/20190308m1 (Initial)>"
+    assert (
+        repr(Expedition.objects.filter(expd_name="Initial")[0])
+        == "<Expedition: /mbari/SeafloorMapping/2019/20190308m1 (Initial)>"
+    )
 
 
 def test_update_expedition(snapshot):
@@ -1139,11 +1146,21 @@ def test_all_missions(snapshot):
     response = client.execute(mission_query)
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
     snapshot.assert_match(response)
-    assert repr(Mission.objects.filter(mission_name="Initial")[0]) == "<Mission: Initial>"
+    assert (
+        repr(Mission.objects.filter(mission_name="Initial")[0]) == "<Mission: Initial>"
+    )
     # Test the .display_ methods that are used by the Django admin
-    assert Mission.objects.filter(mission_name="Initial")[0].display_sensor() == "ST1(M)"
-    assert Mission.objects.filter(mission_name="Initial")[0].display_data_archival() == "doi://da_initial/1, doi://da_initial/2"
-    assert Mission.objects.filter(mission_name="Initial")[0].display_citation() == "doi://c_initial/1, doi://c_initial/2"
+    assert (
+        Mission.objects.filter(mission_name="Initial")[0].display_sensor() == "ST1(M)"
+    )
+    assert (
+        Mission.objects.filter(mission_name="Initial")[0].display_data_archival()
+        == "doi://da_initial/1, doi://da_initial/2"
+    )
+    assert (
+        Mission.objects.filter(mission_name="Initial")[0].display_citation()
+        == "doi://c_initial/1, doi://c_initial/2"
+    )
 
 
 def test_update_mission(snapshot):
@@ -1533,3 +1550,148 @@ def test_delete_citation(snapshot):
         )
     )
     assert Citation.objects.count() == 0
+
+
+# ===== Note Tests =====
+multi_line_text = (
+    """Here is some text that may be in a Note.\nAnd another line of text."""
+)
+create_note_template = Template(
+    """mutation CreateNote($text: String!) {
+        create_note(input: {
+            text: $text
+            mission: {mission_name: "Mn1_test", expedition: {expd_name: "ENn1", expd_path_name: "PNn1"}},
+            }) {
+            note {
+                {{ uuid }}
+                text
+                mission {
+                    mission_name
+                    expedition {
+                        expd_name
+                        expd_path_name
+                    }
+                }
+            }
+        }
+    }"""
+)
+# Do not return verbose text from 5 Missions in text fixture
+note_query = """{
+                all_notes {
+                    mission {
+                        mission_name
+                        expedition {
+                            expd_name
+                            expd_path_name
+                        }
+                    }
+                  }
+                }"""
+
+
+def test_all_notes_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(client.execute(note_query))
+
+
+def test_create_note(snapshot):
+    client = Client(schema)
+    create_note_mutation = create_note_template.render(uuid="")
+    snapshot.assert_match(
+        client.execute(
+            create_note_mutation,
+            variable_values={"text": multi_line_text},
+            context_value=user_authenticated(),
+        )
+    )
+    assert Note.objects.filter(mission__mission_name="Mn1_test")[0].text.startswith(
+        "Here is some text"
+    )
+
+
+def test_all_notes(snapshot):
+    client = Client(schema)
+    create_note_mutation = create_note_template.render(uuid="")
+    client.execute(
+        create_note_mutation,
+        variable_values={"text": multi_line_text},
+        context_value=user_authenticated(),
+    )
+    response = client.execute(note_query)
+    assert Note.objects.filter(mission__mission_name="Mn1_test")[0].text.startswith(
+        "Here is some text"
+    )
+    snapshot.assert_match(response)
+
+
+def test_update_note(snapshot):
+    client = Client(schema)
+    create_note_mutation = create_note_template.render(uuid="uuid")
+    response = client.execute(
+        create_note_mutation,
+        variable_values={"text": multi_line_text},
+        context_value=user_authenticated(),
+    )
+    uuid = response["data"]["create_note"]["note"]["uuid"]
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateNote($uuid: ID!, $text: String!) {
+                update_note(uuid: $uuid, input: {
+                    text: $text,
+                    mission: {mission_name: "Mn1_updated", expedition: {expd_name: "EN3", expd_path_name: "PN3"}},
+                    }) {
+                    note {
+                        text
+                        mission {
+                            mission_name
+                            expedition {
+                                expd_name
+                                expd_path_name
+                            }
+                        }
+                    }
+                }
+            }""",
+            variable_values={"uuid": uuid, "text": "Updated single line of text."},
+            context_value=user_authenticated(),
+        )
+    )
+    assert (
+        Note.objects.filter(mission__mission_name="Mn1_updated")[0].text
+        == "Updated single line of text."
+    )
+
+
+def test_delete_note(snapshot):
+    client = Client(schema)
+    create_note_mutation = create_note_template.render(uuid="uuid")
+    response = client.execute(
+        create_note_mutation,
+        variable_values={"text": multi_line_text},
+        context_value=user_authenticated(),
+    )
+    uuid = response["data"]["create_note"]["note"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteNote($uuid: ID) {
+                delete_note(uuid: $uuid) {
+                    note {
+                        text
+                        mission {
+                            mission_name
+                            expedition {
+                                expd_name
+                                expd_path_name
+                            }
+                        }
+                    }
+                }
+            }""",
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
+        )
+    )
+    # Initial number of Notes from the text fixture
+    assert Note.objects.count() == 5

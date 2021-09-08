@@ -591,6 +591,119 @@ snapshots['test_all_missiontypes_empty 1'] = {
     }
 }
 
+snapshots['test_all_notes 1'] = {
+    'data': {
+        'all_notes': [
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1'
+                    },
+                    'mission_name': '2019/20190124m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1'
+                    },
+                    'mission_name': '2019/20190125m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1'
+                    },
+                    'mission_name': '2019/20190308m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2'
+                    },
+                    'mission_name': '2019/20190308m2'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1'
+                    },
+                    'mission_name': '2019/20190314m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': 'ENn1',
+                        'expd_path_name': 'PNn1'
+                    },
+                    'mission_name': 'Mn1_test'
+                }
+            }
+        ]
+    }
+}
+
+snapshots['test_all_notes_empty 1'] = {
+    'data': {
+        'all_notes': [
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1'
+                    },
+                    'mission_name': '2019/20190124m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1'
+                    },
+                    'mission_name': '2019/20190125m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1'
+                    },
+                    'mission_name': '2019/20190308m1'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2'
+                    },
+                    'mission_name': '2019/20190308m2'
+                }
+            },
+            {
+                'mission': {
+                    'expedition': {
+                        'expd_name': None,
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1'
+                    },
+                    'mission_name': '2019/20190314m1'
+                }
+            }
+        ]
+    }
+}
+
 snapshots['test_all_persons 1'] = {
     'data': {
         'all_persons': [
@@ -925,6 +1038,24 @@ snapshots['test_create_missiontype_not_authenticated 1'] = {
     ]
 }
 
+snapshots['test_create_note 1'] = {
+    'data': {
+        'create_note': {
+            'note': {
+                'mission': {
+                    'expedition': {
+                        'expd_name': 'ENn1',
+                        'expd_path_name': 'PNn1'
+                    },
+                    'mission_name': 'Mn1_test'
+                },
+                'text': '''Here is some text that may be in a Note.
+And another line of text.'''
+            }
+        }
+    }
+}
+
 snapshots['test_create_person 1'] = {
     'data': {
         'create_person': {
@@ -1144,6 +1275,24 @@ snapshots['test_delete_missiontype 1'] = {
         'delete_missiontype': {
             'missiontype': {
                 'missiontype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_delete_note 1'] = {
+    'data': {
+        'delete_note': {
+            'note': {
+                'mission': {
+                    'expedition': {
+                        'expd_name': 'ENn1',
+                        'expd_path_name': 'PNn1'
+                    },
+                    'mission_name': 'Mn1_test'
+                },
+                'text': '''Here is some text that may be in a Note.
+And another line of text.'''
             }
         }
     }
@@ -1451,6 +1600,23 @@ snapshots['test_update_missiontype 1'] = {
         'update_missiontype': {
             'missiontype': {
                 'missiontype_name': 'Updated'
+            }
+        }
+    }
+}
+
+snapshots['test_update_note 1'] = {
+    'data': {
+        'update_note': {
+            'note': {
+                'mission': {
+                    'expedition': {
+                        'expd_name': 'EN3',
+                        'expd_path_name': 'PN3'
+                    },
+                    'mission_name': 'Mn1_updated'
+                },
+                'text': 'Updated single line of text.'
             }
         }
     }

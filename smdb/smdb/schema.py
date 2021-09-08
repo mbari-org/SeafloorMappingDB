@@ -13,6 +13,7 @@ from smdb.models import (
     Expedition,
     Mission,
     MissionType,
+    Note,
     Person,
     Platform,
     PlatformType,
@@ -153,6 +154,16 @@ class CitationNode(DjangoObjectNode):
         )
 
 
+class NoteNode(DjangoObjectNode):
+    class Meta:
+        model = Note
+        fields = (
+            "uuid",
+            "text",
+            "mission",
+        )
+
+
 class Query(graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name="_debug")
     all_missiontypes = graphene.List(MissionTypeNode)
@@ -166,6 +177,7 @@ class Query(graphene.ObjectType):
     all_missions = graphene.List(MissionNode)
     all_dataarchivals = graphene.List(DataArchivalNode)
     all_citations = graphene.List(CitationNode)
+    all_notes = graphene.List(NoteNode)
 
     missiontype_by_name = graphene.Field(
         MissionTypeNode, name=graphene.String(required=True)
@@ -208,6 +220,9 @@ class Query(graphene.ObjectType):
 
     def resolve_all_citations(root, info):
         return Citation.objects.all()
+
+    def resolve_all_notes(root, info):
+        return Note.objects.all()
 
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
@@ -1100,6 +1115,76 @@ class DeleteCitation(graphene.Mutation):
         return DeleteCitation(citation=citation)
 
 
+# ===== Note =====
+class NoteInput(graphene.InputObjectType):
+    text = graphene.String()
+    mission = graphene.Field(MissionInput)
+
+
+class CreateNote(graphene.Mutation):
+    class Arguments:
+        input = NoteInput(required=True)
+
+    note = graphene.Field(NoteNode)
+
+    def mutate(self, info, input):
+        if not info.context.user.is_authenticated:  # pragma: no cover
+            raise GraphQLError("You must be logged in")
+        expedition, _ = Expedition.objects.get_or_create(
+            expd_name=input.mission.expedition.expd_name,
+            expd_path_name=input.mission.expedition.expd_path_name,
+        )
+        mission, _ = Mission.objects.get_or_create(
+            mission_name=input.mission.mission_name,
+            expedition=expedition,
+        )
+        note = Note.objects.create(
+            text=input.text,
+            mission=mission,
+        )
+        note.save()
+        return CreateNote(note=note)
+
+
+class UpdateNote(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+        input = NoteInput(required=True)
+
+    note = graphene.Field(NoteNode)
+
+    def mutate(self, info, uuid, input):
+        if not info.context.user.is_authenticated:  # pragma: no cover
+            raise GraphQLError("You must be logged in")
+        expedition, _ = Expedition.objects.get_or_create(
+            expd_name=input.mission.expedition.expd_name,
+            expd_path_name=input.mission.expedition.expd_path_name,
+        )
+        mission, _ = Mission.objects.get_or_create(
+            mission_name=input.mission.mission_name,
+            expedition=expedition,
+        )
+        note = Note.objects.get(uuid=uuid)
+        note.text = input.text
+        note.mission = mission
+        note.save()
+        return UpdateNote(note=note)
+
+
+class DeleteNote(graphene.Mutation):
+    class Arguments:
+        uuid = graphene.ID()
+
+    note = graphene.Field(NoteNode)
+
+    def mutate(self, info, uuid):
+        if not info.context.user.is_authenticated:  # pragma: no cover
+            raise GraphQLError("You must be logged in")
+        note = Note.objects.get(uuid=uuid)
+        note.delete()
+        return DeleteNote(note=note)
+
+
 # =====
 
 
@@ -1147,6 +1232,10 @@ class Mutation(graphene.ObjectType):
     create_citation = CreateCitation.Field()
     update_citation = UpdateCitation.Field()
     delete_citation = DeleteCitation.Field()
+
+    create_note = CreateNote.Field()
+    update_note = UpdateNote.Field()
+    delete_note = DeleteNote.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, auto_camelcase=False)
