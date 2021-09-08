@@ -610,6 +610,16 @@ snapshots['test_all_persons_empty 1'] = {
     }
 }
 
+snapshots['test_all_platforms 1'] = {
+    'data': {
+        'all_platforms': [
+            {
+                'platform_name': 'Dorado'
+            }
+        ]
+    }
+}
+
 snapshots['test_all_platforms_empty 1'] = {
     'data': {
         'all_platforms': [

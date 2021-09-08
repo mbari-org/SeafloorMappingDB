@@ -222,6 +222,7 @@ def test_all_persons(snapshot):
     assert response["data"]["all_persons"][0]["first_name"] == "Jane"
     assert response["data"]["all_persons"][0]["last_name"] == "Doe"
     assert response["data"]["all_persons"][0]["institution_name"] == "MBARI"
+    assert repr(Person.objects.all()[0]) == "<Person: Doe, Jane>"
     snapshot.assert_match(response)
 
 
@@ -325,6 +326,7 @@ def test_all_platformtypes(snapshot):
                 }"""
     )
     assert response["data"]["all_platformtypes"][0]["platformtype_name"] == "Initial"
+    assert repr(PlatformType.objects.all()[0]) == "<PlatformType: Initial>"
     snapshot.assert_match(response)
 
 
@@ -411,6 +413,21 @@ def test_create_platform(snapshot):
     )
     assert Platform.objects.all()[0].platform_name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
+
+def test_all_platforms(snapshot):
+    client = Client(schema)
+    create_platform_mutation = create_platform_template.render(uuid="")
+    client.execute(create_platform_mutation, context_value=user_authenticated())
+    snapshot.assert_match(
+        client.execute(
+            """{
+                all_platforms {
+                    platform_name
+                  }
+                }"""
+        )
+    )
+    assert repr(Platform.objects.all()[0]) == "<Platform: Dorado (MBARI)>"
 
 
 def test_update_platform(snapshot):
@@ -517,6 +534,7 @@ def test_all_sensortypes(snapshot):
     )
     assert response["data"]["all_sensortypes"][0]["sensortype_name"] == "Initial"
     snapshot.assert_match(response)
+    assert repr(SensorType.objects.all()[0]) == "<SensorType: Initial>"
 
 
 def test_update_sensortype(snapshot):
@@ -618,6 +636,7 @@ def test_all_sensors(snapshot):
     )
     assert response["data"]["all_sensors"][0]["model_name"] == "Initial"
     snapshot.assert_match(response)
+    assert repr(Sensor.objects.all()[0]) == "<Sensor: Sonar(Initial)>"
 
 
 def test_update_sensor(snapshot):
@@ -776,6 +795,7 @@ def test_all_expeditions(snapshot):
     )
     assert response["data"]["all_expeditions"][-1]["expd_name"] == "Initial"
     snapshot.assert_match(response)
+    assert repr(Expedition.objects.filter(expd_name="Initial")[0]) == "<Expedition: /mbari/SeafloorMapping/2019/20190308m1 (Initial)>"
 
 
 def test_update_expedition(snapshot):
@@ -930,6 +950,7 @@ def test_all_compilations(snapshot):
     response = client.execute(compilation_query)
     assert response["data"]["all_compilations"][0]["comment"] == "Initial comment."
     snapshot.assert_match(response)
+    assert repr(Compilation.objects.all()[0]) == "<Compilation: /a/dir/name>"
 
 
 def test_update_compilation(snapshot):
@@ -1118,6 +1139,11 @@ def test_all_missions(snapshot):
     response = client.execute(mission_query)
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
     snapshot.assert_match(response)
+    assert repr(Mission.objects.filter(mission_name="Initial")[0]) == "<Mission: Initial>"
+    # Test the .display_ methods that are used by the Django admin
+    assert Mission.objects.filter(mission_name="Initial")[0].display_sensor() == "ST1(M)"
+    assert Mission.objects.filter(mission_name="Initial")[0].display_data_archival() == "doi://da_initial/1, doi://da_initial/2"
+    assert Mission.objects.filter(mission_name="Initial")[0].display_citation() == "doi://c_initial/1, doi://c_initial/2"
 
 
 def test_update_mission(snapshot):
