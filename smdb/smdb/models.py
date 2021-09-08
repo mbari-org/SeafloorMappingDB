@@ -64,7 +64,7 @@ class Sensor(models.Model):
     missions = models.ManyToManyField("Mission")
 
     def __str__(self):
-        return f"{self.sensor_type}: {self.model_name}"
+        return f"{self.sensor_type}({self.model_name})"
 
 
 class Expedition(models.Model):
@@ -160,19 +160,19 @@ class Mission(models.Model):
         return f"{self.mission_name}"
 
     def display_sensor(self):
-        return ", ".join(sensor.name for sensor in self.sensors.all()[:3])
+        return ", ".join(f"{sensor.sensor_type}({sensor.model_name})" for sensor in self.sensors.all())
 
     display_sensor.short_description = "Sensor"
 
     def display_data_archival(self):
         return ", ".join(
-            data_archival.doi for data_archival in self.data_archivals.all()[:3]
+            data_archival.doi for data_archival in self.data_archivals.all()
         )
 
     display_data_archival.short_description = "Data Archival"
 
     def display_citation(self):
-        return ", ".join(citation.doi for citation in self.citations.all()[:3])
+        return ", ".join(citation.doi for citation in self.citations.all())
 
     display_citation.short_description = "Citation"
 
