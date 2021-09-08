@@ -7,6 +7,40 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots['test_all_citations 1'] = {
+    'data': {
+        'all_citations': [
+            {
+                'doi': 'doi://123456/hello',
+                'full_reference': 'Initial Reference',
+                'missions': [
+                    {
+                        'expedition': {
+                            'expd_name': 'EN1',
+                            'expd_path_name': 'PN1'
+                        },
+                        'mission_name': 'M1'
+                    },
+                    {
+                        'expedition': {
+                            'expd_name': 'EN2',
+                            'expd_path_name': 'PN2'
+                        },
+                        'mission_name': 'M2'
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+snapshots['test_all_citations_empty 1'] = {
+    'data': {
+        'all_citations': [
+        ]
+    }
+}
+
 snapshots['test_all_compilations 1'] = {
     'data': {
         'all_compilations': [
@@ -127,10 +161,10 @@ snapshots['test_all_expeditions 1'] = {
                 'start_date': None
             },
             {
-                'end_date': '1998-07-20T00:00:00+00:00',
+                'end_date': '1998-07-20T00:00:00',
                 'expd_name': 'Initial',
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
-                'start_date': '1998-07-01T00:00:00+00:00'
+                'start_date': '1998-07-01T00:00:00'
             }
         ]
     }
@@ -635,6 +669,33 @@ snapshots['test_all_sensortypes_empty 1'] = {
     }
 }
 
+snapshots['test_create_citation 1'] = {
+    'data': {
+        'create_citation': {
+            'citation': {
+                'doi': 'doi://123456/hello',
+                'full_reference': 'Initial Reference',
+                'missions': [
+                    {
+                        'expedition': {
+                            'expd_name': 'EN1',
+                            'expd_path_name': 'PN1'
+                        },
+                        'mission_name': 'M1'
+                    },
+                    {
+                        'expedition': {
+                            'expd_name': 'EN2',
+                            'expd_path_name': 'PN2'
+                        },
+                        'mission_name': 'M2'
+                    }
+                ]
+            }
+        }
+    }
+}
+
 snapshots['test_create_compilation 1'] = {
     'data': {
         'create_compilation': {
@@ -894,6 +955,30 @@ snapshots['test_create_sensortype 1'] = {
     }
 }
 
+snapshots['test_delete_citation 1'] = {
+    'data': {
+        'delete_citation': {
+            'citation': None
+        }
+    },
+    'errors': [
+        {
+            'locations': [
+                {
+                    'column': 25,
+                    'line': 6
+                }
+            ],
+            'message': '"<Citation: doi://123456/hello>" needs to have a value for field "id" before this many-to-many relationship can be used.',
+            'path': [
+                'delete_citation',
+                'citation',
+                'missions'
+            ]
+        }
+    ]
+}
+
 snapshots['test_delete_compilation 1'] = {
     'data': {
         'delete_compilation': {
@@ -971,14 +1056,14 @@ snapshots['test_delete_expedition 1'] = {
                     'first_name': 'Walter',
                     'last_name': 'Munk'
                 },
-                'end_date': '1998-07-20T00:00:00+00:00',
+                'end_date': '1998-07-20T00:00:00',
                 'expd_name': 'Initial',
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'investigator': {
                     'first_name': 'Henry',
                     'last_name': 'Stommel'
                 },
-                'start_date': '1998-07-01T00:00:00+00:00'
+                'start_date': '1998-07-01T00:00:00'
             }
         }
     }
@@ -1082,6 +1167,33 @@ snapshots['test_delete_sensortype 1'] = {
         'delete_sensortype': {
             'sensortype': {
                 'sensortype_name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_update_citation 1'] = {
+    'data': {
+        'update_citation': {
+            'citation': {
+                'doi': 'doi://7890/hello',
+                'full_reference': 'Updated Reference',
+                'missions': [
+                    {
+                        'expedition': {
+                            'expd_name': 'EN3',
+                            'expd_path_name': 'PN3'
+                        },
+                        'mission_name': 'M3'
+                    },
+                    {
+                        'expedition': {
+                            'expd_name': 'EN4',
+                            'expd_path_name': 'PN4'
+                        },
+                        'mission_name': 'M4'
+                    }
+                ]
             }
         }
     }
