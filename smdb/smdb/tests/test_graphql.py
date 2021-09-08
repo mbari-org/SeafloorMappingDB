@@ -1623,6 +1623,7 @@ def test_all_notes(snapshot):
         "Here is some text"
     )
     snapshot.assert_match(response)
+    assert repr(Note.objects.filter(mission__mission_name="Mn1_test")[0]) == "<Note: Notes for Mn1_test>"
 
 
 def test_update_note(snapshot):
