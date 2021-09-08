@@ -9,6 +9,7 @@ from jinja2 import Template
 
 from smdb.models import (
     Compilation,
+    Citation,
     DataArchival,
     Expedition,
     Mission,
@@ -64,7 +65,8 @@ def test_all_missiontypes_empty(snapshot):
 def test_create_missiontype_not_authenticated(snapshot):
     client = Client(schema)
     response = client.execute(
-        create_missiontype_mutation, context=user_authenticated(anonymous_user=True)
+        create_missiontype_mutation,
+        context_value=user_authenticated(anonymous_user=True),
     )
     snapshot.assert_match(response)
     assert MissionType.objects.all().count() == 0
@@ -74,7 +76,7 @@ def test_create_missiontype_not_authenticated(snapshot):
 def test_create_missiontype(snapshot):
     client = Client(schema)
     snapshot.assert_match(
-        client.execute(create_missiontype_mutation, context=user_authenticated())
+        client.execute(create_missiontype_mutation, context_value=user_authenticated())
     )
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
 
@@ -82,7 +84,7 @@ def test_create_missiontype(snapshot):
 def test_all_sensortypes(snapshot):
     client = Client(schema)
 
-    client.execute(create_sensortype_mutation, context=user_authenticated())
+    client.execute(create_sensortype_mutation, context_value=user_authenticated())
     response = client.execute(
         """{
                 all_sensortypes {
@@ -96,7 +98,7 @@ def test_all_sensortypes(snapshot):
 
 def test_update_missiontype(snapshot):
     client = Client(schema)
-    client.execute(create_missiontype_mutation, context=user_authenticated())
+    client.execute(create_missiontype_mutation, context_value=user_authenticated())
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
     snapshot.assert_match(
         client.execute(
@@ -107,7 +109,7 @@ def test_update_missiontype(snapshot):
                     }
                 }
             }""",
-            context=user_authenticated(),
+            context_value=user_authenticated(),
         )
     )
     assert MissionType.objects.all()[0].missiontype_name == "Updated"
@@ -115,7 +117,7 @@ def test_update_missiontype(snapshot):
 
 def test_delete_missiontype(snapshot):
     client = Client(schema)
-    client.execute(create_missiontype_mutation, context=user_authenticated())
+    client.execute(create_missiontype_mutation, context_value=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -125,7 +127,7 @@ def test_delete_missiontype(snapshot):
                     }
                 }
             }""",
-            context=user_authenticated(),
+            context_value=user_authenticated(),
         )
     )
     assert MissionType.objects.all().count() == 0
@@ -170,7 +172,7 @@ def test_create_person(snapshot):
     client = Client(schema)
     create_person_mutation = create_person_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_person_mutation, context=user_authenticated())
+        client.execute(create_person_mutation, context_value=user_authenticated())
     )
     assert Person.objects.all()[0].first_name == "Jane"
     assert Person.objects.all()[0].last_name == "Doe"
@@ -180,7 +182,7 @@ def test_create_person(snapshot):
 def test_all_persons(snapshot):
     client = Client(schema)
     create_person_mutation = create_person_template.render(uuid="")
-    client.execute(create_person_mutation, context=user_authenticated())
+    client.execute(create_person_mutation, context_value=user_authenticated())
     response = client.execute(
         """{
                 all_persons {
@@ -200,7 +202,9 @@ def test_all_persons(snapshot):
 def test_update_person(snapshot):
     client = Client(schema)
     create_person_mutation = create_person_template.render(uuid="uuid")
-    response = client.execute(create_person_mutation, context=user_authenticated())
+    response = client.execute(
+        create_person_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_person"]["person"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -217,8 +221,8 @@ def test_update_person(snapshot):
                 }
             }
         }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Person.objects.all()[0].first_name == "Jim"
@@ -229,7 +233,9 @@ def test_update_person(snapshot):
 def test_delete_person(snapshot):
     client = Client(schema)
     create_person_mutation = create_person_template.render(uuid="uuid")
-    response = client.execute(create_person_mutation, context=user_authenticated())
+    response = client.execute(
+        create_person_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_person"]["person"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -242,8 +248,8 @@ def test_delete_person(snapshot):
                 }
             }
         }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Person.objects.all().count() == 0
@@ -276,14 +282,14 @@ def test_all_platformtypes_empty(snapshot):
 def test_create_platformtype(snapshot):
     client = Client(schema)
     snapshot.assert_match(
-        client.execute(create_platformtype_mutation, context=user_authenticated())
+        client.execute(create_platformtype_mutation, context_value=user_authenticated())
     )
     assert PlatformType.objects.all()[0].platformtype_name == "Initial"
 
 
 def test_all_platformtypes(snapshot):
     client = Client(schema)
-    client.execute(create_platformtype_mutation, context=user_authenticated())
+    client.execute(create_platformtype_mutation, context_value=user_authenticated())
     response = client.execute(
         """{
                 all_platformtypes {
@@ -297,7 +303,7 @@ def test_all_platformtypes(snapshot):
 
 def test_update_platformtype(snapshot):
     client = Client(schema)
-    client.execute(create_platformtype_mutation, context=user_authenticated())
+    client.execute(create_platformtype_mutation, context_value=user_authenticated())
     assert PlatformType.objects.all()[0].platformtype_name == "Initial"
 
     snapshot.assert_match(
@@ -309,7 +315,7 @@ def test_update_platformtype(snapshot):
                     }
                 }
             }""",
-            context=user_authenticated(),
+            context_value=user_authenticated(),
         )
     )
     assert PlatformType.objects.all()[0].platformtype_name == "Updated"
@@ -317,7 +323,7 @@ def test_update_platformtype(snapshot):
 
 def test_delete_platformtype(snapshot):
     client = Client(schema)
-    client.execute(create_platformtype_mutation, context=user_authenticated())
+    client.execute(create_platformtype_mutation, context_value=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -327,7 +333,7 @@ def test_delete_platformtype(snapshot):
                     }
                 }
             }""",
-            context=user_authenticated(),
+            context_value=user_authenticated(),
         )
     )
     assert PlatformType.objects.all().count() == 0
@@ -374,7 +380,7 @@ def test_create_platform(snapshot):
     client = Client(schema)
     create_platform_mutation = create_platform_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_platform_mutation, context=user_authenticated())
+        client.execute(create_platform_mutation, context_value=user_authenticated())
     )
     assert Platform.objects.all()[0].platform_name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
@@ -383,7 +389,9 @@ def test_create_platform(snapshot):
 def test_update_platform(snapshot):
     client = Client(schema)
     create_platform_mutation = create_platform_template.render(uuid="uuid")
-    response = client.execute(create_platform_mutation, context=user_authenticated())
+    response = client.execute(
+        create_platform_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_platform"]["platform"]["uuid"]
     assert Platform.objects.all()[0].platform_name == "Dorado"
 
@@ -406,8 +414,8 @@ def test_update_platform(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Platform.objects.all()[0].platform_name == "Updated"
@@ -418,7 +426,9 @@ def test_update_platform(snapshot):
 def test_delete_platform(snapshot):
     client = Client(schema)
     create_platform_mutation = create_platform_template.render(uuid="uuid")
-    response = client.execute(create_platform_mutation, context=user_authenticated())
+    response = client.execute(
+        create_platform_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_platform"]["platform"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -429,8 +439,8 @@ def test_delete_platform(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Platform.objects.all().count() == 0
@@ -463,14 +473,14 @@ def test_all_sensortypes_empty(snapshot):
 def test_create_sensortype(snapshot):
     client = Client(schema)
     snapshot.assert_match(
-        client.execute(create_sensortype_mutation, context=user_authenticated())
+        client.execute(create_sensortype_mutation, context_value=user_authenticated())
     )
     assert SensorType.objects.all()[0].sensortype_name == "Initial"
 
 
 def test_all_sensortypes(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation, context=user_authenticated())
+    client.execute(create_sensortype_mutation, context_value=user_authenticated())
     response = client.execute(
         """{
                 all_sensortypes {
@@ -484,7 +494,7 @@ def test_all_sensortypes(snapshot):
 
 def test_update_sensortype(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation, context=user_authenticated())
+    client.execute(create_sensortype_mutation, context_value=user_authenticated())
     assert SensorType.objects.all()[0].sensortype_name == "Initial"
 
     snapshot.assert_match(
@@ -496,7 +506,7 @@ def test_update_sensortype(snapshot):
                     }
                 }
             }""",
-            context=user_authenticated(),
+            context_value=user_authenticated(),
         )
     )
     assert SensorType.objects.all()[0].sensortype_name == "Updated"
@@ -504,7 +514,7 @@ def test_update_sensortype(snapshot):
 
 def test_delete_sensortype(snapshot):
     client = Client(schema)
-    client.execute(create_sensortype_mutation, context=user_authenticated())
+    client.execute(create_sensortype_mutation, context_value=user_authenticated())
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -514,7 +524,7 @@ def test_delete_sensortype(snapshot):
                     }
                 }
             }""",
-            context=user_authenticated(),
+            context_value=user_authenticated(),
         )
     )
     assert SensorType.objects.all().count() == 0
@@ -562,7 +572,7 @@ def test_create_sensor(snapshot):
     client = Client(schema)
     create_sensor_mutation = create_sensor_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_sensor_mutation, context=user_authenticated())
+        client.execute(create_sensor_mutation, context_value=user_authenticated())
     )
     assert Sensor.objects.all()[0].model_name == "Initial"
 
@@ -570,7 +580,7 @@ def test_create_sensor(snapshot):
 def test_all_sensors(snapshot):
     client = Client(schema)
     create_sensor_mutation = create_sensor_template.render(uuid="")
-    client.execute(create_sensor_mutation, context=user_authenticated())
+    client.execute(create_sensor_mutation, context_value=user_authenticated())
     response = client.execute(
         """{
                 all_sensors {
@@ -586,7 +596,9 @@ def test_all_sensors(snapshot):
 def test_update_sensor(snapshot):
     client = Client(schema)
     create_sensor_mutation = create_sensor_template.render(uuid="uuid")
-    response = client.execute(create_sensor_mutation, context=user_authenticated())
+    response = client.execute(
+        create_sensor_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_sensor"]["sensor"]["uuid"]
     assert Sensor.objects.all()[0].model_name == "Initial"
 
@@ -603,8 +615,8 @@ def test_update_sensor(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Sensor.objects.all()[0].model_name == "Updated"
@@ -614,7 +626,9 @@ def test_update_sensor(snapshot):
 def test_delete_sensor(snapshot):
     client = Client(schema)
     create_sensor_mutation = create_sensor_template.render(uuid="uuid")
-    response = client.execute(create_sensor_mutation, context=user_authenticated())
+    response = client.execute(
+        create_sensor_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_sensor"]["sensor"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -626,8 +640,8 @@ def test_delete_sensor(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Sensor.objects.all().count() == 0
@@ -683,7 +697,7 @@ def test_create_expedition(snapshot):
     client = Client(schema)
     create_expedition_mutation = create_expedition_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_expedition_mutation, context=user_authenticated())
+        client.execute(create_expedition_mutation, context_value=user_authenticated())
     )
     assert Expedition.objects.filter(expd_name="Initial")[0].expd_name == "Initial"
 
@@ -691,7 +705,7 @@ def test_create_expedition(snapshot):
 def test_all_expeditions(snapshot):
     client = Client(schema)
     create_expedition_mutation = create_expedition_template.render(uuid="")
-    client.execute(create_expedition_mutation, context=user_authenticated())
+    client.execute(create_expedition_mutation, context_value=user_authenticated())
     response = client.execute(
         """{
                 all_expeditions {
@@ -709,7 +723,9 @@ def test_all_expeditions(snapshot):
 def test_update_expedition(snapshot):
     client = Client(schema)
     create_expedition_mutation = create_expedition_template.render(uuid="uuid")
-    response = client.execute(create_expedition_mutation, context=user_authenticated())
+    response = client.execute(
+        create_expedition_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_expedition"]["expedition"]["uuid"]
     assert Expedition.objects.get(expd_name="Initial").expd_name == "Initial"
 
@@ -748,8 +764,8 @@ def test_update_expedition(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Expedition.objects.get(expd_name="Updated").expd_name == "Updated"
@@ -758,7 +774,9 @@ def test_update_expedition(snapshot):
 def test_delete_expedition(snapshot):
     client = Client(schema)
     create_expedition_mutation = create_expedition_template.render(uuid="uuid")
-    response = client.execute(create_expedition_mutation, context=user_authenticated())
+    response = client.execute(
+        create_expedition_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_expedition"]["expedition"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -780,8 +798,8 @@ def test_delete_expedition(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Expedition.objects.filter(expd_name="Initial").count() == 0
@@ -842,7 +860,7 @@ def test_create_compilation(snapshot):
     client = Client(schema)
     create_compilation_mutation = create_compilation_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_compilation_mutation, context=user_authenticated())
+        client.execute(create_compilation_mutation, context_value=user_authenticated())
     )
     assert Compilation.objects.all()[0].comment == "Initial comment."
 
@@ -850,7 +868,7 @@ def test_create_compilation(snapshot):
 def test_all_compilations(snapshot):
     client = Client(schema)
     create_compilation_mutation = create_compilation_template.render(uuid="")
-    client.execute(create_compilation_mutation, context=user_authenticated())
+    client.execute(create_compilation_mutation, context_value=user_authenticated())
     response = client.execute(compilation_query)
     assert response["data"]["all_compilations"][0]["comment"] == "Initial comment."
     snapshot.assert_match(response)
@@ -859,7 +877,9 @@ def test_all_compilations(snapshot):
 def test_update_compilation(snapshot):
     client = Client(schema)
     create_compilation_mutation = create_compilation_template.render(uuid="uuid")
-    response = client.execute(create_compilation_mutation, context=user_authenticated())
+    response = client.execute(
+        create_compilation_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_compilation"]["compilation"]["uuid"]
     assert Compilation.objects.all()[0].comment == "Initial comment."
 
@@ -891,8 +911,8 @@ def test_update_compilation(snapshot):
             }
         }
     }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Compilation.objects.all()[0].comment == "Updated comment."
@@ -901,7 +921,9 @@ def test_update_compilation(snapshot):
 def test_delete_compilation(snapshot):
     client = Client(schema)
     create_compilation_mutation = create_compilation_template.render(uuid="uuid")
-    response = client.execute(create_compilation_mutation, context=user_authenticated())
+    response = client.execute(
+        create_compilation_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_compilation"]["compilation"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -921,8 +943,8 @@ def test_delete_compilation(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Compilation.objects.all().count() == 0
@@ -1024,7 +1046,7 @@ def test_create_mission(snapshot):
     client = Client(schema)
     create_mission_mutation = create_mission_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_mission_mutation, context=user_authenticated())
+        client.execute(create_mission_mutation, context_value=user_authenticated())
     )
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
 
@@ -1032,7 +1054,7 @@ def test_create_mission(snapshot):
 def test_all_missions(snapshot):
     client = Client(schema)
     create_mission_mutation = create_mission_template.render(uuid="")
-    client.execute(create_mission_mutation, context=user_authenticated())
+    client.execute(create_mission_mutation, context_value=user_authenticated())
     response = client.execute(mission_query)
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
     snapshot.assert_match(response)
@@ -1041,7 +1063,9 @@ def test_all_missions(snapshot):
 def test_update_mission(snapshot):
     client = Client(schema)
     create_mission_mutation = create_mission_template.render(uuid="uuid")
-    response = client.execute(create_mission_mutation, context=user_authenticated())
+    response = client.execute(
+        create_mission_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_mission"]["mission"]["uuid"]
     assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
 
@@ -1119,8 +1143,8 @@ def test_update_mission(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Mission.objects.filter(mission_name="Updated")[0].mission_name == "Updated"
@@ -1129,7 +1153,9 @@ def test_update_mission(snapshot):
 def test_delete_mission(snapshot):
     client = Client(schema)
     create_mission_mutation = create_mission_template.render(uuid="uuid")
-    response = client.execute(create_mission_mutation, context=user_authenticated())
+    response = client.execute(
+        create_mission_mutation, context_value=user_authenticated()
+    )
     uuid = response["data"]["create_mission"]["mission"]["uuid"]
     snapshot.assert_match(
         client.execute(
@@ -1144,8 +1170,8 @@ def test_delete_mission(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert Mission.objects.filter(mission_name="Initial").count() == 0
@@ -1200,15 +1226,17 @@ def test_create_dataarchival(snapshot):
     client = Client(schema)
     create_dataarchival_mutation = create_dataarchival_template.render(uuid="")
     snapshot.assert_match(
-        client.execute(create_dataarchival_mutation, context=user_authenticated())
+        client.execute(create_dataarchival_mutation, context_value=user_authenticated())
     )
     assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
+    assert DataArchival.objects.all()[0].missions.all()[0].mission_name == "M1"
+    assert DataArchival.objects.all()[0].missions.all()[1].mission_name == "M2"
 
 
 def test_all_dataarchivals(snapshot):
     client = Client(schema)
     create_dataarchival_mutation = create_dataarchival_template.render(uuid="")
-    client.execute(create_dataarchival_mutation, context=user_authenticated())
+    client.execute(create_dataarchival_mutation, context_value=user_authenticated())
     response = client.execute(dataarchival_query)
     assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
     snapshot.assert_match(response)
@@ -1218,7 +1246,7 @@ def test_update_dataarchival(snapshot):
     client = Client(schema)
     create_dataarchival_mutation = create_dataarchival_template.render(uuid="uuid")
     response = client.execute(
-        create_dataarchival_mutation, context=user_authenticated()
+        create_dataarchival_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_dataarchival"]["dataarchival"]["uuid"]
     assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
@@ -1246,18 +1274,20 @@ def test_update_dataarchival(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert DataArchival.objects.all()[0].doi == "doi://7890/hello"
+    assert DataArchival.objects.all()[0].missions.all()[0].mission_name == "M3"
+    assert DataArchival.objects.all()[0].missions.all()[1].mission_name == "M4"
 
 
 def test_delete_dataarchival(snapshot):
     client = Client(schema)
     create_dataarchival_mutation = create_dataarchival_template.render(uuid="uuid")
     response = client.execute(
-        create_dataarchival_mutation, context=user_authenticated()
+        create_dataarchival_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_dataarchival"]["dataarchival"]["uuid"]
     snapshot.assert_match(
@@ -1277,8 +1307,141 @@ def test_delete_dataarchival(snapshot):
                     }
                 }
             }""",
-            variables={"uuid": uuid},
-            context=user_authenticated(),
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
         )
     )
     assert DataArchival.objects.count() == 0
+
+
+# ===== Citation Tests =====
+create_citation_template = Template(
+    """mutation {
+        create_citation(input: {
+            doi: "doi://123456/hello",
+            full_reference: "Initial Reference",
+            missions: [ {mission_name: "M1", expedition: {expd_name: "EN1", expd_path_name: "PN1"}},
+                        {mission_name: "M2", expedition: {expd_name: "EN2", expd_path_name: "PN2"}},
+                      ],
+            }) {
+            citation {
+                {{ uuid }}
+                doi
+                full_reference
+                missions {
+                    mission_name
+                    expedition {
+                        expd_name
+                        expd_path_name
+                    }
+                }
+            }
+        }
+    }"""
+)
+citation_query = """{
+                all_citations {
+                    doi
+                    full_reference
+                    missions {
+                        mission_name
+                        expedition {
+                            expd_name
+                            expd_path_name
+                        }
+                    }
+                  }
+                }"""
+
+
+def test_all_citations_empty(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(client.execute(citation_query))
+
+
+def test_create_citation(snapshot):
+    client = Client(schema)
+    create_citation_mutation = create_citation_template.render(uuid="")
+    snapshot.assert_match(
+        client.execute(create_citation_mutation, context_value=user_authenticated())
+    )
+    assert Citation.objects.all()[0].doi == "doi://123456/hello"
+
+
+def test_all_citations(snapshot):
+    client = Client(schema)
+    create_citation_mutation = create_citation_template.render(uuid="")
+    client.execute(create_citation_mutation, context_value=user_authenticated())
+    response = client.execute(citation_query)
+    assert Citation.objects.all()[0].doi == "doi://123456/hello"
+    snapshot.assert_match(response)
+
+
+def test_update_citation(snapshot):
+    client = Client(schema)
+    create_citation_mutation = create_citation_template.render(uuid="uuid")
+    response = client.execute(
+        create_citation_mutation, context_value=user_authenticated()
+    )
+    uuid = response["data"]["create_citation"]["citation"]["uuid"]
+    assert Citation.objects.all()[0].doi == "doi://123456/hello"
+
+    snapshot.assert_match(
+        client.execute(
+            """mutation UpdateCitation($uuid: ID!) {
+                update_citation(uuid: $uuid, input: {
+                    doi: "doi://7890/hello",
+                    full_reference: "Updated Reference",
+                    missions: [ {mission_name: "M3", expedition: {expd_name: "EN3", expd_path_name: "PN3"}},
+                                {mission_name: "M4", expedition: {expd_name: "EN4", expd_path_name: "PN4"}},
+                            ],
+                    }) {
+                    citation {
+                        doi
+                        full_reference
+                        missions {
+                            mission_name
+                            expedition {
+                                expd_name
+                                expd_path_name
+                            }
+                        }
+                    }
+                }
+            }""",
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
+        )
+    )
+    assert Citation.objects.all()[0].doi == "doi://7890/hello"
+
+
+def test_delete_citation(snapshot):
+    client = Client(schema)
+    create_citation_mutation = create_citation_template.render(uuid="uuid")
+    response = client.execute(
+        create_citation_mutation, context_value=user_authenticated()
+    )
+    uuid = response["data"]["create_citation"]["citation"]["uuid"]
+    snapshot.assert_match(
+        client.execute(
+            """mutation DeleteCitation($uuid: ID) {
+                delete_citation(uuid: $uuid) {
+                    citation {
+                        doi
+                        full_reference
+                        missions {
+                            mission_name
+                            expedition {
+                                expd_name
+                                expd_path_name
+                            }
+                        }
+                    }
+                }
+            }""",
+            variable_values={"uuid": uuid},
+            context_value=user_authenticated(),
+        )
+    )
+    assert Citation.objects.count() == 0
