@@ -1172,6 +1172,34 @@ snapshots['test_delete_sensortype 1'] = {
     }
 }
 
+snapshots['test_expedition_by_name 1'] = {
+    'data': {
+        'expedition_by_name': {
+            'expd_name': 'Initial'
+        }
+    }
+}
+
+snapshots['test_expedition_by_name_does_not_exist 1'] = {
+    'data': {
+        'expedition_by_name': None
+    }
+}
+
+snapshots['test_missiontype_by_name 1'] = {
+    'data': {
+        'missiontype_by_name': {
+            'missiontype_name': 'Initial'
+        }
+    }
+}
+
+snapshots['test_missiontype_by_name_does_not_exist 1'] = {
+    'data': {
+        'missiontype_by_name': None
+    }
+}
+
 snapshots['test_update_citation 1'] = {
     'data': {
         'update_citation': {

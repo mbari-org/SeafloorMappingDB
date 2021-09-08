@@ -81,6 +81,33 @@ def test_create_missiontype(snapshot):
     assert MissionType.objects.all()[0].missiontype_name == "Initial"
 
 
+def test_missiontype_by_name(snapshot):
+    client = Client(schema)
+    client.execute(create_missiontype_mutation, context_value=user_authenticated())
+    snapshot.assert_match(
+        client.execute(
+            """{
+                 missiontype_by_name(name: "Initial") {
+                    missiontype_name
+                  }
+                }"""
+        )
+    )
+    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+
+def test_missiontype_by_name_does_not_exist(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                 missiontype_by_name(name: "DoesNotExist") {
+                    missiontype_name
+                  }
+                }"""
+        )
+    )
+    assert MissionType.objects.count() == 0
+
 def test_all_sensortypes(snapshot):
     client = Client(schema)
 
@@ -700,6 +727,37 @@ def test_create_expedition(snapshot):
         client.execute(create_expedition_mutation, context_value=user_authenticated())
     )
     assert Expedition.objects.filter(expd_name="Initial")[0].expd_name == "Initial"
+
+
+def test_expedition_by_name(snapshot):
+    client = Client(schema)
+    create_expedition_mutation = create_expedition_template.render(uuid="")
+    client.execute(create_expedition_mutation, context_value=user_authenticated())
+    snapshot.assert_match(
+        client.execute(
+            """{
+                 expedition_by_name(expd_name: "Initial") {
+                    expd_name
+                  }
+                }"""
+        )
+    )
+    assert Expedition.objects.filter(expd_name="Initial")[0].expd_name == "Initial"
+
+
+def test_expedition_by_name_does_not_exist(snapshot):
+    client = Client(schema)
+    snapshot.assert_match(
+        client.execute(
+            """{
+                 expedition_by_name(expd_name: "DoesNotExist") {
+                    expd_name
+                  }
+                }"""
+        )
+    )
+    # Only the 5 Expeditions loaded by the test fixture
+    assert Expedition.objects.count() == 5
 
 
 def test_all_expeditions(snapshot):
