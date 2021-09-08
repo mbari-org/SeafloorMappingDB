@@ -33,7 +33,7 @@ USE_I18N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
 USE_L10N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
-USE_TZ = True
+USE_TZ = False
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
 LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 
@@ -77,6 +77,7 @@ THIRD_PARTY_APPS = [
     "django_bleach",
     "graphene_django",
     "graphene_graphiql_explorer",
+    "graphene_gis",
 ]
 
 LOCAL_APPS = [
@@ -297,5 +298,10 @@ CORS_URLS_REGEX = r"^/api/.*$"
 # ------------------------------------------------------------------------------
 GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="/usr/lib/libgdal.so")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-GRAPHENE = {"SCHEMA": "smdb.schema.schema"}
+GRAPHENE = {
+    "SCHEMA": "smdb.schema.schema",
+    "MIDDLEWARE": [
+        "graphene_django.debug.DjangoDebugMiddleware",
+    ],
+}
 TEST_RUNNER = "snapshottest.django.TestRunner"

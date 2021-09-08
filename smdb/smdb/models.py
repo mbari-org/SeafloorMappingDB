@@ -64,7 +64,7 @@ class Sensor(models.Model):
     missions = models.ManyToManyField("Mission")
 
     def __str__(self):
-        return f"{self.sensor_type}: {self.model_name}"
+        return f"{self.sensor_type}({self.model_name})"
 
 
 class Expedition(models.Model):
@@ -130,8 +130,8 @@ class Mission(models.Model):
     platform = models.ForeignKey(
         Platform, on_delete=models.CASCADE, blank=True, null=True
     )
-    start_date = models.DateTimeField(null=True)
-    end_date = models.DateTimeField(null=True)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
     start_depth = models.FloatField(blank=True, null=True)
     start_point = models.PointField(
         srid=4326, spatial_index=True, dim=2, blank=True, null=True
@@ -139,16 +139,20 @@ class Mission(models.Model):
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
-    notes_filename = models.CharField(max_length=128, db_index=True, null=True)
-    region_name = models.CharField(max_length=128, db_index=True)
-    site_detail = models.CharField(max_length=128, db_index=True)
-    thumbnail_filename = models.CharField(max_length=128, db_index=True)
-    kml_filename = models.CharField(max_length=128, db_index=True)
+    notes_filename = models.CharField(
+        max_length=128, db_index=True, blank=True, null=True
+    )
+    region_name = models.CharField(max_length=128, db_index=True, blank=True)
+    site_detail = models.CharField(max_length=128, db_index=True, blank=True)
+    thumbnail_filename = models.CharField(max_length=128, db_index=True, blank=True)
+    kml_filename = models.CharField(
+        max_length=128, db_index=True, blank=True, null=True
+    )
     compilation = models.ForeignKey(
         Compilation, on_delete=models.CASCADE, blank=True, null=True
     )
     update_status = models.IntegerField(blank=True, null=True)
-    sensors = models.ManyToManyField(Sensor)
+    sensors = models.ManyToManyField(Sensor, blank=True)
     data_archivals = models.ManyToManyField("DataArchival", blank=True)
     citations = models.ManyToManyField("Citation", blank=True)
 
@@ -156,19 +160,19 @@ class Mission(models.Model):
         return f"{self.mission_name}"
 
     def display_sensor(self):
-        return ", ".join(sensor.name for sensor in self.sensors.all()[:3])
+        return ", ".join(f"{sensor.sensor_type}({sensor.model_name})" for sensor in self.sensors.all())
 
     display_sensor.short_description = "Sensor"
 
     def display_data_archival(self):
         return ", ".join(
-            data_archival.doi for data_archival in self.data_archivals.all()[:3]
+            data_archival.doi for data_archival in self.data_archivals.all()
         )
 
     display_data_archival.short_description = "Data Archival"
 
     def display_citation(self):
-        return ", ".join(citation.doi for citation in self.citations.all()[:3])
+        return ", ".join(citation.doi for citation in self.citations.all())
 
     display_citation.short_description = "Citation"
 

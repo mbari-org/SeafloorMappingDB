@@ -182,7 +182,7 @@ class Scanner:
         parser.add_argument(
             "--clobber",
             action="store_true",
-            help="Delete all Missions before loading",
+            help="Delete all Expeditions and Missions before loading",
         )
         parser.add_argument(
             "--exclude",
@@ -227,8 +227,13 @@ def run(*args):
     sc.logger.debug("Arguments passed to run(): %s", " ".join(args))
 
     if sc.args.clobber:
-        ans = input("\nAre you sure you want to delete all existing Missions? [y/N] ")
+        ans = input(
+            "\nAre you sure you want to delete all existing Expeditions and Missions? [y/N] "
+        )
         if ans.lower() == "y":
+            sc.logger.info("Deleting %s Expedition", Expedition.objects.all().count())
+            for expd in Expedition.objects.all():
+                expd.delete()
             sc.logger.info("Deleting %s Missions", Mission.objects.all().count())
             for miss in Mission.objects.all():
                 miss.delete()
@@ -280,6 +285,8 @@ def run(*args):
 
             miss_count += 1
             sc.logger.info("%3d. Saved %s", miss_count, mission)
+            if miss_count == 5:
+                sys.exit(1)
 
 
 if __name__ == "__main__":
