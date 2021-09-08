@@ -6,7 +6,7 @@ from smdb.users.api.views import UserViewSet
 from . import views
 
 if settings.DEBUG:
-    router = DefaultRouter()
+    router = DefaultRouter() # pragma: no cover
 else:
     router = SimpleRouter()
 
