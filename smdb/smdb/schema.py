@@ -47,7 +47,7 @@ class PlatformNode(DjangoObjectNode):
             "uuid",
             "platform_name",
             "operator_org_name",
-            "platform_type",
+            "platformtype",
         )
 
 
@@ -62,7 +62,7 @@ class SensorNode(DjangoObjectNode):
         model = Sensor
         fields = (
             "uuid",
-            "sensor_type",
+            "sensortype",
             "model_name",
             "comment",
             "missions",
@@ -431,7 +431,7 @@ class CreatePlatform(graphene.Mutation):
         )
         platform = Platform.objects.create(
             platform_name=input.platform_name,
-            platform_type=platformtype,
+            platformtype=platformtype,
             operator_org_name=input.operator_org_name,
         )
         platform.save()
@@ -452,7 +452,7 @@ class UpdatePlatform(graphene.Mutation):
         platformtype, _ = PlatformType.objects.get_or_create(
             platformtype_name=input.platformtype.platformtype_name
         )
-        platform.platform_type = platformtype
+        platform.platformtype = platformtype
         platform.platform_name = input.platform_name
         platform.operator_org_name = input.operator_org_name
         platform.save()
@@ -550,7 +550,7 @@ class CreateSensor(graphene.Mutation):
             sensortype_name=input.sensortype.sensortype_name
         )
         sensor = Sensor.objects.create(
-            sensor_type=sensortype,
+            sensortype=sensortype,
             model_name=input.model_name,
             comment=input.comment,
         )
@@ -800,7 +800,7 @@ class CreateMission(graphene.Mutation):
         )
         platform, _ = Platform.objects.get_or_create(
             platform_name=input.platform.platform_name,
-            platform_type=platformtype,
+            platformtype=platformtype,
         )
         sensors = []
         for sensor_input in input.sensors or ():
@@ -810,7 +810,7 @@ class CreateMission(graphene.Mutation):
             sensor, _ = Sensor.objects.get_or_create(
                 comment=sensor_input.comment,
                 model_name=sensor_input.model_name,
-                sensor_type=sensortype,
+                sensortype=sensortype,
             )
             sensors.append(sensor)
 
@@ -884,7 +884,7 @@ class UpdateMission(graphene.Mutation):
         )
         platform, _ = Platform.objects.get_or_create(
             platform_name=input.platform.platform_name,
-            platform_type=platformtype,
+            platformtype=platformtype,
         )
         sensors = []
         for sensor_input in input.sensors or ():
@@ -894,7 +894,7 @@ class UpdateMission(graphene.Mutation):
             sensor, _ = Sensor.objects.get_or_create(
                 comment=sensor_input.comment,
                 model_name=sensor_input.model_name,
-                sensor_type=sensortype,
+                sensortype=sensortype,
             )
             sensors.append(sensor)
         compilation, _ = Compilation.objects.get_or_create(

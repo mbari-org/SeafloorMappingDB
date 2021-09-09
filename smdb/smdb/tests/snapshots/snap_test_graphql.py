@@ -986,7 +986,7 @@ snapshots['test_create_mission 1'] = {
                 'sensors': [
                     {
                         'model_name': 'M',
-                        'sensor_type': {
+                        'sensortype': {
                             'sensortype_name': 'ST1'
                         }
                     }
@@ -1074,7 +1074,7 @@ snapshots['test_create_platform 1'] = {
             'platform': {
                 'operator_org_name': 'MBARI',
                 'platform_name': 'Dorado',
-                'platform_type': {
+                'platformtype': {
                     'platformtype_name': 'AUV'
                 }
             }
@@ -1098,7 +1098,7 @@ snapshots['test_create_sensor 1'] = {
             'sensor': {
                 'comment': 'Initial comment',
                 'model_name': 'Initial',
-                'sensor_type': {
+                'sensortype': {
                     'sensortype_name': 'Sonar'
                 }
             }
@@ -1573,7 +1573,7 @@ snapshots['test_update_mission 1'] = {
                 'sensors': [
                     {
                         'model_name': 'M',
-                        'sensor_type': {
+                        'sensortype': {
                             'sensortype_name': 'T1'
                         }
                     }
@@ -1640,7 +1640,7 @@ snapshots['test_update_platform 1'] = {
             'platform': {
                 'operator_org_name': 'SIO',
                 'platform_name': 'Updated',
-                'platform_type': {
+                'platformtype': {
                     'platformtype_name': 'LRAUV'
                 }
             }

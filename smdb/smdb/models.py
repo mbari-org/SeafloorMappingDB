@@ -32,7 +32,7 @@ class PlatformType(models.Model):
 
 class Platform(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    platform_type = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
+    platformtype = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
     platform_name = models.CharField(max_length=128, db_index=True, unique=True)
     operator_org_name = models.CharField(max_length=128, blank=True, null=True)
 
@@ -58,13 +58,13 @@ class SensorType(models.Model):
 
 class Sensor(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    sensor_type = models.ForeignKey(SensorType, on_delete=models.CASCADE)
+    sensortype = models.ForeignKey(SensorType, on_delete=models.CASCADE)
     model_name = models.CharField(max_length=128)
     comment = models.CharField(max_length=128)
     missions = models.ManyToManyField("Mission")
 
     def __str__(self):
-        return f"{self.sensor_type}({self.model_name})"
+        return f"{self.sensortype}({self.model_name})"
 
 
 class Expedition(models.Model):
@@ -160,7 +160,9 @@ class Mission(models.Model):
         return f"{self.mission_name}"
 
     def display_sensor(self):
-        return ", ".join(f"{sensor.sensor_type}({sensor.model_name})" for sensor in self.sensors.all())
+        return ", ".join(
+            f"{sensor.sensortype}({sensor.model_name})" for sensor in self.sensors.all()
+        )
 
     display_sensor.short_description = "Sensor"
 

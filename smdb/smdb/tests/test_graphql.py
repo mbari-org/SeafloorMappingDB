@@ -385,7 +385,7 @@ create_platform_template = Template(
                 {{ uuid }}
                 platform_name
                 operator_org_name
-                platform_type {
+                platformtype {
                     platformtype_name
                 }
             }
@@ -455,7 +455,7 @@ def test_update_platform(snapshot):
                 }) {
                     platform {
                         platform_name
-                        platform_type {
+                        platformtype {
                             platformtype_name
                         }
                         operator_org_name
@@ -467,7 +467,7 @@ def test_update_platform(snapshot):
         )
     )
     assert Platform.objects.all()[0].platform_name == "Updated"
-    assert Platform.objects.all()[0].platform_type.platformtype_name == "LRAUV"
+    assert Platform.objects.all()[0].platformtype.platformtype_name == "LRAUV"
     assert Platform.objects.all()[0].operator_org_name == "SIO"
 
 
@@ -593,7 +593,7 @@ create_sensor_template = Template(
                 {{ uuid }}
                 model_name
                 comment
-                sensor_type {
+                sensortype {
                     sensortype_name
                 }
             }
@@ -1097,7 +1097,7 @@ create_mission_template = Template(
                 }
                 update_status
                 sensors {
-                    sensor_type {
+                    sensortype {
                         sensortype_name
                     }
                     model_name
@@ -1232,7 +1232,7 @@ def test_update_mission(snapshot):
                         }
                         update_status
                         sensors {
-                            sensor_type {
+                            sensortype {
                                 sensortype_name
                             }
                             model_name
@@ -1623,7 +1623,10 @@ def test_all_notes(snapshot):
         "Here is some text"
     )
     snapshot.assert_match(response)
-    assert repr(Note.objects.filter(mission__mission_name="Mn1_test")[0]) == "<Note: Notes for Mn1_test>"
+    assert (
+        repr(Note.objects.filter(mission__mission_name="Mn1_test")[0])
+        == "<Note: Notes for Mn1_test>"
+    )
 
 
 def test_update_note(snapshot):
