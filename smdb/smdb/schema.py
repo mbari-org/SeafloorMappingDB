@@ -54,7 +54,7 @@ class PlatformNode(DjangoObjectNode):
 class SensorTypeNode(DjangoObjectNode):
     class Meta:
         model = SensorType
-        fields = ("uuid", "sensortype_name")
+        fields = ("uuid", "name")
 
 
 class SensorNode(DjangoObjectNode):
@@ -475,20 +475,20 @@ class DeletePlatform(graphene.Mutation):
 
 # ===== SensorType =====
 class SensorTypeInput(graphene.InputObjectType):
-    sensortype_name = graphene.String(required=True)
+    name = graphene.String(required=True)
 
 
 class CreateSensorType(graphene.Mutation):
     class Arguments:
-        sensortype_name = graphene.String()
+        name = graphene.String()
 
     sensortype = graphene.Field(SensorTypeNode)
 
-    def mutate(self, info, sensortype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.create(
-            sensortype_name=sensortype_name,
+            name=name,
         )
         sensortype.save()
         return CreateSensorType(sensortype=sensortype)
@@ -496,33 +496,33 @@ class CreateSensorType(graphene.Mutation):
 
 class UpdateSensorType(graphene.Mutation):
     class Arguments:
-        sensortype_name = graphene.String(required=True)
-        new_sensortype_name = graphene.String(required=True)
+        name = graphene.String(required=True)
+        new_name = graphene.String(required=True)
 
     sensortype = graphene.Field(SensorTypeNode)
 
-    def mutate(self, info, sensortype_name, new_sensortype_name):
+    def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.get(
-            sensortype_name=sensortype_name,
+            name=name,
         )
-        sensortype.sensortype_name = new_sensortype_name
+        sensortype.name = new_name
         sensortype.save()
         return UpdateSensorType(sensortype=sensortype)
 
 
 class DeleteSensorType(graphene.Mutation):
     class Arguments:
-        sensortype_name = graphene.String()
+        name = graphene.String()
 
     sensortype = graphene.Field(SensorTypeNode)
 
-    def mutate(self, info, sensortype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.get(
-            sensortype_name=sensortype_name,
+            name=name,
         )
         sensortype.delete()
         return DeleteSensorType(sensortype=sensortype)
@@ -546,9 +546,7 @@ class CreateSensor(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        sensortype, _ = SensorType.objects.get_or_create(
-            sensortype_name=input.sensortype.sensortype_name
-        )
+        sensortype, _ = SensorType.objects.get_or_create(name=input.sensortype.name)
         sensor = Sensor.objects.create(
             sensortype=sensortype,
             model_name=input.model_name,
@@ -805,7 +803,7 @@ class CreateMission(graphene.Mutation):
         sensors = []
         for sensor_input in input.sensors or ():
             sensortype, _ = SensorType.objects.get_or_create(
-                sensortype_name=sensor_input.sensortype.sensortype_name,
+                name=sensor_input.sensortype.name,
             )
             sensor, _ = Sensor.objects.get_or_create(
                 comment=sensor_input.comment,
@@ -889,7 +887,7 @@ class UpdateMission(graphene.Mutation):
         sensors = []
         for sensor_input in input.sensors or ():
             sensortype, _ = SensorType.objects.get_or_create(
-                sensortype_name=sensor_input.sensortype.sensortype_name,
+                name=sensor_input.sensortype.name,
             )
             sensor, _ = Sensor.objects.get_or_create(
                 comment=sensor_input.comment,

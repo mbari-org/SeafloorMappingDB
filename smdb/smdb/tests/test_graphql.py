@@ -118,11 +118,11 @@ def test_all_sensortypes(snapshot):
     response = client.execute(
         """{
                 all_sensortypes {
-                    sensortype_name
+                    name
                   }
                 }"""
     )
-    assert response["data"]["all_sensortypes"][0]["sensortype_name"] == "Initial"
+    assert response["data"]["all_sensortypes"][0]["name"] == "Initial"
     snapshot.assert_match(response)
 
 
@@ -496,9 +496,9 @@ def test_delete_platform(snapshot):
 
 # ===== SensorType Tests =====
 create_sensortype_mutation = """mutation {
-        create_sensortype(sensortype_name: "Initial") {
+        create_sensortype(name: "Initial") {
             sensortype {
-                sensortype_name
+                name
             }
         }
     }"""
@@ -510,7 +510,7 @@ def test_all_sensortypes_empty(snapshot):
         client.execute(
             """{
                 all_sensortypes {
-                    sensortype_name
+                    name
                     uuid
                   }
                 }"""
@@ -523,7 +523,7 @@ def test_create_sensortype(snapshot):
     snapshot.assert_match(
         client.execute(create_sensortype_mutation, context_value=user_authenticated())
     )
-    assert SensorType.objects.all()[0].sensortype_name == "Initial"
+    assert SensorType.objects.all()[0].name == "Initial"
 
 
 def test_all_sensortypes(snapshot):
@@ -532,11 +532,11 @@ def test_all_sensortypes(snapshot):
     response = client.execute(
         """{
                 all_sensortypes {
-                    sensortype_name
+                    name
                   }
                 }"""
     )
-    assert response["data"]["all_sensortypes"][0]["sensortype_name"] == "Initial"
+    assert response["data"]["all_sensortypes"][0]["name"] == "Initial"
     snapshot.assert_match(response)
     assert repr(SensorType.objects.all()[0]) == "<SensorType: Initial>"
 
@@ -544,21 +544,21 @@ def test_all_sensortypes(snapshot):
 def test_update_sensortype(snapshot):
     client = Client(schema)
     client.execute(create_sensortype_mutation, context_value=user_authenticated())
-    assert SensorType.objects.all()[0].sensortype_name == "Initial"
+    assert SensorType.objects.all()[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_sensortype(sensortype_name: "Initial", new_sensortype_name: "Updated") {
+                update_sensortype(name: "Initial", new_name: "Updated") {
                     sensortype {
-                        sensortype_name
+                        name
                     }
                 }
             }""",
             context_value=user_authenticated(),
         )
     )
-    assert SensorType.objects.all()[0].sensortype_name == "Updated"
+    assert SensorType.objects.all()[0].name == "Updated"
 
 
 def test_delete_sensortype(snapshot):
@@ -567,9 +567,9 @@ def test_delete_sensortype(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_sensortype(sensortype_name: "Initial") {
+                delete_sensortype(name: "Initial") {
                     sensortype {
-                        sensortype_name
+                        name
                     }
                 }
             }""",
@@ -584,7 +584,7 @@ create_sensor_template = Template(
     """mutation {
         create_sensor(input: {
             sensortype: {
-                sensortype_name: "Sonar"
+                name: "Sonar"
             },
             model_name: "Initial",
             comment: "Initial comment"
@@ -594,7 +594,7 @@ create_sensor_template = Template(
                 model_name
                 comment
                 sensortype {
-                    sensortype_name
+                    name
                 }
             }
         }
@@ -1059,7 +1059,7 @@ create_mission_template = Template(
             kml_filename: "kml_file.kml",
             compilation: {compilation_dir_name: "Initial compilation"},
             update_status: 5,
-            sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "ST1"}},
+            sensors: {comment: "C", model_name: "M", sensortype: {name: "ST1"}},
             data_archivals: [ {doi: "doi://da_initial/1", archival_db_name: "DA Initial 1"},
                               {doi: "doi://da_initial/2", archival_db_name: "DA Initial 2"},
                             ],
@@ -1098,7 +1098,7 @@ create_mission_template = Template(
                 update_status
                 sensors {
                     sensortype {
-                        sensortype_name
+                        name
                     }
                     model_name
                 }
@@ -1195,7 +1195,7 @@ def test_update_mission(snapshot):
                     kml_filename: "Added kml_file.kml",
                     compilation: {compilation_dir_name: "Updated compilation"},
                     update_status: 6,
-                    sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "T1"}},
+                    sensors: {comment: "C", model_name: "M", sensortype: {name: "T1"}},
                     data_archivals: [ {doi: "doi://da_updated/1", archival_db_name: "DA Updated 1"},
                                       {doi: "doi://da_updated/2", archival_db_name: "DA Updated 2"},
                                     ],
@@ -1233,7 +1233,7 @@ def test_update_mission(snapshot):
                         update_status
                         sensors {
                             sensortype {
-                                sensortype_name
+                                name
                             }
                             model_name
                         }

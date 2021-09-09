@@ -779,7 +779,7 @@ snapshots['test_all_sensortypes 1'] = {
     'data': {
         'all_sensortypes': [
             {
-                'sensortype_name': 'Initial'
+                'name': 'Initial'
             }
         ]
     }
@@ -987,7 +987,7 @@ snapshots['test_create_mission 1'] = {
                     {
                         'model_name': 'M',
                         'sensortype': {
-                            'sensortype_name': 'ST1'
+                            'name': 'ST1'
                         }
                     }
                 ],
@@ -1099,7 +1099,7 @@ snapshots['test_create_sensor 1'] = {
                 'comment': 'Initial comment',
                 'model_name': 'Initial',
                 'sensortype': {
-                    'sensortype_name': 'Sonar'
+                    'name': 'Sonar'
                 }
             }
         }
@@ -1110,7 +1110,7 @@ snapshots['test_create_sensortype 1'] = {
     'data': {
         'create_sensortype': {
             'sensortype': {
-                'sensortype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1345,7 +1345,7 @@ snapshots['test_delete_sensortype 1'] = {
     'data': {
         'delete_sensortype': {
             'sensortype': {
-                'sensortype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1574,7 +1574,7 @@ snapshots['test_update_mission 1'] = {
                     {
                         'model_name': 'M',
                         'sensortype': {
-                            'sensortype_name': 'T1'
+                            'name': 'T1'
                         }
                     }
                 ],
@@ -1673,7 +1673,7 @@ snapshots['test_update_sensortype 1'] = {
     'data': {
         'update_sensortype': {
             'sensortype': {
-                'sensortype_name': 'Updated'
+                'name': 'Updated'
             }
         }
     }

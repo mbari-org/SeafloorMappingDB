@@ -50,10 +50,10 @@ class MissionType(models.Model):
 
 class SensorType(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    sensortype_name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128, unique=True)
 
     def __str__(self):
-        return self.sensortype_name
+        return self.name
 
 
 class Sensor(models.Model):
