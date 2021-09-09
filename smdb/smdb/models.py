@@ -117,7 +117,7 @@ class Compilation(models.Model):
 
 class Mission(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    mission_name = models.CharField(max_length=256, db_index=True)
+    name = models.CharField(max_length=256, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
@@ -157,7 +157,7 @@ class Mission(models.Model):
     citations = models.ManyToManyField("Citation", blank=True)
 
     def __str__(self):
-        return f"{self.mission_name}"
+        return f"{self.name}"
 
     def display_sensor(self):
         return ", ".join(
@@ -205,4 +205,4 @@ class Note(models.Model):
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Notes for {self.mission.mission_name}"
+        return f"Notes for {self.mission.name}"

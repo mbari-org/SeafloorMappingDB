@@ -107,7 +107,7 @@ class MissionNode(DjangoObjectNode):
         model = Mission
         fields = (
             "uuid",
-            "mission_name",
+            "name",
             "grid_bounds",
             "expedition",
             "missiontype",
@@ -752,7 +752,7 @@ class DeleteCompilation(graphene.Mutation):
 
 # ===== Mission =====
 class MissionInput(graphene.InputObjectType):
-    mission_name = graphene.String(required=True)
+    name = graphene.String(required=True)
     grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
     expedition = graphene.Field(ExpeditionInput, required=True)
     missiontype = graphene.Field(MissionTypeInput)
@@ -832,7 +832,7 @@ class CreateMission(graphene.Mutation):
         # End DRY warning
 
         mission = Mission.objects.create(
-            mission_name=input.mission_name,
+            name=input.name,
             grid_bounds=input.grid_bounds,
             expedition=expedition,
             missiontype=missiontype,
@@ -915,7 +915,7 @@ class UpdateMission(graphene.Mutation):
         # End DRY warning
 
         mission = Mission.objects.get(uuid=uuid)
-        mission.mission_name = input.mission_name
+        mission.name = input.name
         mission.grid_bounds = input.grid_bounds
         mission.expedition = expedition
         mission.missiontype = missiontype
@@ -978,7 +978,7 @@ class CreateDataArchival(graphene.Mutation):
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1008,7 +1008,7 @@ class UpdateDataArchival(graphene.Mutation):
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1057,7 +1057,7 @@ class CreateCitation(graphene.Mutation):
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1087,7 +1087,7 @@ class UpdateCitation(graphene.Mutation):
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1133,7 +1133,7 @@ class CreateNote(graphene.Mutation):
             expd_path_name=input.mission.expedition.expd_path_name,
         )
         mission, _ = Mission.objects.get_or_create(
-            mission_name=input.mission.mission_name,
+            name=input.mission.name,
             expedition=expedition,
         )
         note = Note.objects.create(
@@ -1159,7 +1159,7 @@ class UpdateNote(graphene.Mutation):
             expd_path_name=input.mission.expedition.expd_path_name,
         )
         mission, _ = Mission.objects.get_or_create(
-            mission_name=input.mission.mission_name,
+            name=input.mission.name,
             expedition=expedition,
         )
         note = Note.objects.get(uuid=uuid)

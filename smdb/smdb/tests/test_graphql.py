@@ -1040,7 +1040,7 @@ def test_delete_compilation(snapshot):
 create_mission_template = Template(
     """mutation {
         create_mission(input: {
-            mission_name: "Initial",
+            name: "Initial",
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
             expedition: {name: "Initial expedition name"},
             missiontype: {name: "Initial missiontype"},
@@ -1069,7 +1069,7 @@ create_mission_template = Template(
             }) {
             mission {
                 {{ uuid }}
-                mission_name
+                name
                 grid_bounds
                 expedition {
                     name
@@ -1136,7 +1136,7 @@ def test_create_mission(snapshot):
     snapshot.assert_match(
         client.execute(create_mission_mutation, context_value=user_authenticated())
     )
-    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    assert Mission.objects.filter(name="Initial")[0].name == "Initial"
 
 
 def test_all_missions(snapshot):
@@ -1144,21 +1144,17 @@ def test_all_missions(snapshot):
     create_mission_mutation = create_mission_template.render(uuid="")
     client.execute(create_mission_mutation, context_value=user_authenticated())
     response = client.execute(mission_query)
-    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    assert Mission.objects.filter(name="Initial")[0].name == "Initial"
     snapshot.assert_match(response)
-    assert (
-        repr(Mission.objects.filter(mission_name="Initial")[0]) == "<Mission: Initial>"
-    )
+    assert repr(Mission.objects.filter(name="Initial")[0]) == "<Mission: Initial>"
     # Test the .display_ methods that are used by the Django admin
+    assert Mission.objects.filter(name="Initial")[0].display_sensor() == "ST1(M)"
     assert (
-        Mission.objects.filter(mission_name="Initial")[0].display_sensor() == "ST1(M)"
-    )
-    assert (
-        Mission.objects.filter(mission_name="Initial")[0].display_data_archival()
+        Mission.objects.filter(name="Initial")[0].display_data_archival()
         == "doi://da_initial/1, doi://da_initial/2"
     )
     assert (
-        Mission.objects.filter(mission_name="Initial")[0].display_citation()
+        Mission.objects.filter(name="Initial")[0].display_citation()
         == "doi://c_initial/1, doi://c_initial/2"
     )
 
@@ -1170,13 +1166,13 @@ def test_update_mission(snapshot):
         create_mission_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_mission"]["mission"]["uuid"]
-    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    assert Mission.objects.filter(name="Initial")[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdateMission($uuid: ID!) {
                 update_mission(uuid: $uuid, input: {
-                    mission_name: "Updated",
+                    name: "Updated",
                     grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
                     expedition: {name: "Added expedition"},
                     missiontype: {name: "Added missiontype"},
@@ -1204,7 +1200,7 @@ def test_update_mission(snapshot):
                                ],
                     }) {
                     mission {
-                        mission_name
+                        name
                         grid_bounds
                         expedition {
                             name
@@ -1252,7 +1248,7 @@ def test_update_mission(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Mission.objects.filter(mission_name="Updated")[0].mission_name == "Updated"
+    assert Mission.objects.filter(name="Updated")[0].name == "Updated"
 
 
 def test_delete_mission(snapshot):
@@ -1279,7 +1275,7 @@ def test_delete_mission(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Mission.objects.filter(mission_name="Initial").count() == 0
+    assert Mission.objects.filter(name="Initial").count() == 0
 
 
 # ===== DataArchival Tests =====
@@ -1288,8 +1284,8 @@ create_dataarchival_template = Template(
         create_dataarchival(input: {
             doi: "doi://123456/hello",
             archival_db_name: "Initial Archival",
-            missions: [ {mission_name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
-                        {mission_name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
+            missions: [ {name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
+                        {name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
                       ],
             }) {
             dataarchival {
@@ -1297,7 +1293,7 @@ create_dataarchival_template = Template(
                 doi
                 archival_db_name
                 missions {
-                    mission_name
+                    name
                     expedition {
                         name
                         expd_path_name
@@ -1312,7 +1308,7 @@ dataarchival_query = """{
                     doi
                     archival_db_name
                     missions {
-                        mission_name
+                        name
                         expedition {
                             name
                             expd_path_name
@@ -1334,8 +1330,8 @@ def test_create_dataarchival(snapshot):
         client.execute(create_dataarchival_mutation, context_value=user_authenticated())
     )
     assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
-    assert DataArchival.objects.all()[0].missions.all()[0].mission_name == "M1"
-    assert DataArchival.objects.all()[0].missions.all()[1].mission_name == "M2"
+    assert DataArchival.objects.all()[0].missions.all()[0].name == "M1"
+    assert DataArchival.objects.all()[0].missions.all()[1].name == "M2"
 
 
 def test_all_dataarchivals(snapshot):
@@ -1362,15 +1358,15 @@ def test_update_dataarchival(snapshot):
                 update_dataarchival(uuid: $uuid, input: {
                     doi: "doi://7890/hello",
                     archival_db_name: "Updated Archival",
-                    missions: [ {mission_name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
-                                {mission_name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
+                    missions: [ {name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
+                                {name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
                             ],
                     }) {
                     dataarchival {
                         doi
                         archival_db_name
                         missions {
-                            mission_name
+                            name
                             expedition {
                                 name
                                 expd_path_name
@@ -1384,8 +1380,8 @@ def test_update_dataarchival(snapshot):
         )
     )
     assert DataArchival.objects.all()[0].doi == "doi://7890/hello"
-    assert DataArchival.objects.all()[0].missions.all()[0].mission_name == "M3"
-    assert DataArchival.objects.all()[0].missions.all()[1].mission_name == "M4"
+    assert DataArchival.objects.all()[0].missions.all()[0].name == "M3"
+    assert DataArchival.objects.all()[0].missions.all()[1].name == "M4"
 
 
 def test_delete_dataarchival(snapshot):
@@ -1403,7 +1399,7 @@ def test_delete_dataarchival(snapshot):
                         doi
                         archival_db_name
                         missions {
-                            mission_name
+                            name
                             expedition {
                                 name
                                 expd_path_name
@@ -1425,8 +1421,8 @@ create_citation_template = Template(
         create_citation(input: {
             doi: "doi://123456/hello",
             full_reference: "Initial Reference",
-            missions: [ {mission_name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
-                        {mission_name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
+            missions: [ {name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
+                        {name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
                       ],
             }) {
             citation {
@@ -1434,7 +1430,7 @@ create_citation_template = Template(
                 doi
                 full_reference
                 missions {
-                    mission_name
+                    name
                     expedition {
                         name
                         expd_path_name
@@ -1449,7 +1445,7 @@ citation_query = """{
                     doi
                     full_reference
                     missions {
-                        mission_name
+                        name
                         expedition {
                             name
                             expd_path_name
@@ -1497,15 +1493,15 @@ def test_update_citation(snapshot):
                 update_citation(uuid: $uuid, input: {
                     doi: "doi://7890/hello",
                     full_reference: "Updated Reference",
-                    missions: [ {mission_name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
-                                {mission_name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
+                    missions: [ {name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
+                                {name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
                             ],
                     }) {
                     citation {
                         doi
                         full_reference
                         missions {
-                            mission_name
+                            name
                             expedition {
                                 name
                                 expd_path_name
@@ -1536,7 +1532,7 @@ def test_delete_citation(snapshot):
                         doi
                         full_reference
                         missions {
-                            mission_name
+                            name
                             expedition {
                                 name
                                 expd_path_name
@@ -1560,13 +1556,13 @@ create_note_template = Template(
     """mutation CreateNote($text: String!) {
         create_note(input: {
             text: $text
-            mission: {mission_name: "Mn1_test", expedition: {name: "ENn1", expd_path_name: "PNn1"}},
+            mission: {name: "Mn1_test", expedition: {name: "ENn1", expd_path_name: "PNn1"}},
             }) {
             note {
                 {{ uuid }}
                 text
                 mission {
-                    mission_name
+                    name
                     expedition {
                         name
                         expd_path_name
@@ -1580,7 +1576,7 @@ create_note_template = Template(
 note_query = """{
                 all_notes {
                     mission {
-                        mission_name
+                        name
                         expedition {
                             name
                             expd_path_name
@@ -1605,7 +1601,7 @@ def test_create_note(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Note.objects.filter(mission__mission_name="Mn1_test")[0].text.startswith(
+    assert Note.objects.filter(mission__name="Mn1_test")[0].text.startswith(
         "Here is some text"
     )
 
@@ -1619,12 +1615,12 @@ def test_all_notes(snapshot):
         context_value=user_authenticated(),
     )
     response = client.execute(note_query)
-    assert Note.objects.filter(mission__mission_name="Mn1_test")[0].text.startswith(
+    assert Note.objects.filter(mission__name="Mn1_test")[0].text.startswith(
         "Here is some text"
     )
     snapshot.assert_match(response)
     assert (
-        repr(Note.objects.filter(mission__mission_name="Mn1_test")[0])
+        repr(Note.objects.filter(mission__name="Mn1_test")[0])
         == "<Note: Notes for Mn1_test>"
     )
 
@@ -1644,12 +1640,12 @@ def test_update_note(snapshot):
             """mutation UpdateNote($uuid: ID!, $text: String!) {
                 update_note(uuid: $uuid, input: {
                     text: $text,
-                    mission: {mission_name: "Mn1_updated", expedition: {name: "EN3", expd_path_name: "PN3"}},
+                    mission: {name: "Mn1_updated", expedition: {name: "EN3", expd_path_name: "PN3"}},
                     }) {
                     note {
                         text
                         mission {
-                            mission_name
+                            name
                             expedition {
                                 name
                                 expd_path_name
@@ -1663,7 +1659,7 @@ def test_update_note(snapshot):
         )
     )
     assert (
-        Note.objects.filter(mission__mission_name="Mn1_updated")[0].text
+        Note.objects.filter(mission__name="Mn1_updated")[0].text
         == "Updated single line of text."
     )
 
@@ -1684,7 +1680,7 @@ def test_delete_note(snapshot):
                     note {
                         text
                         mission {
-                            mission_name
+                            name
                             expedition {
                                 name
                                 expd_path_name

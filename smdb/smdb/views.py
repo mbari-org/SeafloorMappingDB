@@ -18,13 +18,13 @@ class MissionOverView(TemplateView):
         context = super().get_context_data(**kwargs)
         search_string = context["view"].request.GET.get("q")
         if search_string:
-            missions = Mission.objects.filter(mission_name__icontains=search_string)
+            missions = Mission.objects.filter(name__icontains=search_string)
         else:
             missions = Mission.objects.all()
 
         self.logger.info("Serializing %s missions to geojson...", missions.count())
         context["missions"] = json.loads(
-            serialize("geojson", missions, fields=("grid_bounds", "mission_name"))
+            serialize("geojson", missions, fields=("grid_bounds", "name"))
         )
         self.logger.info("# of Queries: %s", len(connection.queries))
         self.logger.info(

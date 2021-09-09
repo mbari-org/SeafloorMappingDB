@@ -66,5 +66,5 @@ class MissionViewSet(
 ):
     serializer_class = MissionSerializer
     queryset = Mission.objects.all()
-    lookup_field = "mission_name"
+    lookup_field = "name"
 """

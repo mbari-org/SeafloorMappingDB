@@ -33,10 +33,10 @@ class PlatformTypeFactory(DjangoModelFactory):
 """ Waiting for serialization
 class MissionFactory(DjangoModelFactory):
 
-    mission_name = Faker("mission_name")
+    name = Faker("name")
     name = Faker("name")
 
     class Meta:
         model = Mission
-        django_get_or_create = ["mission_name"]
+        django_get_or_create = ["name"]
 """

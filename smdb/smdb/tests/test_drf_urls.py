@@ -68,11 +68,11 @@ def test_mission_list():
 
 def test_mission_detail(mission: Mission):
     assert (
-        reverse("api:mission-detail", kwargs={"mission_name": mission.mission_name})
-        == f"/api/v1/missions/{mission.mission_name}/"
+        reverse("api:mission-detail", kwargs={"name": mission.name})
+        == f"/api/v1/missions/{mission.name}/"
     )
     assert (
-        resolve(f"/api/v1/mission/{mission.mission_name}/").view_name
+        resolve(f"/api/v1/mission/{mission.name}/").view_name
         == "api:mission-detail"
     )
 """

@@ -46,12 +46,12 @@ class PlatformTypeSerializer(serializers.ModelSerializer):
 class MissionSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = Mission
-        fields = ["mission_name", "url"]
+        fields = ["name", "url"]
         grid_bounds = GeometrySerializerMethodField()
         extra_kwargs = {
             "url": {
                 "view_name": "api:mission-detail",
-                "lookup_field": "mission_name",
+                "lookup_field": "name",
             }
         }
         # https://github.com/openwisp/django-rest-framework-gis#bounding-box-auto_bbox-and-bbox_geo_field
