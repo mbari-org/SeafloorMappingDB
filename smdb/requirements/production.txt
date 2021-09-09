@@ -3,4 +3,4 @@
 -r base.txt
 
 gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
-
+python-dateutil==2.8.2  # Must be installed as a dependency in local.txt
