@@ -33,11 +33,11 @@ class PersonSerializer(serializers.ModelSerializer):
 class PlatformTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlatformType
-        fields = ["platformtype_name", "url"]
+        fields = ["name", "url"]
         extra_kwargs = {
             "url": {
                 "view_name": "api:platformtype-detail",
-                "lookup_field": "platformtype_name",
+                "lookup_field": "name",
             }
         }
 

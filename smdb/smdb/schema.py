@@ -37,7 +37,7 @@ class PersonNode(DjangoObjectNode):
 class PlatformTypeNode(DjangoObjectNode):
     class Meta:
         model = PlatformType
-        fields = ("uuid", "platformtype_name")
+        fields = ("uuid", "name")
 
 
 class PlatformNode(DjangoObjectNode):
@@ -357,20 +357,20 @@ class DeletePerson(graphene.Mutation):
 
 # ===== PlatformType =====
 class PlatformTypeInput(graphene.InputObjectType):
-    platformtype_name = graphene.String(required=True)
+    name = graphene.String(required=True)
 
 
 class CreatePlatformType(graphene.Mutation):
     class Arguments:
-        platformtype_name = graphene.String()
+        name = graphene.String()
 
     platformtype = graphene.Field(PlatformTypeNode)
 
-    def mutate(self, info, platformtype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.create(
-            platformtype_name=platformtype_name,
+            name=name,
         )
         platformtype.save()
         return CreatePlatformType(platformtype=platformtype)
@@ -378,33 +378,33 @@ class CreatePlatformType(graphene.Mutation):
 
 class UpdatePlatformType(graphene.Mutation):
     class Arguments:
-        platformtype_name = graphene.String(required=True)
-        new_platformtype_name = graphene.String(required=True)
+        name = graphene.String(required=True)
+        new_name = graphene.String(required=True)
 
     platformtype = graphene.Field(PlatformTypeNode)
 
-    def mutate(self, info, platformtype_name, new_platformtype_name):
+    def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.get(
-            platformtype_name=platformtype_name,
+            name=name,
         )
-        platformtype.platformtype_name = new_platformtype_name
+        platformtype.name = new_name
         platformtype.save()
         return UpdatePlatformType(platformtype=platformtype)
 
 
 class DeletePlatformType(graphene.Mutation):
     class Arguments:
-        platformtype_name = graphene.String()
+        name = graphene.String()
 
     platformtype = graphene.Field(PlatformTypeNode)
 
-    def mutate(self, info, platformtype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.get(
-            platformtype_name=platformtype_name,
+            name=name,
         )
         platformtype.delete()
         return DeletePlatformType(platformtype=platformtype)
@@ -427,7 +427,7 @@ class CreatePlatform(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platformtype.platformtype_name
+            name=input.platformtype.name
         )
         platform = Platform.objects.create(
             platform_name=input.platform_name,
@@ -450,7 +450,7 @@ class UpdatePlatform(graphene.Mutation):
             raise GraphQLError("You must be logged in")
         platform = Platform.objects.get(uuid=uuid)
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platformtype.platformtype_name
+            name=input.platformtype.name
         )
         platform.platformtype = platformtype
         platform.platform_name = input.platform_name
@@ -796,7 +796,7 @@ class CreateMission(graphene.Mutation):
             missiontype_name=input.missiontype.missiontype_name,
         )
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platform.platformtype.platformtype_name,
+            name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
             platform_name=input.platform.platform_name,
@@ -880,7 +880,7 @@ class UpdateMission(graphene.Mutation):
             missiontype_name=input.missiontype.missiontype_name,
         )
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platform.platformtype.platformtype_name,
+            name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
             platform_name=input.platform.platform_name,

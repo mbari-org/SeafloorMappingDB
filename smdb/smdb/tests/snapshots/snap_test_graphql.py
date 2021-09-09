@@ -744,7 +744,7 @@ snapshots['test_all_platformtypes 1'] = {
     'data': {
         'all_platformtypes': [
             {
-                'platformtype_name': 'Initial'
+                'name': 'Initial'
             }
         ]
     }
@@ -1075,7 +1075,7 @@ snapshots['test_create_platform 1'] = {
                 'operator_org_name': 'MBARI',
                 'platform_name': 'Dorado',
                 'platformtype': {
-                    'platformtype_name': 'AUV'
+                    'name': 'AUV'
                 }
             }
         }
@@ -1086,7 +1086,7 @@ snapshots['test_create_platformtype 1'] = {
     'data': {
         'create_platformtype': {
             'platformtype': {
-                'platformtype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1324,7 +1324,7 @@ snapshots['test_delete_platformtype 1'] = {
     'data': {
         'delete_platformtype': {
             'platformtype': {
-                'platformtype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1641,7 +1641,7 @@ snapshots['test_update_platform 1'] = {
                 'operator_org_name': 'SIO',
                 'platform_name': 'Updated',
                 'platformtype': {
-                    'platformtype_name': 'LRAUV'
+                    'name': 'LRAUV'
                 }
             }
         }
@@ -1652,7 +1652,7 @@ snapshots['test_update_platformtype 1'] = {
     'data': {
         'update_platformtype': {
             'platformtype': {
-                'platformtype_name': 'Updated'
+                'name': 'Updated'
             }
         }
     }

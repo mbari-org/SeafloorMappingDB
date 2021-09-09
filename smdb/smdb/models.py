@@ -24,10 +24,10 @@ class Person(models.Model):
 
 class PlatformType(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    platformtype_name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128)
 
     def __str__(self) -> str:
-        return self.platformtype_name
+        return self.name
 
 
 class Platform(models.Model):

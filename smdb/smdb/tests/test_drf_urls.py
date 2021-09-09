@@ -50,12 +50,12 @@ def test_platformtype_detail(platformtype: PlatformType):
     assert (
         reverse(
             "api:platformtype-detail",
-            kwargs={"platformtype_name": platformtype.platformtype_name},
+            kwargs={"name": platformtype.name},
         )
-        == f"/api/v1/platformtype/{platformtype.platformtype_name}/"
+        == f"/api/v1/platformtype/{platformtype.name}/"
     )
     assert (
-        resolve(f"/api/v1/platformtype/{platformtype.platformtype_name}/").view_name
+        resolve(f"/api/v1/platformtype/{platformtype.name}/").view_name
         == "api:platformtype-detail"
     )
 

@@ -288,9 +288,9 @@ def test_delete_person(snapshot):
 
 # ===== PlatformType Tests =====
 create_platformtype_mutation = """mutation {
-        create_platformtype(platformtype_name: "Initial") {
+        create_platformtype(name: "Initial") {
             platformtype {
-                platformtype_name
+                name
             }
         }
     }"""
@@ -302,7 +302,7 @@ def test_all_platformtypes_empty(snapshot):
         client.execute(
             """{
                 all_platformtypes {
-                    platformtype_name
+                    name
                     uuid
                   }
                 }"""
@@ -315,7 +315,7 @@ def test_create_platformtype(snapshot):
     snapshot.assert_match(
         client.execute(create_platformtype_mutation, context_value=user_authenticated())
     )
-    assert PlatformType.objects.all()[0].platformtype_name == "Initial"
+    assert PlatformType.objects.all()[0].name == "Initial"
 
 
 def test_all_platformtypes(snapshot):
@@ -324,11 +324,11 @@ def test_all_platformtypes(snapshot):
     response = client.execute(
         """{
                 all_platformtypes {
-                    platformtype_name
+                    name
                   }
                 }"""
     )
-    assert response["data"]["all_platformtypes"][0]["platformtype_name"] == "Initial"
+    assert response["data"]["all_platformtypes"][0]["name"] == "Initial"
     assert repr(PlatformType.objects.all()[0]) == "<PlatformType: Initial>"
     snapshot.assert_match(response)
 
@@ -336,21 +336,21 @@ def test_all_platformtypes(snapshot):
 def test_update_platformtype(snapshot):
     client = Client(schema)
     client.execute(create_platformtype_mutation, context_value=user_authenticated())
-    assert PlatformType.objects.all()[0].platformtype_name == "Initial"
+    assert PlatformType.objects.all()[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_platformtype(platformtype_name: "Initial", new_platformtype_name: "Updated") {
+                update_platformtype(name: "Initial", new_name: "Updated") {
                     platformtype {
-                        platformtype_name
+                        name
                     }
                 }
             }""",
             context_value=user_authenticated(),
         )
     )
-    assert PlatformType.objects.all()[0].platformtype_name == "Updated"
+    assert PlatformType.objects.all()[0].name == "Updated"
 
 
 def test_delete_platformtype(snapshot):
@@ -359,9 +359,9 @@ def test_delete_platformtype(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_platformtype(platformtype_name: "Initial") {
+                delete_platformtype(name: "Initial") {
                     platformtype {
-                        platformtype_name
+                        name
                     }
                 }
             }""",
@@ -377,7 +377,7 @@ create_platform_template = Template(
         create_platform(input: {
             platform_name: "Dorado",
             platformtype: {
-                    platformtype_name: "AUV"
+                    name: "AUV"
             }
             operator_org_name: "MBARI"
         }) {
@@ -386,7 +386,7 @@ create_platform_template = Template(
                 platform_name
                 operator_org_name
                 platformtype {
-                    platformtype_name
+                    name
                 }
             }
         }
@@ -449,14 +449,14 @@ def test_update_platform(snapshot):
                 update_platform(uuid: $uuid, input: {
                     platform_name: "Updated",
                     platformtype: {
-                            platformtype_name: "LRAUV"
+                            name: "LRAUV"
                     }
                     operator_org_name: "SIO"
                 }) {
                     platform {
                         platform_name
                         platformtype {
-                            platformtype_name
+                            name
                         }
                         operator_org_name
                     }
@@ -467,7 +467,7 @@ def test_update_platform(snapshot):
         )
     )
     assert Platform.objects.all()[0].platform_name == "Updated"
-    assert Platform.objects.all()[0].platformtype.platformtype_name == "LRAUV"
+    assert Platform.objects.all()[0].platformtype.name == "LRAUV"
     assert Platform.objects.all()[0].operator_org_name == "SIO"
 
 
@@ -1044,7 +1044,7 @@ create_mission_template = Template(
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
             expedition: {expd_name: "Initial expedition name"},
             missiontype: {missiontype_name: "Initial missiontype"},
-            platform: {platform_name: "Initial platform", platformtype: {platformtype_name: "PT1"}},
+            platform: {platform_name: "Initial platform", platformtype: {name: "PT1"}},
             start_date: "2021-03-03",
             end_date: "2021-04-04",
             start_depth: 1500,
@@ -1180,7 +1180,7 @@ def test_update_mission(snapshot):
                     grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
                     expedition: {expd_name: "Added expedition"},
                     missiontype: {missiontype_name: "Added missiontype"},
-                    platform: {platform_name: "Added platform", platformtype: {platformtype_name: "PT2"}},
+                    platform: {platform_name: "Added platform", platformtype: {name: "PT2"}},
                     start_date: "2021-05-05",
                     end_date: "2021-06-06",
                     start_depth: 1700,
