@@ -6,13 +6,13 @@ from smdb.models import (
     DataArchival,
     Expedition,
     Mission,
-    MissionType,
+    Missiontype,
     Note,
     Person,
     Platform,
-    PlatformType,
+    Platformtype,
     Sensor,
-    SensorType,
+    Sensortype,
 )
 
 
@@ -43,8 +43,8 @@ class MissionAdmin(GeoModelAdmin):
     ]
 
 
-@register(MissionType)
-class MissionTypeAdmin(GeoModelAdmin):
+@register(Missiontype)
+class MissiontypeAdmin(GeoModelAdmin):
     pass
 
 
@@ -58,8 +58,8 @@ class PlatformAdmin(GeoModelAdmin):
     pass
 
 
-@register(PlatformType)
-class PlatformTypeAdmin(GeoModelAdmin):
+@register(Platformtype)
+class PlatformtypeAdmin(GeoModelAdmin):
     pass
 
 
@@ -68,8 +68,8 @@ class SensorAdmin(GeoModelAdmin):
     pass
 
 
-@register(SensorType)
-class SensorTypeAdmin(GeoModelAdmin):
+@register(Sensortype)
+class SensortypeAdmin(GeoModelAdmin):
     pass
 
 

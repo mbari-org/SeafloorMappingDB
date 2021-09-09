@@ -3,12 +3,12 @@ from rest_framework_gis.serializers import (
     GeoFeatureModelSerializer,
     GeometrySerializerMethodField,
 )
-from smdb.models import Mission, MissionType, Person, PlatformType
+from smdb.models import Mission, Missiontype, Person, Platformtype
 
 
-class MissionTypeSerializer(serializers.ModelSerializer):
+class MissiontypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MissionType
+        model = Missiontype
         fields = ["name", "url"]
         extra_kwargs = {
             "url": {
@@ -30,9 +30,9 @@ class PersonSerializer(serializers.ModelSerializer):
         }
 
 
-class PlatformTypeSerializer(serializers.ModelSerializer):
+class PlatformtypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PlatformType
+        model = Platformtype
         fields = ["name", "url"]
         extra_kwargs = {
             "url": {

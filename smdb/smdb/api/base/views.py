@@ -11,12 +11,12 @@ from rest_framework.mixins import (
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ViewSet
-from smdb.models import MissionType, Person, PlatformType
-from .serializers import MissionTypeSerializer, PersonSerializer, PlatformTypeSerializer
+from smdb.models import Missiontype, Person, Platformtype
+from .serializers import MissiontypeSerializer, PersonSerializer, PlatformtypeSerializer
 
 
 # Modeled after UserViewSet
-class MissionTypeViewSet(
+class MissiontypeViewSet(
     ListModelMixin,
     CreateModelMixin,
     RetrieveModelMixin,
@@ -24,8 +24,8 @@ class MissionTypeViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
-    serializer_class = MissionTypeSerializer
-    queryset = MissionType.objects.all()
+    serializer_class = MissiontypeSerializer
+    queryset = Missiontype.objects.all()
     lookup_field = "name"
 
 
@@ -42,7 +42,7 @@ class PersonViewSet(
     lookup_field = "uuid"
 
 
-class PlatformTypeViewSet(
+class PlatformtypeViewSet(
     ListModelMixin,
     CreateModelMixin,
     RetrieveModelMixin,
@@ -50,8 +50,8 @@ class PlatformTypeViewSet(
     DestroyModelMixin,
     GenericViewSet,
 ):
-    serializer_class = PlatformTypeSerializer
-    queryset = PlatformType.objects.all()
+    serializer_class = PlatformtypeSerializer
+    queryset = Platformtype.objects.all()
     lookup_field = "name"
 
 

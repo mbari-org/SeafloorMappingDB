@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from smdb.models import Mission, MissionType
+from smdb.models import Mission, Missiontype
 
 pytestmark = pytest.mark.django_db
 
@@ -29,7 +29,7 @@ class TestAdmin:
             },
         )
         assert response.status_code == 302
-        assert MissionType.objects.filter(name="test").exists()
+        assert Missiontype.objects.filter(name="test").exists()
 
     """
     def test_add_mission(self, admin_client):
