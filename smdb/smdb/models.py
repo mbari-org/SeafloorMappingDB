@@ -33,11 +33,11 @@ class PlatformType(models.Model):
 class Platform(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     platformtype = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
-    platform_name = models.CharField(max_length=128, db_index=True, unique=True)
+    name = models.CharField(max_length=128, db_index=True, unique=True)
     operator_org_name = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.platform_name} ({self.operator_org_name})"
+        return f"{self.name} ({self.operator_org_name})"
 
 
 class MissionType(models.Model):

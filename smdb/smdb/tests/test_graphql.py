@@ -375,7 +375,7 @@ def test_delete_platformtype(snapshot):
 create_platform_template = Template(
     """mutation {
         create_platform(input: {
-            platform_name: "Dorado",
+            name: "Dorado",
             platformtype: {
                     name: "AUV"
             }
@@ -383,7 +383,7 @@ create_platform_template = Template(
         }) {
             platform {
                 {{ uuid }}
-                platform_name
+                name
                 operator_org_name
                 platformtype {
                     name
@@ -400,7 +400,7 @@ def test_all_platforms_empty(snapshot):
         client.execute(
             """{
                 all_platforms {
-                    platform_name
+                    name
                     uuid
                   }
                 }"""
@@ -414,7 +414,7 @@ def test_create_platform(snapshot):
     snapshot.assert_match(
         client.execute(create_platform_mutation, context_value=user_authenticated())
     )
-    assert Platform.objects.all()[0].platform_name == "Dorado"
+    assert Platform.objects.all()[0].name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
 
 
@@ -426,7 +426,7 @@ def test_all_platforms(snapshot):
         client.execute(
             """{
                 all_platforms {
-                    platform_name
+                    name
                   }
                 }"""
         )
@@ -441,20 +441,20 @@ def test_update_platform(snapshot):
         create_platform_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_platform"]["platform"]["uuid"]
-    assert Platform.objects.all()[0].platform_name == "Dorado"
+    assert Platform.objects.all()[0].name == "Dorado"
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdatePlatform($uuid: ID!) {
                 update_platform(uuid: $uuid, input: {
-                    platform_name: "Updated",
+                    name: "Updated",
                     platformtype: {
                             name: "LRAUV"
                     }
                     operator_org_name: "SIO"
                 }) {
                     platform {
-                        platform_name
+                        name
                         platformtype {
                             name
                         }
@@ -466,7 +466,7 @@ def test_update_platform(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Platform.objects.all()[0].platform_name == "Updated"
+    assert Platform.objects.all()[0].name == "Updated"
     assert Platform.objects.all()[0].platformtype.name == "LRAUV"
     assert Platform.objects.all()[0].operator_org_name == "SIO"
 
@@ -483,7 +483,7 @@ def test_delete_platform(snapshot):
             """mutation DeletePlatform($uuid: ID!) {
                 delete_platform(uuid: $uuid) {
                     platform {
-                        platform_name
+                        name
                     }
                 }
             }""",
@@ -1044,7 +1044,7 @@ create_mission_template = Template(
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
             expedition: {expd_name: "Initial expedition name"},
             missiontype: {missiontype_name: "Initial missiontype"},
-            platform: {platform_name: "Initial platform", platformtype: {name: "PT1"}},
+            platform: {name: "Initial platform", platformtype: {name: "PT1"}},
             start_date: "2021-03-03",
             end_date: "2021-04-04",
             start_depth: 1500,
@@ -1078,7 +1078,7 @@ create_mission_template = Template(
                     missiontype_name
                 }
                 platform {
-                    platform_name
+                    name
                 }
                 start_date
                 end_date
@@ -1180,7 +1180,7 @@ def test_update_mission(snapshot):
                     grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
                     expedition: {expd_name: "Added expedition"},
                     missiontype: {missiontype_name: "Added missiontype"},
-                    platform: {platform_name: "Added platform", platformtype: {name: "PT2"}},
+                    platform: {name: "Added platform", platformtype: {name: "PT2"}},
                     start_date: "2021-05-05",
                     end_date: "2021-06-06",
                     start_depth: 1700,
@@ -1213,7 +1213,7 @@ def test_update_mission(snapshot):
                             missiontype_name
                         }
                         platform {
-                            platform_name
+                            name
                         }
                         start_date
                         end_date

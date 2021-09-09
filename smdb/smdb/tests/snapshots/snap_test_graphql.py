@@ -727,7 +727,7 @@ snapshots['test_all_platforms 1'] = {
     'data': {
         'all_platforms': [
             {
-                'platform_name': 'Dorado'
+                'name': 'Dorado'
             }
         ]
     }
@@ -978,7 +978,7 @@ snapshots['test_create_mission 1'] = {
                 },
                 'notes_filename': 'file.notes',
                 'platform': {
-                    'platform_name': 'Initial platform'
+                    'name': 'Initial platform'
                 },
                 'quality_comment': 'Q',
                 'region_name': 'region1',
@@ -1072,8 +1072,8 @@ snapshots['test_create_platform 1'] = {
     'data': {
         'create_platform': {
             'platform': {
+                'name': 'Dorado',
                 'operator_org_name': 'MBARI',
-                'platform_name': 'Dorado',
                 'platformtype': {
                     'name': 'AUV'
                 }
@@ -1314,7 +1314,7 @@ snapshots['test_delete_platform 1'] = {
     'data': {
         'delete_platform': {
             'platform': {
-                'platform_name': 'Dorado'
+                'name': 'Dorado'
             }
         }
     }
@@ -1565,7 +1565,7 @@ snapshots['test_update_mission 1'] = {
                 },
                 'notes_filename': 'file2.notes',
                 'platform': {
-                    'platform_name': 'Added platform'
+                    'name': 'Added platform'
                 },
                 'quality_comment': 'R',
                 'region_name': 'region2',
@@ -1638,8 +1638,8 @@ snapshots['test_update_platform 1'] = {
     'data': {
         'update_platform': {
             'platform': {
+                'name': 'Updated',
                 'operator_org_name': 'SIO',
-                'platform_name': 'Updated',
                 'platformtype': {
                     'name': 'LRAUV'
                 }

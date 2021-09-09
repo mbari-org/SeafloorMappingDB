@@ -45,7 +45,7 @@ class PlatformNode(DjangoObjectNode):
         model = Platform
         fields = (
             "uuid",
-            "platform_name",
+            "name",
             "operator_org_name",
             "platformtype",
         )
@@ -412,7 +412,7 @@ class DeletePlatformType(graphene.Mutation):
 
 # ===== Platform =====
 class PlatformInput(graphene.InputObjectType):
-    platform_name = graphene.String(required=True)
+    name = graphene.String(required=True)
     platformtype = graphene.Field(PlatformTypeInput)
     operator_org_name = graphene.String()
 
@@ -430,7 +430,7 @@ class CreatePlatform(graphene.Mutation):
             name=input.platformtype.name
         )
         platform = Platform.objects.create(
-            platform_name=input.platform_name,
+            name=input.name,
             platformtype=platformtype,
             operator_org_name=input.operator_org_name,
         )
@@ -453,7 +453,7 @@ class UpdatePlatform(graphene.Mutation):
             name=input.platformtype.name
         )
         platform.platformtype = platformtype
-        platform.platform_name = input.platform_name
+        platform.name = input.name
         platform.operator_org_name = input.operator_org_name
         platform.save()
         return UpdatePlatform(platform=platform)
@@ -799,7 +799,7 @@ class CreateMission(graphene.Mutation):
             name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
-            platform_name=input.platform.platform_name,
+            name=input.platform.name,
             platformtype=platformtype,
         )
         sensors = []
@@ -883,7 +883,7 @@ class UpdateMission(graphene.Mutation):
             name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
-            platform_name=input.platform.platform_name,
+            name=input.platform.name,
             platformtype=platformtype,
         )
         sensors = []
