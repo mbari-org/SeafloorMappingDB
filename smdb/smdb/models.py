@@ -69,7 +69,7 @@ class Sensor(models.Model):
 
 class Expedition(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    expd_name = models.CharField(max_length=128, null=True)
+    name = models.CharField(max_length=128, null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     investigator = models.ForeignKey(
@@ -91,8 +91,8 @@ class Expedition(models.Model):
 
     def __str__(self):
         name = ""
-        if self.expd_name:
-            name = self.expd_name
+        if self.name:
+            name = self.name
         return f"{self.expd_path_name} ({name})"
 
 
