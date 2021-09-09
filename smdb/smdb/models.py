@@ -98,11 +98,11 @@ class Expedition(models.Model):
 
 class Compilation(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    compilation_dir_name = models.CharField(max_length=128, db_index=True)
+    dir_name = models.CharField(max_length=128, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
-    compilation_path_name = models.CharField(max_length=128, db_index=True)
+    path_name = models.CharField(max_length=128, db_index=True)
     navadjust_dir_path = models.CharField(max_length=128, db_index=True)
     figures_dir_path = models.CharField(max_length=128, db_index=True)
     comment = models.TextField(blank=True, null=True)
@@ -112,7 +112,7 @@ class Compilation(models.Model):
     update_status = models.IntegerField(blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"{self.compilation_dir_name}"
+        return f"{self.dir_name}"
 
 
 class Mission(models.Model):

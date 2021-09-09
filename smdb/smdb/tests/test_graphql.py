@@ -895,8 +895,8 @@ create_compilation_template = Template(
     """mutation {
         create_compilation(input: {
             comment: "Initial comment.",
-            compilation_dir_name: "/a/dir/name",
-            compilation_path_name: "/a/path/name",
+            dir_name: "/a/dir/name",
+            path_name: "/a/path/name",
             figures_dir_path: "/figures/path",
             grid_bounds: "SRID=4326;POLYGON ((-121.94 36.69, -121.94 36.69, -121.93 36.69, -121.93 36.69, -121.94 36.69))",
             kml_filename: "file.kml",
@@ -907,8 +907,8 @@ create_compilation_template = Template(
             compilation {
                 {{ uuid }}
                 comment
-                compilation_dir_name
-                compilation_path_name
+                dir_name
+                path_name
                 figures_dir_path
                 grid_bounds
                 kml_filename
@@ -923,8 +923,8 @@ create_compilation_template = Template(
 compilation_query = """{
                 all_compilations {
                     comment
-                    compilation_dir_name
-                    compilation_path_name
+                    dir_name
+                    path_name
                     figures_dir_path
                     grid_bounds
                     kml_filename
@@ -974,8 +974,8 @@ def test_update_compilation(snapshot):
             """mutation UpdateCompilation($uuid: ID) {
         update_compilation(uuid: $uuid, input: {
             comment: "Updated comment.",
-            compilation_dir_name: "/b/dir/name",
-            compilation_path_name: "/b/path/name",
+            dir_name: "/b/dir/name",
+            path_name: "/b/path/name",
             figures_dir_path: "/figures/path2",
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
             kml_filename: "file2.kml",
@@ -985,8 +985,8 @@ def test_update_compilation(snapshot):
             update_status: 10}) {
             compilation {
                 comment
-                compilation_dir_name
-                compilation_path_name
+                dir_name
+                path_name
                 figures_dir_path
                 grid_bounds
                 kml_filename
@@ -1017,8 +1017,8 @@ def test_delete_compilation(snapshot):
                 delete_compilation(uuid: $uuid) {
                     compilation {
                         comment
-                        compilation_dir_name
-                        compilation_path_name
+                        dir_name
+                        path_name
                         figures_dir_path
                         grid_bounds
                         kml_filename
@@ -1057,7 +1057,7 @@ create_mission_template = Template(
             site_detail: "site detail",
             thumbnail_filename: "thumbnail.png",
             kml_filename: "kml_file.kml",
-            compilation: {compilation_dir_name: "Initial compilation"},
+            compilation: {dir_name: "Initial compilation"},
             update_status: 5,
             sensors: {comment: "C", model_name: "M", sensortype: {name: "ST1"}},
             data_archivals: [ {doi: "doi://da_initial/1", archival_db_name: "DA Initial 1"},
@@ -1093,7 +1093,7 @@ create_mission_template = Template(
                 thumbnail_filename
                 kml_filename
                 compilation {
-                    compilation_dir_name
+                    dir_name
                 }
                 update_status
                 sensors {
@@ -1193,7 +1193,7 @@ def test_update_mission(snapshot):
                     site_detail: "site detail 2",
                     thumbnail_filename: "tumbnail2.png",
                     kml_filename: "Added kml_file.kml",
-                    compilation: {compilation_dir_name: "Updated compilation"},
+                    compilation: {dir_name: "Updated compilation"},
                     update_status: 6,
                     sensors: {comment: "C", model_name: "M", sensortype: {name: "T1"}},
                     data_archivals: [ {doi: "doi://da_updated/1", archival_db_name: "DA Updated 1"},
@@ -1228,7 +1228,7 @@ def test_update_mission(snapshot):
                         thumbnail_filename
                         kml_filename
                         compilation {
-                            compilation_dir_name
+                            dir_name
                         }
                         update_status
                         sensors {

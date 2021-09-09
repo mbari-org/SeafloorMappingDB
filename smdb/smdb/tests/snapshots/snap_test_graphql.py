@@ -46,8 +46,7 @@ snapshots['test_all_compilations 1'] = {
         'all_compilations': [
             {
                 'comment': 'Initial comment.',
-                'compilation_dir_name': '/a/dir/name',
-                'compilation_path_name': '/a/path/name',
+                'dir_name': '/a/dir/name',
                 'figures_dir_path': '/figures/path',
                 'grid_bounds': {
                     'coordinates': [
@@ -78,6 +77,7 @@ snapshots['test_all_compilations 1'] = {
                 },
                 'kml_filename': 'file.kml',
                 'navadjust_dir_path': '/nav/adjust/path/',
+                'path_name': '/a/path/name',
                 'proc_datalist_filename': 'proc.datalist-1',
                 'thumbnail_filename': 'thumbnail.png',
                 'update_status': 10
@@ -824,8 +824,7 @@ snapshots['test_create_compilation 1'] = {
         'create_compilation': {
             'compilation': {
                 'comment': 'Initial comment.',
-                'compilation_dir_name': '/a/dir/name',
-                'compilation_path_name': '/a/path/name',
+                'dir_name': '/a/dir/name',
                 'figures_dir_path': '/figures/path',
                 'grid_bounds': {
                     'coordinates': [
@@ -856,6 +855,7 @@ snapshots['test_create_compilation 1'] = {
                 },
                 'kml_filename': 'file.kml',
                 'navadjust_dir_path': '/nav/adjust/path/',
+                'path_name': '/a/path/name',
                 'proc_datalist_filename': 'proc.datalist-1',
                 'thumbnail_filename': 'thumbnail.png',
                 'update_status': 10
@@ -928,7 +928,7 @@ snapshots['test_create_mission 1'] = {
                 ],
                 'comment': 'Initial comment.',
                 'compilation': {
-                    'compilation_dir_name': 'Initial compilation'
+                    'dir_name': 'Initial compilation'
                 },
                 'data_archivals': [
                     {
@@ -1145,8 +1145,7 @@ snapshots['test_delete_compilation 1'] = {
         'delete_compilation': {
             'compilation': {
                 'comment': 'Initial comment.',
-                'compilation_dir_name': '/a/dir/name',
-                'compilation_path_name': '/a/path/name',
+                'dir_name': '/a/dir/name',
                 'figures_dir_path': '/figures/path',
                 'grid_bounds': {
                     'coordinates': [
@@ -1177,6 +1176,7 @@ snapshots['test_delete_compilation 1'] = {
                 },
                 'kml_filename': 'file.kml',
                 'navadjust_dir_path': '/nav/adjust/path/',
+                'path_name': '/a/path/name',
                 'proc_datalist_filename': 'proc.datalist-1',
                 'thumbnail_filename': 'thumbnail.png',
                 'update_status': 10
@@ -1411,8 +1411,7 @@ snapshots['test_update_compilation 1'] = {
         'update_compilation': {
             'compilation': {
                 'comment': 'Updated comment.',
-                'compilation_dir_name': '/b/dir/name',
-                'compilation_path_name': '/b/path/name',
+                'dir_name': '/b/dir/name',
                 'figures_dir_path': '/figures/path2',
                 'grid_bounds': {
                     'coordinates': [
@@ -1443,6 +1442,7 @@ snapshots['test_update_compilation 1'] = {
                 },
                 'kml_filename': 'file2.kml',
                 'navadjust_dir_path': '/new/adjust/path/',
+                'path_name': '/b/path/name',
                 'proc_datalist_filename': 'proc.datalist-2',
                 'thumbnail_filename': 'thumbnail2.png',
                 'update_status': 10
@@ -1515,7 +1515,7 @@ snapshots['test_update_mission 1'] = {
                 ],
                 'comment': 'Updates comment.',
                 'compilation': {
-                    'compilation_dir_name': 'Updated compilation'
+                    'dir_name': 'Updated compilation'
                 },
                 'data_archivals': [
                     {
