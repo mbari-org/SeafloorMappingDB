@@ -26,7 +26,7 @@ class MissionTypeViewSet(
 ):
     serializer_class = MissionTypeSerializer
     queryset = MissionType.objects.all()
-    lookup_field = "missiontype_name"
+    lookup_field = "name"
 
 
 class PersonViewSet(
@@ -52,7 +52,7 @@ class PlatformTypeViewSet(
 ):
     serializer_class = PlatformTypeSerializer
     queryset = PlatformType.objects.all()
-    lookup_field = "platformtype_name"
+    lookup_field = "name"
 
 
 """ Waiting for better serializer implementaion
@@ -66,5 +66,5 @@ class MissionViewSet(
 ):
     serializer_class = MissionSerializer
     queryset = Mission.objects.all()
-    lookup_field = "mission_name"
+    lookup_field = "name"
 """

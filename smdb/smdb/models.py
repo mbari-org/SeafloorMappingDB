@@ -24,52 +24,52 @@ class Person(models.Model):
 
 class PlatformType(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    platformtype_name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128)
 
     def __str__(self) -> str:
-        return self.platformtype_name
+        return self.name
 
 
 class Platform(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    platform_type = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
-    platform_name = models.CharField(max_length=128, db_index=True, unique=True)
+    platformtype = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
+    name = models.CharField(max_length=128, db_index=True, unique=True)
     operator_org_name = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.platform_name} ({self.operator_org_name})"
+        return f"{self.name} ({self.operator_org_name})"
 
 
 class MissionType(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    missiontype_name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128, unique=True)
 
     def __str__(self):
-        return self.missiontype_name
+        return self.name
 
 
 class SensorType(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    sensortype_name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128, unique=True)
 
     def __str__(self):
-        return self.sensortype_name
+        return self.name
 
 
 class Sensor(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    sensor_type = models.ForeignKey(SensorType, on_delete=models.CASCADE)
+    sensortype = models.ForeignKey(SensorType, on_delete=models.CASCADE)
     model_name = models.CharField(max_length=128)
     comment = models.CharField(max_length=128)
     missions = models.ManyToManyField("Mission")
 
     def __str__(self):
-        return f"{self.sensor_type}({self.model_name})"
+        return f"{self.sensortype}({self.model_name})"
 
 
 class Expedition(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    expd_name = models.CharField(max_length=128, null=True)
+    name = models.CharField(max_length=128, null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     investigator = models.ForeignKey(
@@ -91,18 +91,18 @@ class Expedition(models.Model):
 
     def __str__(self):
         name = ""
-        if self.expd_name:
-            name = self.expd_name
+        if self.name:
+            name = self.name
         return f"{self.expd_path_name} ({name})"
 
 
 class Compilation(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    compilation_dir_name = models.CharField(max_length=128, db_index=True)
+    dir_name = models.CharField(max_length=128, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
-    compilation_path_name = models.CharField(max_length=128, db_index=True)
+    path_name = models.CharField(max_length=128, db_index=True)
     navadjust_dir_path = models.CharField(max_length=128, db_index=True)
     figures_dir_path = models.CharField(max_length=128, db_index=True)
     comment = models.TextField(blank=True, null=True)
@@ -112,12 +112,12 @@ class Compilation(models.Model):
     update_status = models.IntegerField(blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"{self.compilation_dir_name}"
+        return f"{self.dir_name}"
 
 
 class Mission(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    mission_name = models.CharField(max_length=256, db_index=True)
+    name = models.CharField(max_length=256, db_index=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
@@ -157,10 +157,12 @@ class Mission(models.Model):
     citations = models.ManyToManyField("Citation", blank=True)
 
     def __str__(self):
-        return f"{self.mission_name}"
+        return f"{self.name}"
 
     def display_sensor(self):
-        return ", ".join(f"{sensor.sensor_type}({sensor.model_name})" for sensor in self.sensors.all())
+        return ", ".join(
+            f"{sensor.sensortype}({sensor.model_name})" for sensor in self.sensors.all()
+        )
 
     display_sensor.short_description = "Sensor"
 
@@ -203,4 +205,4 @@ class Note(models.Model):
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Notes for {self.mission.mission_name}"
+        return f"Notes for {self.mission.name}"

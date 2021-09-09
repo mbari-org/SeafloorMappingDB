@@ -25,7 +25,7 @@ from smdb.models import (
 class MissionTypeNode(DjangoObjectNode):
     class Meta:
         model = MissionType
-        fields = ("uuid", "missiontype_name")
+        fields = ("uuid", "name")
 
 
 class PersonNode(DjangoObjectNode):
@@ -37,7 +37,7 @@ class PersonNode(DjangoObjectNode):
 class PlatformTypeNode(DjangoObjectNode):
     class Meta:
         model = PlatformType
-        fields = ("uuid", "platformtype_name")
+        fields = ("uuid", "name")
 
 
 class PlatformNode(DjangoObjectNode):
@@ -45,16 +45,16 @@ class PlatformNode(DjangoObjectNode):
         model = Platform
         fields = (
             "uuid",
-            "platform_name",
+            "name",
             "operator_org_name",
-            "platform_type",
+            "platformtype",
         )
 
 
 class SensorTypeNode(DjangoObjectNode):
     class Meta:
         model = SensorType
-        fields = ("uuid", "sensortype_name")
+        fields = ("uuid", "name")
 
 
 class SensorNode(DjangoObjectNode):
@@ -62,7 +62,7 @@ class SensorNode(DjangoObjectNode):
         model = Sensor
         fields = (
             "uuid",
-            "sensor_type",
+            "sensortype",
             "model_name",
             "comment",
             "missions",
@@ -74,7 +74,7 @@ class ExpeditionNode(DjangoObjectNode):
         model = Expedition
         fields = (
             "uuid",
-            "expd_name",
+            "name",
             "start_date",
             "end_date",
             "investigator",
@@ -89,9 +89,9 @@ class CompilationNode(DjangoObjectNode):
         model = Compilation
         fields = (
             "uuid",
-            "compilation_dir_name",
+            "dir_name",
             "grid_bounds",
-            "compilation_path_name",
+            "path_name",
             "navadjust_dir_path",
             "figures_dir_path",
             "comment",
@@ -107,7 +107,7 @@ class MissionNode(DjangoObjectNode):
         model = Mission
         fields = (
             "uuid",
-            "mission_name",
+            "name",
             "grid_bounds",
             "expedition",
             "missiontype",
@@ -184,7 +184,7 @@ class Query(graphene.ObjectType):
     )
 
     expedition_by_name = graphene.Field(
-        ExpeditionNode, expd_name=graphene.String(required=True)
+        ExpeditionNode, name=graphene.String(required=True)
     )
 
     # Queries for all_ objects
@@ -227,13 +227,13 @@ class Query(graphene.ObjectType):
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
-            return MissionType.objects.get(missiontype_name=name)
+            return MissionType.objects.get(name=name)
         except MissionType.DoesNotExist:
             return None
 
-    def resolve_expedition_by_name(root, info, expd_name):
+    def resolve_expedition_by_name(root, info, name):
         try:
-            return Expedition.objects.get(expd_name=expd_name)
+            return Expedition.objects.get(name=name)
         except Expedition.DoesNotExist:
             return None
 
@@ -241,20 +241,20 @@ class Query(graphene.ObjectType):
 # https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
 # ===== MissionType =====
 class MissionTypeInput(graphene.InputObjectType):
-    missiontype_name = graphene.String(required=True)
+    name = graphene.String(required=True)
 
 
 class CreateMissionType(graphene.Mutation):
     class Arguments:
-        missiontype_name = graphene.String()
+        name = graphene.String()
 
     missiontype = graphene.Field(MissionTypeNode)
 
-    def mutate(self, info, missiontype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.create(
-            missiontype_name=missiontype_name,
+            name=name,
         )
         missiontype.save()
         return CreateMissionType(missiontype=missiontype)
@@ -262,33 +262,33 @@ class CreateMissionType(graphene.Mutation):
 
 class UpdateMissionType(graphene.Mutation):
     class Arguments:
-        missiontype_name = graphene.String(required=True)
-        new_missiontype_name = graphene.String(required=True)
+        name = graphene.String(required=True)
+        new_name = graphene.String(required=True)
 
     missiontype = graphene.Field(MissionTypeNode)
 
-    def mutate(self, info, missiontype_name, new_missiontype_name):
+    def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.get(
-            missiontype_name=missiontype_name,
+            name=name,
         )
-        missiontype.missiontype_name = new_missiontype_name
+        missiontype.name = new_name
         missiontype.save()
         return UpdateMissionType(missiontype=missiontype)
 
 
 class DeleteMissionType(graphene.Mutation):
     class Arguments:
-        missiontype_name = graphene.String()
+        name = graphene.String()
 
     missiontype = graphene.Field(MissionTypeNode)
 
-    def mutate(self, info, missiontype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.get(
-            missiontype_name=missiontype_name,
+            name=name,
         )
         missiontype.delete()
         return DeleteMissionType(missiontype=missiontype)
@@ -357,20 +357,20 @@ class DeletePerson(graphene.Mutation):
 
 # ===== PlatformType =====
 class PlatformTypeInput(graphene.InputObjectType):
-    platformtype_name = graphene.String(required=True)
+    name = graphene.String(required=True)
 
 
 class CreatePlatformType(graphene.Mutation):
     class Arguments:
-        platformtype_name = graphene.String()
+        name = graphene.String()
 
     platformtype = graphene.Field(PlatformTypeNode)
 
-    def mutate(self, info, platformtype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.create(
-            platformtype_name=platformtype_name,
+            name=name,
         )
         platformtype.save()
         return CreatePlatformType(platformtype=platformtype)
@@ -378,33 +378,33 @@ class CreatePlatformType(graphene.Mutation):
 
 class UpdatePlatformType(graphene.Mutation):
     class Arguments:
-        platformtype_name = graphene.String(required=True)
-        new_platformtype_name = graphene.String(required=True)
+        name = graphene.String(required=True)
+        new_name = graphene.String(required=True)
 
     platformtype = graphene.Field(PlatformTypeNode)
 
-    def mutate(self, info, platformtype_name, new_platformtype_name):
+    def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.get(
-            platformtype_name=platformtype_name,
+            name=name,
         )
-        platformtype.platformtype_name = new_platformtype_name
+        platformtype.name = new_name
         platformtype.save()
         return UpdatePlatformType(platformtype=platformtype)
 
 
 class DeletePlatformType(graphene.Mutation):
     class Arguments:
-        platformtype_name = graphene.String()
+        name = graphene.String()
 
     platformtype = graphene.Field(PlatformTypeNode)
 
-    def mutate(self, info, platformtype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype = PlatformType.objects.get(
-            platformtype_name=platformtype_name,
+            name=name,
         )
         platformtype.delete()
         return DeletePlatformType(platformtype=platformtype)
@@ -412,7 +412,7 @@ class DeletePlatformType(graphene.Mutation):
 
 # ===== Platform =====
 class PlatformInput(graphene.InputObjectType):
-    platform_name = graphene.String(required=True)
+    name = graphene.String(required=True)
     platformtype = graphene.Field(PlatformTypeInput)
     operator_org_name = graphene.String()
 
@@ -427,11 +427,11 @@ class CreatePlatform(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platformtype.platformtype_name
+            name=input.platformtype.name
         )
         platform = Platform.objects.create(
-            platform_name=input.platform_name,
-            platform_type=platformtype,
+            name=input.name,
+            platformtype=platformtype,
             operator_org_name=input.operator_org_name,
         )
         platform.save()
@@ -450,10 +450,10 @@ class UpdatePlatform(graphene.Mutation):
             raise GraphQLError("You must be logged in")
         platform = Platform.objects.get(uuid=uuid)
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platformtype.platformtype_name
+            name=input.platformtype.name
         )
-        platform.platform_type = platformtype
-        platform.platform_name = input.platform_name
+        platform.platformtype = platformtype
+        platform.name = input.name
         platform.operator_org_name = input.operator_org_name
         platform.save()
         return UpdatePlatform(platform=platform)
@@ -475,20 +475,20 @@ class DeletePlatform(graphene.Mutation):
 
 # ===== SensorType =====
 class SensorTypeInput(graphene.InputObjectType):
-    sensortype_name = graphene.String(required=True)
+    name = graphene.String(required=True)
 
 
 class CreateSensorType(graphene.Mutation):
     class Arguments:
-        sensortype_name = graphene.String()
+        name = graphene.String()
 
     sensortype = graphene.Field(SensorTypeNode)
 
-    def mutate(self, info, sensortype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.create(
-            sensortype_name=sensortype_name,
+            name=name,
         )
         sensortype.save()
         return CreateSensorType(sensortype=sensortype)
@@ -496,33 +496,33 @@ class CreateSensorType(graphene.Mutation):
 
 class UpdateSensorType(graphene.Mutation):
     class Arguments:
-        sensortype_name = graphene.String(required=True)
-        new_sensortype_name = graphene.String(required=True)
+        name = graphene.String(required=True)
+        new_name = graphene.String(required=True)
 
     sensortype = graphene.Field(SensorTypeNode)
 
-    def mutate(self, info, sensortype_name, new_sensortype_name):
+    def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.get(
-            sensortype_name=sensortype_name,
+            name=name,
         )
-        sensortype.sensortype_name = new_sensortype_name
+        sensortype.name = new_name
         sensortype.save()
         return UpdateSensorType(sensortype=sensortype)
 
 
 class DeleteSensorType(graphene.Mutation):
     class Arguments:
-        sensortype_name = graphene.String()
+        name = graphene.String()
 
     sensortype = graphene.Field(SensorTypeNode)
 
-    def mutate(self, info, sensortype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         sensortype = SensorType.objects.get(
-            sensortype_name=sensortype_name,
+            name=name,
         )
         sensortype.delete()
         return DeleteSensorType(sensortype=sensortype)
@@ -546,11 +546,9 @@ class CreateSensor(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        sensortype, _ = SensorType.objects.get_or_create(
-            sensortype_name=input.sensortype.sensortype_name
-        )
+        sensortype, _ = SensorType.objects.get_or_create(name=input.sensortype.name)
         sensor = Sensor.objects.create(
-            sensor_type=sensortype,
+            sensortype=sensortype,
             model_name=input.model_name,
             comment=input.comment,
         )
@@ -591,7 +589,7 @@ class DeleteSensor(graphene.Mutation):
 
 # ===== Expedition =====
 class ExpeditionInput(graphene.InputObjectType):
-    expd_name = graphene.String()
+    name = graphene.String()
     start_date_iso = graphene.String()
     end_date_iso = graphene.String()
     investigator = graphene.Field(PersonInput)
@@ -619,7 +617,7 @@ class CreateExpedition(graphene.Mutation):
             last_name=input.chiefscientist.last_name,
         )
         expedition = Expedition.objects.create(
-            expd_name=input.expd_name,
+            name=input.name,
             start_date=parse(input.start_date_iso),
             end_date=parse(input.end_date_iso),
             investigator=investigator,
@@ -650,7 +648,7 @@ class UpdateExpedition(graphene.Mutation):
             last_name=input.chiefscientist.last_name,
         )
         expedition = Expedition.objects.get(uuid=uuid)
-        expedition.expd_name = input.expd_name
+        expedition.name = input.name
         expedition.start_date = parse(input.start_date_iso)
         expedition.end_date = parse(input.end_date_iso)
         expedition.investigator = investigator
@@ -676,9 +674,9 @@ class DeleteExpedition(graphene.Mutation):
 
 # ===== Compilation =====
 class CompilationInput(graphene.InputObjectType):
-    compilation_dir_name = graphene.String()
+    dir_name = graphene.String()
     grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
-    compilation_path_name = graphene.String()
+    path_name = graphene.String()
     navadjust_dir_path = graphene.String()
     figures_dir_path = graphene.String()
     comment = graphene.String()
@@ -698,9 +696,9 @@ class CreateCompilation(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         compilation = Compilation.objects.create(
-            compilation_dir_name=input.compilation_dir_name,
+            dir_name=input.dir_name,
             grid_bounds=input.grid_bounds,
-            compilation_path_name=input.compilation_path_name,
+            path_name=input.path_name,
             navadjust_dir_path=input.navadjust_dir_path,
             figures_dir_path=input.figures_dir_path,
             comment=input.comment,
@@ -724,9 +722,9 @@ class UpdateCompilation(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         compilation = Compilation.objects.get(uuid=uuid)
-        compilation.compilation_dir_name = input.compilation_dir_name
+        compilation.dir_name = input.dir_name
         compilation.grid_bounds = input.grid_bounds
-        compilation.compilation_path_name = input.compilation_path_name
+        compilation.path_name = input.path_name
         compilation.navadjust_dir_path = input.navadjust_dir_path
         compilation.figures_dir_path = input.figures_dir_path
         compilation.comment = input.comment
@@ -754,7 +752,7 @@ class DeleteCompilation(graphene.Mutation):
 
 # ===== Mission =====
 class MissionInput(graphene.InputObjectType):
-    mission_name = graphene.String(required=True)
+    name = graphene.String(required=True)
     grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
     expedition = graphene.Field(ExpeditionInput, required=True)
     missiontype = graphene.Field(MissionTypeInput)
@@ -790,32 +788,32 @@ class CreateMission(graphene.Mutation):
 
         # DRY warning - these calls repeated in UpdateMission()
         expedition, _ = Expedition.objects.get_or_create(
-            expd_name=input.expedition.expd_name,
+            name=input.expedition.name,
         )
         missiontype, _ = MissionType.objects.get_or_create(
-            missiontype_name=input.missiontype.missiontype_name,
+            name=input.missiontype.name,
         )
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platform.platformtype.platformtype_name,
+            name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
-            platform_name=input.platform.platform_name,
-            platform_type=platformtype,
+            name=input.platform.name,
+            platformtype=platformtype,
         )
         sensors = []
         for sensor_input in input.sensors or ():
             sensortype, _ = SensorType.objects.get_or_create(
-                sensortype_name=sensor_input.sensortype.sensortype_name,
+                name=sensor_input.sensortype.name,
             )
             sensor, _ = Sensor.objects.get_or_create(
                 comment=sensor_input.comment,
                 model_name=sensor_input.model_name,
-                sensor_type=sensortype,
+                sensortype=sensortype,
             )
             sensors.append(sensor)
 
         compilation, _ = Compilation.objects.get_or_create(
-            compilation_dir_name=input.compilation.compilation_dir_name,
+            dir_name=input.compilation.dir_name,
         )
         data_archivals = []
         for data_archival_input in input.data_archivals or ():
@@ -834,7 +832,7 @@ class CreateMission(graphene.Mutation):
         # End DRY warning
 
         mission = Mission.objects.create(
-            mission_name=input.mission_name,
+            name=input.name,
             grid_bounds=input.grid_bounds,
             expedition=expedition,
             missiontype=missiontype,
@@ -874,31 +872,31 @@ class UpdateMission(graphene.Mutation):
 
         # DRY warning - these calls repeated in CreateMission()
         expedition, _ = Expedition.objects.get_or_create(
-            expd_name=input.expedition.expd_name,
+            name=input.expedition.name,
         )
         missiontype, _ = MissionType.objects.get_or_create(
-            missiontype_name=input.missiontype.missiontype_name,
+            name=input.missiontype.name,
         )
         platformtype, _ = PlatformType.objects.get_or_create(
-            platformtype_name=input.platform.platformtype.platformtype_name,
+            name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
-            platform_name=input.platform.platform_name,
-            platform_type=platformtype,
+            name=input.platform.name,
+            platformtype=platformtype,
         )
         sensors = []
         for sensor_input in input.sensors or ():
             sensortype, _ = SensorType.objects.get_or_create(
-                sensortype_name=sensor_input.sensortype.sensortype_name,
+                name=sensor_input.sensortype.name,
             )
             sensor, _ = Sensor.objects.get_or_create(
                 comment=sensor_input.comment,
                 model_name=sensor_input.model_name,
-                sensor_type=sensortype,
+                sensortype=sensortype,
             )
             sensors.append(sensor)
         compilation, _ = Compilation.objects.get_or_create(
-            compilation_dir_name=input.compilation.compilation_dir_name,
+            dir_name=input.compilation.dir_name,
         )
         data_archivals = []
         for data_archival_input in input.data_archivals or ():
@@ -917,7 +915,7 @@ class UpdateMission(graphene.Mutation):
         # End DRY warning
 
         mission = Mission.objects.get(uuid=uuid)
-        mission.mission_name = input.mission_name
+        mission.name = input.name
         mission.grid_bounds = input.grid_bounds
         mission.expedition = expedition
         mission.missiontype = missiontype
@@ -976,11 +974,11 @@ class CreateDataArchival(graphene.Mutation):
         missions = []
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
-                expd_name=mission_input.expedition.expd_name,
+                name=mission_input.expedition.name,
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1006,11 +1004,11 @@ class UpdateDataArchival(graphene.Mutation):
         missions = []
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
-                expd_name=mission_input.expedition.expd_name,
+                name=mission_input.expedition.name,
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1055,11 +1053,11 @@ class CreateCitation(graphene.Mutation):
         missions = []
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
-                expd_name=mission_input.expedition.expd_name,
+                name=mission_input.expedition.name,
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1085,11 +1083,11 @@ class UpdateCitation(graphene.Mutation):
         missions = []
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
-                expd_name=mission_input.expedition.expd_name,
+                name=mission_input.expedition.name,
                 expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
-                mission_name=mission_input.mission_name,
+                name=mission_input.name,
                 expedition=expedition,
             )
             missions.append(mission)
@@ -1131,11 +1129,11 @@ class CreateNote(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         expedition, _ = Expedition.objects.get_or_create(
-            expd_name=input.mission.expedition.expd_name,
+            name=input.mission.expedition.name,
             expd_path_name=input.mission.expedition.expd_path_name,
         )
         mission, _ = Mission.objects.get_or_create(
-            mission_name=input.mission.mission_name,
+            name=input.mission.name,
             expedition=expedition,
         )
         note = Note.objects.create(
@@ -1157,11 +1155,11 @@ class UpdateNote(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         expedition, _ = Expedition.objects.get_or_create(
-            expd_name=input.mission.expedition.expd_name,
+            name=input.mission.expedition.name,
             expd_path_name=input.mission.expedition.expd_path_name,
         )
         mission, _ = Mission.objects.get_or_create(
-            mission_name=input.mission.mission_name,
+            name=input.mission.name,
             expedition=expedition,
         )
         note = Note.objects.get(uuid=uuid)

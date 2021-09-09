@@ -15,12 +15,12 @@ def test_missiontype_detail(missiontype: MissionType):
     assert (
         reverse(
             "api:missiontype-detail",
-            kwargs={"missiontype_name": missiontype.missiontype_name},
+            kwargs={"name": missiontype.name},
         )
-        == f"/api/v1/missiontype/{missiontype.missiontype_name}/"
+        == f"/api/v1/missiontype/{missiontype.name}/"
     )
     assert (
-        resolve(f"/api/v1/missiontype/{missiontype.missiontype_name}/").view_name
+        resolve(f"/api/v1/missiontype/{missiontype.name}/").view_name
         == "api:missiontype-detail"
     )
 
@@ -50,12 +50,12 @@ def test_platformtype_detail(platformtype: PlatformType):
     assert (
         reverse(
             "api:platformtype-detail",
-            kwargs={"platformtype_name": platformtype.platformtype_name},
+            kwargs={"name": platformtype.name},
         )
-        == f"/api/v1/platformtype/{platformtype.platformtype_name}/"
+        == f"/api/v1/platformtype/{platformtype.name}/"
     )
     assert (
-        resolve(f"/api/v1/platformtype/{platformtype.platformtype_name}/").view_name
+        resolve(f"/api/v1/platformtype/{platformtype.name}/").view_name
         == "api:platformtype-detail"
     )
 
@@ -68,11 +68,11 @@ def test_mission_list():
 
 def test_mission_detail(mission: Mission):
     assert (
-        reverse("api:mission-detail", kwargs={"mission_name": mission.mission_name})
-        == f"/api/v1/missions/{mission.mission_name}/"
+        reverse("api:mission-detail", kwargs={"name": mission.name})
+        == f"/api/v1/missions/{mission.name}/"
     )
     assert (
-        resolve(f"/api/v1/mission/{mission.mission_name}/").view_name
+        resolve(f"/api/v1/mission/{mission.name}/").view_name
         == "api:mission-detail"
     )
 """

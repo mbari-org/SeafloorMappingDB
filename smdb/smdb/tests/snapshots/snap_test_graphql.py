@@ -16,17 +16,17 @@ snapshots['test_all_citations 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_name': 'EN1',
-                            'expd_path_name': 'PN1'
+                            'expd_path_name': 'PN1',
+                            'name': 'EN1'
                         },
-                        'mission_name': 'M1'
+                        'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_name': 'EN2',
-                            'expd_path_name': 'PN2'
+                            'expd_path_name': 'PN2',
+                            'name': 'EN2'
                         },
-                        'mission_name': 'M2'
+                        'name': 'M2'
                     }
                 ]
             }
@@ -46,8 +46,7 @@ snapshots['test_all_compilations 1'] = {
         'all_compilations': [
             {
                 'comment': 'Initial comment.',
-                'compilation_dir_name': '/a/dir/name',
-                'compilation_path_name': '/a/path/name',
+                'dir_name': '/a/dir/name',
                 'figures_dir_path': '/figures/path',
                 'grid_bounds': {
                     'coordinates': [
@@ -78,6 +77,7 @@ snapshots['test_all_compilations 1'] = {
                 },
                 'kml_filename': 'file.kml',
                 'navadjust_dir_path': '/nav/adjust/path/',
+                'path_name': '/a/path/name',
                 'proc_datalist_filename': 'proc.datalist-1',
                 'thumbnail_filename': 'thumbnail.png',
                 'update_status': 10
@@ -102,17 +102,17 @@ snapshots['test_all_dataarchivals 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_name': 'EN1',
-                            'expd_path_name': 'PN1'
+                            'expd_path_name': 'PN1',
+                            'name': 'EN1'
                         },
-                        'mission_name': 'M1'
+                        'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_name': 'EN2',
-                            'expd_path_name': 'PN2'
+                            'expd_path_name': 'PN2',
+                            'name': 'EN2'
                         },
-                        'mission_name': 'M2'
+                        'name': 'M2'
                     }
                 ]
             }
@@ -132,38 +132,38 @@ snapshots['test_all_expeditions 1'] = {
         'all_expeditions': [
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': '1998-07-20T00:00:00',
-                'expd_name': 'Initial',
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'name': 'Initial',
                 'start_date': '1998-07-01T00:00:00'
             }
         ]
@@ -175,32 +175,32 @@ snapshots['test_all_expeditions_empty 1'] = {
         'all_expeditions': [
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
+                'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_name': None,
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
+                'name': None,
                 'start_date': None
             }
         ]
@@ -597,55 +597,55 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190124m1'
+                    'name': '2019/20190124m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190125m1'
+                    'name': '2019/20190125m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190308m1'
+                    'name': '2019/20190308m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
+                        'name': None
                     },
-                    'mission_name': '2019/20190308m2'
+                    'name': '2019/20190308m2'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190314m1'
+                    'name': '2019/20190314m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': 'ENn1',
-                        'expd_path_name': 'PNn1'
+                        'expd_path_name': 'PNn1',
+                        'name': 'ENn1'
                     },
-                    'mission_name': 'Mn1_test'
+                    'name': 'Mn1_test'
                 }
             }
         ]
@@ -658,46 +658,46 @@ snapshots['test_all_notes_empty 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190124m1'
+                    'name': '2019/20190124m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190125m1'
+                    'name': '2019/20190125m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190308m1'
+                    'name': '2019/20190308m1'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
+                        'name': None
                     },
-                    'mission_name': '2019/20190308m2'
+                    'name': '2019/20190308m2'
                 }
             },
             {
                 'mission': {
                     'expedition': {
-                        'expd_name': None,
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1'
+                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
+                        'name': None
                     },
-                    'mission_name': '2019/20190314m1'
+                    'name': '2019/20190314m1'
                 }
             }
         ]
@@ -727,7 +727,7 @@ snapshots['test_all_platforms 1'] = {
     'data': {
         'all_platforms': [
             {
-                'platform_name': 'Dorado'
+                'name': 'Dorado'
             }
         ]
     }
@@ -744,7 +744,7 @@ snapshots['test_all_platformtypes 1'] = {
     'data': {
         'all_platformtypes': [
             {
-                'platformtype_name': 'Initial'
+                'name': 'Initial'
             }
         ]
     }
@@ -779,7 +779,7 @@ snapshots['test_all_sensortypes 1'] = {
     'data': {
         'all_sensortypes': [
             {
-                'sensortype_name': 'Initial'
+                'name': 'Initial'
             }
         ]
     }
@@ -801,17 +801,17 @@ snapshots['test_create_citation 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_name': 'EN1',
-                            'expd_path_name': 'PN1'
+                            'expd_path_name': 'PN1',
+                            'name': 'EN1'
                         },
-                        'mission_name': 'M1'
+                        'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_name': 'EN2',
-                            'expd_path_name': 'PN2'
+                            'expd_path_name': 'PN2',
+                            'name': 'EN2'
                         },
-                        'mission_name': 'M2'
+                        'name': 'M2'
                     }
                 ]
             }
@@ -824,8 +824,7 @@ snapshots['test_create_compilation 1'] = {
         'create_compilation': {
             'compilation': {
                 'comment': 'Initial comment.',
-                'compilation_dir_name': '/a/dir/name',
-                'compilation_path_name': '/a/path/name',
+                'dir_name': '/a/dir/name',
                 'figures_dir_path': '/figures/path',
                 'grid_bounds': {
                     'coordinates': [
@@ -856,6 +855,7 @@ snapshots['test_create_compilation 1'] = {
                 },
                 'kml_filename': 'file.kml',
                 'navadjust_dir_path': '/nav/adjust/path/',
+                'path_name': '/a/path/name',
                 'proc_datalist_filename': 'proc.datalist-1',
                 'thumbnail_filename': 'thumbnail.png',
                 'update_status': 10
@@ -873,17 +873,17 @@ snapshots['test_create_dataarchival 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_name': 'EN1',
-                            'expd_path_name': 'PN1'
+                            'expd_path_name': 'PN1',
+                            'name': 'EN1'
                         },
-                        'mission_name': 'M1'
+                        'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_name': 'EN2',
-                            'expd_path_name': 'PN2'
+                            'expd_path_name': 'PN2',
+                            'name': 'EN2'
                         },
-                        'mission_name': 'M2'
+                        'name': 'M2'
                     }
                 ]
             }
@@ -900,12 +900,12 @@ snapshots['test_create_expedition 1'] = {
                     'last_name': 'Munk'
                 },
                 'end_date': '1998-07-20T00:00:00',
-                'expd_name': 'Initial',
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'investigator': {
                     'first_name': 'Henry',
                     'last_name': 'Stommel'
                 },
+                'name': 'Initial',
                 'start_date': '1998-07-01T00:00:00'
             }
         }
@@ -928,7 +928,7 @@ snapshots['test_create_mission 1'] = {
                 ],
                 'comment': 'Initial comment.',
                 'compilation': {
-                    'compilation_dir_name': 'Initial compilation'
+                    'dir_name': 'Initial compilation'
                 },
                 'data_archivals': [
                     {
@@ -942,7 +942,7 @@ snapshots['test_create_mission 1'] = {
                 ],
                 'end_date': '2021-04-04T00:00:00',
                 'expedition': {
-                    'expd_name': 'Initial expedition name'
+                    'name': 'Initial expedition name'
                 },
                 'grid_bounds': {
                     'coordinates': [
@@ -972,13 +972,13 @@ snapshots['test_create_mission 1'] = {
                     'type': 'Polygon'
                 },
                 'kml_filename': 'kml_file.kml',
-                'mission_name': 'Initial',
                 'missiontype': {
-                    'missiontype_name': 'Initial missiontype'
+                    'name': 'Initial missiontype'
                 },
+                'name': 'Initial',
                 'notes_filename': 'file.notes',
                 'platform': {
-                    'platform_name': 'Initial platform'
+                    'name': 'Initial platform'
                 },
                 'quality_comment': 'Q',
                 'region_name': 'region1',
@@ -986,8 +986,8 @@ snapshots['test_create_mission 1'] = {
                 'sensors': [
                     {
                         'model_name': 'M',
-                        'sensor_type': {
-                            'sensortype_name': 'ST1'
+                        'sensortype': {
+                            'name': 'ST1'
                         }
                     }
                 ],
@@ -1012,7 +1012,7 @@ snapshots['test_create_missiontype 1'] = {
     'data': {
         'create_missiontype': {
             'missiontype': {
-                'missiontype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1044,10 +1044,10 @@ snapshots['test_create_note 1'] = {
             'note': {
                 'mission': {
                     'expedition': {
-                        'expd_name': 'ENn1',
-                        'expd_path_name': 'PNn1'
+                        'expd_path_name': 'PNn1',
+                        'name': 'ENn1'
                     },
-                    'mission_name': 'Mn1_test'
+                    'name': 'Mn1_test'
                 },
                 'text': '''Here is some text that may be in a Note.
 And another line of text.'''
@@ -1072,10 +1072,10 @@ snapshots['test_create_platform 1'] = {
     'data': {
         'create_platform': {
             'platform': {
+                'name': 'Dorado',
                 'operator_org_name': 'MBARI',
-                'platform_name': 'Dorado',
-                'platform_type': {
-                    'platformtype_name': 'AUV'
+                'platformtype': {
+                    'name': 'AUV'
                 }
             }
         }
@@ -1086,7 +1086,7 @@ snapshots['test_create_platformtype 1'] = {
     'data': {
         'create_platformtype': {
             'platformtype': {
-                'platformtype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1098,8 +1098,8 @@ snapshots['test_create_sensor 1'] = {
             'sensor': {
                 'comment': 'Initial comment',
                 'model_name': 'Initial',
-                'sensor_type': {
-                    'sensortype_name': 'Sonar'
+                'sensortype': {
+                    'name': 'Sonar'
                 }
             }
         }
@@ -1110,7 +1110,7 @@ snapshots['test_create_sensortype 1'] = {
     'data': {
         'create_sensortype': {
             'sensortype': {
-                'sensortype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1145,8 +1145,7 @@ snapshots['test_delete_compilation 1'] = {
         'delete_compilation': {
             'compilation': {
                 'comment': 'Initial comment.',
-                'compilation_dir_name': '/a/dir/name',
-                'compilation_path_name': '/a/path/name',
+                'dir_name': '/a/dir/name',
                 'figures_dir_path': '/figures/path',
                 'grid_bounds': {
                     'coordinates': [
@@ -1177,6 +1176,7 @@ snapshots['test_delete_compilation 1'] = {
                 },
                 'kml_filename': 'file.kml',
                 'navadjust_dir_path': '/nav/adjust/path/',
+                'path_name': '/a/path/name',
                 'proc_datalist_filename': 'proc.datalist-1',
                 'thumbnail_filename': 'thumbnail.png',
                 'update_status': 10
@@ -1218,12 +1218,12 @@ snapshots['test_delete_expedition 1'] = {
                     'last_name': 'Munk'
                 },
                 'end_date': '1998-07-20T00:00:00',
-                'expd_name': 'Initial',
                 'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'investigator': {
                     'first_name': 'Henry',
                     'last_name': 'Stommel'
                 },
+                'name': 'Initial',
                 'start_date': '1998-07-01T00:00:00'
             }
         }
@@ -1274,7 +1274,7 @@ snapshots['test_delete_missiontype 1'] = {
     'data': {
         'delete_missiontype': {
             'missiontype': {
-                'missiontype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1286,10 +1286,10 @@ snapshots['test_delete_note 1'] = {
             'note': {
                 'mission': {
                     'expedition': {
-                        'expd_name': 'ENn1',
-                        'expd_path_name': 'PNn1'
+                        'expd_path_name': 'PNn1',
+                        'name': 'ENn1'
                     },
-                    'mission_name': 'Mn1_test'
+                    'name': 'Mn1_test'
                 },
                 'text': '''Here is some text that may be in a Note.
 And another line of text.'''
@@ -1314,7 +1314,7 @@ snapshots['test_delete_platform 1'] = {
     'data': {
         'delete_platform': {
             'platform': {
-                'platform_name': 'Dorado'
+                'name': 'Dorado'
             }
         }
     }
@@ -1324,7 +1324,7 @@ snapshots['test_delete_platformtype 1'] = {
     'data': {
         'delete_platformtype': {
             'platformtype': {
-                'platformtype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1345,7 +1345,7 @@ snapshots['test_delete_sensortype 1'] = {
     'data': {
         'delete_sensortype': {
             'sensortype': {
-                'sensortype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1354,7 +1354,7 @@ snapshots['test_delete_sensortype 1'] = {
 snapshots['test_expedition_by_name 1'] = {
     'data': {
         'expedition_by_name': {
-            'expd_name': 'Initial'
+            'name': 'Initial'
         }
     }
 }
@@ -1368,7 +1368,7 @@ snapshots['test_expedition_by_name_does_not_exist 1'] = {
 snapshots['test_missiontype_by_name 1'] = {
     'data': {
         'missiontype_by_name': {
-            'missiontype_name': 'Initial'
+            'name': 'Initial'
         }
     }
 }
@@ -1388,17 +1388,17 @@ snapshots['test_update_citation 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_name': 'EN3',
-                            'expd_path_name': 'PN3'
+                            'expd_path_name': 'PN3',
+                            'name': 'EN3'
                         },
-                        'mission_name': 'M3'
+                        'name': 'M3'
                     },
                     {
                         'expedition': {
-                            'expd_name': 'EN4',
-                            'expd_path_name': 'PN4'
+                            'expd_path_name': 'PN4',
+                            'name': 'EN4'
                         },
-                        'mission_name': 'M4'
+                        'name': 'M4'
                     }
                 ]
             }
@@ -1411,8 +1411,7 @@ snapshots['test_update_compilation 1'] = {
         'update_compilation': {
             'compilation': {
                 'comment': 'Updated comment.',
-                'compilation_dir_name': '/b/dir/name',
-                'compilation_path_name': '/b/path/name',
+                'dir_name': '/b/dir/name',
                 'figures_dir_path': '/figures/path2',
                 'grid_bounds': {
                     'coordinates': [
@@ -1443,6 +1442,7 @@ snapshots['test_update_compilation 1'] = {
                 },
                 'kml_filename': 'file2.kml',
                 'navadjust_dir_path': '/new/adjust/path/',
+                'path_name': '/b/path/name',
                 'proc_datalist_filename': 'proc.datalist-2',
                 'thumbnail_filename': 'thumbnail2.png',
                 'update_status': 10
@@ -1460,17 +1460,17 @@ snapshots['test_update_dataarchival 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_name': 'EN3',
-                            'expd_path_name': 'PN3'
+                            'expd_path_name': 'PN3',
+                            'name': 'EN3'
                         },
-                        'mission_name': 'M3'
+                        'name': 'M3'
                     },
                     {
                         'expedition': {
-                            'expd_name': 'EN4',
-                            'expd_path_name': 'PN4'
+                            'expd_path_name': 'PN4',
+                            'name': 'EN4'
                         },
-                        'mission_name': 'M4'
+                        'name': 'M4'
                     }
                 ]
             }
@@ -1487,12 +1487,12 @@ snapshots['test_update_expedition 1'] = {
                     'last_name': 'Roe'
                 },
                 'end_date': '2021-02-02T00:00:00',
-                'expd_name': 'Updated',
                 'expd_path_name': '/a/directory/path',
                 'investigator': {
                     'first_name': 'John',
                     'last_name': 'Doe'
                 },
+                'name': 'Updated',
                 'start_date': '2020-01-01T00:00:00'
             }
         }
@@ -1515,7 +1515,7 @@ snapshots['test_update_mission 1'] = {
                 ],
                 'comment': 'Updates comment.',
                 'compilation': {
-                    'compilation_dir_name': 'Updated compilation'
+                    'dir_name': 'Updated compilation'
                 },
                 'data_archivals': [
                     {
@@ -1529,7 +1529,7 @@ snapshots['test_update_mission 1'] = {
                 ],
                 'end_date': '2021-06-06T00:00:00',
                 'expedition': {
-                    'expd_name': 'Added expedition'
+                    'name': 'Added expedition'
                 },
                 'grid_bounds': {
                     'coordinates': [
@@ -1559,13 +1559,13 @@ snapshots['test_update_mission 1'] = {
                     'type': 'Polygon'
                 },
                 'kml_filename': 'Added kml_file.kml',
-                'mission_name': 'Updated',
                 'missiontype': {
-                    'missiontype_name': 'Added missiontype'
+                    'name': 'Added missiontype'
                 },
+                'name': 'Updated',
                 'notes_filename': 'file2.notes',
                 'platform': {
-                    'platform_name': 'Added platform'
+                    'name': 'Added platform'
                 },
                 'quality_comment': 'R',
                 'region_name': 'region2',
@@ -1573,8 +1573,8 @@ snapshots['test_update_mission 1'] = {
                 'sensors': [
                     {
                         'model_name': 'M',
-                        'sensor_type': {
-                            'sensortype_name': 'T1'
+                        'sensortype': {
+                            'name': 'T1'
                         }
                     }
                 ],
@@ -1599,7 +1599,7 @@ snapshots['test_update_missiontype 1'] = {
     'data': {
         'update_missiontype': {
             'missiontype': {
-                'missiontype_name': 'Updated'
+                'name': 'Updated'
             }
         }
     }
@@ -1611,10 +1611,10 @@ snapshots['test_update_note 1'] = {
             'note': {
                 'mission': {
                     'expedition': {
-                        'expd_name': 'EN3',
-                        'expd_path_name': 'PN3'
+                        'expd_path_name': 'PN3',
+                        'name': 'EN3'
                     },
-                    'mission_name': 'Mn1_updated'
+                    'name': 'Mn1_updated'
                 },
                 'text': 'Updated single line of text.'
             }
@@ -1638,10 +1638,10 @@ snapshots['test_update_platform 1'] = {
     'data': {
         'update_platform': {
             'platform': {
+                'name': 'Updated',
                 'operator_org_name': 'SIO',
-                'platform_name': 'Updated',
-                'platform_type': {
-                    'platformtype_name': 'LRAUV'
+                'platformtype': {
+                    'name': 'LRAUV'
                 }
             }
         }
@@ -1652,7 +1652,7 @@ snapshots['test_update_platformtype 1'] = {
     'data': {
         'update_platformtype': {
             'platformtype': {
-                'platformtype_name': 'Updated'
+                'name': 'Updated'
             }
         }
     }
@@ -1673,7 +1673,7 @@ snapshots['test_update_sensortype 1'] = {
     'data': {
         'update_sensortype': {
             'sensortype': {
-                'sensortype_name': 'Updated'
+                'name': 'Updated'
             }
         }
     }

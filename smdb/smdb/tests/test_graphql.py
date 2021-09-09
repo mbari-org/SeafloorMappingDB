@@ -41,9 +41,9 @@ def user_authenticated(anonymous_user=False):
 
 # ===== MissionType Tests =====
 create_missiontype_mutation = """mutation {
-        create_missiontype(missiontype_name: "Initial") {
+        create_missiontype(name: "Initial") {
             missiontype {
-            missiontype_name
+            name
             }
         }
     }"""
@@ -55,7 +55,7 @@ def test_all_missiontypes_empty(snapshot):
         client.execute(
             """{
                 all_missiontypes {
-                    missiontype_name
+                    name
                     uuid
                   }
                 }"""
@@ -79,7 +79,7 @@ def test_create_missiontype(snapshot):
     snapshot.assert_match(
         client.execute(create_missiontype_mutation, context_value=user_authenticated())
     )
-    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+    assert MissionType.objects.all()[0].name == "Initial"
 
 
 def test_missiontype_by_name(snapshot):
@@ -89,12 +89,12 @@ def test_missiontype_by_name(snapshot):
         client.execute(
             """{
                  missiontype_by_name(name: "Initial") {
-                    missiontype_name
+                    name
                   }
                 }"""
         )
     )
-    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+    assert MissionType.objects.all()[0].name == "Initial"
 
 
 def test_missiontype_by_name_does_not_exist(snapshot):
@@ -103,7 +103,7 @@ def test_missiontype_by_name_does_not_exist(snapshot):
         client.execute(
             """{
                  missiontype_by_name(name: "DoesNotExist") {
-                    missiontype_name
+                    name
                   }
                 }"""
         )
@@ -118,31 +118,31 @@ def test_all_sensortypes(snapshot):
     response = client.execute(
         """{
                 all_sensortypes {
-                    sensortype_name
+                    name
                   }
                 }"""
     )
-    assert response["data"]["all_sensortypes"][0]["sensortype_name"] == "Initial"
+    assert response["data"]["all_sensortypes"][0]["name"] == "Initial"
     snapshot.assert_match(response)
 
 
 def test_update_missiontype(snapshot):
     client = Client(schema)
     client.execute(create_missiontype_mutation, context_value=user_authenticated())
-    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+    assert MissionType.objects.all()[0].name == "Initial"
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_missiontype(missiontype_name: "Initial", new_missiontype_name: "Updated") {
+                update_missiontype(name: "Initial", new_name: "Updated") {
                     missiontype {
-                        missiontype_name
+                        name
                     }
                 }
             }""",
             context_value=user_authenticated(),
         )
     )
-    assert MissionType.objects.all()[0].missiontype_name == "Updated"
+    assert MissionType.objects.all()[0].name == "Updated"
 
 
 def test_delete_missiontype(snapshot):
@@ -151,9 +151,9 @@ def test_delete_missiontype(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_missiontype(missiontype_name: "Initial") {
+                delete_missiontype(name: "Initial") {
                     missiontype {
-                        missiontype_name
+                        name
                     }
                 }
             }""",
@@ -288,9 +288,9 @@ def test_delete_person(snapshot):
 
 # ===== PlatformType Tests =====
 create_platformtype_mutation = """mutation {
-        create_platformtype(platformtype_name: "Initial") {
+        create_platformtype(name: "Initial") {
             platformtype {
-                platformtype_name
+                name
             }
         }
     }"""
@@ -302,7 +302,7 @@ def test_all_platformtypes_empty(snapshot):
         client.execute(
             """{
                 all_platformtypes {
-                    platformtype_name
+                    name
                     uuid
                   }
                 }"""
@@ -315,7 +315,7 @@ def test_create_platformtype(snapshot):
     snapshot.assert_match(
         client.execute(create_platformtype_mutation, context_value=user_authenticated())
     )
-    assert PlatformType.objects.all()[0].platformtype_name == "Initial"
+    assert PlatformType.objects.all()[0].name == "Initial"
 
 
 def test_all_platformtypes(snapshot):
@@ -324,11 +324,11 @@ def test_all_platformtypes(snapshot):
     response = client.execute(
         """{
                 all_platformtypes {
-                    platformtype_name
+                    name
                   }
                 }"""
     )
-    assert response["data"]["all_platformtypes"][0]["platformtype_name"] == "Initial"
+    assert response["data"]["all_platformtypes"][0]["name"] == "Initial"
     assert repr(PlatformType.objects.all()[0]) == "<PlatformType: Initial>"
     snapshot.assert_match(response)
 
@@ -336,21 +336,21 @@ def test_all_platformtypes(snapshot):
 def test_update_platformtype(snapshot):
     client = Client(schema)
     client.execute(create_platformtype_mutation, context_value=user_authenticated())
-    assert PlatformType.objects.all()[0].platformtype_name == "Initial"
+    assert PlatformType.objects.all()[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_platformtype(platformtype_name: "Initial", new_platformtype_name: "Updated") {
+                update_platformtype(name: "Initial", new_name: "Updated") {
                     platformtype {
-                        platformtype_name
+                        name
                     }
                 }
             }""",
             context_value=user_authenticated(),
         )
     )
-    assert PlatformType.objects.all()[0].platformtype_name == "Updated"
+    assert PlatformType.objects.all()[0].name == "Updated"
 
 
 def test_delete_platformtype(snapshot):
@@ -359,9 +359,9 @@ def test_delete_platformtype(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_platformtype(platformtype_name: "Initial") {
+                delete_platformtype(name: "Initial") {
                     platformtype {
-                        platformtype_name
+                        name
                     }
                 }
             }""",
@@ -375,18 +375,18 @@ def test_delete_platformtype(snapshot):
 create_platform_template = Template(
     """mutation {
         create_platform(input: {
-            platform_name: "Dorado",
+            name: "Dorado",
             platformtype: {
-                    platformtype_name: "AUV"
+                    name: "AUV"
             }
             operator_org_name: "MBARI"
         }) {
             platform {
                 {{ uuid }}
-                platform_name
+                name
                 operator_org_name
-                platform_type {
-                    platformtype_name
+                platformtype {
+                    name
                 }
             }
         }
@@ -400,7 +400,7 @@ def test_all_platforms_empty(snapshot):
         client.execute(
             """{
                 all_platforms {
-                    platform_name
+                    name
                     uuid
                   }
                 }"""
@@ -414,7 +414,7 @@ def test_create_platform(snapshot):
     snapshot.assert_match(
         client.execute(create_platform_mutation, context_value=user_authenticated())
     )
-    assert Platform.objects.all()[0].platform_name == "Dorado"
+    assert Platform.objects.all()[0].name == "Dorado"
     assert Platform.objects.all()[0].operator_org_name == "MBARI"
 
 
@@ -426,7 +426,7 @@ def test_all_platforms(snapshot):
         client.execute(
             """{
                 all_platforms {
-                    platform_name
+                    name
                   }
                 }"""
         )
@@ -441,22 +441,22 @@ def test_update_platform(snapshot):
         create_platform_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_platform"]["platform"]["uuid"]
-    assert Platform.objects.all()[0].platform_name == "Dorado"
+    assert Platform.objects.all()[0].name == "Dorado"
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdatePlatform($uuid: ID!) {
                 update_platform(uuid: $uuid, input: {
-                    platform_name: "Updated",
+                    name: "Updated",
                     platformtype: {
-                            platformtype_name: "LRAUV"
+                            name: "LRAUV"
                     }
                     operator_org_name: "SIO"
                 }) {
                     platform {
-                        platform_name
-                        platform_type {
-                            platformtype_name
+                        name
+                        platformtype {
+                            name
                         }
                         operator_org_name
                     }
@@ -466,8 +466,8 @@ def test_update_platform(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Platform.objects.all()[0].platform_name == "Updated"
-    assert Platform.objects.all()[0].platform_type.platformtype_name == "LRAUV"
+    assert Platform.objects.all()[0].name == "Updated"
+    assert Platform.objects.all()[0].platformtype.name == "LRAUV"
     assert Platform.objects.all()[0].operator_org_name == "SIO"
 
 
@@ -483,7 +483,7 @@ def test_delete_platform(snapshot):
             """mutation DeletePlatform($uuid: ID!) {
                 delete_platform(uuid: $uuid) {
                     platform {
-                        platform_name
+                        name
                     }
                 }
             }""",
@@ -496,9 +496,9 @@ def test_delete_platform(snapshot):
 
 # ===== SensorType Tests =====
 create_sensortype_mutation = """mutation {
-        create_sensortype(sensortype_name: "Initial") {
+        create_sensortype(name: "Initial") {
             sensortype {
-                sensortype_name
+                name
             }
         }
     }"""
@@ -510,7 +510,7 @@ def test_all_sensortypes_empty(snapshot):
         client.execute(
             """{
                 all_sensortypes {
-                    sensortype_name
+                    name
                     uuid
                   }
                 }"""
@@ -523,7 +523,7 @@ def test_create_sensortype(snapshot):
     snapshot.assert_match(
         client.execute(create_sensortype_mutation, context_value=user_authenticated())
     )
-    assert SensorType.objects.all()[0].sensortype_name == "Initial"
+    assert SensorType.objects.all()[0].name == "Initial"
 
 
 def test_all_sensortypes(snapshot):
@@ -532,11 +532,11 @@ def test_all_sensortypes(snapshot):
     response = client.execute(
         """{
                 all_sensortypes {
-                    sensortype_name
+                    name
                   }
                 }"""
     )
-    assert response["data"]["all_sensortypes"][0]["sensortype_name"] == "Initial"
+    assert response["data"]["all_sensortypes"][0]["name"] == "Initial"
     snapshot.assert_match(response)
     assert repr(SensorType.objects.all()[0]) == "<SensorType: Initial>"
 
@@ -544,21 +544,21 @@ def test_all_sensortypes(snapshot):
 def test_update_sensortype(snapshot):
     client = Client(schema)
     client.execute(create_sensortype_mutation, context_value=user_authenticated())
-    assert SensorType.objects.all()[0].sensortype_name == "Initial"
+    assert SensorType.objects.all()[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_sensortype(sensortype_name: "Initial", new_sensortype_name: "Updated") {
+                update_sensortype(name: "Initial", new_name: "Updated") {
                     sensortype {
-                        sensortype_name
+                        name
                     }
                 }
             }""",
             context_value=user_authenticated(),
         )
     )
-    assert SensorType.objects.all()[0].sensortype_name == "Updated"
+    assert SensorType.objects.all()[0].name == "Updated"
 
 
 def test_delete_sensortype(snapshot):
@@ -567,9 +567,9 @@ def test_delete_sensortype(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_sensortype(sensortype_name: "Initial") {
+                delete_sensortype(name: "Initial") {
                     sensortype {
-                        sensortype_name
+                        name
                     }
                 }
             }""",
@@ -584,7 +584,7 @@ create_sensor_template = Template(
     """mutation {
         create_sensor(input: {
             sensortype: {
-                sensortype_name: "Sonar"
+                name: "Sonar"
             },
             model_name: "Initial",
             comment: "Initial comment"
@@ -593,8 +593,8 @@ create_sensor_template = Template(
                 {{ uuid }}
                 model_name
                 comment
-                sensor_type {
-                    sensortype_name
+                sensortype {
+                    name
                 }
             }
         }
@@ -706,10 +706,10 @@ create_expedition_template = Template(
             investigator: {first_name: "Henry", last_name: "Stommel", institution_name: "SIO"},
             start_date_iso: "1998-07-01",
             end_date_iso: "1998-07-20",
-            expd_name: "Initial"}) {
+            name: "Initial"}) {
             expedition {
                 {{ uuid }}
-                expd_name
+                name
                 start_date
                 end_date
                 investigator {
@@ -733,7 +733,7 @@ def test_all_expeditions_empty(snapshot):
         client.execute(
             """{
                 all_expeditions {
-                    expd_name
+                    name
                     start_date
                     end_date
                     expd_path_name
@@ -749,7 +749,7 @@ def test_create_expedition(snapshot):
     snapshot.assert_match(
         client.execute(create_expedition_mutation, context_value=user_authenticated())
     )
-    assert Expedition.objects.filter(expd_name="Initial")[0].expd_name == "Initial"
+    assert Expedition.objects.filter(name="Initial")[0].name == "Initial"
 
 
 def test_expedition_by_name(snapshot):
@@ -759,13 +759,13 @@ def test_expedition_by_name(snapshot):
     snapshot.assert_match(
         client.execute(
             """{
-                 expedition_by_name(expd_name: "Initial") {
-                    expd_name
+                 expedition_by_name(name: "Initial") {
+                    name
                   }
                 }"""
         )
     )
-    assert Expedition.objects.filter(expd_name="Initial")[0].expd_name == "Initial"
+    assert Expedition.objects.filter(name="Initial")[0].name == "Initial"
 
 
 def test_expedition_by_name_does_not_exist(snapshot):
@@ -773,8 +773,8 @@ def test_expedition_by_name_does_not_exist(snapshot):
     snapshot.assert_match(
         client.execute(
             """{
-                 expedition_by_name(expd_name: "DoesNotExist") {
-                    expd_name
+                 expedition_by_name(name: "DoesNotExist") {
+                    name
                   }
                 }"""
         )
@@ -790,17 +790,17 @@ def test_all_expeditions(snapshot):
     response = client.execute(
         """{
                 all_expeditions {
-                    expd_name
+                    name
                     start_date
                     end_date
                     expd_path_name
                   }
                 }"""
     )
-    assert response["data"]["all_expeditions"][-1]["expd_name"] == "Initial"
+    assert response["data"]["all_expeditions"][-1]["name"] == "Initial"
     snapshot.assert_match(response)
     assert (
-        repr(Expedition.objects.filter(expd_name="Initial")[0])
+        repr(Expedition.objects.filter(name="Initial")[0])
         == "<Expedition: /mbari/SeafloorMapping/2019/20190308m1 (Initial)>"
     )
 
@@ -812,13 +812,13 @@ def test_update_expedition(snapshot):
         create_expedition_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_expedition"]["expedition"]["uuid"]
-    assert Expedition.objects.get(expd_name="Initial").expd_name == "Initial"
+    assert Expedition.objects.get(name="Initial").name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdateExpedition($uuid: ID) {
                 update_expedition(uuid: $uuid, input: {
-                    expd_name: "Updated"
+                    name: "Updated"
                     start_date_iso: "2020-01-01"
                     end_date_iso: "2021-02-02"
                     investigator: {
@@ -834,7 +834,7 @@ def test_update_expedition(snapshot):
                     expd_path_name: "/a/directory/path"
                 }) {
                     expedition {
-                        expd_name
+                        name
                         start_date
                         end_date
                         investigator {
@@ -853,7 +853,7 @@ def test_update_expedition(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Expedition.objects.get(expd_name="Updated").expd_name == "Updated"
+    assert Expedition.objects.get(name="Updated").name == "Updated"
 
 
 def test_delete_expedition(snapshot):
@@ -868,7 +868,7 @@ def test_delete_expedition(snapshot):
             """mutation DeleteExpedition($uuid: ID) {
                 delete_expedition(uuid: $uuid) {
                     expedition {
-                        expd_name
+                        name
                         start_date
                         end_date
                         investigator {
@@ -887,7 +887,7 @@ def test_delete_expedition(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Expedition.objects.filter(expd_name="Initial").count() == 0
+    assert Expedition.objects.filter(name="Initial").count() == 0
 
 
 # ===== Compilation Tests =====
@@ -895,8 +895,8 @@ create_compilation_template = Template(
     """mutation {
         create_compilation(input: {
             comment: "Initial comment.",
-            compilation_dir_name: "/a/dir/name",
-            compilation_path_name: "/a/path/name",
+            dir_name: "/a/dir/name",
+            path_name: "/a/path/name",
             figures_dir_path: "/figures/path",
             grid_bounds: "SRID=4326;POLYGON ((-121.94 36.69, -121.94 36.69, -121.93 36.69, -121.93 36.69, -121.94 36.69))",
             kml_filename: "file.kml",
@@ -907,8 +907,8 @@ create_compilation_template = Template(
             compilation {
                 {{ uuid }}
                 comment
-                compilation_dir_name
-                compilation_path_name
+                dir_name
+                path_name
                 figures_dir_path
                 grid_bounds
                 kml_filename
@@ -923,8 +923,8 @@ create_compilation_template = Template(
 compilation_query = """{
                 all_compilations {
                     comment
-                    compilation_dir_name
-                    compilation_path_name
+                    dir_name
+                    path_name
                     figures_dir_path
                     grid_bounds
                     kml_filename
@@ -974,8 +974,8 @@ def test_update_compilation(snapshot):
             """mutation UpdateCompilation($uuid: ID) {
         update_compilation(uuid: $uuid, input: {
             comment: "Updated comment.",
-            compilation_dir_name: "/b/dir/name",
-            compilation_path_name: "/b/path/name",
+            dir_name: "/b/dir/name",
+            path_name: "/b/path/name",
             figures_dir_path: "/figures/path2",
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
             kml_filename: "file2.kml",
@@ -985,8 +985,8 @@ def test_update_compilation(snapshot):
             update_status: 10}) {
             compilation {
                 comment
-                compilation_dir_name
-                compilation_path_name
+                dir_name
+                path_name
                 figures_dir_path
                 grid_bounds
                 kml_filename
@@ -1017,8 +1017,8 @@ def test_delete_compilation(snapshot):
                 delete_compilation(uuid: $uuid) {
                     compilation {
                         comment
-                        compilation_dir_name
-                        compilation_path_name
+                        dir_name
+                        path_name
                         figures_dir_path
                         grid_bounds
                         kml_filename
@@ -1040,11 +1040,11 @@ def test_delete_compilation(snapshot):
 create_mission_template = Template(
     """mutation {
         create_mission(input: {
-            mission_name: "Initial",
+            name: "Initial",
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
-            expedition: {expd_name: "Initial expedition name"},
-            missiontype: {missiontype_name: "Initial missiontype"},
-            platform: {platform_name: "Initial platform", platformtype: {platformtype_name: "PT1"}},
+            expedition: {name: "Initial expedition name"},
+            missiontype: {name: "Initial missiontype"},
+            platform: {name: "Initial platform", platformtype: {name: "PT1"}},
             start_date: "2021-03-03",
             end_date: "2021-04-04",
             start_depth: 1500,
@@ -1057,9 +1057,9 @@ create_mission_template = Template(
             site_detail: "site detail",
             thumbnail_filename: "thumbnail.png",
             kml_filename: "kml_file.kml",
-            compilation: {compilation_dir_name: "Initial compilation"},
+            compilation: {dir_name: "Initial compilation"},
             update_status: 5,
-            sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "ST1"}},
+            sensors: {comment: "C", model_name: "M", sensortype: {name: "ST1"}},
             data_archivals: [ {doi: "doi://da_initial/1", archival_db_name: "DA Initial 1"},
                               {doi: "doi://da_initial/2", archival_db_name: "DA Initial 2"},
                             ],
@@ -1069,16 +1069,16 @@ create_mission_template = Template(
             }) {
             mission {
                 {{ uuid }}
-                mission_name
+                name
                 grid_bounds
                 expedition {
-                    expd_name
+                    name
                 }
                 missiontype {
-                    missiontype_name
+                    name
                 }
                 platform {
-                    platform_name
+                    name
                 }
                 start_date
                 end_date
@@ -1093,12 +1093,12 @@ create_mission_template = Template(
                 thumbnail_filename
                 kml_filename
                 compilation {
-                    compilation_dir_name
+                    dir_name
                 }
                 update_status
                 sensors {
-                    sensor_type {
-                        sensortype_name
+                    sensortype {
+                        name
                     }
                     model_name
                 }
@@ -1136,7 +1136,7 @@ def test_create_mission(snapshot):
     snapshot.assert_match(
         client.execute(create_mission_mutation, context_value=user_authenticated())
     )
-    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    assert Mission.objects.filter(name="Initial")[0].name == "Initial"
 
 
 def test_all_missions(snapshot):
@@ -1144,21 +1144,17 @@ def test_all_missions(snapshot):
     create_mission_mutation = create_mission_template.render(uuid="")
     client.execute(create_mission_mutation, context_value=user_authenticated())
     response = client.execute(mission_query)
-    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    assert Mission.objects.filter(name="Initial")[0].name == "Initial"
     snapshot.assert_match(response)
-    assert (
-        repr(Mission.objects.filter(mission_name="Initial")[0]) == "<Mission: Initial>"
-    )
+    assert repr(Mission.objects.filter(name="Initial")[0]) == "<Mission: Initial>"
     # Test the .display_ methods that are used by the Django admin
+    assert Mission.objects.filter(name="Initial")[0].display_sensor() == "ST1(M)"
     assert (
-        Mission.objects.filter(mission_name="Initial")[0].display_sensor() == "ST1(M)"
-    )
-    assert (
-        Mission.objects.filter(mission_name="Initial")[0].display_data_archival()
+        Mission.objects.filter(name="Initial")[0].display_data_archival()
         == "doi://da_initial/1, doi://da_initial/2"
     )
     assert (
-        Mission.objects.filter(mission_name="Initial")[0].display_citation()
+        Mission.objects.filter(name="Initial")[0].display_citation()
         == "doi://c_initial/1, doi://c_initial/2"
     )
 
@@ -1170,17 +1166,17 @@ def test_update_mission(snapshot):
         create_mission_mutation, context_value=user_authenticated()
     )
     uuid = response["data"]["create_mission"]["mission"]["uuid"]
-    assert Mission.objects.filter(mission_name="Initial")[0].mission_name == "Initial"
+    assert Mission.objects.filter(name="Initial")[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
             """mutation UpdateMission($uuid: ID!) {
                 update_mission(uuid: $uuid, input: {
-                    mission_name: "Updated",
+                    name: "Updated",
                     grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
-                    expedition: {expd_name: "Added expedition"},
-                    missiontype: {missiontype_name: "Added missiontype"},
-                    platform: {platform_name: "Added platform", platformtype: {platformtype_name: "PT2"}},
+                    expedition: {name: "Added expedition"},
+                    missiontype: {name: "Added missiontype"},
+                    platform: {name: "Added platform", platformtype: {name: "PT2"}},
                     start_date: "2021-05-05",
                     end_date: "2021-06-06",
                     start_depth: 1700,
@@ -1193,9 +1189,9 @@ def test_update_mission(snapshot):
                     site_detail: "site detail 2",
                     thumbnail_filename: "tumbnail2.png",
                     kml_filename: "Added kml_file.kml",
-                    compilation: {compilation_dir_name: "Updated compilation"},
+                    compilation: {dir_name: "Updated compilation"},
                     update_status: 6,
-                    sensors: {comment: "C", model_name: "M", sensortype: {sensortype_name: "T1"}},
+                    sensors: {comment: "C", model_name: "M", sensortype: {name: "T1"}},
                     data_archivals: [ {doi: "doi://da_updated/1", archival_db_name: "DA Updated 1"},
                                       {doi: "doi://da_updated/2", archival_db_name: "DA Updated 2"},
                                     ],
@@ -1204,16 +1200,16 @@ def test_update_mission(snapshot):
                                ],
                     }) {
                     mission {
-                        mission_name
+                        name
                         grid_bounds
                         expedition {
-                            expd_name
+                            name
                         }
                         missiontype {
-                            missiontype_name
+                            name
                         }
                         platform {
-                            platform_name
+                            name
                         }
                         start_date
                         end_date
@@ -1228,12 +1224,12 @@ def test_update_mission(snapshot):
                         thumbnail_filename
                         kml_filename
                         compilation {
-                            compilation_dir_name
+                            dir_name
                         }
                         update_status
                         sensors {
-                            sensor_type {
-                                sensortype_name
+                            sensortype {
+                                name
                             }
                             model_name
                         }
@@ -1252,7 +1248,7 @@ def test_update_mission(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Mission.objects.filter(mission_name="Updated")[0].mission_name == "Updated"
+    assert Mission.objects.filter(name="Updated")[0].name == "Updated"
 
 
 def test_delete_mission(snapshot):
@@ -1279,7 +1275,7 @@ def test_delete_mission(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Mission.objects.filter(mission_name="Initial").count() == 0
+    assert Mission.objects.filter(name="Initial").count() == 0
 
 
 # ===== DataArchival Tests =====
@@ -1288,8 +1284,8 @@ create_dataarchival_template = Template(
         create_dataarchival(input: {
             doi: "doi://123456/hello",
             archival_db_name: "Initial Archival",
-            missions: [ {mission_name: "M1", expedition: {expd_name: "EN1", expd_path_name: "PN1"}},
-                        {mission_name: "M2", expedition: {expd_name: "EN2", expd_path_name: "PN2"}},
+            missions: [ {name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
+                        {name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
                       ],
             }) {
             dataarchival {
@@ -1297,9 +1293,9 @@ create_dataarchival_template = Template(
                 doi
                 archival_db_name
                 missions {
-                    mission_name
+                    name
                     expedition {
-                        expd_name
+                        name
                         expd_path_name
                     }
                 }
@@ -1312,9 +1308,9 @@ dataarchival_query = """{
                     doi
                     archival_db_name
                     missions {
-                        mission_name
+                        name
                         expedition {
-                            expd_name
+                            name
                             expd_path_name
                         }
                     }
@@ -1334,8 +1330,8 @@ def test_create_dataarchival(snapshot):
         client.execute(create_dataarchival_mutation, context_value=user_authenticated())
     )
     assert DataArchival.objects.all()[0].doi == "doi://123456/hello"
-    assert DataArchival.objects.all()[0].missions.all()[0].mission_name == "M1"
-    assert DataArchival.objects.all()[0].missions.all()[1].mission_name == "M2"
+    assert DataArchival.objects.all()[0].missions.all()[0].name == "M1"
+    assert DataArchival.objects.all()[0].missions.all()[1].name == "M2"
 
 
 def test_all_dataarchivals(snapshot):
@@ -1362,17 +1358,17 @@ def test_update_dataarchival(snapshot):
                 update_dataarchival(uuid: $uuid, input: {
                     doi: "doi://7890/hello",
                     archival_db_name: "Updated Archival",
-                    missions: [ {mission_name: "M3", expedition: {expd_name: "EN3", expd_path_name: "PN3"}},
-                                {mission_name: "M4", expedition: {expd_name: "EN4", expd_path_name: "PN4"}},
+                    missions: [ {name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
+                                {name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
                             ],
                     }) {
                     dataarchival {
                         doi
                         archival_db_name
                         missions {
-                            mission_name
+                            name
                             expedition {
-                                expd_name
+                                name
                                 expd_path_name
                             }
                         }
@@ -1384,8 +1380,8 @@ def test_update_dataarchival(snapshot):
         )
     )
     assert DataArchival.objects.all()[0].doi == "doi://7890/hello"
-    assert DataArchival.objects.all()[0].missions.all()[0].mission_name == "M3"
-    assert DataArchival.objects.all()[0].missions.all()[1].mission_name == "M4"
+    assert DataArchival.objects.all()[0].missions.all()[0].name == "M3"
+    assert DataArchival.objects.all()[0].missions.all()[1].name == "M4"
 
 
 def test_delete_dataarchival(snapshot):
@@ -1403,9 +1399,9 @@ def test_delete_dataarchival(snapshot):
                         doi
                         archival_db_name
                         missions {
-                            mission_name
+                            name
                             expedition {
-                                expd_name
+                                name
                                 expd_path_name
                             }
                         }
@@ -1425,8 +1421,8 @@ create_citation_template = Template(
         create_citation(input: {
             doi: "doi://123456/hello",
             full_reference: "Initial Reference",
-            missions: [ {mission_name: "M1", expedition: {expd_name: "EN1", expd_path_name: "PN1"}},
-                        {mission_name: "M2", expedition: {expd_name: "EN2", expd_path_name: "PN2"}},
+            missions: [ {name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
+                        {name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
                       ],
             }) {
             citation {
@@ -1434,9 +1430,9 @@ create_citation_template = Template(
                 doi
                 full_reference
                 missions {
-                    mission_name
+                    name
                     expedition {
-                        expd_name
+                        name
                         expd_path_name
                     }
                 }
@@ -1449,9 +1445,9 @@ citation_query = """{
                     doi
                     full_reference
                     missions {
-                        mission_name
+                        name
                         expedition {
-                            expd_name
+                            name
                             expd_path_name
                         }
                     }
@@ -1497,17 +1493,17 @@ def test_update_citation(snapshot):
                 update_citation(uuid: $uuid, input: {
                     doi: "doi://7890/hello",
                     full_reference: "Updated Reference",
-                    missions: [ {mission_name: "M3", expedition: {expd_name: "EN3", expd_path_name: "PN3"}},
-                                {mission_name: "M4", expedition: {expd_name: "EN4", expd_path_name: "PN4"}},
+                    missions: [ {name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
+                                {name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
                             ],
                     }) {
                     citation {
                         doi
                         full_reference
                         missions {
-                            mission_name
+                            name
                             expedition {
-                                expd_name
+                                name
                                 expd_path_name
                             }
                         }
@@ -1536,9 +1532,9 @@ def test_delete_citation(snapshot):
                         doi
                         full_reference
                         missions {
-                            mission_name
+                            name
                             expedition {
-                                expd_name
+                                name
                                 expd_path_name
                             }
                         }
@@ -1560,15 +1556,15 @@ create_note_template = Template(
     """mutation CreateNote($text: String!) {
         create_note(input: {
             text: $text
-            mission: {mission_name: "Mn1_test", expedition: {expd_name: "ENn1", expd_path_name: "PNn1"}},
+            mission: {name: "Mn1_test", expedition: {name: "ENn1", expd_path_name: "PNn1"}},
             }) {
             note {
                 {{ uuid }}
                 text
                 mission {
-                    mission_name
+                    name
                     expedition {
-                        expd_name
+                        name
                         expd_path_name
                     }
                 }
@@ -1580,9 +1576,9 @@ create_note_template = Template(
 note_query = """{
                 all_notes {
                     mission {
-                        mission_name
+                        name
                         expedition {
-                            expd_name
+                            name
                             expd_path_name
                         }
                     }
@@ -1605,7 +1601,7 @@ def test_create_note(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert Note.objects.filter(mission__mission_name="Mn1_test")[0].text.startswith(
+    assert Note.objects.filter(mission__name="Mn1_test")[0].text.startswith(
         "Here is some text"
     )
 
@@ -1619,11 +1615,14 @@ def test_all_notes(snapshot):
         context_value=user_authenticated(),
     )
     response = client.execute(note_query)
-    assert Note.objects.filter(mission__mission_name="Mn1_test")[0].text.startswith(
+    assert Note.objects.filter(mission__name="Mn1_test")[0].text.startswith(
         "Here is some text"
     )
     snapshot.assert_match(response)
-    assert repr(Note.objects.filter(mission__mission_name="Mn1_test")[0]) == "<Note: Notes for Mn1_test>"
+    assert (
+        repr(Note.objects.filter(mission__name="Mn1_test")[0])
+        == "<Note: Notes for Mn1_test>"
+    )
 
 
 def test_update_note(snapshot):
@@ -1641,14 +1640,14 @@ def test_update_note(snapshot):
             """mutation UpdateNote($uuid: ID!, $text: String!) {
                 update_note(uuid: $uuid, input: {
                     text: $text,
-                    mission: {mission_name: "Mn1_updated", expedition: {expd_name: "EN3", expd_path_name: "PN3"}},
+                    mission: {name: "Mn1_updated", expedition: {name: "EN3", expd_path_name: "PN3"}},
                     }) {
                     note {
                         text
                         mission {
-                            mission_name
+                            name
                             expedition {
-                                expd_name
+                                name
                                 expd_path_name
                             }
                         }
@@ -1660,7 +1659,7 @@ def test_update_note(snapshot):
         )
     )
     assert (
-        Note.objects.filter(mission__mission_name="Mn1_updated")[0].text
+        Note.objects.filter(mission__name="Mn1_updated")[0].text
         == "Updated single line of text."
     )
 
@@ -1681,9 +1680,9 @@ def test_delete_note(snapshot):
                     note {
                         text
                         mission {
-                            mission_name
+                            name
                             expedition {
-                                expd_name
+                                name
                                 expd_path_name
                             }
                         }

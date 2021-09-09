@@ -7,11 +7,11 @@ from django.contrib.auth import get_user_model
 
 
 class MissionTypeFactory(DjangoModelFactory):
-    missiontype_name = Faker("user_name")
+    name = Faker("user_name")
 
     class Meta:
         model = MissionType
-        django_get_or_create = ["missiontype_name"]
+        django_get_or_create = ["name"]
 
 
 class PersonFactory(DjangoModelFactory):
@@ -24,7 +24,7 @@ class PersonFactory(DjangoModelFactory):
 
 
 class PlatformTypeFactory(DjangoModelFactory):
-    platformtype_name = Faker("user_name")
+    name = Faker("user_name")
 
     class Meta:
         model = PlatformType
@@ -33,10 +33,10 @@ class PlatformTypeFactory(DjangoModelFactory):
 """ Waiting for serialization
 class MissionFactory(DjangoModelFactory):
 
-    mission_name = Faker("mission_name")
+    name = Faker("name")
     name = Faker("name")
 
     class Meta:
         model = Mission
-        django_get_or_create = ["mission_name"]
+        django_get_or_create = ["name"]
 """

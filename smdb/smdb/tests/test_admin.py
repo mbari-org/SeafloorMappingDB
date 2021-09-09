@@ -25,15 +25,15 @@ class TestAdmin:
         response = admin_client.post(
             url,
             data={
-                "missiontype_name": "test",
+                "name": "test",
             },
         )
         assert response.status_code == 302
-        assert MissionType.objects.filter(missiontype_name="test").exists()
+        assert MissionType.objects.filter(name="test").exists()
 
     """
     def test_add_mission(self, admin_client):
-        # Adding a Mission requires several more fields than just mission_name
+        # Adding a Mission requires several more fields than just name
         url = reverse("admin:smdb_mission_add")
         response = admin_client.get(url)
         assert response.status_code == 200
@@ -41,12 +41,12 @@ class TestAdmin:
         response = admin_client.post(
             url,
             data={
-                "mission_name": "test",
+                "name": "test",
             },
         )
         # A successful post (add) has 302 code
         assert response.status_code == 302
-        assert Mission.objects.filter(mission_name="test").exists()
+        assert Mission.objects.filter(name="test").exists()
 
     def test_view_mission(self, admin_client):
         mission = Mission.objects.get(username="admin")
