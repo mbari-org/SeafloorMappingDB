@@ -41,9 +41,9 @@ def user_authenticated(anonymous_user=False):
 
 # ===== MissionType Tests =====
 create_missiontype_mutation = """mutation {
-        create_missiontype(missiontype_name: "Initial") {
+        create_missiontype(name: "Initial") {
             missiontype {
-            missiontype_name
+            name
             }
         }
     }"""
@@ -55,7 +55,7 @@ def test_all_missiontypes_empty(snapshot):
         client.execute(
             """{
                 all_missiontypes {
-                    missiontype_name
+                    name
                     uuid
                   }
                 }"""
@@ -79,7 +79,7 @@ def test_create_missiontype(snapshot):
     snapshot.assert_match(
         client.execute(create_missiontype_mutation, context_value=user_authenticated())
     )
-    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+    assert MissionType.objects.all()[0].name == "Initial"
 
 
 def test_missiontype_by_name(snapshot):
@@ -89,12 +89,12 @@ def test_missiontype_by_name(snapshot):
         client.execute(
             """{
                  missiontype_by_name(name: "Initial") {
-                    missiontype_name
+                    name
                   }
                 }"""
         )
     )
-    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+    assert MissionType.objects.all()[0].name == "Initial"
 
 
 def test_missiontype_by_name_does_not_exist(snapshot):
@@ -103,7 +103,7 @@ def test_missiontype_by_name_does_not_exist(snapshot):
         client.execute(
             """{
                  missiontype_by_name(name: "DoesNotExist") {
-                    missiontype_name
+                    name
                   }
                 }"""
         )
@@ -129,20 +129,20 @@ def test_all_sensortypes(snapshot):
 def test_update_missiontype(snapshot):
     client = Client(schema)
     client.execute(create_missiontype_mutation, context_value=user_authenticated())
-    assert MissionType.objects.all()[0].missiontype_name == "Initial"
+    assert MissionType.objects.all()[0].name == "Initial"
     snapshot.assert_match(
         client.execute(
             """mutation {
-                update_missiontype(missiontype_name: "Initial", new_missiontype_name: "Updated") {
+                update_missiontype(name: "Initial", new_name: "Updated") {
                     missiontype {
-                        missiontype_name
+                        name
                     }
                 }
             }""",
             context_value=user_authenticated(),
         )
     )
-    assert MissionType.objects.all()[0].missiontype_name == "Updated"
+    assert MissionType.objects.all()[0].name == "Updated"
 
 
 def test_delete_missiontype(snapshot):
@@ -151,9 +151,9 @@ def test_delete_missiontype(snapshot):
     snapshot.assert_match(
         client.execute(
             """mutation {
-                delete_missiontype(missiontype_name: "Initial") {
+                delete_missiontype(name: "Initial") {
                     missiontype {
-                        missiontype_name
+                        name
                     }
                 }
             }""",
@@ -1043,7 +1043,7 @@ create_mission_template = Template(
             mission_name: "Initial",
             grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
             expedition: {expd_name: "Initial expedition name"},
-            missiontype: {missiontype_name: "Initial missiontype"},
+            missiontype: {name: "Initial missiontype"},
             platform: {name: "Initial platform", platformtype: {name: "PT1"}},
             start_date: "2021-03-03",
             end_date: "2021-04-04",
@@ -1075,7 +1075,7 @@ create_mission_template = Template(
                     expd_name
                 }
                 missiontype {
-                    missiontype_name
+                    name
                 }
                 platform {
                     name
@@ -1179,7 +1179,7 @@ def test_update_mission(snapshot):
                     mission_name: "Updated",
                     grid_bounds: "SRID=4326;POLYGON ((-121.893 36.775, -121.893 36.794, -121.869 36.794, -121.869 36.775, -121.893 36.775))",
                     expedition: {expd_name: "Added expedition"},
-                    missiontype: {missiontype_name: "Added missiontype"},
+                    missiontype: {name: "Added missiontype"},
                     platform: {name: "Added platform", platformtype: {name: "PT2"}},
                     start_date: "2021-05-05",
                     end_date: "2021-06-06",
@@ -1210,7 +1210,7 @@ def test_update_mission(snapshot):
                             expd_name
                         }
                         missiontype {
-                            missiontype_name
+                            name
                         }
                         platform {
                             name

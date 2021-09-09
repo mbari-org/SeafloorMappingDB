@@ -15,12 +15,12 @@ def test_missiontype_detail(missiontype: MissionType):
     assert (
         reverse(
             "api:missiontype-detail",
-            kwargs={"missiontype_name": missiontype.missiontype_name},
+            kwargs={"name": missiontype.name},
         )
-        == f"/api/v1/missiontype/{missiontype.missiontype_name}/"
+        == f"/api/v1/missiontype/{missiontype.name}/"
     )
     assert (
-        resolve(f"/api/v1/missiontype/{missiontype.missiontype_name}/").view_name
+        resolve(f"/api/v1/missiontype/{missiontype.name}/").view_name
         == "api:missiontype-detail"
     )
 

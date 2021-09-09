@@ -7,11 +7,11 @@ from django.contrib.auth import get_user_model
 
 
 class MissionTypeFactory(DjangoModelFactory):
-    missiontype_name = Faker("user_name")
+    name = Faker("user_name")
 
     class Meta:
         model = MissionType
-        django_get_or_create = ["missiontype_name"]
+        django_get_or_create = ["name"]
 
 
 class PersonFactory(DjangoModelFactory):

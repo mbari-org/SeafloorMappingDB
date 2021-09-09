@@ -25,11 +25,11 @@ class TestAdmin:
         response = admin_client.post(
             url,
             data={
-                "missiontype_name": "test",
+                "name": "test",
             },
         )
         assert response.status_code == 302
-        assert MissionType.objects.filter(missiontype_name="test").exists()
+        assert MissionType.objects.filter(name="test").exists()
 
     """
     def test_add_mission(self, admin_client):

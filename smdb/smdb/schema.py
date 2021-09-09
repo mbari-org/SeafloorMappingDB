@@ -25,7 +25,7 @@ from smdb.models import (
 class MissionTypeNode(DjangoObjectNode):
     class Meta:
         model = MissionType
-        fields = ("uuid", "missiontype_name")
+        fields = ("uuid", "name")
 
 
 class PersonNode(DjangoObjectNode):
@@ -227,7 +227,7 @@ class Query(graphene.ObjectType):
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
-            return MissionType.objects.get(missiontype_name=name)
+            return MissionType.objects.get(name=name)
         except MissionType.DoesNotExist:
             return None
 
@@ -241,20 +241,20 @@ class Query(graphene.ObjectType):
 # https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
 # ===== MissionType =====
 class MissionTypeInput(graphene.InputObjectType):
-    missiontype_name = graphene.String(required=True)
+    name = graphene.String(required=True)
 
 
 class CreateMissionType(graphene.Mutation):
     class Arguments:
-        missiontype_name = graphene.String()
+        name = graphene.String()
 
     missiontype = graphene.Field(MissionTypeNode)
 
-    def mutate(self, info, missiontype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.create(
-            missiontype_name=missiontype_name,
+            name=name,
         )
         missiontype.save()
         return CreateMissionType(missiontype=missiontype)
@@ -262,33 +262,33 @@ class CreateMissionType(graphene.Mutation):
 
 class UpdateMissionType(graphene.Mutation):
     class Arguments:
-        missiontype_name = graphene.String(required=True)
-        new_missiontype_name = graphene.String(required=True)
+        name = graphene.String(required=True)
+        new_name = graphene.String(required=True)
 
     missiontype = graphene.Field(MissionTypeNode)
 
-    def mutate(self, info, missiontype_name, new_missiontype_name):
+    def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.get(
-            missiontype_name=missiontype_name,
+            name=name,
         )
-        missiontype.missiontype_name = new_missiontype_name
+        missiontype.name = new_name
         missiontype.save()
         return UpdateMissionType(missiontype=missiontype)
 
 
 class DeleteMissionType(graphene.Mutation):
     class Arguments:
-        missiontype_name = graphene.String()
+        name = graphene.String()
 
     missiontype = graphene.Field(MissionTypeNode)
 
-    def mutate(self, info, missiontype_name):
+    def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         missiontype = MissionType.objects.get(
-            missiontype_name=missiontype_name,
+            name=name,
         )
         missiontype.delete()
         return DeleteMissionType(missiontype=missiontype)
@@ -793,7 +793,7 @@ class CreateMission(graphene.Mutation):
             expd_name=input.expedition.expd_name,
         )
         missiontype, _ = MissionType.objects.get_or_create(
-            missiontype_name=input.missiontype.missiontype_name,
+            name=input.missiontype.name,
         )
         platformtype, _ = PlatformType.objects.get_or_create(
             name=input.platform.platformtype.name,
@@ -877,7 +877,7 @@ class UpdateMission(graphene.Mutation):
             expd_name=input.expedition.expd_name,
         )
         missiontype, _ = MissionType.objects.get_or_create(
-            missiontype_name=input.missiontype.missiontype_name,
+            name=input.missiontype.name,
         )
         platformtype, _ = PlatformType.objects.get_or_create(
             name=input.platform.platformtype.name,

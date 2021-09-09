@@ -9,11 +9,11 @@ from smdb.models import Mission, MissionType, Person, PlatformType
 class MissionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = MissionType
-        fields = ["missiontype_name", "url"]
+        fields = ["name", "url"]
         extra_kwargs = {
             "url": {
                 "view_name": "api:missiontype-detail",
-                "lookup_field": "missiontype_name",
+                "lookup_field": "name",
             }
         }
 

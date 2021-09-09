@@ -974,7 +974,7 @@ snapshots['test_create_mission 1'] = {
                 'kml_filename': 'kml_file.kml',
                 'mission_name': 'Initial',
                 'missiontype': {
-                    'missiontype_name': 'Initial missiontype'
+                    'name': 'Initial missiontype'
                 },
                 'notes_filename': 'file.notes',
                 'platform': {
@@ -1012,7 +1012,7 @@ snapshots['test_create_missiontype 1'] = {
     'data': {
         'create_missiontype': {
             'missiontype': {
-                'missiontype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1274,7 +1274,7 @@ snapshots['test_delete_missiontype 1'] = {
     'data': {
         'delete_missiontype': {
             'missiontype': {
-                'missiontype_name': 'Initial'
+                'name': 'Initial'
             }
         }
     }
@@ -1368,7 +1368,7 @@ snapshots['test_expedition_by_name_does_not_exist 1'] = {
 snapshots['test_missiontype_by_name 1'] = {
     'data': {
         'missiontype_by_name': {
-            'missiontype_name': 'Initial'
+            'name': 'Initial'
         }
     }
 }
@@ -1561,7 +1561,7 @@ snapshots['test_update_mission 1'] = {
                 'kml_filename': 'Added kml_file.kml',
                 'mission_name': 'Updated',
                 'missiontype': {
-                    'missiontype_name': 'Added missiontype'
+                    'name': 'Added missiontype'
                 },
                 'notes_filename': 'file2.notes',
                 'platform': {
@@ -1599,7 +1599,7 @@ snapshots['test_update_missiontype 1'] = {
     'data': {
         'update_missiontype': {
             'missiontype': {
-                'missiontype_name': 'Updated'
+                'name': 'Updated'
             }
         }
     }
