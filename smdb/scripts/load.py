@@ -50,13 +50,124 @@ Can be run from smdb Docker environment thusly...
 """
 
 
-class Scanner:
-    logger = logging.getLogger(__name__)
-    _log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
-    _log_strings = ("WARN", "INFO", "DEBUG")
-    commandline = None
-    exclude_files = []
+class BaseLoader:
+    def __init__(self):
+        self.logger = logging.getLogger("load")
+        self._log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
+        self._log_strings = ("WARN", "INFO", "DEBUG")
+        self.commandline = None
+        self.exclude_files = []
 
+    def process_command_line(self):
+        parser = argparse.ArgumentParser(
+            description=__doc__,
+            formatter_class=argparse.RawTextHelpFormatter,
+            epilog=instructions,
+        )
+        parser.add_argument(
+            "-v",
+            "--verbose",
+            type=int,
+            choices=range(3),
+            action="store",
+            default=0,
+            const=1,
+            nargs="?",
+            help="verbosity level: "
+            + ", ".join([f"{i}: {v}" for i, v, in enumerate(self._log_strings)]),
+        )
+        parser.add_argument(
+            "--clobber",
+            action="store_true",
+            help="Delete all Expeditions and Missions before loading",
+        )
+        parser.add_argument(
+            "--exclude",
+            action="store",
+            help="Name of file containing Mission names to exclude",
+            default="/etc/smdb/exclude.list",
+        )
+        parser.add_argument(
+            "--regex",
+            action="store",
+            help="Load only ZTopo.grd files that have this regular expression in their path",
+            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)\/",
+        )
+        parser.add_argument(
+            "--bootstrap",
+            action="store_true",
+            help="Load initial Mission, Expedition and Notes data from file system - do not do notes load",
+        )
+        parser.add_argument(
+            "--notes",
+            action="store_true",
+            help="Process the notes loaded by a bootstrap load - do not do bootstrap load",
+        )
+        parser.add_argument(
+            "--count",
+            action="store",
+            type=int,
+            help="Stop loading after this number of records",
+        )
+
+        self.args = parser.parse_args()  # noqa
+        self.commandline = " ".join(sys.argv)
+
+        # Override Django's logging so that we can setLevel() with --verbose
+        logging.getLogger().handlers.clear()
+        _handler = logging.StreamHandler()
+        _formatter = logging.Formatter(
+            "%(levelname)s %(asctime)s %(filename)s "
+            "%(funcName)s():%(lineno)d %(message)s"
+        )
+        _handler.setFormatter(_formatter)
+        if not self.logger.handlers:
+            # Don't add handler for sub class
+            self.logger.addHandler(_handler)
+        self.logger.setLevel(self._log_levels[self.args.verbose])
+
+        for line in open(self.args.exclude):
+            if not line.startswith("#"):
+                self.exclude_files.append(line.strip())
+
+        self.logger.debug(
+            "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
+        )
+
+
+class NoteParser(BaseLoader):
+    SCIENCE_PARTY = "------------------------------------"
+
+    def filepaths(self):
+        return Mission.objects.all().values_list("notes_filename", flat=True)
+
+    def parse_texts(self):
+        """Brute force parsing of Note text to grab information"""
+        for note in Note.objects.all():
+            self.logger.info(f"======== {note.mission.name} ========")
+            comment_captured = False
+            line_is_expd_db_id = False
+            comment = ""
+            for count, line in enumerate(note.text.split("\n")):
+                if not comment_captured:
+                    comment += line + "\n"
+                self.logger.debug(line)
+                if line == self.SCIENCE_PARTY and not comment_captured:
+                    comment_captured = True
+                    comment = comment.replace(self.SCIENCE_PARTY, "")
+                    note.mission.comment = comment.strip()
+                    note.mission.save()
+
+                if line_is_expd_db_id:
+                    note.mission.expedition.expd_db_id = int(line)
+                    note.mission.expedition.save()
+                    line_is_expd_db_id = False
+                if "ExpeditionID" in line:
+                    line_is_expd_db_id = True
+                    self.logger.info(line)
+
+
+class Scanner(BaseLoader):
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
             X = "x"
@@ -164,82 +275,34 @@ class Scanner:
         )
         note.save()
 
-    def process_command_line(self):
-        parser = argparse.ArgumentParser(
-            description=__doc__,
-            formatter_class=argparse.RawTextHelpFormatter,
-            epilog=instructions,
-        )
-        parser.add_argument(
-            "-v",
-            "--verbose",
-            type=int,
-            choices=range(3),
-            action="store",
-            default=0,
-            const=1,
-            nargs="?",
-            help="verbosity level: "
-            + ", ".join([f"{i}: {v}" for i, v, in enumerate(self._log_strings)]),
-        )
-        parser.add_argument(
-            "--clobber",
-            action="store_true",
-            help="Delete all Expeditions and Missions before loading",
-        )
-        parser.add_argument(
-            "--exclude",
-            action="store",
-            help="Name of file containing Mission names to exclude",
-            default="/etc/smdb/exclude.list",
-        )
-        parser.add_argument(
-            "--regex",
-            action="store",
-            help="Load only ZTopo.grd files that have this regular expression in their path",
-            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)\/",
-        )
-
-        self.args = parser.parse_args()  # noqa
-        self.commandline = " ".join(sys.argv)
-
-        # Override Django's logging so that we can setLevel() with --verbose
-        logging.getLogger().handlers.clear()
-        _handler = logging.StreamHandler()
-        _formatter = logging.Formatter(
-            "%(levelname)s %(asctime)s %(filename)s "
-            "%(funcName)s():%(lineno)d %(message)s"
-        )
-        _handler.setFormatter(_formatter)
-        self.logger.addHandler(_handler)
-        self.logger.setLevel(self._log_levels[self.args.verbose])
-
-        for line in open(self.args.exclude):
-            if not line.startswith("#"):
-                self.exclude_files.append(line.strip())
-
-        self.logger.debug(
-            "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
-        )
-
 
 def run(*args):
+    # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
+    bl = BaseLoader()
+    bl.process_command_line()
+    bl.logger.debug("Arguments passed to run(): %s", " ".join(args))
+    if bl.args.bootstrap:
+        bootstrap_load()
+    elif bl.args.notes:
+        notes_load()
+    else:
+        bootstrap_load()
+        notes_load()
+
+
+def bootstrap_load():
     sc = Scanner()
     sc.process_command_line()
-    # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
-    sc.logger.debug("Arguments passed to run(): %s", " ".join(args))
 
     if sc.args.clobber:
+        # Will cascade delete Missions and Notes loaded by bootstrap load
         ans = input(
-            "\nAre you sure you want to delete all existing Expeditions and Missions? [y/N] "
+            "\nAre you sure you want to delete all existing Expeditions? [y/N] "
         )
         if ans.lower() == "y":
             sc.logger.info("Deleting %s Expedition", Expedition.objects.all().count())
             for expd in Expedition.objects.all():
                 expd.delete()
-            sc.logger.info("Deleting %s Missions", Mission.objects.all().count())
-            for miss in Mission.objects.all():
-                miss.delete()
 
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = "locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'"
@@ -288,6 +351,15 @@ def run(*args):
 
             miss_count += 1
             sc.logger.info("%3d. Saved %s", miss_count, mission)
+            if sc.args.count:
+                if miss_count > sc.args.count:
+                    sc.logger.info(f"Stopping after {sc.args.count} records")
+                    sys.exit(1)
+
+
+def notes_load():
+    np = NoteParser()
+    np.parse_texts()
 
 
 if __name__ == "__main__":
