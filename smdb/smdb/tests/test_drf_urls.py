@@ -1,7 +1,7 @@
 import pytest
 from django.urls import resolve, reverse
 
-from smdb.models import MissionType, Person, PlatformType
+from smdb.models import Missiontype, Person, Platformtype
 
 pytestmark = pytest.mark.django_db
 
@@ -11,7 +11,7 @@ def test_missiontype_list():
     assert resolve("/api/v1/missiontype/").view_name == "api:missiontype-list"
 
 
-def test_missiontype_detail(missiontype: MissionType):
+def test_missiontype_detail(missiontype: Missiontype):
     assert (
         reverse(
             "api:missiontype-detail",
@@ -46,7 +46,7 @@ def test_platformtype_list():
     assert resolve("/api/v1/platformtype/").view_name == "api:platformtype-list"
 
 
-def test_platformtype_detail(platformtype: PlatformType):
+def test_platformtype_detail(platformtype: Platformtype):
     assert (
         reverse(
             "api:platformtype-detail",

@@ -11,9 +11,9 @@ else:
     router = SimpleRouter()
 
 router.register("users", UserViewSet)
-router.register("missiontype", views.MissionTypeViewSet)
+router.register("missiontype", views.MissiontypeViewSet)
 router.register("persons", views.PersonViewSet)
-router.register("platformtype", views.PlatformTypeViewSet)
+router.register("platformtype", views.PlatformtypeViewSet)
 
 app_name = "api"
 urlpatterns = router.urls

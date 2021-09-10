@@ -22,7 +22,7 @@ from pytest_drf.util import pluralized, url_for
 from pytest_lambda import lambda_fixture, static_fixture
 from rest_framework.test import APIRequestFactory
 
-from smdb.models import MissionType, Person, PlatformType
+from smdb.models import Missiontype, Person, Platformtype
 from smdb.users.models import User
 
 pytestmark = pytest.mark.django_db
@@ -34,7 +34,7 @@ tester = lambda_fixture(
 )
 
 
-def express_missiontype(missiontype: MissionType) -> Dict[str, Any]:
+def express_missiontype(missiontype: Missiontype) -> Dict[str, Any]:
     factory = APIRequestFactory()
     request = factory.get("api:missiontype-detail")
     return {
@@ -51,7 +51,7 @@ def express_missiontype(missiontype: MissionType) -> Dict[str, Any]:
 express_missiontypes = pluralized(express_missiontype)
 
 
-def express_platformtype(platformtype: PlatformType) -> Dict[str, Any]:
+def express_platformtype(platformtype: Platformtype) -> Dict[str, Any]:
     factory = APIRequestFactory()
     request = factory.get("api:platformtype-detail")
     return {
@@ -88,7 +88,7 @@ def express_person(person: Person) -> Dict[str, Any]:
 express_persons = pluralized(express_person)
 
 
-class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
+class TestMissiontypeViewSet(ViewSetTest, AsUser("tester")):
     """Modeled after 'But I mainly use ViewSets, not APIViews!'
     section at https://pypi.org/project/pytest-drf/"""
 
@@ -111,7 +111,7 @@ class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
     ):
         missiontypes = lambda_fixture(
             lambda: [
-                MissionType.objects.create(name=name)
+                Missiontype.objects.create(name=name)
                 for name in ("cruise", "dive", "flight")
             ],
             autouse=True,
@@ -137,22 +137,22 @@ class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
             }
         )
         initial_missiontype = precondition_fixture(
-            lambda: set(MissionType.objects.values_list("name", flat=True))
+            lambda: set(Missiontype.objects.values_list("name", flat=True))
         )
 
         def it_creates_new_missiontype(self, initial_missiontype, json):
             expected = initial_missiontype | {json["name"]}
-            actual = set(MissionType.objects.values_list("name", flat=True))
+            actual = set(Missiontype.objects.values_list("name", flat=True))
             assert expected == actual
 
         def it_sets_expected_attrs(self, data, json):
-            missiontype = MissionType.objects.get(name=json["name"])
+            missiontype = Missiontype.objects.get(name=json["name"])
 
             expected = data
             assert_model_attrs(missiontype, expected)
 
         def it_returns_missiontype(self, json):
-            missiontype = MissionType.objects.get(name=json["name"])
+            missiontype = Missiontype.objects.get(name=json["name"])
 
             expected = express_missiontype(missiontype)
             actual = json
@@ -163,7 +163,7 @@ class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
         UsesDetailEndpoint,
         Returns200,
     ):
-        missiontype = lambda_fixture(lambda: MissionType.objects.create(name="dive"))
+        missiontype = lambda_fixture(lambda: Missiontype.objects.create(name="dive"))
 
         def it_returns_missiontype(self, missiontype, json):
             expected = express_missiontype(missiontype)
@@ -175,7 +175,7 @@ class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
         UsesDetailEndpoint,
         Returns200,
     ):
-        missiontype = lambda_fixture(lambda: MissionType.objects.create(name="dive"))
+        missiontype = lambda_fixture(lambda: Missiontype.objects.create(name="dive"))
         data = static_fixture(
             {
                 "name": "updated name",
@@ -203,18 +203,18 @@ class TestMissionTypeViewSet(ViewSetTest, AsUser("tester")):
         Returns204,
     ):
         missiontype = lambda_fixture(
-            lambda: MissionType.objects.create(name="dive_to_delete")
+            lambda: Missiontype.objects.create(name="dive_to_delete")
         )
 
         initial_missiontype = precondition_fixture(
-            lambda missiontype: set(  # ensure our to-be-deleted MissionType exists in our set
-                MissionType.objects.values_list("name", flat=True)
+            lambda missiontype: set(  # ensure our to-be-deleted Missiontype exists in our set
+                Missiontype.objects.values_list("name", flat=True)
             )
         )
 
         def it_deletes_missiontype(self, initial_missiontype, missiontype):
             expected = initial_missiontype - {missiontype.name}
-            actual = set(MissionType.objects.values_list("name", flat=True))
+            actual = set(Missiontype.objects.values_list("name", flat=True))
             assert expected == actual
 
 
@@ -367,7 +367,7 @@ class TestPersonViewSet(ViewSetTest, AsUser("tester")):
             assert expected == actual
 
 
-class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
+class TestPlatformtypeViewSet(ViewSetTest, AsUser("tester")):
     """Modeled after 'But I mainly use ViewSets, not APIViews!'
     section at https://pypi.org/project/pytest-drf/"""
 
@@ -390,8 +390,8 @@ class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
     ):
         platformtypes = lambda_fixture(
             lambda: [
-                PlatformType.objects.create(name="AUV"),
-                PlatformType.objects.create(name="ship"),
+                Platformtype.objects.create(name="AUV"),
+                Platformtype.objects.create(name="ship"),
             ],
             autouse=True,
         )
@@ -418,16 +418,16 @@ class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
             }
         )
         initial_platformtype = precondition_fixture(
-            lambda: set(PlatformType.objects.values_list("name", flat=True))
+            lambda: set(Platformtype.objects.values_list("name", flat=True))
         )
 
         def it_creates_new_platformtype(self, initial_platformtype, json):
             expected = initial_platformtype | {json["name"]}
-            actual = set((str(PlatformType.objects.values_list("name", flat=True)[0]),))
+            actual = set((str(Platformtype.objects.values_list("name", flat=True)[0]),))
             assert expected == actual
 
         def a_test_it_sets_expected_attrs(self, data, json):
-            platformtype = PlatformType.objects.get(name=json["name"])
+            platformtype = Platformtype.objects.get(name=json["name"])
 
             expected = data
             breakpoint()
@@ -436,7 +436,7 @@ class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
             assert_model_attrs(platformtype, expected)
 
         def it_returns_platformtype(self, json):
-            platformtype = PlatformType.objects.get(name=json["name"])
+            platformtype = Platformtype.objects.get(name=json["name"])
 
             expected = express_platformtype(platformtype)
             actual = json
@@ -447,7 +447,7 @@ class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
         UsesDetailEndpoint,
         Returns200,
     ):
-        platformtype = lambda_fixture(lambda: PlatformType.objects.create(name="Sonar"))
+        platformtype = lambda_fixture(lambda: Platformtype.objects.create(name="Sonar"))
 
         def it_returns_platformtype(self, platformtype, json):
             expected = express_platformtype(platformtype)
@@ -459,7 +459,7 @@ class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
         UsesDetailEndpoint,
         Returns200,
     ):
-        platformtype = lambda_fixture(lambda: PlatformType.objects.create(name="Drone"))
+        platformtype = lambda_fixture(lambda: Platformtype.objects.create(name="Drone"))
         data = static_fixture(
             {
                 "name": "LRAUV",
@@ -487,16 +487,16 @@ class TestPlatformTypeViewSet(ViewSetTest, AsUser("tester")):
         Returns204,
     ):
         platformtype = lambda_fixture(
-            lambda: PlatformType.objects.create(name="Glider")
+            lambda: Platformtype.objects.create(name="Glider")
         )
 
         initial_platformtype = precondition_fixture(
-            lambda platformtype: set(  # ensure our to-be-deleted PlatformType exists in our set
-                PlatformType.objects.values_list("name", flat=True)
+            lambda platformtype: set(  # ensure our to-be-deleted Platformtype exists in our set
+                Platformtype.objects.values_list("name", flat=True)
             )
         )
 
         def it_deletes_platformtype(self, initial_platformtype, platformtype):
             expected = initial_platformtype - {platformtype.name}
-            actual = set(PlatformType.objects.values_list("name", flat=True))
+            actual = set(Platformtype.objects.values_list("name", flat=True))
             assert expected == actual

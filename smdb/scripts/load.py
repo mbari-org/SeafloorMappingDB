@@ -42,8 +42,11 @@ Can be run from smdb Docker environment thusly...
         docker-compose run --rm -u $UID -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -h
     From VS Code:
         - Mount smb://titan.shore.mbari.org/SeafloorMapping
-        - Open zsh terminal, at ➜  /app prompt:
-          scripts/load.py -h
+        - Open zsh terminal, at ➜  /app/smdb prompt:
+          scripts/load.py --help
+          scripts/load.py -v --clobber # To reload database
+          or use the "load.py" Debug launch configuration
+
 """
 
 
@@ -272,7 +275,7 @@ def run(*args):
                 expd_path_name=os.path.dirname(fp)
             )
             mission = Mission(
-                mission_name=os.path.dirname(fp).replace("/mbari/SeafloorMapping/", ""),
+                name=os.path.dirname(fp).replace("/mbari/SeafloorMapping/", ""),
                 expedition=expedition,
                 grid_bounds=grid_bounds,
                 notes_filename=notes_filename,
@@ -285,8 +288,6 @@ def run(*args):
 
             miss_count += 1
             sc.logger.info("%3d. Saved %s", miss_count, mission)
-            if miss_count == 5:
-                sys.exit(1)
 
 
 if __name__ == "__main__":

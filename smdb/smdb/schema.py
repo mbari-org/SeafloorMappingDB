@@ -12,19 +12,19 @@ from smdb.models import (
     DataArchival,
     Expedition,
     Mission,
-    MissionType,
+    Missiontype,
     Note,
     Person,
     Platform,
-    PlatformType,
+    Platformtype,
     Sensor,
-    SensorType,
+    Sensortype,
 )
 
 
-class MissionTypeNode(DjangoObjectNode):
+class MissiontypeNode(DjangoObjectNode):
     class Meta:
-        model = MissionType
+        model = Missiontype
         fields = ("uuid", "name")
 
 
@@ -34,9 +34,9 @@ class PersonNode(DjangoObjectNode):
         fields = ("uuid", "first_name", "last_name", "institution_name")
 
 
-class PlatformTypeNode(DjangoObjectNode):
+class PlatformtypeNode(DjangoObjectNode):
     class Meta:
-        model = PlatformType
+        model = Platformtype
         fields = ("uuid", "name")
 
 
@@ -51,9 +51,9 @@ class PlatformNode(DjangoObjectNode):
         )
 
 
-class SensorTypeNode(DjangoObjectNode):
+class SensortypeNode(DjangoObjectNode):
     class Meta:
-        model = SensorType
+        model = Sensortype
         fields = ("uuid", "name")
 
 
@@ -166,11 +166,11 @@ class NoteNode(DjangoObjectNode):
 
 class Query(graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name="_debug")
-    all_missiontypes = graphene.List(MissionTypeNode)
+    all_missiontypes = graphene.List(MissiontypeNode)
     all_persons = graphene.List(PersonNode)
-    all_platformtypes = graphene.List(PlatformTypeNode)
+    all_platformtypes = graphene.List(PlatformtypeNode)
     all_platforms = graphene.List(PlatformNode)
-    all_sensortypes = graphene.List(SensorTypeNode)
+    all_sensortypes = graphene.List(SensortypeNode)
     all_sensors = graphene.List(SensorNode)
     all_expeditions = graphene.List(ExpeditionNode)
     all_compilations = graphene.List(CompilationNode)
@@ -180,7 +180,7 @@ class Query(graphene.ObjectType):
     all_notes = graphene.List(NoteNode)
 
     missiontype_by_name = graphene.Field(
-        MissionTypeNode, name=graphene.String(required=True)
+        MissiontypeNode, name=graphene.String(required=True)
     )
 
     expedition_by_name = graphene.Field(
@@ -189,19 +189,19 @@ class Query(graphene.ObjectType):
 
     # Queries for all_ objects
     def resolve_all_missiontypes(root, info):
-        return MissionType.objects.all()
+        return Missiontype.objects.all()
 
     def resolve_all_persons(root, info):
         return Person.objects.all()
 
     def resolve_all_platformtypes(root, info):
-        return PlatformType.objects.all()
+        return Platformtype.objects.all()
 
     def resolve_all_platforms(root, info):
         return Platform.objects.all()
 
     def resolve_all_sensortypes(root, info):
-        return SensorType.objects.all()
+        return Sensortype.objects.all()
 
     def resolve_all_sensors(root, info):
         return Sensor.objects.all()
@@ -227,8 +227,8 @@ class Query(graphene.ObjectType):
     # Specialized queries
     def resolve_missiontype_by_name(root, info, name):
         try:
-            return MissionType.objects.get(name=name)
-        except MissionType.DoesNotExist:
+            return Missiontype.objects.get(name=name)
+        except Missiontype.DoesNotExist:
             return None
 
     def resolve_expedition_by_name(root, info, name):
@@ -239,59 +239,59 @@ class Query(graphene.ObjectType):
 
 
 # https://medium.com/analytics-vidhya/graphql-with-django-simple-yet-powerful-crud-part-2-bacce3668e35
-# ===== MissionType =====
-class MissionTypeInput(graphene.InputObjectType):
+# ===== Missiontype =====
+class MissiontypeInput(graphene.InputObjectType):
     name = graphene.String(required=True)
 
 
-class CreateMissionType(graphene.Mutation):
+class CreateMissiontype(graphene.Mutation):
     class Arguments:
         name = graphene.String()
 
-    missiontype = graphene.Field(MissionTypeNode)
+    missiontype = graphene.Field(MissiontypeNode)
 
     def mutate(self, info, name):
         if not info.context.user.is_authenticated:
             raise GraphQLError("You must be logged in")
-        missiontype = MissionType.objects.create(
+        missiontype = Missiontype.objects.create(
             name=name,
         )
         missiontype.save()
-        return CreateMissionType(missiontype=missiontype)
+        return CreateMissiontype(missiontype=missiontype)
 
 
-class UpdateMissionType(graphene.Mutation):
+class UpdateMissiontype(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         new_name = graphene.String(required=True)
 
-    missiontype = graphene.Field(MissionTypeNode)
+    missiontype = graphene.Field(MissiontypeNode)
 
     def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        missiontype = MissionType.objects.get(
+        missiontype = Missiontype.objects.get(
             name=name,
         )
         missiontype.name = new_name
         missiontype.save()
-        return UpdateMissionType(missiontype=missiontype)
+        return UpdateMissiontype(missiontype=missiontype)
 
 
-class DeleteMissionType(graphene.Mutation):
+class DeleteMissiontype(graphene.Mutation):
     class Arguments:
         name = graphene.String()
 
-    missiontype = graphene.Field(MissionTypeNode)
+    missiontype = graphene.Field(MissiontypeNode)
 
     def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        missiontype = MissionType.objects.get(
+        missiontype = Missiontype.objects.get(
             name=name,
         )
         missiontype.delete()
-        return DeleteMissionType(missiontype=missiontype)
+        return DeleteMissiontype(missiontype=missiontype)
 
 
 # ===== Person =====
@@ -355,65 +355,65 @@ class DeletePerson(graphene.Mutation):
         return DeletePerson(person=person)
 
 
-# ===== PlatformType =====
-class PlatformTypeInput(graphene.InputObjectType):
+# ===== Platformtype =====
+class PlatformtypeInput(graphene.InputObjectType):
     name = graphene.String(required=True)
 
 
-class CreatePlatformType(graphene.Mutation):
+class CreatePlatformtype(graphene.Mutation):
     class Arguments:
         name = graphene.String()
 
-    platformtype = graphene.Field(PlatformTypeNode)
+    platformtype = graphene.Field(PlatformtypeNode)
 
     def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        platformtype = PlatformType.objects.create(
+        platformtype = Platformtype.objects.create(
             name=name,
         )
         platformtype.save()
-        return CreatePlatformType(platformtype=platformtype)
+        return CreatePlatformtype(platformtype=platformtype)
 
 
-class UpdatePlatformType(graphene.Mutation):
+class UpdatePlatformtype(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         new_name = graphene.String(required=True)
 
-    platformtype = graphene.Field(PlatformTypeNode)
+    platformtype = graphene.Field(PlatformtypeNode)
 
     def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        platformtype = PlatformType.objects.get(
+        platformtype = Platformtype.objects.get(
             name=name,
         )
         platformtype.name = new_name
         platformtype.save()
-        return UpdatePlatformType(platformtype=platformtype)
+        return UpdatePlatformtype(platformtype=platformtype)
 
 
-class DeletePlatformType(graphene.Mutation):
+class DeletePlatformtype(graphene.Mutation):
     class Arguments:
         name = graphene.String()
 
-    platformtype = graphene.Field(PlatformTypeNode)
+    platformtype = graphene.Field(PlatformtypeNode)
 
     def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        platformtype = PlatformType.objects.get(
+        platformtype = Platformtype.objects.get(
             name=name,
         )
         platformtype.delete()
-        return DeletePlatformType(platformtype=platformtype)
+        return DeletePlatformtype(platformtype=platformtype)
 
 
 # ===== Platform =====
 class PlatformInput(graphene.InputObjectType):
     name = graphene.String(required=True)
-    platformtype = graphene.Field(PlatformTypeInput)
+    platformtype = graphene.Field(PlatformtypeInput)
     operator_org_name = graphene.String()
 
 
@@ -426,7 +426,7 @@ class CreatePlatform(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        platformtype, _ = PlatformType.objects.get_or_create(
+        platformtype, _ = Platformtype.objects.get_or_create(
             name=input.platformtype.name
         )
         platform = Platform.objects.create(
@@ -449,7 +449,7 @@ class UpdatePlatform(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         platform = Platform.objects.get(uuid=uuid)
-        platformtype, _ = PlatformType.objects.get_or_create(
+        platformtype, _ = Platformtype.objects.get_or_create(
             name=input.platformtype.name
         )
         platform.platformtype = platformtype
@@ -473,64 +473,64 @@ class DeletePlatform(graphene.Mutation):
         return DeletePlatform(platform=platform)
 
 
-# ===== SensorType =====
-class SensorTypeInput(graphene.InputObjectType):
+# ===== Sensortype =====
+class SensortypeInput(graphene.InputObjectType):
     name = graphene.String(required=True)
 
 
-class CreateSensorType(graphene.Mutation):
+class CreateSensortype(graphene.Mutation):
     class Arguments:
         name = graphene.String()
 
-    sensortype = graphene.Field(SensorTypeNode)
+    sensortype = graphene.Field(SensortypeNode)
 
     def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        sensortype = SensorType.objects.create(
+        sensortype = Sensortype.objects.create(
             name=name,
         )
         sensortype.save()
-        return CreateSensorType(sensortype=sensortype)
+        return CreateSensortype(sensortype=sensortype)
 
 
-class UpdateSensorType(graphene.Mutation):
+class UpdateSensortype(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         new_name = graphene.String(required=True)
 
-    sensortype = graphene.Field(SensorTypeNode)
+    sensortype = graphene.Field(SensortypeNode)
 
     def mutate(self, info, name, new_name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        sensortype = SensorType.objects.get(
+        sensortype = Sensortype.objects.get(
             name=name,
         )
         sensortype.name = new_name
         sensortype.save()
-        return UpdateSensorType(sensortype=sensortype)
+        return UpdateSensortype(sensortype=sensortype)
 
 
-class DeleteSensorType(graphene.Mutation):
+class DeleteSensortype(graphene.Mutation):
     class Arguments:
         name = graphene.String()
 
-    sensortype = graphene.Field(SensorTypeNode)
+    sensortype = graphene.Field(SensortypeNode)
 
     def mutate(self, info, name):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        sensortype = SensorType.objects.get(
+        sensortype = Sensortype.objects.get(
             name=name,
         )
         sensortype.delete()
-        return DeleteSensorType(sensortype=sensortype)
+        return DeleteSensortype(sensortype=sensortype)
 
 
 # ===== Sensor =====
 class SensorInput(graphene.InputObjectType):
-    sensortype = graphene.Field(SensorTypeInput)
+    sensortype = graphene.Field(SensortypeInput)
     model_name = graphene.String()
     comment = graphene.String()
     # missions is many-to-many, input will happen from Mission
@@ -546,7 +546,7 @@ class CreateSensor(graphene.Mutation):
     def mutate(self, info, input):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
-        sensortype, _ = SensorType.objects.get_or_create(name=input.sensortype.name)
+        sensortype, _ = Sensortype.objects.get_or_create(name=input.sensortype.name)
         sensor = Sensor.objects.create(
             sensortype=sensortype,
             model_name=input.model_name,
@@ -755,7 +755,7 @@ class MissionInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
     expedition = graphene.Field(ExpeditionInput, required=True)
-    missiontype = graphene.Field(MissionTypeInput)
+    missiontype = graphene.Field(MissiontypeInput)
     platform = graphene.Field(PlatformInput)
     start_date = graphene.String()
     end_date = graphene.String()
@@ -790,10 +790,10 @@ class CreateMission(graphene.Mutation):
         expedition, _ = Expedition.objects.get_or_create(
             name=input.expedition.name,
         )
-        missiontype, _ = MissionType.objects.get_or_create(
+        missiontype, _ = Missiontype.objects.get_or_create(
             name=input.missiontype.name,
         )
-        platformtype, _ = PlatformType.objects.get_or_create(
+        platformtype, _ = Platformtype.objects.get_or_create(
             name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
@@ -802,7 +802,7 @@ class CreateMission(graphene.Mutation):
         )
         sensors = []
         for sensor_input in input.sensors or ():
-            sensortype, _ = SensorType.objects.get_or_create(
+            sensortype, _ = Sensortype.objects.get_or_create(
                 name=sensor_input.sensortype.name,
             )
             sensor, _ = Sensor.objects.get_or_create(
@@ -874,10 +874,10 @@ class UpdateMission(graphene.Mutation):
         expedition, _ = Expedition.objects.get_or_create(
             name=input.expedition.name,
         )
-        missiontype, _ = MissionType.objects.get_or_create(
+        missiontype, _ = Missiontype.objects.get_or_create(
             name=input.missiontype.name,
         )
-        platformtype, _ = PlatformType.objects.get_or_create(
+        platformtype, _ = Platformtype.objects.get_or_create(
             name=input.platform.platformtype.name,
         )
         platform, _ = Platform.objects.get_or_create(
@@ -886,7 +886,7 @@ class UpdateMission(graphene.Mutation):
         )
         sensors = []
         for sensor_input in input.sensors or ():
-            sensortype, _ = SensorType.objects.get_or_create(
+            sensortype, _ = Sensortype.objects.get_or_create(
                 name=sensor_input.sensortype.name,
             )
             sensor, _ = Sensor.objects.get_or_create(
@@ -1187,25 +1187,25 @@ class DeleteNote(graphene.Mutation):
 
 
 class Mutation(graphene.ObjectType):
-    create_missiontype = CreateMissionType.Field()
-    update_missiontype = UpdateMissionType.Field()
-    delete_missiontype = DeleteMissionType.Field()
+    create_missiontype = CreateMissiontype.Field()
+    update_missiontype = UpdateMissiontype.Field()
+    delete_missiontype = DeleteMissiontype.Field()
 
     create_person = CreatePerson.Field()
     update_person = UpdatePerson.Field()
     delete_person = DeletePerson.Field()
 
-    create_platformtype = CreatePlatformType.Field()
-    update_platformtype = UpdatePlatformType.Field()
-    delete_platformtype = DeletePlatformType.Field()
+    create_platformtype = CreatePlatformtype.Field()
+    update_platformtype = UpdatePlatformtype.Field()
+    delete_platformtype = DeletePlatformtype.Field()
 
     create_platform = CreatePlatform.Field()
     update_platform = UpdatePlatform.Field()
     delete_platform = DeletePlatform.Field()
 
-    create_sensortype = CreateSensorType.Field()
-    update_sensortype = UpdateSensorType.Field()
-    delete_sensortype = DeleteSensorType.Field()
+    create_sensortype = CreateSensortype.Field()
+    update_sensortype = UpdateSensortype.Field()
+    delete_sensortype = DeleteSensortype.Field()
 
     create_sensor = CreateSensor.Field()
     update_sensor = UpdateSensor.Field()

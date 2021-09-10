@@ -1,12 +1,12 @@
 import pytest
 
 from django.core.management import call_command
-from smdb.models import Mission, MissionType, Person, PlatformType
+from smdb.models import Mission, Missiontype, Person, Platformtype
 from smdb.users.models import User
 
 from smdb.users.tests.factories import UserFactory
 
-from smdb.tests.factories import MissionTypeFactory, PersonFactory, PlatformTypeFactory
+from smdb.tests.factories import MissiontypeFactory, PersonFactory, PlatformtypeFactory
 
 ##from smdb.tests.factories import MissionFactory
 
@@ -33,8 +33,8 @@ def user() -> User:
 
 
 @pytest.fixture
-def missiontype() -> MissionType:
-    return MissionTypeFactory()
+def missiontype() -> Missiontype:
+    return MissiontypeFactory()
 
 
 @pytest.fixture
@@ -43,8 +43,8 @@ def person() -> Person:
 
 
 @pytest.fixture
-def platformtype() -> PlatformType:
-    return PlatformTypeFactory()
+def platformtype() -> Platformtype:
+    return PlatformtypeFactory()
 
 
 """ Waiting for serialization

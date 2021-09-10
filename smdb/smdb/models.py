@@ -22,7 +22,7 @@ class Person(models.Model):
         return f"{self.last_name}, {self.first_name}"
 
 
-class PlatformType(models.Model):
+class Platformtype(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=128)
 
@@ -32,7 +32,7 @@ class PlatformType(models.Model):
 
 class Platform(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    platformtype = models.ForeignKey(PlatformType, on_delete=models.CASCADE)
+    platformtype = models.ForeignKey(Platformtype, on_delete=models.CASCADE)
     name = models.CharField(max_length=128, db_index=True, unique=True)
     operator_org_name = models.CharField(max_length=128, blank=True, null=True)
 
@@ -40,7 +40,7 @@ class Platform(models.Model):
         return f"{self.name} ({self.operator_org_name})"
 
 
-class MissionType(models.Model):
+class Missiontype(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=128, unique=True)
 
@@ -48,7 +48,7 @@ class MissionType(models.Model):
         return self.name
 
 
-class SensorType(models.Model):
+class Sensortype(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=128, unique=True)
 
@@ -58,7 +58,7 @@ class SensorType(models.Model):
 
 class Sensor(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    sensortype = models.ForeignKey(SensorType, on_delete=models.CASCADE)
+    sensortype = models.ForeignKey(Sensortype, on_delete=models.CASCADE)
     model_name = models.CharField(max_length=128)
     comment = models.CharField(max_length=128)
     missions = models.ManyToManyField("Mission")
@@ -125,7 +125,7 @@ class Mission(models.Model):
         Expedition, on_delete=models.CASCADE, blank=True, null=True
     )
     missiontype = models.ForeignKey(
-        MissionType, on_delete=models.CASCADE, blank=True, null=True
+        Missiontype, on_delete=models.CASCADE, blank=True, null=True
     )
     platform = models.ForeignKey(
         Platform, on_delete=models.CASCADE, blank=True, null=True

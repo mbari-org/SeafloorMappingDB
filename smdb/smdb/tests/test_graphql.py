@@ -13,13 +13,13 @@ from smdb.models import (
     DataArchival,
     Expedition,
     Mission,
-    MissionType,
+    Missiontype,
     Note,
     Person,
     Platform,
-    PlatformType,
+    Platformtype,
     Sensor,
-    SensorType,
+    Sensortype,
 )
 from smdb.schema import schema
 from smdb.users.models import User
@@ -39,7 +39,7 @@ def user_authenticated(anonymous_user=False):
     return request
 
 
-# ===== MissionType Tests =====
+# ===== Missiontype Tests =====
 create_missiontype_mutation = """mutation {
         create_missiontype(name: "Initial") {
             missiontype {
@@ -70,7 +70,7 @@ def test_create_missiontype_not_authenticated(snapshot):
         context_value=user_authenticated(anonymous_user=True),
     )
     snapshot.assert_match(response)
-    assert MissionType.objects.all().count() == 0
+    assert Missiontype.objects.all().count() == 0
     assert "You must be logged in" == response["errors"][0]["message"]
 
 
@@ -79,7 +79,7 @@ def test_create_missiontype(snapshot):
     snapshot.assert_match(
         client.execute(create_missiontype_mutation, context_value=user_authenticated())
     )
-    assert MissionType.objects.all()[0].name == "Initial"
+    assert Missiontype.objects.all()[0].name == "Initial"
 
 
 def test_missiontype_by_name(snapshot):
@@ -94,7 +94,7 @@ def test_missiontype_by_name(snapshot):
                 }"""
         )
     )
-    assert MissionType.objects.all()[0].name == "Initial"
+    assert Missiontype.objects.all()[0].name == "Initial"
 
 
 def test_missiontype_by_name_does_not_exist(snapshot):
@@ -108,7 +108,7 @@ def test_missiontype_by_name_does_not_exist(snapshot):
                 }"""
         )
     )
-    assert MissionType.objects.count() == 0
+    assert Missiontype.objects.count() == 0
 
 
 def test_all_sensortypes(snapshot):
@@ -129,7 +129,7 @@ def test_all_sensortypes(snapshot):
 def test_update_missiontype(snapshot):
     client = Client(schema)
     client.execute(create_missiontype_mutation, context_value=user_authenticated())
-    assert MissionType.objects.all()[0].name == "Initial"
+    assert Missiontype.objects.all()[0].name == "Initial"
     snapshot.assert_match(
         client.execute(
             """mutation {
@@ -142,7 +142,7 @@ def test_update_missiontype(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert MissionType.objects.all()[0].name == "Updated"
+    assert Missiontype.objects.all()[0].name == "Updated"
 
 
 def test_delete_missiontype(snapshot):
@@ -160,7 +160,7 @@ def test_delete_missiontype(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert MissionType.objects.all().count() == 0
+    assert Missiontype.objects.all().count() == 0
 
 
 # ===== Person Tests =====
@@ -286,7 +286,7 @@ def test_delete_person(snapshot):
     assert Person.objects.all().count() == 0
 
 
-# ===== PlatformType Tests =====
+# ===== Platformtype Tests =====
 create_platformtype_mutation = """mutation {
         create_platformtype(name: "Initial") {
             platformtype {
@@ -315,7 +315,7 @@ def test_create_platformtype(snapshot):
     snapshot.assert_match(
         client.execute(create_platformtype_mutation, context_value=user_authenticated())
     )
-    assert PlatformType.objects.all()[0].name == "Initial"
+    assert Platformtype.objects.all()[0].name == "Initial"
 
 
 def test_all_platformtypes(snapshot):
@@ -329,14 +329,14 @@ def test_all_platformtypes(snapshot):
                 }"""
     )
     assert response["data"]["all_platformtypes"][0]["name"] == "Initial"
-    assert repr(PlatformType.objects.all()[0]) == "<PlatformType: Initial>"
+    assert repr(Platformtype.objects.all()[0]) == "<Platformtype: Initial>"
     snapshot.assert_match(response)
 
 
 def test_update_platformtype(snapshot):
     client = Client(schema)
     client.execute(create_platformtype_mutation, context_value=user_authenticated())
-    assert PlatformType.objects.all()[0].name == "Initial"
+    assert Platformtype.objects.all()[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
@@ -350,7 +350,7 @@ def test_update_platformtype(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert PlatformType.objects.all()[0].name == "Updated"
+    assert Platformtype.objects.all()[0].name == "Updated"
 
 
 def test_delete_platformtype(snapshot):
@@ -368,7 +368,7 @@ def test_delete_platformtype(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert PlatformType.objects.all().count() == 0
+    assert Platformtype.objects.all().count() == 0
 
 
 # ===== Platform Tests =====
@@ -494,7 +494,7 @@ def test_delete_platform(snapshot):
     assert Platform.objects.all().count() == 0
 
 
-# ===== SensorType Tests =====
+# ===== Sensortype Tests =====
 create_sensortype_mutation = """mutation {
         create_sensortype(name: "Initial") {
             sensortype {
@@ -523,7 +523,7 @@ def test_create_sensortype(snapshot):
     snapshot.assert_match(
         client.execute(create_sensortype_mutation, context_value=user_authenticated())
     )
-    assert SensorType.objects.all()[0].name == "Initial"
+    assert Sensortype.objects.all()[0].name == "Initial"
 
 
 def test_all_sensortypes(snapshot):
@@ -538,13 +538,13 @@ def test_all_sensortypes(snapshot):
     )
     assert response["data"]["all_sensortypes"][0]["name"] == "Initial"
     snapshot.assert_match(response)
-    assert repr(SensorType.objects.all()[0]) == "<SensorType: Initial>"
+    assert repr(Sensortype.objects.all()[0]) == "<Sensortype: Initial>"
 
 
 def test_update_sensortype(snapshot):
     client = Client(schema)
     client.execute(create_sensortype_mutation, context_value=user_authenticated())
-    assert SensorType.objects.all()[0].name == "Initial"
+    assert Sensortype.objects.all()[0].name == "Initial"
 
     snapshot.assert_match(
         client.execute(
@@ -558,7 +558,7 @@ def test_update_sensortype(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert SensorType.objects.all()[0].name == "Updated"
+    assert Sensortype.objects.all()[0].name == "Updated"
 
 
 def test_delete_sensortype(snapshot):
@@ -576,7 +576,7 @@ def test_delete_sensortype(snapshot):
             context_value=user_authenticated(),
         )
     )
-    assert SensorType.objects.all().count() == 0
+    assert Sensortype.objects.all().count() == 0
 
 
 # ===== Sensor Tests =====
