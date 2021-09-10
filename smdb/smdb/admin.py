@@ -39,7 +39,7 @@ class ExpeditionAdmin(GeoModelAdmin):
 @register(Mission)
 class MissionAdmin(GeoModelAdmin):
     search_fields = [
-        "mission_name",
+        "name",
     ]
 
 
