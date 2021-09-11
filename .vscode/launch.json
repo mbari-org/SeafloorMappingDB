@@ -34,7 +34,9 @@
       "request": "launch",
       "program": "${workspaceFolder}/smdb/scripts/load.py",
       "console": "integratedTerminal",
-      "args": ["-v 2", "--regex", "mbsystem/Data/2019/20191106m3/ZTopo.grd$"],
+      //"args": ["-v 2", "--regex", "mbsystem/Data/2019/20191106m3/ZTopo.grd$"],
+      //"args": ["--bootstrap", "-v 2", "--clobber", "--count", "5"],
+      "args": ["--notes", "-v 2", "--count", "1"],
       "justMyCode": false
     }
   ]
