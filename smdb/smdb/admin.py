@@ -33,13 +33,25 @@ class DataArchivalAdmin(GeoModelAdmin):
 
 @register(Expedition)
 class ExpeditionAdmin(GeoModelAdmin):
-    pass
+    ordering = [
+        "name",
+    ]
+    search_fields = [
+        "name",
+        "mission__name",
+        "expd_path_name",
+        "expd_db_id",
+    ]
 
 
 @register(Mission)
 class MissionAdmin(GeoModelAdmin):
+    ordering = [
+        "name",
+    ]
     search_fields = [
         "name",
+        "note__text",
     ]
 
 
@@ -75,4 +87,7 @@ class SensortypeAdmin(GeoModelAdmin):
 
 @register(Note)
 class NoteAdmin(GeoModelAdmin):
+    ordering = [
+        "mission__name",
+    ]
     search_fields = ["text"]
