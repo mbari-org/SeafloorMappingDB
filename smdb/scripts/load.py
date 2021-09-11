@@ -136,25 +136,25 @@ class BaseLoader:
 
 
 class NoteParser(BaseLoader):
-    SCIENCE_PARTY = "------------------------------------"
+    BOUNDARY_DASHES = "------------------------------------"
 
     def filepaths(self):
         return Mission.objects.all().values_list("notes_filename", flat=True)
 
     def parse_texts(self):
         """Brute force parsing of Note text to grab information"""
-        for note in Note.objects.all():
-            self.logger.info(f"======== {note.mission.name} ========")
+        for note_count, note in enumerate(Note.objects.all()):
+            self.logger.info(f"======== {note_count:3f} {note.mission.name} ========")
             comment_captured = False
             line_is_expd_db_id = False
             comment = ""
-            for count, line in enumerate(note.text.split("\n")):
+            for line in note.text.split("\n"):
                 if not comment_captured:
                     comment += line + "\n"
                 self.logger.debug(line)
-                if line == self.SCIENCE_PARTY and not comment_captured:
+                if line == self.BOUNDARY_DASHES and not comment_captured:
                     comment_captured = True
-                    comment = comment.replace(self.SCIENCE_PARTY, "")
+                    comment = comment.replace(self.BOUNDARY_DASHES, "")
                     note.mission.comment = comment.strip()
                     note.mission.save()
 
@@ -165,6 +165,16 @@ class NoteParser(BaseLoader):
                 if "ExpeditionID" in line:
                     line_is_expd_db_id = True
                     self.logger.info(line)
+
+    def save_expd_name_from_comment(self):
+        # It looks like the third line begins with an Expedition name
+        for mission in Mission.objects.all():
+            expd_name = ""
+            for count, line in enumerate(mission.comment.split("\n")):
+                if count > 1:
+                    expd_name += line + " "
+            mission.expedition.name = expd_name
+            mission.expedition.save()
 
 
 class Scanner(BaseLoader):
@@ -250,6 +260,17 @@ class Scanner(BaseLoader):
 
         return notes_file
 
+    def thumbnail_filename(self, sm_dir):
+        locate_cmd = (
+            f"locate -d /etc/smdb/SeafloorMapping.db -r '{sm_dir}/ZTopoSlopeNav.jpg'"
+        )
+        thumbnail_file = None
+        for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
+            self.logger.debug("Potential thumbnail file: %s", jpg_file)
+            thumbnail_file = jpg_file
+
+        return thumbnail_file
+
     def save_notes(self, mission):
         if not mission.notes_filename:
             raise FileExistsError(f"No Notes found for {mission.mission_name}")
@@ -333,6 +354,7 @@ def bootstrap_load():
             sc.logger.debug("grid_bounds: %s", grid_bounds)
 
             notes_filename = sc.notes_filename(os.path.dirname(fp))
+            thumbnail_filename = sc.thumbnail_filename(os.path.dirname(fp))
 
             expedition, _ = Expedition.objects.get_or_create(
                 expd_path_name=os.path.dirname(fp)
@@ -342,6 +364,7 @@ def bootstrap_load():
                 expedition=expedition,
                 grid_bounds=grid_bounds,
                 notes_filename=notes_filename,
+                thumbnail_filename=thumbnail_filename,
             )
             mission.save()
             try:
@@ -352,14 +375,16 @@ def bootstrap_load():
             miss_count += 1
             sc.logger.info("%3d. Saved %s", miss_count, mission)
             if sc.args.count:
-                if miss_count > sc.args.count:
+                if miss_count >= sc.args.count:
                     sc.logger.info(f"Stopping after {sc.args.count} records")
-                    sys.exit(1)
+                    return
 
 
 def notes_load():
     np = NoteParser()
+    np.process_command_line()
     np.parse_texts()
+    np.save_expd_name_from_comment()
 
 
 if __name__ == "__main__":
