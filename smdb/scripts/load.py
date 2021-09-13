@@ -104,7 +104,7 @@ class BaseLoader:
             help="Process the notes loaded by a bootstrap load - do not do bootstrap load",
         )
         parser.add_argument(
-            "--count",
+            "--limit",
             action="store",
             type=int,
             help="Stop loading after this number of records",
@@ -144,9 +144,9 @@ class NoteParser(BaseLoader):
     def parse_texts(self):
         """Brute force parsing of Note text to grab information"""
         for note_count, note in enumerate(Note.objects.all()):
-            self.logger.info(f"======== {note_count:3f} {note.mission.name} ========")
+            self.logger.info(f"======== {note_count:3}. {note.mission.name} ========")
             comment_captured = False
-            line_is_expd_db_id = False
+            next_line_is_expd_db_id = False
             comment = ""
             for line in note.text.split("\n"):
                 if not comment_captured:
@@ -158,18 +158,32 @@ class NoteParser(BaseLoader):
                     note.mission.comment = comment.strip()
                     note.mission.save()
 
-                if line_is_expd_db_id:
-                    note.mission.expedition.expd_db_id = int(line)
+                if next_line_is_expd_db_id:
+                    try:
+                        note.mission.expedition.expd_db_id = int(line)
+                    except ValueError:
+                        self.logger.warning(
+                            f"Could not get expd_db_id for {note.mission.name}"
+                            f" from Notes file {note.mission.notes_filename}"
+                        )
                     note.mission.expedition.save()
-                    line_is_expd_db_id = False
+                    next_line_is_expd_db_id = False
                 if "ExpeditionID" in line:
-                    line_is_expd_db_id = True
                     self.logger.info(line)
+                    if ma := re.match("ExpeditionID\s+(\d+)", line):
+                        # ExpeditionID	6229
+                        note.mission.expedition.expd_db_id = int(ma.group(1))
+                        note.mission.expedition.save()
+                        next_line_is_expd_db_id = False
+                    else:
+                        next_line_is_expd_db_id = True
 
     def save_expd_name_from_comment(self):
         # It looks like the third line begins with an Expedition name
         for mission in Mission.objects.all():
             expd_name = ""
+            if not mission.comment:
+                continue
             for count, line in enumerate(mission.comment.split("\n")):
                 if count > 1:
                     expd_name += line + " "
@@ -235,7 +249,7 @@ class Scanner(BaseLoader):
         return False
 
     def notes_filename(self, sm_dir):
-        locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{sm_dir}.*Notes.txt'"
+        locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("Potential notes file: %s", txt_file)
@@ -245,7 +259,7 @@ class Scanner(BaseLoader):
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
             locate_cmd = (
-                f"locate -d /etc/smdb/SeafloorMapping.db -r '{parent_dir}.*Notes.txt'"
+                f"locate -d /etc/smdb/SeafloorMapping.db -r '{parent_dir}.*Notes.txt$'"
             )
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
                 self.logger.debug("Potential notes file: %s", txt_file)
@@ -253,7 +267,7 @@ class Scanner(BaseLoader):
         if not notes_file:
             # Try grandparent directory
             grandparent_dir = os.path.abspath(os.path.join(sm_dir, "../.."))
-            locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{grandparent_dir}.*Notes.txt'"
+            locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{grandparent_dir}.*Notes.txt$'"
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
                 self.logger.debug("Potential notes file: %s", txt_file)
                 notes_file = txt_file
@@ -374,9 +388,9 @@ def bootstrap_load():
 
             miss_count += 1
             sc.logger.info("%3d. Saved %s", miss_count, mission)
-            if sc.args.count:
-                if miss_count >= sc.args.count:
-                    sc.logger.info(f"Stopping after {sc.args.count} records")
+            if sc.args.limit:
+                if miss_count >= sc.args.limit:
+                    sc.logger.info(f"Stopping after {sc.args.limit} records")
                     return
 
 
