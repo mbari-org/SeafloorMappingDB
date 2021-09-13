@@ -144,7 +144,7 @@ class NoteParser(BaseLoader):
     def parse_texts(self):
         """Brute force parsing of Note text to grab information"""
         for note_count, note in enumerate(Note.objects.all()):
-            self.logger.info(f"======== {note_count:3}. {note.mission.name} ========")
+            self.logger.info(f"======== %d. %s ========", note_count, note.mission.name)
             comment_captured = False
             next_line_is_expd_db_id = False
             comment = ""
@@ -157,7 +157,9 @@ class NoteParser(BaseLoader):
                     comment = comment.replace(self.BOUNDARY_DASHES, "")
                     note.mission.comment = comment.strip()
                     if note.mission.comment == "":
-                        self.logger.warning(f"Empty comment for mission {note.mission}")
+                        self.logger.warning(
+                            "Empty comment for mission %s", note.mission
+                        )
                     note.mission.save()
 
                 if next_line_is_expd_db_id:
@@ -165,16 +167,17 @@ class NoteParser(BaseLoader):
                         note.mission.expedition.expd_db_id = int(line)
                     except ValueError:
                         self.logger.warning(
-                            f"Could not get expd_db_id for {note.mission.name}"
-                            f" from Notes file {note.mission.notes_filename}"
+                            "Could not get expd_db_id for %s from Notes file %s",
+                            note.mission.name,
+                            note.mission.notes_filename,
                         )
                     note.mission.expedition.save()
                     next_line_is_expd_db_id = False
                 if "ExpeditionID" in line:
                     self.logger.info(line)
-                    if ma := re.match("ExpeditionID\s+(\d+)", line):
+                    if expd_ma := re.match("ExpeditionID\s+(\d+)", line):
                         # ExpeditionID	6229
-                        note.mission.expedition.expd_db_id = int(ma.group(1))
+                        note.mission.expedition.expd_db_id = int(expd_ma.group(1))
                         note.mission.expedition.save()
                         next_line_is_expd_db_id = False
                     else:
@@ -184,7 +187,7 @@ class NoteParser(BaseLoader):
         # It looks like the third line begins with an Expedition name
         for mission in Mission.objects.all():
             expd_name = ""
-            self.logger.info(f"Saving expedition.name for mission: {mission}")
+            self.logger.info("Saving expedition.name for mission: %s", mission)
             for count, line in enumerate(mission.comment.split("\n")):
                 if count > 1:
                     expd_name += line + " "
@@ -192,10 +195,12 @@ class NoteParser(BaseLoader):
             try:
                 mission.expedition.save()
             except django.db.utils.DataError as e:
-                self.logger.warning(f"Error saving expedition.name: {expd_name}")
+                self.logger.warning("Error saving expedition.name: %s", expd_name)
 
 
 class Scanner(BaseLoader):
+    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
+
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
             X = "x"
@@ -217,7 +222,7 @@ class Scanner(BaseLoader):
             srid=4326,
         )
         for point in grid_bounds[0]:
-            self.logger.debug(f"Checking if point is on Earth: {point}")
+            self.logger.debug("Checking if point is on Earth: %s", point)
             lon, lat = point
             if lon < -180 or lon > 360:
                 raise ValueError(
@@ -253,13 +258,13 @@ class Scanner(BaseLoader):
         return False
 
     def notes_filename(self, sm_dir):
-        locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{sm_dir}.*Notes.txt$'"
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("Potential notes file: %s", txt_file)
             if "junk" in txt_file:
                 self.logger.debug(
-                    f"Skipping over Notes file found in junk dir: {txt_file}"
+                    "Skipping over Notes file found in junk dir: %s", txt_file
                 )
                 continue
             notes_file = txt_file
@@ -267,16 +272,16 @@ class Scanner(BaseLoader):
         if not notes_file:
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
-            locate_cmd = (
-                f"locate -d /etc/smdb/SeafloorMapping.db -r '{parent_dir}.*Notes.txt$'"
-            )
+            locate_cmd = f"locate -d {self.LOCATE_DB} -r '{parent_dir}.*Notes.txt$'"
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
                 self.logger.debug("Potential notes file: %s", txt_file)
                 notes_file = txt_file
         if not notes_file:
             # Try grandparent directory
             grandparent_dir = os.path.abspath(os.path.join(sm_dir, "../.."))
-            locate_cmd = f"locate -d /etc/smdb/SeafloorMapping.db -r '{grandparent_dir}.*Notes.txt$'"
+            locate_cmd = (
+                f"locate -d {self.LOCATE_DB} -r '{grandparent_dir}.*Notes.txt$'"
+            )
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
                 self.logger.debug("Potential notes file: %s", txt_file)
                 notes_file = txt_file
@@ -284,9 +289,7 @@ class Scanner(BaseLoader):
         return notes_file
 
     def thumbnail_filename(self, sm_dir):
-        locate_cmd = (
-            f"locate -d /etc/smdb/SeafloorMapping.db -r '{sm_dir}/ZTopoSlopeNav.jpg'"
-        )
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}/ZTopoSlopeNav.jpg'"
         thumbnail_file = None
         for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("Potential thumbnail file: %s", jpg_file)
@@ -349,7 +352,7 @@ def bootstrap_load():
                 expd.delete()
 
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
-    locate_cmd = "locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$'"
+    locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
     miss_count = 0
     for fp in subprocess.getoutput(locate_cmd).split("\n"):
         sc.logger.debug("file: %s", fp)
@@ -382,7 +385,7 @@ def bootstrap_load():
             expedition, _ = Expedition.objects.get_or_create(
                 expd_path_name=os.path.dirname(fp)
             )
-            mission, _ = Mission.objects.get_or_create(
+            mission, created = Mission.objects.get_or_create(
                 name=os.path.dirname(fp).replace("/mbari/SeafloorMapping/", ""),
                 expedition=expedition,
                 grid_bounds=grid_bounds,
@@ -395,10 +398,13 @@ def bootstrap_load():
                 sc.logger.warning(str(e))
 
             miss_count += 1
-            sc.logger.info("%3d. Saved %s", miss_count, mission)
+            if created:
+                sc.logger.info("%3d. Saved %s", miss_count, mission)
+            else:
+                sc.logger.info("%3d. Resaved %s", miss_count, mission)
             if sc.args.limit:
                 if miss_count >= sc.args.limit:
-                    sc.logger.info(f"Stopping after {sc.args.limit} records")
+                    sc.logger.info("Stopping after %s records", sc.args.limit)
                     return
 
 
