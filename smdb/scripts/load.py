@@ -156,6 +156,8 @@ class NoteParser(BaseLoader):
                     comment_captured = True
                     comment = comment.replace(self.BOUNDARY_DASHES, "")
                     note.mission.comment = comment.strip()
+                    if note.mission.comment == "":
+                        self.logger.warning(f"Empty comment for mission {note.mission}")
                     note.mission.save()
 
                 if next_line_is_expd_db_id:
@@ -182,13 +184,15 @@ class NoteParser(BaseLoader):
         # It looks like the third line begins with an Expedition name
         for mission in Mission.objects.all():
             expd_name = ""
-            if not mission.comment:
-                continue
+            self.logger.info(f"Saving expedition.name for mission: {mission}")
             for count, line in enumerate(mission.comment.split("\n")):
                 if count > 1:
                     expd_name += line + " "
             mission.expedition.name = expd_name
-            mission.expedition.save()
+            try:
+                mission.expedition.save()
+            except django.db.utils.DataError as e:
+                self.logger.warning(f"Error saving expedition.name: {expd_name}")
 
 
 class Scanner(BaseLoader):
@@ -253,6 +257,11 @@ class Scanner(BaseLoader):
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("Potential notes file: %s", txt_file)
+            if "junk" in txt_file:
+                self.logger.debug(
+                    f"Skipping over Notes file found in junk dir: {txt_file}"
+                )
+                continue
             notes_file = txt_file
 
         if not notes_file:
@@ -335,7 +344,7 @@ def bootstrap_load():
             "\nAre you sure you want to delete all existing Expeditions? [y/N] "
         )
         if ans.lower() == "y":
-            sc.logger.info("Deleting %s Expedition", Expedition.objects.all().count())
+            sc.logger.info("Deleting %s Expeditions", Expedition.objects.all().count())
             for expd in Expedition.objects.all():
                 expd.delete()
 
@@ -373,14 +382,13 @@ def bootstrap_load():
             expedition, _ = Expedition.objects.get_or_create(
                 expd_path_name=os.path.dirname(fp)
             )
-            mission = Mission(
+            mission, _ = Mission.objects.get_or_create(
                 name=os.path.dirname(fp).replace("/mbari/SeafloorMapping/", ""),
                 expedition=expedition,
                 grid_bounds=grid_bounds,
                 notes_filename=notes_filename,
                 thumbnail_filename=thumbnail_filename,
             )
-            mission.save()
             try:
                 sc.save_notes(mission)
             except FileExistsError as e:
