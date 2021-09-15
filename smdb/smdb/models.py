@@ -69,7 +69,7 @@ class Sensor(models.Model):
 
 class Expedition(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    name = models.CharField(max_length=128, null=True)
+    name = models.CharField(max_length=512, null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     investigator = models.ForeignKey(
@@ -93,7 +93,7 @@ class Expedition(models.Model):
         name = ""
         if self.name:
             name = self.name
-        return f"{self.expd_path_name} ({name})"
+        return f"{self.name} ({self.expd_path_name})"
 
 
 class Compilation(models.Model):
@@ -151,6 +151,7 @@ class Mission(models.Model):
     compilation = models.ForeignKey(
         Compilation, on_delete=models.CASCADE, blank=True, null=True
     )
+    # update_status: (0=up to date; 1=needs lookup; 2=not found)
     update_status = models.IntegerField(blank=True, null=True)
     sensors = models.ManyToManyField(Sensor, blank=True)
     data_archivals = models.ManyToManyField("DataArchival", blank=True)

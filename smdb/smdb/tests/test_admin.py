@@ -31,6 +31,21 @@ class TestAdmin:
         assert response.status_code == 302
         assert Missiontype.objects.filter(name="test").exists()
 
+    def test_mission_search(self, admin_client):
+        url = reverse("admin:smdb_mission_changelist")
+        response = admin_client.get(url, data={"q": "test"})
+        assert response.status_code == 200
+
+    def test_expedition_search(self, admin_client):
+        url = reverse("admin:smdb_expedition_changelist")
+        response = admin_client.get(url, data={"q": "test"})
+        assert response.status_code == 200
+
+    def test_note_search(self, admin_client):
+        url = reverse("admin:smdb_note_changelist")
+        response = admin_client.get(url, data={"q": "test"})
+        assert response.status_code == 200
+
     """
     def test_add_mission(self, admin_client):
         # Adding a Mission requires several more fields than just name

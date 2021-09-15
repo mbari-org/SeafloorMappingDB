@@ -801,7 +801,7 @@ def test_all_expeditions(snapshot):
     snapshot.assert_match(response)
     assert (
         repr(Expedition.objects.filter(name="Initial")[0])
-        == "<Expedition: /mbari/SeafloorMapping/2019/20190308m1 (Initial)>"
+        == "<Expedition: Initial (/mbari/SeafloorMapping/2019/20190308m1)>"
     )
 
 
