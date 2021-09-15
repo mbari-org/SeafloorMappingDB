@@ -19,10 +19,13 @@ os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV'
 django.setup()
 
 import logging  # noqa F402
-from glob import glob  # noqa F402
 from netCDF4 import Dataset  # noqa F402
+from django.conf import settings
 from django.contrib.gis.geos import Polygon  # noqa F402
+from PIL import Image
 from smdb.models import Expedition, Mission, Note  # noqa F402
+
+MBARI_DIR = "/mbari/SeafloorMapping/"
 
 instructions = f"""
 Can be run from smdb Docker environment thusly...
@@ -108,6 +111,11 @@ class BaseLoader:
             action="store",
             type=int,
             help="Stop loading after this number of records",
+        )
+        parser.add_argument(
+            "--noinput",
+            action="store_true",
+            help="Don't ask to confirm --clobber",
         )
 
         self.args = parser.parse_args()  # noqa
@@ -322,6 +330,24 @@ class Scanner(BaseLoader):
         )
         note.save()
 
+    def save_thumbnail(self, mission):
+        if not mission.thumbnail_filename:
+            raise FileExistsError(
+                f"No thumbnail image found for {mission.thumbnail_filename}"
+            )
+        scale_factor = 8
+        im = Image.open(mission.thumbnail_filename)
+        width, height = im.size
+        new_im = im.resize((width // scale_factor, height // scale_factor))
+
+        new_name = "_".join(
+            mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
+        )
+        im_path = os.path.join(settings.MEDIA_ROOT, "thumbnails", new_name)
+        new_im.save(im_path, "JPEG")
+        mission.thumbnail_image = os.path.join("thumbnails", new_name)
+        mission.save()
+
 
 def run(*args):
     # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
@@ -343,13 +369,16 @@ def bootstrap_load():
 
     if sc.args.clobber:
         # Will cascade delete Missions and Notes loaded by bootstrap load
-        ans = input(
-            "\nAre you sure you want to delete all existing Expeditions? [y/N] "
-        )
-        if ans.lower() == "y":
-            sc.logger.info("Deleting %s Expeditions", Expedition.objects.all().count())
-            for expd in Expedition.objects.all():
-                expd.delete()
+        if not sc.args.noinput:
+            ans = input(
+                "\nAre you sure you want to delete all existing Expeditions? [y/N] "
+            )
+            if ans.lower() == "y":
+                sc.logger.info(
+                    "Deleting %s Expeditions", Expedition.objects.all().count()
+                )
+                for expd in Expedition.objects.all():
+                    expd.delete()
 
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
@@ -386,7 +415,7 @@ def bootstrap_load():
                 expd_path_name=os.path.dirname(fp)
             )
             mission, created = Mission.objects.get_or_create(
-                name=os.path.dirname(fp).replace("/mbari/SeafloorMapping/", ""),
+                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
                 expedition=expedition,
                 grid_bounds=grid_bounds,
                 notes_filename=notes_filename,
@@ -394,6 +423,7 @@ def bootstrap_load():
             )
             try:
                 sc.save_notes(mission)
+                sc.save_thumbnail(mission)
             except FileExistsError as e:
                 sc.logger.warning(str(e))
 
