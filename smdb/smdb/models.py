@@ -145,6 +145,7 @@ class Mission(models.Model):
     region_name = models.CharField(max_length=128, db_index=True, blank=True)
     site_detail = models.CharField(max_length=128, db_index=True, blank=True)
     thumbnail_filename = models.CharField(max_length=128, db_index=True, blank=True)
+    thumbnail_image = models.ImageField(upload_to="thumbnails", blank=True)
     kml_filename = models.CharField(
         max_length=128, db_index=True, blank=True, null=True
     )
