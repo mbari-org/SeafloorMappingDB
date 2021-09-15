@@ -340,7 +340,10 @@ class Scanner(BaseLoader):
                 self.logger.warning(
                     "Cannot read Notes file: %s", mission.notes_filename
                 )
-                self.logger.error(str(e))
+                raise FileExistsError(f"No Notes found for {mission}")
+
+        if not note_text:
+            raise FileExistsError(f"No Notes found for {mission}")
 
         note = Note(
             mission=mission,
