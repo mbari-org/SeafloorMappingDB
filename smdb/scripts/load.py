@@ -22,7 +22,7 @@ import logging  # noqa F402
 from netCDF4 import Dataset  # noqa F402
 from django.conf import settings
 from django.contrib.gis.geos import Polygon  # noqa F402
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from smdb.models import Expedition, Mission, Note  # noqa F402
 
 MBARI_DIR = "/mbari/SeafloorMapping/"
@@ -117,6 +117,11 @@ class BaseLoader:
             action="store_true",
             help="Don't ask to confirm --clobber",
         )
+        parser.add_argument(
+            "--skipuntil",
+            action="store_true",
+            help="Start processing at mission identified by --regex",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -182,7 +187,7 @@ class NoteParser(BaseLoader):
                     note.mission.expedition.save()
                     next_line_is_expd_db_id = False
                 if "ExpeditionID" in line:
-                    self.logger.info(line)
+                    self.logger.debug(line)
                     if expd_ma := re.match("ExpeditionID\s+(\d+)", line):
                         # ExpeditionID	6229
                         note.mission.expedition.expd_db_id = int(expd_ma.group(1))
@@ -196,13 +201,23 @@ class NoteParser(BaseLoader):
         for mission in Mission.objects.all():
             expd_name = ""
             self.logger.info("Saving expedition.name for mission: %s", mission)
+            if not mission.comment:
+                self.logger.warning("Empty comment for mission %s", mission)
+                try:
+                    if hasattr(Note.objects.get(mission=mission), "text"):
+                        self.logger.debug(
+                            "note.text = \n%s", Note.objects.get(mission=mission).text
+                        )
+                except Note.DoesNotExist:
+                    self.logger.debug("No Note saved for mission %s", mission)
+                continue
             for count, line in enumerate(mission.comment.split("\n")):
                 if count > 1:
                     expd_name += line + " "
             mission.expedition.name = expd_name
             try:
                 mission.expedition.save()
-            except django.db.utils.DataError as e:
+            except django.db.utils.DataError:
                 self.logger.warning("Error saving expedition.name: %s", expd_name)
 
 
@@ -269,21 +284,23 @@ class Scanner(BaseLoader):
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("Potential notes file: %s", txt_file)
-            if "junk" in txt_file:
-                self.logger.debug(
-                    "Skipping over Notes file found in junk dir: %s", txt_file
-                )
-                continue
-            notes_file = txt_file
+            if txt_file:
+                self.logger.debug("Potential notes file: %s", txt_file)
+                if "junk" in txt_file:
+                    self.logger.debug(
+                        "Skipping over Notes file found in junk dir: %s", txt_file
+                    )
+                    continue
+                notes_file = txt_file
 
         if not notes_file:
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
             locate_cmd = f"locate -d {self.LOCATE_DB} -r '{parent_dir}.*Notes.txt$'"
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-                self.logger.debug("Potential notes file: %s", txt_file)
-                notes_file = txt_file
+                if txt_file:
+                    self.logger.debug("Potential notes file: %s", txt_file)
+                    notes_file = txt_file
         if not notes_file:
             # Try grandparent directory
             grandparent_dir = os.path.abspath(os.path.join(sm_dir, "../.."))
@@ -291,8 +308,9 @@ class Scanner(BaseLoader):
                 f"locate -d {self.LOCATE_DB} -r '{grandparent_dir}.*Notes.txt$'"
             )
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-                self.logger.debug("Potential notes file: %s", txt_file)
-                notes_file = txt_file
+                if txt_file:
+                    self.logger.debug("Potential notes file: %s", txt_file)
+                    notes_file = txt_file
 
         return notes_file
 
@@ -307,11 +325,11 @@ class Scanner(BaseLoader):
 
     def save_notes(self, mission):
         if not mission.notes_filename:
-            raise FileExistsError(f"No Notes found for {mission.mission_name}")
+            raise FileExistsError(f"No Notes found for {mission}")
         note_text = ""
         with open(mission.notes_filename) as fh:
             try:
-                for line in fh.readlines():
+                for line_count, line in enumerate(fh.readlines()):
                     if "password" in line.lower():
                         # Blank out actual passwords
                         line = (
@@ -329,16 +347,21 @@ class Scanner(BaseLoader):
             text=note_text,
         )
         note.save()
+        self.logger.info(f"Saved %d lines of note text", line_count)
 
     def save_thumbnail(self, mission):
         if not mission.thumbnail_filename:
-            raise FileExistsError(
-                f"No thumbnail image found for {mission.thumbnail_filename}"
-            )
+            raise FileExistsError(f"No thumbnail image found for {mission}")
         scale_factor = 8
-        im = Image.open(mission.thumbnail_filename)
+        try:
+            im = Image.open(mission.thumbnail_filename)
+        except UnidentifiedImageError as e:
+            self.logger.warning(f"{e}")
+            return
         width, height = im.size
-        new_im = im.resize((width // scale_factor, height // scale_factor))
+        nx = width // scale_factor
+        ny = height // scale_factor
+        new_im = im.resize((nx, ny))
 
         new_name = "_".join(
             mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
@@ -347,6 +370,7 @@ class Scanner(BaseLoader):
         new_im.save(im_path, "JPEG")
         mission.thumbnail_image = os.path.join("thumbnails", new_name)
         mission.save()
+        self.logger.info(f"Saved thumbnail image of size %dx%s", nx, ny)
 
 
 def run(*args):
@@ -382,14 +406,21 @@ def bootstrap_load():
 
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
+    start_processing = True
+    if sc.args.skipuntil and sc.args.regex:
+        start_processing = False
     miss_count = 0
-    for fp in subprocess.getoutput(locate_cmd).split("\n"):
-        sc.logger.debug("file: %s", fp)
+    for count, fp in enumerate(subprocess.getoutput(locate_cmd).split("\n")):
+        sc.logger.debug("%3d. file: %s", count, fp)
         if sc.args.regex:
-            if not re.search(re.compile(sc.args.regex), fp):
-                sc.logger.debug("%s does not match --regex '%s'", fp, sc.args.regex)
+            if sc.args.skipuntil and re.search(re.compile(sc.args.regex), fp):
+                start_processing = True
+            if not sc.args.skipuntil and not re.search(re.compile(sc.args.regex), fp):
+                sc.logger.debug("Does not match --regex '%s'", sc.args.regex)
                 continue
-
+        if not start_processing:
+            sc.logger.debug("Waiting for %s to start processing", sc.args.regex)
+            continue
         if fp in sc.exclude_files:
             sc.logger.debug("Excluding file: %s", fp)
         else:
@@ -398,6 +429,8 @@ def bootstrap_load():
                 sc.logger.debug(ds)
             except PermissionError as e:
                 sc.logger.warning(str(e))
+            except FileNotFoundError:
+                raise FileNotFoundError(f"Could not open {fp}\nIs {MBARI_DIR} mounted?")
             if not sc.is_geographic(ds):
                 sc.logger.warning("%s is not Projection: Geographic", fp)
                 continue
