@@ -1,8 +1,9 @@
-version: '3'
+version: "3"
 
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
+  local_media_files: {}
 
 services:
   django:
@@ -16,6 +17,7 @@ services:
       - mailhog
     volumes:
       - .:/app:z
+      - local_media_files:/media:z
     environment:
       - USE_DOCKER=yes
       - IPYTHONDIR=/app/.ipython
@@ -30,7 +32,7 @@ services:
       - "8000:8000"
       - "8001:8001"
     command: /start
-     
+
   postgres:
     build:
       context: .

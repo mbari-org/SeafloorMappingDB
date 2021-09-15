@@ -1,9 +1,10 @@
-version: '3'
+version: "3"
 
 volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
   production_traefik: {}
+  local_media_files: {}
 
 services:
   django:
@@ -20,6 +21,7 @@ services:
     command: /start
     volumes:
       - /opt/docker_smdb_vol:/etc/smdb:z
+      - local_media_files:/media:z
 
   postgres:
     build:
