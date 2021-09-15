@@ -22,9 +22,20 @@ class MissionOverView(TemplateView):
         else:
             missions = Mission.objects.all()
 
-        self.logger.info("Serializing %s missions to geojson...", missions.count())
+        self.logger.info(
+            "Serializing %s missions to geojson...",
+            missions.count(),
+        )
         context["missions"] = json.loads(
-            serialize("geojson", missions, fields=("grid_bounds", "name"))
+            serialize(
+                "geojson",
+                missions,
+                fields=(
+                    "grid_bounds",
+                    "name",
+                    "thumbnail_image",
+                ),
+            )
         )
         self.logger.info("# of Queries: %s", len(connection.queries))
         self.logger.info(

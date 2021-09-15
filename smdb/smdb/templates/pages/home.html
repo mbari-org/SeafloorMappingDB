@@ -21,8 +21,9 @@
 {% block content %}
   <h2>{{ search_string|bleach }}</h2>
   {{ missions|json_script:"missions-data" }}
+  {{ MEDIA_URL|json_script:"MEDIA-URL" }}
   <div id="map"></div>
-  <script src="{% static 'js/map.js' %}"></script
+  <script src="{% static 'js/map.js' %}"></script>
 {% endblock %}
 
 <!--
