@@ -50,6 +50,16 @@ services:
     ports:
       - "8025:8025"
 
+  mb-system:
+    image: mb-system
+    container_name: mb-system
+    volumes:
+      # Edit source path to use directories from *your* host
+      # Copy your public key to your ~/.ssh/authorized_keys file
+      - /Users/mccann/.ssh:/root/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+    command: /usr/sbin/sshd -D
+
   node:
     build:
       context: ./smdb
