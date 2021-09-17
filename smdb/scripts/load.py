@@ -20,6 +20,8 @@ django.setup()
 
 import logging  # noqa F402
 from netCDF4 import Dataset  # noqa F402
+from datetime import datetime
+from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.gis.geos import Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError
@@ -105,6 +107,11 @@ class BaseLoader:
             "--notes",
             action="store_true",
             help="Process the notes loaded by a bootstrap load - do not do bootstrap load",
+        )
+        parser.add_argument(
+            "--mb_system",
+            action="store_true",
+            help="Run the loading steps that require MB-System commands - do not do other load steps",
         )
         parser.add_argument(
             "--limit",
@@ -219,6 +226,55 @@ class NoteParser(BaseLoader):
                 mission.expedition.save()
             except django.db.utils.DataError:
                 self.logger.warning("Error saving expedition.name: %s", expd_name)
+
+
+class MB_System(BaseLoader):
+    SSH_CMD = "ssh root@mb-system"
+
+    def sonar_start_time(self, sonar_file: str) -> datetime:
+        cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
+        self.logger.debug("Executing %s", cmd)
+        start_line = False
+        for line in subprocess.getoutput(cmd).split("\n"):
+            if start_line:
+                # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
+                s_ma = re.match(
+                    "Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)", line
+                )
+                start_date = parse(s_ma.group(1))
+                break
+            if line == "Start of Data:":
+                start_line = True
+        return start_date
+
+    def first_sonar_time(self, path: str, datalist: str) -> str:
+        with open(datalist) as fh:
+            for line in fh.readlines():
+                item = line.split()[0].strip()
+                if item.endswith("mb-1"):
+                    self.first_sonar_time(path, os.path.join(path, item))
+                elif re.match(".+\.mb\d\d", item):
+                    start_time = self.sonar_start_time(
+                        os.path.join(path, item),
+                    )
+        return start_time
+
+    def update_mission_times(self):
+        for mission in Mission.objects.all():
+            # Start with datalistp.mb-1 and recurse down
+            # to find first and last sonar file and corresponding
+            # first and last datetimes for the mission
+            path = mission.expedition.expd_path_name
+            datalist = os.path.join(path, "datalistp.mb-1")
+            mission.start_date = self.first_sonar_time(path, datalist)
+            mission.end_date = self.last_sonar_time(path, datalist)
+
+            self.logger.info(
+                "uuid: %s, expd.uuid: %s, path: %s",
+                mission.uuid,
+                mission.expedition.uuid,
+                mission.expedition.expd_path_name,
+            )
 
 
 class Scanner(BaseLoader):
@@ -385,6 +441,8 @@ def run(*args):
         bootstrap_load()
     elif bl.args.notes:
         notes_load()
+    elif bl.args.mb_system:
+        mb_system_load()
     else:
         bootstrap_load()
         notes_load()
@@ -479,6 +537,12 @@ def notes_load():
     np.process_command_line()
     np.parse_texts()
     np.save_expd_name_from_comment()
+
+
+def mb_system_load():
+    mbs = MB_System()
+    mbs.process_command_line()
+    mbs.update_mission_times()
 
 
 if __name__ == "__main__":
