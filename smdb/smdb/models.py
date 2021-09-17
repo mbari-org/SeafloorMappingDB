@@ -140,12 +140,14 @@ class Mission(models.Model):
     repeat_survey = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     notes_filename = models.CharField(
-        max_length=128, db_index=True, blank=True, null=True
+        max_length=256, db_index=True, blank=True, null=True
     )
     region_name = models.CharField(max_length=128, db_index=True, blank=True)
     site_detail = models.CharField(max_length=128, db_index=True, blank=True)
-    thumbnail_filename = models.CharField(max_length=128, db_index=True, blank=True)
-    thumbnail_image = models.ImageField(upload_to="thumbnails", blank=True)
+    thumbnail_filename = models.CharField(max_length=256, db_index=True, blank=True)
+    thumbnail_image = models.ImageField(
+        max_length=256, upload_to="thumbnails", blank=True
+    )
     kml_filename = models.CharField(
         max_length=128, db_index=True, blank=True, null=True
     )
