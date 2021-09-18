@@ -42,7 +42,7 @@
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
       //"args": ["--notes", "-v 2", "--limit", "1"],
       //"args": ["--notes", "-v", "1"],
-      "args": ["--mb_system", "-v", "2", "--limit", "1"],
+      "args": ["--mbsystem", "-v", "2", "--limit", "1"],
       "justMyCode": false
     }
   ]
