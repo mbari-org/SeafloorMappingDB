@@ -61,20 +61,12 @@ services:
     ports:
       - "8025:8025"
 
-  node:
-    build:
-      context: .
-      dockerfile: ./compose/local/node/Dockerfile
-    image: smdb_local_node
-    container_name: node
-    depends_on:
-      - django
+  mb-system:
+    image: mbari/mbsystem:latest
+    container_name: mb-system
     volumes:
-      - .:/app:z
-      # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
-      - /app/node_modules
-    command: npm run dev
-    ports:
-      - "3000:3000"
-      # Expose browsersync UI: https://www.browsersync.io/docs/options/#option-ui
-      - "3001:3001"
+      # Edit source path to use directories from *your* host
+      # Copy your public key to your ~/.ssh/authorized_keys file
+      - /Users/mccann/.ssh:/root/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+    command: /usr/sbin/sshd -D

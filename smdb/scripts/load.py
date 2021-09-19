@@ -20,10 +20,13 @@ django.setup()
 
 import logging  # noqa F402
 from netCDF4 import Dataset  # noqa F402
+from datetime import datetime
+from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.gis.geos import Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError
 from smdb.models import Expedition, Mission, Note  # noqa F402
+from subprocess import check_output, TimeoutExpired  # noqa F402
 
 MBARI_DIR = "/mbari/SeafloorMapping/"
 
@@ -105,6 +108,11 @@ class BaseLoader:
             "--notes",
             action="store_true",
             help="Process the notes loaded by a bootstrap load - do not do bootstrap load",
+        )
+        parser.add_argument(
+            "--mbsystem",
+            action="store_true",
+            help="Run the loading steps that require MB-System commands - do not do other load steps",
         )
         parser.add_argument(
             "--limit",
@@ -219,6 +227,103 @@ class NoteParser(BaseLoader):
                 mission.expedition.save()
             except django.db.utils.DataError:
                 self.logger.warning("Error saving expedition.name: %s", expd_name)
+
+
+class MBSystem(BaseLoader):
+    SSH_CMD = "ssh root@mb-system"
+    TIMEOUT = 60
+
+    def sonar_start_time(self, sonar_file: str) -> datetime:
+        cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
+        start_line = False
+
+        self.logger.debug("Executing %s", cmd)
+        try:
+            lines = check_output(cmd.split(), timeout=self.TIMEOUT).decode().split("\n")
+        except TimeoutExpired:
+            self.logger.warning("Timeout for: %s", cmd)
+            raise TimeoutExpired(cmd, self.TIMEOUT)
+        for line in lines:
+            if start_line:
+                # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
+                ma = re.match(
+                    "Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)",
+                    line,
+                )
+                return parse(ma.group(1))
+            if line == "Start of Data:":
+                start_line = True
+        raise ValueError(f"Could not find 'Start of Data' from: {cmd}")
+
+    def sonar_end_time(self, sonar_file: str) -> datetime:
+        cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
+        end_line = False
+        self.logger.debug("Executing %s", cmd)
+        try:
+            lines = check_output(cmd.split(), timeout=self.TIMEOUT).decode().split("\n")
+        except TimeoutExpired:
+            self.logger.warning("Timeout for: %s", cmd)
+            raise TimeoutExpired(cmd, self.TIMEOUT)
+        for line in lines:
+            if end_line:
+                # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
+                ma = re.match(
+                    "Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)", line
+                )
+                return parse(ma.group(1))
+            if line == "End of Data:":
+                end_line = True
+        raise ValueError(f"Could not find 'End of Data' from: {cmd}")
+
+    def first_sonar_time(self, path: str, datalist: str) -> datetime:
+        with open(datalist) as fh:
+            for line in fh.readlines():
+                if line.startswith("#"):
+                    continue
+                item = line.split()[0].strip()
+                if item.endswith("mb-1"):
+                    return self.first_sonar_time(path, os.path.join(path, item))
+                elif re.match(".+\.mb\d\d", item):
+                    return self.sonar_start_time(os.path.join(path, item))
+
+    def last_sonar_time(self, path: str, datalist: str) -> datetime:
+        last_sonar_item = None
+        with open(datalist) as fh:
+            for line in fh.readlines():
+                if line.startswith("#"):
+                    continue
+                item = line.split()[0].strip()
+                if item.endswith("mb-1") or re.match(".+\.mb\d\d", item):
+                    last_sonar_item = item
+            if not last_sonar_item:
+                raise ValueError(
+                    "Did not find last_sonar_item for datalist %s",
+                    datalist,
+                )
+            if last_sonar_item.endswith("mb-1"):
+                return self.last_sonar_time(
+                    path,
+                    os.path.join(path, last_sonar_item),
+                )
+            elif re.match(".+\.mb\d\d", last_sonar_item):
+                return self.sonar_end_time(os.path.join(path, item))
+
+    def update_mission_times(self):
+        for miss_count, mission in enumerate(Mission.objects.all(), start=1):
+            # Start with datalistp.mb-1 and recurse down
+            # to find first and last sonar file and corresponding
+            # first and last datetimes for the mission
+            self.logger.info(f"======== %d. %s ========", miss_count, mission)
+            path = mission.expedition.expd_path_name
+            datalist = os.path.join(path, "datalistp.mb-1")
+            mission.start_date = self.first_sonar_time(path, datalist)
+            mission.end_date = self.last_sonar_time(path, datalist)
+            mission.save()
+            self.logger.info(
+                "Saved start & end: %s to %s", mission.start_date, mission.end_date
+            )
+            if miss_count >= self.args.limit:
+                break
 
 
 class Scanner(BaseLoader):
@@ -340,7 +445,10 @@ class Scanner(BaseLoader):
                 self.logger.warning(
                     "Cannot read Notes file: %s", mission.notes_filename
                 )
-                self.logger.error(str(e))
+                raise FileExistsError(f"No Notes found for {mission}")
+
+        if not note_text:
+            raise FileExistsError(f"No Notes found for {mission}")
 
         note = Note(
             mission=mission,
@@ -382,6 +490,8 @@ def run(*args):
         bootstrap_load()
     elif bl.args.notes:
         notes_load()
+    elif bl.args.mbsystem:
+        mbsystem_load()
     else:
         bootstrap_load()
         notes_load()
@@ -476,6 +586,12 @@ def notes_load():
     np.process_command_line()
     np.parse_texts()
     np.save_expd_name_from_comment()
+
+
+def mbsystem_load():
+    mbs = MBSystem()
+    mbs.process_command_line()
+    mbs.update_mission_times()
 
 
 if __name__ == "__main__":
