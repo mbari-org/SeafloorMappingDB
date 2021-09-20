@@ -119,6 +119,7 @@ export SMDB_HOME=$(pwd)
 ```
 sudo -u docker_user -i
 cd /opt/SeafloorMappingDB
+export DOCKER_USER_ID=$(id -u)
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
 docker-compose up -d
