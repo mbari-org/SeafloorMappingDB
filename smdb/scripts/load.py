@@ -21,7 +21,7 @@ django.setup()
 import logging  # noqa F402
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 from django.conf import settings
 from django.contrib.gis.geos import Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError
@@ -230,7 +230,7 @@ class NoteParser(BaseLoader):
 
 
 class MBSystem(BaseLoader):
-    SSH_CMD = "ssh root@mb-system"
+    SSH_CMD = f"ssh {os.environ.get('LOGNAME')}@mb-system"
     TIMEOUT = 60
 
     def sonar_start_time(self, sonar_file: str) -> datetime:
@@ -309,21 +309,26 @@ class MBSystem(BaseLoader):
                 return self.sonar_end_time(os.path.join(path, item))
 
     def update_mission_times(self):
-        for miss_count, mission in enumerate(Mission.objects.all(), start=1):
-            # Start with datalistp.mb-1 and recurse down
-            # to find first and last sonar file and corresponding
-            # first and last datetimes for the mission
-            self.logger.info(f"======== %d. %s ========", miss_count, mission)
-            path = mission.expedition.expd_path_name
-            datalist = os.path.join(path, "datalistp.mb-1")
-            mission.start_date = self.first_sonar_time(path, datalist)
-            mission.end_date = self.last_sonar_time(path, datalist)
-            mission.save()
-            self.logger.info(
-                "Saved start & end: %s to %s", mission.start_date, mission.end_date
-            )
-            if miss_count >= self.args.limit:
-                break
+        try:
+            for miss_count, mission in enumerate(
+                Mission.objects.all().order_by("name"), start=1
+            ):
+                # Start with datalistp.mb-1 and recurse down
+                # to find first and last sonar file and corresponding
+                # first and last datetimes for the mission
+                self.logger.info(f"======== %d. %s ========", miss_count, mission)
+                path = mission.expedition.expd_path_name
+                datalist = os.path.join(path, "datalistp.mb-1")
+                mission.start_date = self.first_sonar_time(path, datalist)
+                mission.end_date = self.last_sonar_time(path, datalist)
+                mission.save()
+                self.logger.info(
+                    "Saved start & end: %s to %s", mission.start_date, mission.end_date
+                )
+                if miss_count >= self.args.limit:
+                    break
+        except ParserError as e:
+            self.logger.warning(e)
 
 
 class Scanner(BaseLoader):

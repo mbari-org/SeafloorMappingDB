@@ -1,5 +1,6 @@
 FROM node:10-stretch-slim as client-builder
 
+ARG DOCKER_USER_ID
 ARG APP_HOME=/app
 WORKDIR ${APP_HOME}
 
@@ -11,9 +12,12 @@ RUN npm run build
 # Base the build off of recent stable GDAL image
 FROM osgeo/gdal:ubuntu-small-3.3.0 as python
 
+ARG DOCKER_USER_ID
+
 # Python build stage
 FROM python as python-build-stage
 
+ARG DOCKER_USER_ID
 ARG BUILD_ENVIRONMENT=production
 
 # Install apt packages
@@ -37,6 +41,7 @@ RUN pip wheel --wheel-dir /usr/src/app/wheels  \
 # Python 'run' stage
 FROM python as python-run-stage
 
+ARG DOCKER_USER_ID
 ARG BUILD_ENVIRONMENT=production
 ARG APP_HOME=/app
 
@@ -48,6 +53,8 @@ WORKDIR ${APP_HOME}
 
 RUN addgroup --system django \
     && adduser --system --ingroup django django
+
+RUN useradd docker_user -u $DOCKER_USER_ID -g 0
 
 
 # Install required system dependencies
@@ -62,6 +69,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   mlocate \
   postgresql-client \
   python3-pip \
+  ssh-client \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
