@@ -42,13 +42,7 @@
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
       //"args": ["--notes", "-v 2", "--limit", "1"],
       //"args": ["--notes", "-v", "1"],
-      "args": [
-        "--mbsystem",
-        "-v",
-        "2",
-        "--skipuntil",
-        "2020/20201014d1/multibeam"
-      ],
+      "args": ["--mbsystem", "-v", "2", "--skipuntil", "2021/20210326m1"],
       "justMyCode": false
     }
   ]
