@@ -37,12 +37,20 @@
       //"args": ["-v", "2", "--regex", "mbsystem/Data/2019/20191106m3/ZTopo.grd$"],
       //"args": ["-v", "2", "--regex", "MappingAUVOps2015/20150312m2/ZTopo.grd$"],
       //"args": ["-v", "1", "--regex", "MappingAUVOps2013/TN293_Moyer13/sentry171/sentry171-raw/ZTopo.grd$", "--limit", "1"],
-      //"args": ["-v", "1", "--bootstrap", "--skipuntil", "--regex", "OceanImaging2013/monterey/ZTopo.grd$"],
+      //"args": ["-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "OceanImaging2013/monterey/ZTopo.grd$"],
       //"args": ["--bootstrap", "-v 2", "--clobber", "--limit", "5"],
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
       //"args": ["--notes", "-v 2", "--limit", "1"],
       //"args": ["--notes", "-v", "1"],
-      "args": ["--mbsystem", "-v", "2", "--limit", "1"],
+      "args": [
+        "--mbsystem",
+        "-v",
+        "2",
+        "--skipuntil",
+        "2020/20201013d1/multibeam",
+        "--limit",
+        "100"
+      ],
       "justMyCode": false
     }
   ]
