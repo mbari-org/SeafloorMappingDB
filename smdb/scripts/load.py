@@ -6,27 +6,28 @@ Scan SeafloorMapping share for data to load into smdb
 import os
 import sys
 
+import django
+
 parentDir = os.path.join(os.path.dirname(__file__), "../")
 sys.path.insert(0, parentDir)
-
-import argparse  # noqa F402
-import django  # noqa F402
-import math  # noqa F402
-import re  # noqa F402
-import subprocess  # noqa F402
-
 os.environ["DJANGO_SETTINGS_MODULE"] = f"config.settings.{os.environ['BUILD_ENV']}"
 django.setup()
 
+import argparse  # noqa F402
+import getpass  # noqa F402
 import logging  # noqa F402
+import math  # noqa F402
+import re  # noqa F402
+import subprocess  # noqa F402
 from netCDF4 import Dataset  # noqa F402
-from datetime import datetime
-from dateutil.parser import ParserError, parse
-from django.conf import settings
+from datetime import datetime  # noqa F402
+from dateutil.parser import ParserError, parse  # noqa F402
+from django.conf import settings  # noqa F402
 from django.contrib.gis.geos import Polygon  # noqa F402
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Note  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
+from time import time  # noqa F402
 
 MBARI_DIR = "/mbari/SeafloorMapping/"
 
@@ -126,9 +127,14 @@ class BaseLoader:
             help="Don't ask to confirm --clobber",
         )
         parser.add_argument(
-            "--skipuntil",
+            "--skipuntil_regex",
             action="store_true",
-            help="Start processing at mission identified by --regex",
+            help="Start bootstrap processing at --regex  provided",
+        )
+        parser.add_argument(
+            "--skipuntil",
+            action="store",
+            help="Start processing at mission name provided",
         )
 
         self.args = parser.parse_args()  # noqa
@@ -196,7 +202,7 @@ class NoteParser(BaseLoader):
                     next_line_is_expd_db_id = False
                 if "ExpeditionID" in line:
                     self.logger.debug(line)
-                    if expd_ma := re.match("ExpeditionID\s+(\d+)", line):
+                    if expd_ma := re.match(r"ExpeditionID\s+(\d+)", line):
                         # ExpeditionID	6229
                         note.mission.expedition.expd_db_id = int(expd_ma.group(1))
                         note.mission.expedition.save()
@@ -230,8 +236,8 @@ class NoteParser(BaseLoader):
 
 
 class MBSystem(BaseLoader):
-    SSH_CMD = f"ssh {os.environ.get('LOGNAME')}@mb-system"
-    TIMEOUT = 60
+    SSH_CMD = f"ssh {getpass.getuser()}@mb-system"
+    TIMEOUT = 360  # Max seconds to retreive file from tertiary storage
 
     def sonar_start_time(self, sonar_file: str) -> datetime:
         cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
@@ -239,6 +245,7 @@ class MBSystem(BaseLoader):
 
         self.logger.debug("Executing %s", cmd)
         try:
+            start_esec = time()
             lines = check_output(cmd.split(), timeout=self.TIMEOUT).decode().split("\n")
         except TimeoutExpired:
             self.logger.warning("Timeout for: %s", cmd)
@@ -247,8 +254,11 @@ class MBSystem(BaseLoader):
             if start_line:
                 # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
                 ma = re.match(
-                    "Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)",
+                    r"Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)",
                     line,
+                )
+                self.logger.debug(
+                    "%4.2f seconds to scan %s", time() - start_esec, sonar_file
                 )
                 return parse(ma.group(1))
             if line == "Start of Data:":
@@ -260,6 +270,7 @@ class MBSystem(BaseLoader):
         end_line = False
         self.logger.debug("Executing %s", cmd)
         try:
+            start_esec = time()
             lines = check_output(cmd.split(), timeout=self.TIMEOUT).decode().split("\n")
         except TimeoutExpired:
             self.logger.warning("Timeout for: %s", cmd)
@@ -268,7 +279,10 @@ class MBSystem(BaseLoader):
             if end_line:
                 # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
                 ma = re.match(
-                    "Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)", line
+                    r"Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)", line
+                )
+                self.logger.debug(
+                    "%4.2f seconds to scan %s", time() - start_esec, sonar_file
                 )
                 return parse(ma.group(1))
             if line == "End of Data:":
@@ -283,7 +297,7 @@ class MBSystem(BaseLoader):
                 item = line.split()[0].strip()
                 if item.endswith("mb-1"):
                     return self.first_sonar_time(path, os.path.join(path, item))
-                elif re.match(".+\.mb\d\d", item):
+                elif re.match(r".+\.mb\d\d", item):
                     return self.sonar_start_time(os.path.join(path, item))
 
     def last_sonar_time(self, path: str, datalist: str) -> datetime:
@@ -293,7 +307,7 @@ class MBSystem(BaseLoader):
                 if line.startswith("#"):
                     continue
                 item = line.split()[0].strip()
-                if item.endswith("mb-1") or re.match(".+\.mb\d\d", item):
+                if item.endswith("mb-1") or re.match(r".+\.mb\d\d", item):
                     last_sonar_item = item
             if not last_sonar_item:
                 raise ValueError(
@@ -305,30 +319,42 @@ class MBSystem(BaseLoader):
                     path,
                     os.path.join(path, last_sonar_item),
                 )
-            elif re.match(".+\.mb\d\d", last_sonar_item):
+            elif re.match(r".+\.mb\d\d", last_sonar_item):
                 return self.sonar_end_time(os.path.join(path, item))
 
-    def update_mission_times(self):
-        try:
-            for miss_count, mission in enumerate(
-                Mission.objects.all().order_by("name"), start=1
-            ):
-                # Start with datalistp.mb-1 and recurse down
-                # to find first and last sonar file and corresponding
-                # first and last datetimes for the mission
+    def process_missions(self):
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
+        for miss_count, mission in enumerate(
+            Mission.objects.all().order_by("name"), start=1
+        ):
+            if self.args.skipuntil:
+                if mission.name == self.args.skipuntil:
+                    start_processing = True
+            if not start_processing:
+                continue
+            try:
                 self.logger.info(f"======== %d. %s ========", miss_count, mission)
-                path = mission.expedition.expd_path_name
-                datalist = os.path.join(path, "datalistp.mb-1")
-                mission.start_date = self.first_sonar_time(path, datalist)
-                mission.end_date = self.last_sonar_time(path, datalist)
-                mission.save()
-                self.logger.info(
-                    "Saved start & end: %s to %s", mission.start_date, mission.end_date
-                )
+                self.update_mission_times(mission)
+            except (ParserError, FileNotFoundError) as e:
+                self.logger.warning(e)
+            if self.args.limit:
                 if miss_count >= self.args.limit:
                     break
-        except ParserError as e:
-            self.logger.warning(e)
+
+    def update_mission_times(self, mission: Mission):
+        # Start with datalistp.mb-1 and recurse down
+        # to find first and last sonar file and corresponding
+        # first and last datetimes for the mission
+        path = mission.expedition.expd_path_name
+        datalist = os.path.join(path, "datalistp.mb-1")
+        mission.start_date = self.first_sonar_time(path, datalist)
+        mission.end_date = self.last_sonar_time(path, datalist)
+        mission.save()
+        self.logger.info(
+            "Saved start & end: %s to %s", mission.start_date, mission.end_date
+        )
 
 
 class Scanner(BaseLoader):
@@ -500,6 +526,7 @@ def run(*args):
     else:
         bootstrap_load()
         notes_load()
+        mbsystem_load()
 
 
 def bootstrap_load():
@@ -522,15 +549,17 @@ def bootstrap_load():
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
     start_processing = True
-    if sc.args.skipuntil and sc.args.regex:
+    if sc.args.skipuntil_regex:
         start_processing = False
     miss_count = 0
     for count, fp in enumerate(subprocess.getoutput(locate_cmd).split("\n")):
         sc.logger.debug("%3d. file: %s", count, fp)
         if sc.args.regex:
-            if sc.args.skipuntil and re.search(re.compile(sc.args.regex), fp):
+            if sc.args.skipuntil_regex and re.search(re.compile(sc.args.regex), fp):
                 start_processing = True
-            if not sc.args.skipuntil and not re.search(re.compile(sc.args.regex), fp):
+            if not sc.args.skipuntil_regex and not re.search(
+                re.compile(sc.args.regex), fp
+            ):
                 sc.logger.debug("Does not match --regex '%s'", sc.args.regex)
                 continue
         if not start_processing:
@@ -596,7 +625,7 @@ def notes_load():
 def mbsystem_load():
     mbs = MBSystem()
     mbs.process_command_line()
-    mbs.update_mission_times()
+    mbs.process_missions()
 
 
 if __name__ == "__main__":
