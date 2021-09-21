@@ -47,9 +47,7 @@
         "-v",
         "2",
         "--skipuntil",
-        "2020/20201013d1/multibeam",
-        "--limit",
-        "100"
+        "2020/20201014d1/multibeam"
       ],
       "justMyCode": false
     }

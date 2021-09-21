@@ -337,10 +337,11 @@ class MBSystem(BaseLoader):
             try:
                 self.logger.info(f"======== %d. %s ========", miss_count, mission)
                 self.update_mission_times(mission)
-            except ParserError as e:
+            except (ParserError, FileNotFoundError) as e:
                 self.logger.warning(e)
-            if miss_count >= self.args.limit:
-                break
+            if self.args.limit:
+                if miss_count >= self.args.limit:
+                    break
 
     def update_mission_times(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
