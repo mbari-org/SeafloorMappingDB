@@ -84,7 +84,7 @@ aws_s3_domain = AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA
 # ------------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = "dc_s3.utils.storages.MediaRootS3Boto3Storage"
+DEFAULT_FILE_STORAGE = "smdb.utils.storages.MediaRootS3Boto3Storage"
 MEDIA_URL = f"https://{aws_s3_domain}/media/"
 
 # TEMPLATES
