@@ -19,10 +19,11 @@ import logging  # noqa F402
 import math  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
+import tempfile  # noqa F402
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
-from django.conf import settings  # noqa F402
+from django.core.files import File  # noqa F402
 from django.contrib.gis.geos import Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Note  # noqa F402
@@ -505,11 +506,15 @@ class Scanner(BaseLoader):
         new_name = "_".join(
             mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
         )
-        im_path = os.path.join(settings.MEDIA_ROOT, "thumbnails", new_name)
-        new_im.save(im_path, "JPEG")
-        mission.thumbnail_image = os.path.join("thumbnails", new_name)
-        mission.save()
-        self.logger.info(f"Saved thumbnail image of size %dx%s", nx, ny)
+        with tempfile.TemporaryDirectory() as thumbdir:
+            im_path = os.path.join(thumbdir, new_name)
+            new_im.save(im_path, "JPEG")
+            with open(im_path, "rb") as fh:
+                mission.thumbnail_image.save(new_name, File(fh))
+                self.logger.debug(
+                    "thumbnail_image.url: %s", mission.thumbnail_image.url
+                )
+                self.logger.info("Saved thumbnail image of size %dx%s", nx, ny)
 
 
 def run(*args):
