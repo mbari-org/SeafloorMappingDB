@@ -5,6 +5,7 @@ Scan SeafloorMapping share for data to load into smdb
 
 import os
 import sys
+from typing import Tuple
 
 import django
 
@@ -24,7 +25,7 @@ from netCDF4 import Dataset  # noqa F402
 from datetime import datetime  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
 from django.core.files import File  # noqa F402
-from django.contrib.gis.geos import Polygon  # noqa F402
+from django.contrib.gis.geos import Point, Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Note  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
@@ -223,11 +224,11 @@ class NoteParser(BaseLoader):
                     )
             except Note.DoesNotExist:
                 self.logger.debug("No Note saved for mission %s", mission)
-            return expd_name
+            return expd_name.strip()
         for count, line in enumerate(mission.comment.split("\n")):
             if count > 1:
                 expd_name += line + " "
-        return expd_name
+        return expd_name.strip()
 
     def parse_notes(self):
         for note_count, note in enumerate(Note.objects.all(), start=1):
@@ -244,9 +245,13 @@ class NoteParser(BaseLoader):
             else:
                 self.logger.info("Reusing <Expedition: %s>", expedition)
                 self.logger.info(
-                    "Other missions belonging to %s:\n%s",
+                    "Other missions belonging to %s: %s",
                     expedition,
-                    "\n".join(Mission.objects.filter(expedition=expedition)),
+                    ", ".join(
+                        Mission.objects.filter(expedition=expedition).values_list(
+                            "name", flat=True
+                        )
+                    ),
                 )
             note.mission.expedition = expedition
             note.mission.save()
@@ -256,7 +261,7 @@ class MBSystem(BaseLoader):
     SSH_CMD = f"ssh {getpass.getuser()}@mb-system"
     TIMEOUT = 360  # Max seconds to retreive file from tertiary storage
 
-    def sonar_start_time(self, sonar_file: str) -> datetime:
+    def sonar_start_data(self, sonar_file: str) -> Tuple[datetime, Point, float]:
         cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
         start_line = False
 
@@ -267,19 +272,29 @@ class MBSystem(BaseLoader):
         except TimeoutExpired:
             self.logger.warning("Timeout for: %s", cmd)
             raise TimeoutExpired(cmd, self.TIMEOUT)
+        ma_pd = None
         for line in lines:
             if start_line:
-                # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
-                ma = re.match(
-                    r"Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)",
-                    line,
-                )
-                self.logger.debug(
-                    "%4.2f seconds to scan %s", time() - start_esec, sonar_file
-                )
-                # TODO: Pull out startpoint and startdepth from this line:
-                # Lon:  -121.945106079     Lat:    36.695916025     Depth:    48.2750 meters
-                return parse(ma.group(1))
+                if line.startswith("Time"):
+                    # Time:  03 18 2019 12:09:53.564998  JD77 (2019-03-18T12:09:53.564998)
+                    ma_ti = re.match(
+                        r"Time:.+\((\d\d\d\d\-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\)",
+                        line,
+                    )
+                if line.startswith("Lon"):
+                    # Lon:  -121.945106079     Lat:    36.695916025     Depth:    48.2750 meters
+                    ma_pd = re.match(
+                        r"Lon:\s+(-?[0-9.]*)\s+Lat:\s+(-?[0-9.]*)\s+Depth:\s+(-?[0-9.]*)",
+                        line,
+                    )
+                    point = Point(
+                        (float(ma_pd.group(1)), float(ma_pd.group(2))), srid=4326
+                    )
+                if ma_ti and ma_pd:
+                    self.logger.debug(
+                        "%4.2f seconds to scan %s", time() - start_esec, sonar_file
+                    )
+                    return parse(ma_ti.group(1)), point, float(ma_pd.group(3))
             if line == "Start of Data:":
                 start_line = True
         raise ValueError(f"Could not find 'Start of Data' from: {cmd}")
@@ -308,16 +323,18 @@ class MBSystem(BaseLoader):
                 end_line = True
         raise ValueError(f"Could not find 'End of Data' from: {cmd}")
 
-    def first_sonar_time(self, path: str, datalist: str) -> datetime:
+    def first_sonar_data(
+        self, path: str, datalist: str
+    ) -> Tuple[datetime, Point, float]:
         with open(datalist) as fh:
             for line in fh.readlines():
                 if line.startswith("#"):
                     continue
                 item = line.split()[0].strip()
                 if item.endswith("mb-1"):
-                    return self.first_sonar_time(path, os.path.join(path, item))
+                    return self.first_sonar_data(path, os.path.join(path, item))
                 elif re.match(r".+\.mb\d\d", item):
-                    return self.sonar_start_time(os.path.join(path, item))
+                    return self.sonar_start_data(os.path.join(path, item))
 
     def last_sonar_time(self, path: str, datalist: str) -> datetime:
         last_sonar_item = None
@@ -365,14 +382,23 @@ class MBSystem(BaseLoader):
     def update_mission_times(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
         # to find first and last sonar file and corresponding
-        # first and last datetimes for the mission
+        # first and last data values for the mission
         path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
-        mission.start_date = self.first_sonar_time(path, datalist)
+        (
+            mission.start_date,
+            mission.start_point,
+            mission.start_depth,
+        ) = self.first_sonar_data(path, datalist)
         mission.end_date = self.last_sonar_time(path, datalist)
         mission.save()
         self.logger.info(
             "Saved start & end: %s to %s", mission.start_date, mission.end_date
+        )
+        self.logger.info(
+            "Saved start_point & start_depth: %s & %s meters",
+            mission.start_point,
+            mission.start_depth,
         )
 
 
@@ -635,7 +661,7 @@ def bootstrap_load():
 
             miss_count += 1
             if created:
-                sc.logger.info("%3d. Saved %s", miss_count, mission)
+                sc.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
             else:
                 sc.logger.info("%3d. Resaved %s", miss_count, mission)
             if sc.args.limit:
