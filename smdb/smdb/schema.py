@@ -79,7 +79,6 @@ class ExpeditionNode(DjangoObjectNode):
             "end_date",
             "investigator",
             "chiefscientist",
-            "expd_path_name",
             "expd_db_id",
         )
 
@@ -119,6 +118,7 @@ class MissionNode(DjangoObjectNode):
             "quality_comment",
             "repeat_survey",
             "comment",
+            "directory",
             "notes_filename",
             "region_name",
             "site_detail",
@@ -594,7 +594,6 @@ class ExpeditionInput(graphene.InputObjectType):
     end_date_iso = graphene.String()
     investigator = graphene.Field(PersonInput)
     chiefscientist = graphene.Field(PersonInput)
-    expd_path_name = graphene.String()
     expd_db_id = graphene.Int()
 
 
@@ -622,7 +621,6 @@ class CreateExpedition(graphene.Mutation):
             end_date=parse(input.end_date_iso),
             investigator=investigator,
             chiefscientist=chiefscientist,
-            expd_path_name=input.expd_path_name,
             expd_db_id=input.expd_db_id,
         )
         expedition.save()
@@ -653,7 +651,6 @@ class UpdateExpedition(graphene.Mutation):
         expedition.end_date = parse(input.end_date_iso)
         expedition.investigator = investigator
         expedition.chiefscientist = chiefscientist
-        expedition.expd_path_name = input.expd_path_name
         expedition.save()
         return UpdateExpedition(expedition=expedition)
 
@@ -764,6 +761,7 @@ class MissionInput(graphene.InputObjectType):
     quality_comment = graphene.String()
     repeat_survey = graphene.Boolean()
     comment = graphene.String()
+    directory = graphene.String()
     notes_filename = graphene.String()
     region_name = graphene.String()
     site_detail = graphene.String()
@@ -844,6 +842,7 @@ class CreateMission(graphene.Mutation):
             quality_comment=input.quality_comment,
             repeat_survey=input.repeat_survey,
             comment=input.comment,
+            directory=input.directory,
             notes_filename=input.notes_filename,
             region_name=input.region_name,
             site_detail=input.site_detail,
@@ -927,6 +926,7 @@ class UpdateMission(graphene.Mutation):
         mission.quality_comment = input.quality_comment
         mission.repeat_survey = input.repeat_survey
         mission.comment = input.comment
+        mission.directory = input.directory
         mission.notes_filename = input.notes_filename
         mission.region_name = input.region_name
         mission.site_detail = input.site_detail
@@ -975,7 +975,6 @@ class CreateDataArchival(graphene.Mutation):
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
                 name=mission_input.expedition.name,
-                expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
                 name=mission_input.name,
@@ -1005,7 +1004,6 @@ class UpdateDataArchival(graphene.Mutation):
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
                 name=mission_input.expedition.name,
-                expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
                 name=mission_input.name,
@@ -1054,7 +1052,6 @@ class CreateCitation(graphene.Mutation):
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
                 name=mission_input.expedition.name,
-                expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
                 name=mission_input.name,
@@ -1084,7 +1081,6 @@ class UpdateCitation(graphene.Mutation):
         for mission_input in input.missions:
             expedition, _ = Expedition.objects.get_or_create(
                 name=mission_input.expedition.name,
-                expd_path_name=mission_input.expedition.expd_path_name,
             )
             mission, _ = Mission.objects.get_or_create(
                 name=mission_input.name,
@@ -1130,7 +1126,6 @@ class CreateNote(graphene.Mutation):
             raise GraphQLError("You must be logged in")
         expedition, _ = Expedition.objects.get_or_create(
             name=input.mission.expedition.name,
-            expd_path_name=input.mission.expedition.expd_path_name,
         )
         mission, _ = Mission.objects.get_or_create(
             name=input.mission.name,
@@ -1156,7 +1151,6 @@ class UpdateNote(graphene.Mutation):
             raise GraphQLError("You must be logged in")
         expedition, _ = Expedition.objects.get_or_create(
             name=input.mission.expedition.name,
-            expd_path_name=input.mission.expedition.expd_path_name,
         )
         mission, _ = Mission.objects.get_or_create(
             name=input.mission.name,

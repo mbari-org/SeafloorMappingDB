@@ -16,14 +16,12 @@ snapshots['test_all_citations 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_path_name': 'PN1',
                             'name': 'EN1'
                         },
                         'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_path_name': 'PN2',
                             'name': 'EN2'
                         },
                         'name': 'M2'
@@ -102,14 +100,12 @@ snapshots['test_all_dataarchivals 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_path_name': 'PN1',
                             'name': 'EN1'
                         },
                         'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_path_name': 'PN2',
                             'name': 'EN2'
                         },
                         'name': 'M2'
@@ -132,37 +128,31 @@ snapshots['test_all_expeditions 1'] = {
         'all_expeditions': [
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': '1998-07-20T00:00:00',
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'name': 'Initial',
                 'start_date': '1998-07-01T00:00:00'
             }
@@ -175,31 +165,26 @@ snapshots['test_all_expeditions_empty 1'] = {
         'all_expeditions': [
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
                 'name': None,
                 'start_date': None
             },
             {
                 'end_date': None,
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
                 'name': None,
                 'start_date': None
             }
@@ -212,6 +197,7 @@ snapshots['test_all_missions 1'] = {
         'all_missions': [
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -245,6 +231,7 @@ snapshots['test_all_missions 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -278,6 +265,7 @@ snapshots['test_all_missions 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -311,6 +299,7 @@ snapshots['test_all_missions 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -344,6 +333,7 @@ snapshots['test_all_missions 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -377,6 +367,7 @@ snapshots['test_all_missions 1'] = {
             },
             {
                 'comment': 'Initial comment.',
+                'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -417,6 +408,7 @@ snapshots['test_all_missions_empty 1'] = {
         'all_missions': [
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -450,6 +442,7 @@ snapshots['test_all_missions_empty 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -483,6 +476,7 @@ snapshots['test_all_missions_empty 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -516,6 +510,7 @@ snapshots['test_all_missions_empty 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -549,6 +544,7 @@ snapshots['test_all_missions_empty 1'] = {
             },
             {
                 'comment': None,
+                'directory': None,
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -597,7 +593,6 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
                         'name': None
                     },
                     'name': '2019/20190124m1'
@@ -606,7 +601,6 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
                         'name': None
                     },
                     'name': '2019/20190125m1'
@@ -615,7 +609,6 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                         'name': None
                     },
                     'name': '2019/20190308m1'
@@ -624,7 +617,6 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
                         'name': None
                     },
                     'name': '2019/20190308m2'
@@ -633,7 +625,6 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
                         'name': None
                     },
                     'name': '2019/20190314m1'
@@ -642,7 +633,6 @@ snapshots['test_all_notes 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': 'PNn1',
                         'name': 'ENn1'
                     },
                     'name': 'Mn1_test'
@@ -658,7 +648,6 @@ snapshots['test_all_notes_empty 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190124m1',
                         'name': None
                     },
                     'name': '2019/20190124m1'
@@ -667,7 +656,6 @@ snapshots['test_all_notes_empty 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190125m1',
                         'name': None
                     },
                     'name': '2019/20190125m1'
@@ -676,7 +664,6 @@ snapshots['test_all_notes_empty 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                         'name': None
                     },
                     'name': '2019/20190308m1'
@@ -685,7 +672,6 @@ snapshots['test_all_notes_empty 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m2',
                         'name': None
                     },
                     'name': '2019/20190308m2'
@@ -694,7 +680,6 @@ snapshots['test_all_notes_empty 1'] = {
             {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': '/mbari/SeafloorMapping/2019/20190314m1',
                         'name': None
                     },
                     'name': '2019/20190314m1'
@@ -801,14 +786,12 @@ snapshots['test_create_citation 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_path_name': 'PN1',
                             'name': 'EN1'
                         },
                         'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_path_name': 'PN2',
                             'name': 'EN2'
                         },
                         'name': 'M2'
@@ -873,14 +856,12 @@ snapshots['test_create_dataarchival 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_path_name': 'PN1',
                             'name': 'EN1'
                         },
                         'name': 'M1'
                     },
                     {
                         'expedition': {
-                            'expd_path_name': 'PN2',
                             'name': 'EN2'
                         },
                         'name': 'M2'
@@ -900,7 +881,6 @@ snapshots['test_create_expedition 1'] = {
                     'last_name': 'Munk'
                 },
                 'end_date': '1998-07-20T00:00:00',
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'investigator': {
                     'first_name': 'Henry',
                     'last_name': 'Stommel'
@@ -940,6 +920,7 @@ snapshots['test_create_mission 1'] = {
                         'doi': 'doi://da_initial/2'
                     }
                 ],
+                'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'end_date': '2021-04-04T00:00:00',
                 'expedition': {
                     'name': 'Initial expedition name'
@@ -1044,7 +1025,6 @@ snapshots['test_create_note 1'] = {
             'note': {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': 'PNn1',
                         'name': 'ENn1'
                     },
                     'name': 'Mn1_test'
@@ -1218,7 +1198,6 @@ snapshots['test_delete_expedition 1'] = {
                     'last_name': 'Munk'
                 },
                 'end_date': '1998-07-20T00:00:00',
-                'expd_path_name': '/mbari/SeafloorMapping/2019/20190308m1',
                 'investigator': {
                     'first_name': 'Henry',
                     'last_name': 'Stommel'
@@ -1235,6 +1214,7 @@ snapshots['test_delete_mission 1'] = {
         'delete_mission': {
             'mission': {
                 'comment': 'Initial comment.',
+                'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -1286,7 +1266,6 @@ snapshots['test_delete_note 1'] = {
             'note': {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': 'PNn1',
                         'name': 'ENn1'
                     },
                     'name': 'Mn1_test'
@@ -1388,14 +1367,12 @@ snapshots['test_update_citation 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_path_name': 'PN3',
                             'name': 'EN3'
                         },
                         'name': 'M3'
                     },
                     {
                         'expedition': {
-                            'expd_path_name': 'PN4',
                             'name': 'EN4'
                         },
                         'name': 'M4'
@@ -1460,14 +1437,12 @@ snapshots['test_update_dataarchival 1'] = {
                 'missions': [
                     {
                         'expedition': {
-                            'expd_path_name': 'PN3',
                             'name': 'EN3'
                         },
                         'name': 'M3'
                     },
                     {
                         'expedition': {
-                            'expd_path_name': 'PN4',
                             'name': 'EN4'
                         },
                         'name': 'M4'
@@ -1487,7 +1462,6 @@ snapshots['test_update_expedition 1'] = {
                     'last_name': 'Roe'
                 },
                 'end_date': '2021-02-02T00:00:00',
-                'expd_path_name': '/a/directory/path',
                 'investigator': {
                     'first_name': 'John',
                     'last_name': 'Doe'
@@ -1527,6 +1501,7 @@ snapshots['test_update_mission 1'] = {
                         'doi': 'doi://da_updated/2'
                     }
                 ],
+                'directory': "'/mbari/SeafloorMapping/2019/20190308m2",
                 'end_date': '2021-06-06T00:00:00',
                 'expedition': {
                     'name': 'Added expedition'
@@ -1611,7 +1586,6 @@ snapshots['test_update_note 1'] = {
             'note': {
                 'mission': {
                     'expedition': {
-                        'expd_path_name': 'PN3',
                         'name': 'EN3'
                     },
                     'name': 'Mn1_updated'
