@@ -39,7 +39,6 @@ class ExpeditionAdmin(GeoModelAdmin):
     search_fields = [
         "name",
         "mission__name",
-        "expd_path_name",
         "expd_db_id",
     ]
 

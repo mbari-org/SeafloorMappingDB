@@ -702,7 +702,6 @@ create_expedition_template = Template(
     """mutation {
         create_expedition(input: {
             chiefscientist: {first_name: "Walter", last_name: "Munk", institution_name: "SIO"},
-            expd_path_name: "/mbari/SeafloorMapping/2019/20190308m1",
             investigator: {first_name: "Henry", last_name: "Stommel", institution_name: "SIO"},
             start_date_iso: "1998-07-01",
             end_date_iso: "1998-07-20",
@@ -720,7 +719,6 @@ create_expedition_template = Template(
                     first_name
                     last_name
                 }
-                expd_path_name
             }
         }
     }"""
@@ -736,7 +734,6 @@ def test_all_expeditions_empty(snapshot):
                     name
                     start_date
                     end_date
-                    expd_path_name
                   }
                 }"""
         )
@@ -793,16 +790,12 @@ def test_all_expeditions(snapshot):
                     name
                     start_date
                     end_date
-                    expd_path_name
                   }
                 }"""
     )
     assert response["data"]["all_expeditions"][-1]["name"] == "Initial"
     snapshot.assert_match(response)
-    assert (
-        repr(Expedition.objects.filter(name="Initial")[0])
-        == "<Expedition: Initial (/mbari/SeafloorMapping/2019/20190308m1)>"
-    )
+    assert repr(Expedition.objects.filter(name="Initial")[0]) == "<Expedition: Initial>"
 
 
 def test_update_expedition(snapshot):
@@ -831,7 +824,6 @@ def test_update_expedition(snapshot):
                         last_name: "Roe"
                         institution_name: "Tester"
                     }
-                    expd_path_name: "/a/directory/path"
                 }) {
                     expedition {
                         name
@@ -845,7 +837,6 @@ def test_update_expedition(snapshot):
                             first_name
                             last_name
                         }
-                        expd_path_name
                     }
                 }
             }""",
@@ -879,7 +870,6 @@ def test_delete_expedition(snapshot):
                             first_name
                             last_name
                         }
-                        expd_path_name
                     }
                 }
             }""",
@@ -1052,6 +1042,7 @@ create_mission_template = Template(
             quality_comment: "Q",
             repeat_survey: false,
             comment: "Initial comment.",
+            directory: "/mbari/SeafloorMapping/2019/20190308m1",
             notes_filename: "file.notes",
             region_name: "region1"
             site_detail: "site detail",
@@ -1087,6 +1078,7 @@ create_mission_template = Template(
                 quality_comment
                 repeat_survey
                 comment
+                directory
                 notes_filename
                 region_name
                 site_detail
@@ -1117,6 +1109,7 @@ create_mission_template = Template(
 mission_query = """{
                 all_missions {
                     comment
+                    directory
                     grid_bounds
                     kml_filename
                     thumbnail_filename
@@ -1184,6 +1177,7 @@ def test_update_mission(snapshot):
                     quality_comment: "R",
                     repeat_survey: true,
                     comment: "Updates comment.",
+                    directory: "'/mbari/SeafloorMapping/2019/20190308m2",
                     notes_filename: "file2.notes",
                     region_name: "region2",
                     site_detail: "site detail 2",
@@ -1218,6 +1212,7 @@ def test_update_mission(snapshot):
                         quality_comment
                         repeat_survey
                         comment
+                        directory
                         notes_filename
                         region_name
                         site_detail
@@ -1264,6 +1259,7 @@ def test_delete_mission(snapshot):
                 delete_mission(uuid: $uuid) {
                     mission {
                         comment
+                        directory
                         grid_bounds
                         kml_filename
                         thumbnail_filename
@@ -1284,8 +1280,8 @@ create_dataarchival_template = Template(
         create_dataarchival(input: {
             doi: "doi://123456/hello",
             archival_db_name: "Initial Archival",
-            missions: [ {name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
-                        {name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
+            missions: [ {name: "M1", expedition: {name: "EN1"}},
+                        {name: "M2", expedition: {name: "EN2"}},
                       ],
             }) {
             dataarchival {
@@ -1296,7 +1292,6 @@ create_dataarchival_template = Template(
                     name
                     expedition {
                         name
-                        expd_path_name
                     }
                 }
             }
@@ -1311,7 +1306,6 @@ dataarchival_query = """{
                         name
                         expedition {
                             name
-                            expd_path_name
                         }
                     }
                   }
@@ -1358,8 +1352,8 @@ def test_update_dataarchival(snapshot):
                 update_dataarchival(uuid: $uuid, input: {
                     doi: "doi://7890/hello",
                     archival_db_name: "Updated Archival",
-                    missions: [ {name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
-                                {name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
+                    missions: [ {name: "M3", expedition: {name: "EN3"}},
+                                {name: "M4", expedition: {name: "EN4"}},
                             ],
                     }) {
                     dataarchival {
@@ -1369,7 +1363,6 @@ def test_update_dataarchival(snapshot):
                             name
                             expedition {
                                 name
-                                expd_path_name
                             }
                         }
                     }
@@ -1402,7 +1395,6 @@ def test_delete_dataarchival(snapshot):
                             name
                             expedition {
                                 name
-                                expd_path_name
                             }
                         }
                     }
@@ -1421,8 +1413,8 @@ create_citation_template = Template(
         create_citation(input: {
             doi: "doi://123456/hello",
             full_reference: "Initial Reference",
-            missions: [ {name: "M1", expedition: {name: "EN1", expd_path_name: "PN1"}},
-                        {name: "M2", expedition: {name: "EN2", expd_path_name: "PN2"}},
+            missions: [ {name: "M1", expedition: {name: "EN1"}},
+                        {name: "M2", expedition: {name: "EN2"}},
                       ],
             }) {
             citation {
@@ -1433,7 +1425,6 @@ create_citation_template = Template(
                     name
                     expedition {
                         name
-                        expd_path_name
                     }
                 }
             }
@@ -1448,7 +1439,6 @@ citation_query = """{
                         name
                         expedition {
                             name
-                            expd_path_name
                         }
                     }
                   }
@@ -1493,8 +1483,8 @@ def test_update_citation(snapshot):
                 update_citation(uuid: $uuid, input: {
                     doi: "doi://7890/hello",
                     full_reference: "Updated Reference",
-                    missions: [ {name: "M3", expedition: {name: "EN3", expd_path_name: "PN3"}},
-                                {name: "M4", expedition: {name: "EN4", expd_path_name: "PN4"}},
+                    missions: [ {name: "M3", expedition: {name: "EN3"}},
+                                {name: "M4", expedition: {name: "EN4"}},
                             ],
                     }) {
                     citation {
@@ -1504,7 +1494,6 @@ def test_update_citation(snapshot):
                             name
                             expedition {
                                 name
-                                expd_path_name
                             }
                         }
                     }
@@ -1535,7 +1524,6 @@ def test_delete_citation(snapshot):
                             name
                             expedition {
                                 name
-                                expd_path_name
                             }
                         }
                     }
@@ -1556,7 +1544,7 @@ create_note_template = Template(
     """mutation CreateNote($text: String!) {
         create_note(input: {
             text: $text
-            mission: {name: "Mn1_test", expedition: {name: "ENn1", expd_path_name: "PNn1"}},
+            mission: {name: "Mn1_test", expedition: {name: "ENn1"}},
             }) {
             note {
                 {{ uuid }}
@@ -1565,7 +1553,6 @@ create_note_template = Template(
                     name
                     expedition {
                         name
-                        expd_path_name
                     }
                 }
             }
@@ -1579,7 +1566,6 @@ note_query = """{
                         name
                         expedition {
                             name
-                            expd_path_name
                         }
                     }
                   }
@@ -1640,7 +1626,7 @@ def test_update_note(snapshot):
             """mutation UpdateNote($uuid: ID!, $text: String!) {
                 update_note(uuid: $uuid, input: {
                     text: $text,
-                    mission: {name: "Mn1_updated", expedition: {name: "EN3", expd_path_name: "PN3"}},
+                    mission: {name: "Mn1_updated", expedition: {name: "EN3"}},
                     }) {
                     note {
                         text
@@ -1648,7 +1634,6 @@ def test_update_note(snapshot):
                             name
                             expedition {
                                 name
-                                expd_path_name
                             }
                         }
                     }
@@ -1683,7 +1668,6 @@ def test_delete_note(snapshot):
                             name
                             expedition {
                                 name
-                                expd_path_name
                             }
                         }
                     }
