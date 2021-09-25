@@ -15,7 +15,7 @@ django-bleach==0.8.0  # https://pypi.org/project/django-bleach/
 django-environ==0.7.0  # https://github.com/joke2k/django-environ
 django-model-utils==4.1.1  # https://github.com/jazzband/django-model-utils
 django-allauth==0.45.0  # https://github.com/pennersr/django-allauth
-django-crispy-forms==1.12.0  # https://github.com/django-crispy-forms/django-crispy-forms
+django-crispy-forms==1.13.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-compressor==2.4.1  # https://github.com/django-compressor/django-compressor
 django-redis==5.0.0  # https://github.com/jazzband/django-redis
 # Django REST Framework
