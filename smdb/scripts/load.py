@@ -224,11 +224,11 @@ class NoteParser(BaseLoader):
                     )
             except Note.DoesNotExist:
                 self.logger.debug("No Note saved for mission %s", mission)
-            return expd_name
+            return expd_name.strip()
         for count, line in enumerate(mission.comment.split("\n")):
             if count > 1:
                 expd_name += line + " "
-        return expd_name
+        return expd_name.strip()
 
     def parse_notes(self):
         for note_count, note in enumerate(Note.objects.all(), start=1):
@@ -245,9 +245,13 @@ class NoteParser(BaseLoader):
             else:
                 self.logger.info("Reusing <Expedition: %s>", expedition)
                 self.logger.info(
-                    "Other missions belonging to %s:\n%s",
+                    "Other missions belonging to %s: %s",
                     expedition,
-                    "\n".join(Mission.objects.filter(expedition=expedition)),
+                    ", ".join(
+                        Mission.objects.filter(expedition=expedition).values_list(
+                            "name", flat=True
+                        )
+                    ),
                 )
             note.mission.expedition = expedition
             note.mission.save()
@@ -392,7 +396,7 @@ class MBSystem(BaseLoader):
             "Saved start & end: %s to %s", mission.start_date, mission.end_date
         )
         self.logger.info(
-            "Saved start_point & start_depth: %s to %s",
+            "Saved start_point & start_depth: %s & %s meters",
             mission.start_point,
             mission.start_depth,
         )
@@ -657,7 +661,7 @@ def bootstrap_load():
 
             miss_count += 1
             if created:
-                sc.logger.info("%3d. Saved %s", miss_count, mission)
+                sc.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
             else:
                 sc.logger.info("%3d. Resaved %s", miss_count, mission)
             if sc.args.limit:
