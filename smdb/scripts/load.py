@@ -137,6 +137,11 @@ class BaseLoader:
             action="store",
             help="Start processing at mission name provided",
         )
+        parser.add_argument(
+            "--save_thumbnail",
+            action="store_true",
+            help="Save thumbnail images to media storage as part of --bootstrap",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -166,74 +171,85 @@ class BaseLoader:
 class NoteParser(BaseLoader):
     BOUNDARY_DASHES = "------------------------------------"
 
-    def filepaths(self):
-        return Mission.objects.all().values_list("notes_filename", flat=True)
-
-    def parse_texts(self):
-        """Brute force parsing of Note text to grab information"""
-        for note_count, note in enumerate(Note.objects.all()):
-            self.logger.info(f"======== %d. %s ========", note_count, note.mission.name)
-            comment_captured = False
-            next_line_is_expd_db_id = False
-            comment = ""
-            for line in note.text.split("\n"):
-                if not comment_captured:
-                    comment += line + "\n"
+    def comment_from_text(self, note: Note) -> str:
+        comment_captured = False
+        comment = ""
+        for line in note.text.split("\n"):
+            if not comment_captured:
                 self.logger.debug(line)
-                if line == self.BOUNDARY_DASHES and not comment_captured:
-                    comment_captured = True
-                    comment = comment.replace(self.BOUNDARY_DASHES, "")
-                    note.mission.comment = comment.strip()
-                    if note.mission.comment == "":
-                        self.logger.warning(
-                            "Empty comment for mission %s", note.mission
-                        )
-                    note.mission.save()
+                # Capture lines starting at the first line
+                comment += line + "\n"
+            if line == self.BOUNDARY_DASHES and not comment_captured:
+                comment_captured = True
+                comment = comment.replace(self.BOUNDARY_DASHES, "").strip()
+                if note.mission.comment == "":
+                    self.logger.warning("Empty comment for mission %s", note.mission)
+        return comment
 
-                if next_line_is_expd_db_id:
-                    try:
-                        note.mission.expedition.expd_db_id = int(line)
-                    except ValueError:
-                        self.logger.warning(
-                            "Could not get expd_db_id for %s from Notes file %s",
-                            note.mission.name,
-                            note.mission.notes_filename,
-                        )
-                    note.mission.expedition.save()
-                    next_line_is_expd_db_id = False
-                if "ExpeditionID" in line:
-                    self.logger.debug(line)
-                    if expd_ma := re.match(r"ExpeditionID\s+(\d+)", line):
-                        # ExpeditionID	6229
-                        note.mission.expedition.expd_db_id = int(expd_ma.group(1))
-                        note.mission.expedition.save()
-                        next_line_is_expd_db_id = False
-                    else:
-                        next_line_is_expd_db_id = True
-
-    def save_expd_name_from_comment(self):
-        # It looks like the third line begins with an Expedition name
-        for mission in Mission.objects.all():
-            expd_name = ""
-            self.logger.info("Saving expedition.name for mission: %s", mission)
-            if not mission.comment:
-                self.logger.warning("Empty comment for mission %s", mission)
+    def expd_db_id_from_text(self, note: Note) -> int:
+        next_line_is_expd_db_id = False
+        expd_db_id = None
+        for line in note.text.split("\n"):
+            if next_line_is_expd_db_id:
                 try:
-                    if hasattr(Note.objects.get(mission=mission), "text"):
-                        self.logger.debug(
-                            "note.text = \n%s", Note.objects.get(mission=mission).text
-                        )
-                except Note.DoesNotExist:
-                    self.logger.debug("No Note saved for mission %s", mission)
-                continue
-            for count, line in enumerate(mission.comment.split("\n")):
-                if count > 1:
-                    expd_name += line + " "
-            mission.expedition.name = expd_name
+                    expd_db_id = int(line)
+                except ValueError:
+                    self.logger.warning(
+                        "Could not get expd_db_id for %s from Notes file %s",
+                        note.mission.name,
+                        note.mission.notes_filename,
+                    )
+                next_line_is_expd_db_id = False
+            if "ExpeditionID" in line:
+                self.logger.debug(line)
+                if expd_ma := re.match(r"ExpeditionID\s+(\d+)", line):
+                    # ExpeditionID	6229
+                    expd_db_id = int(expd_ma.group(1))
+                    next_line_is_expd_db_id = False
+                else:
+                    next_line_is_expd_db_id = True
+        return expd_db_id
+
+    def expedition_name_from_comment(self, mission: Mission) -> str:
+        # It looks like the third line begins with an Expedition name
+        expd_name = ""
+        if not mission.comment:
+            self.logger.warning("Empty comment for mission %s", mission)
             try:
-                mission.expedition.save()
-            except django.db.utils.DataError:
-                self.logger.warning("Error saving expedition.name: %s", expd_name)
+                if hasattr(Note.objects.get(mission=mission), "text"):
+                    self.logger.debug(
+                        "note.text = \n%s",
+                        Note.objects.get(mission=mission).text,
+                    )
+            except Note.DoesNotExist:
+                self.logger.debug("No Note saved for mission %s", mission)
+            return expd_name
+        for count, line in enumerate(mission.comment.split("\n")):
+            if count > 1:
+                expd_name += line + " "
+        return expd_name
+
+    def parse_notes(self):
+        for note_count, note in enumerate(Note.objects.all(), start=1):
+            self.logger.info("======== %d. %s ========", note_count, note.mission.name)
+            note.mission.comment = self.comment_from_text(note)
+            expd_db_id = self.expd_db_id_from_text(note)
+            name = self.expedition_name_from_comment(note.mission)
+            expedition, created = Expedition.objects.get_or_create(
+                expd_db_id=expd_db_id,
+                name=name,
+            )
+            if created:
+                self.logger.info("Saved <Expedition: %s>", expedition)
+            else:
+                self.logger.info("Reusing <Expedition: %s>", expedition)
+                self.logger.info(
+                    "Other missions belonging to %s:\n%s",
+                    expedition,
+                    "\n".join(Mission.objects.filter(expedition=expedition)),
+                )
+            note.mission.expedition = expedition
+            note.mission.save()
 
 
 class MBSystem(BaseLoader):
@@ -261,6 +277,8 @@ class MBSystem(BaseLoader):
                 self.logger.debug(
                     "%4.2f seconds to scan %s", time() - start_esec, sonar_file
                 )
+                # TODO: Pull out startpoint and startdepth from this line:
+                # Lon:  -121.945106079     Lat:    36.695916025     Depth:    48.2750 meters
                 return parse(ma.group(1))
             if line == "Start of Data:":
                 start_line = True
@@ -323,7 +341,7 @@ class MBSystem(BaseLoader):
             elif re.match(r".+\.mb\d\d", last_sonar_item):
                 return self.sonar_end_time(os.path.join(path, item))
 
-    def process_missions(self):
+    def execute_mbinfos(self):
         start_processing = True
         if self.args.skipuntil:
             start_processing = False
@@ -336,7 +354,7 @@ class MBSystem(BaseLoader):
             if not start_processing:
                 continue
             try:
-                self.logger.info(f"======== %d. %s ========", miss_count, mission)
+                self.logger.info("======= %d. %s ========", miss_count, mission)
                 self.update_mission_times(mission)
             except (ParserError, FileNotFoundError) as e:
                 self.logger.warning(e)
@@ -348,7 +366,7 @@ class MBSystem(BaseLoader):
         # Start with datalistp.mb-1 and recurse down
         # to find first and last sonar file and corresponding
         # first and last datetimes for the mission
-        path = mission.expedition.expd_path_name
+        path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
         mission.start_date = self.first_sonar_time(path, datalist)
         mission.end_date = self.last_sonar_time(path, datalist)
@@ -482,12 +500,8 @@ class Scanner(BaseLoader):
         if not note_text:
             raise FileExistsError(f"No Notes found for {mission}")
 
-        note = Note(
-            mission=mission,
-            text=note_text,
-        )
-        note.save()
-        self.logger.info(f"Saved %d lines of note text", line_count)
+        Note.objects.get_or_create(mission=mission, text=note_text)
+        self.logger.info(f"Saved note text: %d lines", line_count)
 
     def save_thumbnail(self, mission):
         if not mission.thumbnail_filename:
@@ -541,23 +555,30 @@ def bootstrap_load():
     if sc.args.clobber:
         # Will cascade delete Missions and Notes loaded by bootstrap load
         if not sc.args.noinput:
-            ans = input(
-                "\nAre you sure you want to delete all existing Expeditions? [y/N] "
-            )
+            ans = input("\nDelete all existing Expeditions? [y/N] ")
             if ans.lower() == "y":
                 sc.logger.info(
                     "Deleting %s Expeditions", Expedition.objects.all().count()
                 )
                 for expd in Expedition.objects.all():
                     expd.delete()
-
+        else:
+            sc.logger.info(
+                "Deleting %s Expeditions",
+                Expedition.objects.all().count(),
+            )
+            for expd in Expedition.objects.all():
+                expd.delete()
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
     start_processing = True
     if sc.args.skipuntil_regex:
         start_processing = False
     miss_count = 0
-    for count, fp in enumerate(subprocess.getoutput(locate_cmd).split("\n")):
+    for count, fp in enumerate(
+        subprocess.getoutput(locate_cmd).split("\n"),
+        start=1,
+    ):
         sc.logger.debug("%3d. file: %s", count, fp)
         if sc.args.regex:
             if sc.args.skipuntil_regex and re.search(re.compile(sc.args.regex), fp):
@@ -568,18 +589,23 @@ def bootstrap_load():
                 sc.logger.debug("Does not match --regex '%s'", sc.args.regex)
                 continue
         if not start_processing:
-            sc.logger.debug("Waiting for %s to start processing", sc.args.regex)
+            sc.logger.debug("Skipping until %s", sc.args.regex)
             continue
         if fp in sc.exclude_files:
             sc.logger.debug("Excluding file: %s", fp)
         else:
+            sc.logger.info(
+                "======== %d. %s ========",
+                count,
+                os.path.dirname(fp).replace(MBARI_DIR, ""),
+            )
             try:
                 ds = Dataset(fp)
                 sc.logger.debug(ds)
             except PermissionError as e:
                 sc.logger.warning(str(e))
             except FileNotFoundError:
-                raise FileNotFoundError(f"Could not open {fp}\nIs {MBARI_DIR} mounted?")
+                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
             if not sc.is_geographic(ds):
                 sc.logger.warning("%s is not Projection: Geographic", fp)
                 continue
@@ -593,19 +619,17 @@ def bootstrap_load():
             notes_filename = sc.notes_filename(os.path.dirname(fp))
             thumbnail_filename = sc.thumbnail_filename(os.path.dirname(fp))
 
-            expedition, _ = Expedition.objects.get_or_create(
-                expd_path_name=os.path.dirname(fp)
-            )
             mission, created = Mission.objects.get_or_create(
                 name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                expedition=expedition,
                 grid_bounds=grid_bounds,
                 notes_filename=notes_filename,
                 thumbnail_filename=thumbnail_filename,
+                directory=os.path.dirname(fp),
             )
             try:
                 sc.save_notes(mission)
-                sc.save_thumbnail(mission)
+                if sc.args.save_thumbnail:
+                    sc.save_thumbnail(mission)
             except FileExistsError as e:
                 sc.logger.warning(str(e))
 
@@ -623,14 +647,13 @@ def bootstrap_load():
 def notes_load():
     np = NoteParser()
     np.process_command_line()
-    np.parse_texts()
-    np.save_expd_name_from_comment()
+    np.parse_notes()
 
 
 def mbsystem_load():
     mbs = MBSystem()
     mbs.process_command_line()
-    mbs.process_missions()
+    mbs.execute_mbinfos()
 
 
 if __name__ == "__main__":
