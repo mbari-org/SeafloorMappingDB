@@ -86,14 +86,10 @@ class Expedition(models.Model):
         related_name="chiefscientist",
         on_delete=models.CASCADE,
     )
-    expd_path_name = models.CharField(max_length=256, null=True)
     expd_db_id = models.IntegerField(null=True)
 
     def __str__(self):
-        name = ""
-        if self.name:
-            name = self.name
-        return f"{self.name} ({self.expd_path_name})"
+        return self.name
 
 
 class Compilation(models.Model):
@@ -139,6 +135,7 @@ class Mission(models.Model):
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
+    directory = models.CharField(max_length=256, null=True)
     notes_filename = models.CharField(
         max_length=256, db_index=True, blank=True, null=True
     )
@@ -161,7 +158,7 @@ class Mission(models.Model):
     citations = models.ManyToManyField("Citation", blank=True)
 
     def __str__(self):
-        return f"{self.name}"
+        return self.name
 
     def display_sensor(self):
         return ", ".join(
@@ -209,4 +206,4 @@ class Note(models.Model):
     mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Notes for {self.mission.name}"
+        return f"Notes for {self.mission}"
