@@ -639,9 +639,10 @@ def bootstrap_load():
         if fp in sc.exclude_files:
             sc.logger.debug("Excluding file: %s", fp)
         else:
+            miss_count += 1
             sc.logger.info(
-                "======== %d. %s ========",
-                count,
+                "======== %3d. %s ========",
+                miss_count,
                 os.path.dirname(fp).replace(MBARI_DIR, ""),
             )
             try:
@@ -678,7 +679,6 @@ def bootstrap_load():
             except FileExistsError as e:
                 sc.logger.warning(str(e))
 
-            miss_count += 1
             if created:
                 sc.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
             else:
