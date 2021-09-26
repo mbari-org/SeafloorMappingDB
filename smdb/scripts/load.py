@@ -27,7 +27,7 @@ from dateutil.parser import ParserError, parse  # noqa F402
 from django.core.files import File  # noqa F402
 from django.contrib.gis.geos import Point, Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
-from smdb.models import Expedition, Mission, Note  # noqa F402
+from smdb.models import Expedition, Mission, Note, Platform, Platformtype  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
@@ -185,6 +185,15 @@ class NoteParser(BaseLoader):
                 comment = comment.replace(self.BOUNDARY_DASHES, "").strip()
                 if note.mission.comment == "":
                     self.logger.warning("Empty comment for mission %s", note.mission)
+            if line.strip() in (
+                "TN199 Expedition to the Juan de Fuca Ridge",
+                "2007 PMEL Nemo Expedition (AT15-21)",
+            ):
+                # /mbari/SeafloorMapping/MappingAUVOps2016/20160919OCEANSTutorial/SampleDatasets/20060901Org/20060831Notes.txt
+                # /mbari/SeafloorMapping/MappingAUVOps2016/20160919OCEANSTutorial/SampleDatasets/20070808/20070808Notes.txt
+                # Special cases where the Notes file has no BOUNDARY_DASHES
+                comment_captured = True
+
         return comment
 
     def expd_db_id_from_text(self, note: Note) -> int:
@@ -212,7 +221,7 @@ class NoteParser(BaseLoader):
         return expd_db_id
 
     def expedition_name_from_comment(self, mission: Mission) -> str:
-        # It looks like the third line begins with an Expedition name
+        # It looks like the fourth line begins with an Expedition name
         expd_name = ""
         if not mission.comment:
             self.logger.warning("Empty comment for mission %s", mission)
@@ -230,15 +239,24 @@ class NoteParser(BaseLoader):
                 expd_name += line + " "
         return expd_name.strip()
 
+    def platform_from_comment(self, mission: Mission) -> str:
+        # It looks like the third line has the Platform (ship) name
+        platform_name = mission.comment.split("\n")[2]
+        platformtype, _ = Platformtype.objects.get_or_create(name="ship")
+        platform, _ = Platform.objects.get_or_create(
+            name=platform_name,
+            platformtype=platformtype,
+            operator_org_name="MBARI",
+        )
+        return platform
+
     def parse_notes(self):
         for note_count, note in enumerate(Note.objects.all(), start=1):
             self.logger.info("======== %d. %s ========", note_count, note.mission.name)
             note.mission.comment = self.comment_from_text(note)
-            expd_db_id = self.expd_db_id_from_text(note)
-            name = self.expedition_name_from_comment(note.mission)
             expedition, created = Expedition.objects.get_or_create(
-                expd_db_id=expd_db_id,
-                name=name,
+                expd_db_id=self.expd_db_id_from_text(note),
+                name=self.expedition_name_from_comment(note.mission),
             )
             if created:
                 self.logger.info("Saved <Expedition: %s>", expedition)
@@ -254,6 +272,7 @@ class NoteParser(BaseLoader):
                     ),
                 )
             note.mission.expedition = expedition
+            note.mission.platform = self.platform_from_comment(note.mission)
             note.mission.save()
 
 
