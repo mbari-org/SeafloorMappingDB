@@ -89,4 +89,4 @@ class NoteAdmin(GeoModelAdmin):
     ordering = [
         "mission__name",
     ]
-    search_fields = ["text"]
+    search_fields = ["text", "mission__name"]
