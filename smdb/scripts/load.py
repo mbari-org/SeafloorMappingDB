@@ -138,11 +138,6 @@ class BaseLoader:
             action="store",
             help="Start processing at mission name provided",
         )
-        parser.add_argument(
-            "--save_thumbnail",
-            action="store_true",
-            help="Save thumbnail images to media storage as part of --bootstrap",
-        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -266,14 +261,19 @@ class NoteParser(BaseLoader):
                     "Other missions belonging to %s: %s",
                     expedition,
                     ", ".join(
-                        Mission.objects.filter(expedition=expedition).values_list(
-                            "name", flat=True
-                        )
+                        Mission.objects.filter(expedition=expedition)
+                        .exclude(note=note)
+                        .values_list("name", flat=True)
                     ),
                 )
             note.mission.expedition = expedition
             note.mission.platform = self.platform_from_comment(note.mission)
             note.mission.save()
+            self.logger.info(
+                "%3d. Saved Mission with <Platform: %s>",
+                note_count,
+                note.mission.platform,
+            )
 
 
 class MBSystem(BaseLoader):
@@ -569,6 +569,8 @@ class Scanner(BaseLoader):
             im_path = os.path.join(thumbdir, new_name)
             new_im.save(im_path, "JPEG")
             with open(im_path, "rb") as fh:
+                # Original file will not be overwritten, delete first
+                mission.thumbnail_image.delete()
                 mission.thumbnail_image.save(new_name, File(fh))
                 self.logger.debug(
                     "thumbnail_image.url: %s", mission.thumbnail_image.url
@@ -593,6 +595,15 @@ def run(*args):
         mbsystem_load()
 
 
+def flush_database(sc):
+    sc.logger.info("Deleting %d stored thumbnail_images", Mission.objects.all().count())
+    for mission in Mission.objects.all():
+        mission.thumbnail_image.delete(save=False)
+    sc.logger.info("Deleting %s Expeditions", Expedition.objects.all().count())
+    for expd in Expedition.objects.all():
+        expd.delete()
+
+
 def bootstrap_load():
     sc = Scanner()
     sc.process_command_line()
@@ -602,18 +613,9 @@ def bootstrap_load():
         if not sc.args.noinput:
             ans = input("\nDelete all existing Expeditions? [y/N] ")
             if ans.lower() == "y":
-                sc.logger.info(
-                    "Deleting %s Expeditions", Expedition.objects.all().count()
-                )
-                for expd in Expedition.objects.all():
-                    expd.delete()
+                flush_database(sc)
         else:
-            sc.logger.info(
-                "Deleting %s Expeditions",
-                Expedition.objects.all().count(),
-            )
-            for expd in Expedition.objects.all():
-                expd.delete()
+            flush_database(sc)
     # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
     locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
     start_processing = True
@@ -674,8 +676,7 @@ def bootstrap_load():
             )
             try:
                 sc.save_notes(mission)
-                if sc.args.save_thumbnail:
-                    sc.save_thumbnail(mission)
+                sc.save_thumbnail(mission)
             except FileExistsError as e:
                 sc.logger.warning(str(e))
 
