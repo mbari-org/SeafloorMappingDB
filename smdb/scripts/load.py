@@ -138,11 +138,6 @@ class BaseLoader:
             action="store",
             help="Start processing at mission name provided",
         )
-        parser.add_argument(
-            "--save_thumbnail",
-            action="store_true",
-            help="Save thumbnail images to media storage as part of --bootstrap",
-        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -188,9 +183,11 @@ class NoteParser(BaseLoader):
             if line.strip() in (
                 "TN199 Expedition to the Juan de Fuca Ridge",
                 "2007 PMEL Nemo Expedition (AT15-21)",
+                "Science Party: Dave Caress, Hans Thomas, Rendi Keaton",
             ):
                 # /mbari/SeafloorMapping/MappingAUVOps2016/20160919OCEANSTutorial/SampleDatasets/20060901Org/20060831Notes.txt
                 # /mbari/SeafloorMapping/MappingAUVOps2016/20160919OCEANSTutorial/SampleDatasets/20070808/20070808Notes.txt
+                # /mbari/SeafloorMapping/MappingAUVOpsStuff/2005/ZZoldstuff/20051118/Notes.txt
                 # Special cases where the Notes file has no BOUNDARY_DASHES
                 comment_captured = True
 
@@ -254,6 +251,14 @@ class NoteParser(BaseLoader):
         for note_count, note in enumerate(Note.objects.all(), start=1):
             self.logger.info("======== %d. %s ========", note_count, note.mission.name)
             note.mission.comment = self.comment_from_text(note)
+            if len(note.mission.comment) > 512:
+                self.logger.warning(
+                    "Comment parsed from Note %s is too long at %d characters",
+                    note.mission.notes_filename,
+                    len(note.mission.comment),
+                )
+                self.logger.info("Truncating it to first 5 lines")
+                note.mission.comment = "\n".join(note.mission.comment.split("\n")[:5])
             expedition, created = Expedition.objects.get_or_create(
                 expd_db_id=self.expd_db_id_from_text(note),
                 name=self.expedition_name_from_comment(note.mission),
@@ -266,14 +271,19 @@ class NoteParser(BaseLoader):
                     "Other missions belonging to %s: %s",
                     expedition,
                     ", ".join(
-                        Mission.objects.filter(expedition=expedition).values_list(
-                            "name", flat=True
-                        )
+                        Mission.objects.filter(expedition=expedition)
+                        .exclude(note=note)
+                        .values_list("name", flat=True)
                     ),
                 )
             note.mission.expedition = expedition
             note.mission.platform = self.platform_from_comment(note.mission)
             note.mission.save()
+            self.logger.info(
+                "%3d. Saved Mission with <Platform: %s>",
+                note_count,
+                note.mission.platform,
+            )
 
 
 class MBSystem(BaseLoader):
@@ -421,7 +431,7 @@ class MBSystem(BaseLoader):
         )
 
 
-class Scanner(BaseLoader):
+class BootStrapper(BaseLoader):
     LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def extent(self, ds, file):
@@ -523,7 +533,7 @@ class Scanner(BaseLoader):
 
         return thumbnail_file
 
-    def save_notes(self, mission):
+    def save_note_to_db(self, mission):
         if not mission.notes_filename:
             raise FileExistsError(f"No Notes found for {mission}")
         note_text = ""
@@ -569,11 +579,109 @@ class Scanner(BaseLoader):
             im_path = os.path.join(thumbdir, new_name)
             new_im.save(im_path, "JPEG")
             with open(im_path, "rb") as fh:
+                # Original file will not be overwritten, delete first
+                mission.thumbnail_image.delete()
                 mission.thumbnail_image.save(new_name, File(fh))
                 self.logger.debug(
                     "thumbnail_image.url: %s", mission.thumbnail_image.url
                 )
                 self.logger.info("Saved thumbnail image of size %dx%s", nx, ny)
+
+    def flush_database(self):
+        self.logger.info(
+            "Deleting %d stored thumbnail_images", Mission.objects.all().count()
+        )
+        for mission in Mission.objects.all():
+            mission.thumbnail_image.delete(save=False)
+        self.logger.info("Deleting %s Expeditions", Expedition.objects.all().count())
+        for expd in Expedition.objects.all():
+            expd.delete()
+
+    def load_from_grds(self):
+        self.process_command_line()
+
+        if self.args.clobber:
+            # Will cascade delete Missions and Notes loaded by bootstrap load
+            if not self.args.noinput:
+                ans = input("\nDelete all existing Expeditions? [y/N] ")
+                if ans.lower() == "y":
+                    self.flush_database()
+            else:
+                self.flush_database()
+        # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '\/ZTopo.grd$'"
+        start_processing = True
+        if self.args.skipuntil_regex:
+            start_processing = False
+        miss_count = 0
+        for count, fp in enumerate(
+            subprocess.getoutput(locate_cmd).split("\n"),
+            start=1,
+        ):
+            self.logger.debug("%3d. file: %s", count, fp)
+            if self.args.regex:
+                if self.args.skipuntil_regex and re.search(
+                    re.compile(self.args.regex), fp
+                ):
+                    start_processing = True
+                if not self.args.skipuntil_regex and not re.search(
+                    re.compile(self.args.regex), fp
+                ):
+                    self.logger.debug("Does not match --regex '%s'", self.args.regex)
+                    continue
+            if not start_processing:
+                self.logger.debug("Skipping until %s", self.args.regex)
+                continue
+            if fp in self.exclude_files:
+                self.logger.debug("Excluding file: %s", fp)
+            else:
+                miss_count += 1
+                self.logger.info(
+                    "======== %3d. %s ========",
+                    miss_count,
+                    os.path.dirname(fp).replace(MBARI_DIR, ""),
+                )
+                try:
+                    ds = Dataset(fp)
+                    self.logger.debug(ds)
+                except PermissionError as e:
+                    self.logger.warning(str(e))
+                except FileNotFoundError:
+                    raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
+                if not self.is_geographic(ds):
+                    self.logger.warning("%s is not Projection: Geographic", fp)
+                    continue
+                try:
+                    grid_bounds = self.extent(ds, fp)
+                except ValueError as e:
+                    self.logger.warning(e)
+                    continue
+                self.logger.debug("grid_bounds: %s", grid_bounds)
+
+                notes_filename = self.notes_filename(os.path.dirname(fp))
+                thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
+
+                mission, created = Mission.objects.get_or_create(
+                    name=os.path.dirname(fp).replace(MBARI_DIR, ""),
+                    grid_bounds=grid_bounds,
+                    notes_filename=notes_filename,
+                    thumbnail_filename=thumbnail_filename,
+                    directory=os.path.dirname(fp),
+                )
+                try:
+                    self.save_note_to_db(mission)
+                    self.save_thumbnail(mission)
+                except FileExistsError as e:
+                    self.logger.warning(str(e))
+
+                if created:
+                    self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
+                else:
+                    self.logger.info("%3d. Resaved %s", miss_count, mission)
+                if self.args.limit:
+                    if miss_count >= self.args.limit:
+                        self.logger.info("Stopping after %s records", self.args.limit)
+                        return
 
 
 def run(*args):
@@ -594,99 +702,9 @@ def run(*args):
 
 
 def bootstrap_load():
-    sc = Scanner()
-    sc.process_command_line()
-
-    if sc.args.clobber:
-        # Will cascade delete Missions and Notes loaded by bootstrap load
-        if not sc.args.noinput:
-            ans = input("\nDelete all existing Expeditions? [y/N] ")
-            if ans.lower() == "y":
-                sc.logger.info(
-                    "Deleting %s Expeditions", Expedition.objects.all().count()
-                )
-                for expd in Expedition.objects.all():
-                    expd.delete()
-        else:
-            sc.logger.info(
-                "Deleting %s Expeditions",
-                Expedition.objects.all().count(),
-            )
-            for expd in Expedition.objects.all():
-                expd.delete()
-    # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
-    locate_cmd = f"locate -d {sc.LOCATE_DB} -r '\/ZTopo.grd$'"
-    start_processing = True
-    if sc.args.skipuntil_regex:
-        start_processing = False
-    miss_count = 0
-    for count, fp in enumerate(
-        subprocess.getoutput(locate_cmd).split("\n"),
-        start=1,
-    ):
-        sc.logger.debug("%3d. file: %s", count, fp)
-        if sc.args.regex:
-            if sc.args.skipuntil_regex and re.search(re.compile(sc.args.regex), fp):
-                start_processing = True
-            if not sc.args.skipuntil_regex and not re.search(
-                re.compile(sc.args.regex), fp
-            ):
-                sc.logger.debug("Does not match --regex '%s'", sc.args.regex)
-                continue
-        if not start_processing:
-            sc.logger.debug("Skipping until %s", sc.args.regex)
-            continue
-        if fp in sc.exclude_files:
-            sc.logger.debug("Excluding file: %s", fp)
-        else:
-            miss_count += 1
-            sc.logger.info(
-                "======== %3d. %s ========",
-                miss_count,
-                os.path.dirname(fp).replace(MBARI_DIR, ""),
-            )
-            try:
-                ds = Dataset(fp)
-                sc.logger.debug(ds)
-            except PermissionError as e:
-                sc.logger.warning(str(e))
-            except FileNotFoundError:
-                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
-            if not sc.is_geographic(ds):
-                sc.logger.warning("%s is not Projection: Geographic", fp)
-                continue
-            try:
-                grid_bounds = sc.extent(ds, fp)
-            except ValueError as e:
-                sc.logger.warning(e)
-                continue
-            sc.logger.debug("grid_bounds: %s", grid_bounds)
-
-            notes_filename = sc.notes_filename(os.path.dirname(fp))
-            thumbnail_filename = sc.thumbnail_filename(os.path.dirname(fp))
-
-            mission, created = Mission.objects.get_or_create(
-                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                grid_bounds=grid_bounds,
-                notes_filename=notes_filename,
-                thumbnail_filename=thumbnail_filename,
-                directory=os.path.dirname(fp),
-            )
-            try:
-                sc.save_notes(mission)
-                if sc.args.save_thumbnail:
-                    sc.save_thumbnail(mission)
-            except FileExistsError as e:
-                sc.logger.warning(str(e))
-
-            if created:
-                sc.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
-            else:
-                sc.logger.info("%3d. Resaved %s", miss_count, mission)
-            if sc.args.limit:
-                if miss_count >= sc.args.limit:
-                    sc.logger.info("Stopping after %s records", sc.args.limit)
-                    return
+    bs = BootStrapper()
+    bs.process_command_line()
+    bs.load_from_grds()
 
 
 def notes_load():
