@@ -13,7 +13,11 @@ let feature = L.geoJSON(missions)
   .bindPopup(
     function (layer) {
       return (
+        "<a target='_blank' href='/missions/" +
+        layer.feature.properties.pk +
+        "'>" +
         layer.feature.properties.name +
+        "</a>" +
         "<br>" +
         "<img src='" +
         media_url +
