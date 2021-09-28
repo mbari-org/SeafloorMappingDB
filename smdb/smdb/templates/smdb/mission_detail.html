@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Mission {{ mission.name }}</h2>
+    <img src="{{ mission.thumbnail_image.url }}">
+    <pre>{{ note_text }}</pre>
+{% endblock %}

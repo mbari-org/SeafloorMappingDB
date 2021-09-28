@@ -9,7 +9,7 @@ from graphene_django.views import GraphQLView
 from rest_framework.authtoken.views import obtain_auth_token
 
 from smdb.api.base import router as api_v1_router
-from smdb.views import MissionOverView
+from smdb.views import MissionOverView, MissionListView, MissionDetailView
 
 GraphQLView.graphiql_template = "graphene_graphiql_explorer/graphiql.html"
 
@@ -24,6 +24,12 @@ urlpatterns = [
     path("users/", include("smdb.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
+    path("missions/", MissionListView.as_view()),
+    path(
+        "missions/<int:pk>/",
+        MissionDetailView.as_view(),
+        name="mission-detail",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # API URLS
