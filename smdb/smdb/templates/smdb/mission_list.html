@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Missions</h2>
+    <ul>
+        {% for mission in mission_list %}
+            <li><a href="{% url 'mission-detail' mission.pk %}">{{ mission.name }}</a>
+        {% endfor %}
+    </ul>
+{% endblock %}
+

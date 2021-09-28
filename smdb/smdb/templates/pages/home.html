@@ -19,7 +19,22 @@
 {% block title %}Overview first{% endblock %}
 
 {% block content %}
-  <h2>{{ search_string|bleach }}</h2>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-7">
+      {{ search_string|bleach }}
+    </div>
+    <div class="col-5">
+      <form id="changelist-search" method="get">
+        <div class="float-right"><!-- DIV needed for valid HTML -->
+          <label for="searchbar"><img src="/static/admin/img/search.svg" alt="Search"></label>
+          <input type="text" size="40" name="q" value="" id="searchbar" autofocus="">
+          <input type="submit" value="Search">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
   {{ missions|json_script:"missions-data" }}
   {{ MEDIA_URL|json_script:"MEDIA-URL" }}
   <div id="map"></div>
