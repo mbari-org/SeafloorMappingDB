@@ -139,6 +139,7 @@ class Mission(models.Model):
     notes_filename = models.CharField(
         max_length=256, db_index=True, blank=True, null=True
     )
+    notes_text = models.TextField(blank=True, null=True)
     region_name = models.CharField(max_length=128, db_index=True, blank=True)
     site_detail = models.CharField(max_length=128, db_index=True, blank=True)
     thumbnail_filename = models.CharField(max_length=256, db_index=True, blank=True)
@@ -200,10 +201,3 @@ class Citation(models.Model):
         return self.doi
 
 
-class Note(models.Model):
-    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    text = models.TextField()
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"Notes for {self.mission}"
