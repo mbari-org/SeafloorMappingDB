@@ -1,10 +1,12 @@
 import json
 import logging
+from os.path import join
 
-from django.views.generic import ListView, DetailView
-from django.views.generic.base import TemplateView
+from django.conf import settings
 from django.core.serializers import serialize
 from django.db import connection
+from django.views.generic import DetailView, ListView
+from django.views.generic.base import TemplateView
 
 from smdb.models import Mission, Note
 
@@ -75,6 +77,12 @@ class MissionDetailView(DetailView):
         # Add in a QuerySet of all the books
         mission = super().get_object()
         context["note_text"] = Note.objects.get(mission=mission).text
+        try:
+            context["thumbnail_url"] = mission.thumbnail_image.url
+        except (AttributeError, ValueError):
+            context["thumbnail_url"] = join(
+                settings.STATIC_URL, "images", "No_ZTopoSlopeNav_image.jpg"
+            )
         return context
 
     def get_object(self):

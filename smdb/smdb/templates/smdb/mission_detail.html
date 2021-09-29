@@ -1,7 +1,19 @@
 {% extends "base.html" %}
 
+{% block css %}
+  {{ block.super }}
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+{% endblock %}
+
+{% block title %}Mission details on demand{% endblock %}
+
 {% block content %}
-    <h2>Mission {{ mission.name }}</h2>
-    <img src="{{ mission.thumbnail_image.url }}">
-    <pre>{{ note_text }}</pre>
+    <h2>{{ mission.name }}</h2>
+    <img src="{{ thumbnail_url }}" />
+    <div>
+        <pre>{{ note_text }}</pre>
+    </div>
 {% endblock %}
