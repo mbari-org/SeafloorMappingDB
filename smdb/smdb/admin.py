@@ -7,7 +7,6 @@ from smdb.models import (
     Expedition,
     Mission,
     Missiontype,
-    Note,
     Person,
     Platform,
     Platformtype,
@@ -83,10 +82,3 @@ class SensorAdmin(GeoModelAdmin):
 class SensortypeAdmin(GeoModelAdmin):
     pass
 
-
-@register(Note)
-class NoteAdmin(GeoModelAdmin):
-    ordering = [
-        "mission__name",
-    ]
-    search_fields = ["text", "mission__name"]
