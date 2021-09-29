@@ -41,11 +41,6 @@ class TestAdmin:
         response = admin_client.get(url, data={"q": "test"})
         assert response.status_code == 200
 
-    def test_note_search(self, admin_client):
-        url = reverse("admin:smdb_note_changelist")
-        response = admin_client.get(url, data={"q": "test"})
-        assert response.status_code == 200
-
     """
     def test_add_mission(self, admin_client):
         # Adding a Mission requires several more fields than just name

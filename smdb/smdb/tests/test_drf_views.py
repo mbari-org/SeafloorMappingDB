@@ -418,12 +418,16 @@ class TestPlatformtypeViewSet(ViewSetTest, AsUser("tester")):
             }
         )
         initial_platformtype = precondition_fixture(
-            lambda: set(Platformtype.objects.values_list("name", flat=True))
+            lambda: set(
+                [pt for pt in Platformtype.objects.values_list("name", flat=True)]
+            )
         )
 
         def it_creates_new_platformtype(self, initial_platformtype, json):
             expected = initial_platformtype | {json["name"]}
-            actual = set((str(Platformtype.objects.values_list("name", flat=True)[0]),))
+            actual = set(
+                [pt for pt in Platformtype.objects.values_list("name", flat=True)]
+            )
             assert expected == actual
 
         def a_test_it_sets_expected_attrs(self, data, json):
