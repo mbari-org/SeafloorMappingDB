@@ -51,6 +51,28 @@ class MissionAdmin(GeoModelAdmin):
         "name",
         "notes_text",
     ]
+    fields = [
+        "image_tag",
+        "expedition",
+        "name",
+        "start_date",
+        "end_date",
+        "start_depth",
+        "comment",
+        "quality_comment",
+        "repeat_survey",
+        "directory",
+        "notes_filename",
+        "notes_text",
+        "region_name",
+        "site_detail",
+        "thumbnail_filename",
+        "thumbnail_image",
+        "kml_filename",
+        "compilation",
+        "update_status",
+    ]
+    readonly_fields = ["image_tag"]
 
 
 @register(Missiontype)

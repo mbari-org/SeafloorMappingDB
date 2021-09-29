@@ -6,7 +6,9 @@ MBARI 20 May 2021
 """
 
 import uuid as uuid_lib
+
 from django.contrib.gis.db import models
+from django.utils.html import mark_safe
 
 
 class Person(models.Model):
@@ -180,6 +182,11 @@ class Mission(models.Model):
 
     display_citation.short_description = "Citation"
 
+    def image_tag(self):
+        return mark_safe('<img src="{}" />'.format(self.thumbnail_image.url))
+
+    image_tag.short_description = "Thumbnail image"
+
 
 class DataArchival(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
@@ -199,5 +206,3 @@ class Citation(models.Model):
 
     def __str__(self):
         return self.doi
-
-
