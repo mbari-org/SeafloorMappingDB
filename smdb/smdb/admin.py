@@ -49,7 +49,7 @@ class MissionAdmin(GeoModelAdmin):
     ]
     search_fields = [
         "name",
-        "note__text",
+        "notes_text",
     ]
 
 
@@ -81,4 +81,3 @@ class SensorAdmin(GeoModelAdmin):
 @register(Sensortype)
 class SensortypeAdmin(GeoModelAdmin):
     pass
-
