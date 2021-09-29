@@ -586,13 +586,27 @@ class BootStrapper(BaseLoader):
 
     def flush_database(self):
         self.logger.info(
-            "Deleting %d stored thumbnail_images", Mission.objects.all().count()
+            "Deleting %d stored thumbnail_images",
+            Mission.objects.all().count(),
         )
+        self.logger.info("Deleting %d Missions", Mission.objects.all().count())
         for mission in Mission.objects.all():
             mission.thumbnail_image.delete(save=False)
-        self.logger.info("Deleting %s Expeditions", Expedition.objects.all().count())
+        self.logger.info(
+            "Deleting %d Expeditions",
+            Expedition.objects.all().count(),
+        )
         for expd in Expedition.objects.all():
             expd.delete()
+
+        # Here's how to automatically flush the whole database:
+        # Satellite (Type) tables may have data - May also want to reset pk's
+        # Also removes superuser - Might be better to do this at command line:
+        # smdb/manage.py flush
+        # smdb/manage.py createsuperuser
+        ##from django.core.management import call_command  # noqa F402
+        ##from django.core.management.commands import flush  # noqa F40
+        ##call_command(flush.Command(), verbosity=1, interactive=False)
 
     def load_from_grds(self):
         self.process_command_line()
@@ -600,7 +614,12 @@ class BootStrapper(BaseLoader):
         if self.args.clobber:
             # Will cascade delete Missions and Notes loaded by bootstrap load
             if not self.args.noinput:
-                ans = input("\nDelete all existing Expeditions? [y/N] ")
+                ans = input(
+                    "\nDelete {} Expeditions and {} Missions? [y/N] ".format(
+                        Expedition.objects.all().count(),
+                        Mission.objects.all().count(),
+                    )
+                )
                 if ans.lower() == "y":
                     self.flush_database()
             else:
@@ -689,6 +708,9 @@ def run(*args):
     if bl.args.bootstrap:
         bootstrap_load()
     elif bl.args.notes:
+        notes_load()
+    elif bl.args.bootstrap and bl.args.note:
+        bootstrap_load()
         notes_load()
     elif bl.args.mbsystem:
         mbsystem_load()
