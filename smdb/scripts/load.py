@@ -709,12 +709,12 @@ def run(*args):
     bl = BaseLoader()
     bl.process_command_line()
     bl.logger.debug("Arguments passed to run(): %s", " ".join(args))
-    if bl.args.bootstrap:
+    if bl.args.bootstrap and bl.args.notes:
+        bootstrap_load()
+        notes_load()
+    elif bl.args.bootstrap:
         bootstrap_load()
     elif bl.args.notes:
-        notes_load()
-    elif bl.args.bootstrap and bl.args.note:
-        bootstrap_load()
         notes_load()
     elif bl.args.mbsystem:
         mbsystem_load()
