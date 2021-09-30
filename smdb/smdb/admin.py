@@ -7,7 +7,6 @@ from smdb.models import (
     Expedition,
     Mission,
     Missiontype,
-    Note,
     Person,
     Platform,
     Platformtype,
@@ -50,8 +49,30 @@ class MissionAdmin(GeoModelAdmin):
     ]
     search_fields = [
         "name",
-        "note__text",
+        "notes_text",
     ]
+    fields = [
+        "image_tag",
+        "expedition",
+        "name",
+        "start_date",
+        "end_date",
+        "start_depth",
+        "comment",
+        "quality_comment",
+        "repeat_survey",
+        "directory",
+        "notes_filename",
+        "notes_text",
+        "region_name",
+        "site_detail",
+        "thumbnail_filename",
+        "thumbnail_image",
+        "kml_filename",
+        "compilation",
+        "update_status",
+    ]
+    readonly_fields = ["image_tag"]
 
 
 @register(Missiontype)
@@ -82,11 +103,3 @@ class SensorAdmin(GeoModelAdmin):
 @register(Sensortype)
 class SensortypeAdmin(GeoModelAdmin):
     pass
-
-
-@register(Note)
-class NoteAdmin(GeoModelAdmin):
-    ordering = [
-        "mission__name",
-    ]
-    search_fields = ["text", "mission__name"]

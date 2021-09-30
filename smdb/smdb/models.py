@@ -6,7 +6,9 @@ MBARI 20 May 2021
 """
 
 import uuid as uuid_lib
+
 from django.contrib.gis.db import models
+from django.utils.html import mark_safe
 
 
 class Person(models.Model):
@@ -139,6 +141,7 @@ class Mission(models.Model):
     notes_filename = models.CharField(
         max_length=256, db_index=True, blank=True, null=True
     )
+    notes_text = models.TextField(blank=True, null=True)
     region_name = models.CharField(max_length=128, db_index=True, blank=True)
     site_detail = models.CharField(max_length=128, db_index=True, blank=True)
     thumbnail_filename = models.CharField(max_length=256, db_index=True, blank=True)
@@ -179,6 +182,11 @@ class Mission(models.Model):
 
     display_citation.short_description = "Citation"
 
+    def image_tag(self):
+        return mark_safe('<img src="{}" />'.format(self.thumbnail_image.url))
+
+    image_tag.short_description = "Thumbnail image"
+
 
 class DataArchival(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
@@ -198,12 +206,3 @@ class Citation(models.Model):
 
     def __str__(self):
         return self.doi
-
-
-class Note(models.Model):
-    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    text = models.TextField()
-    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"Notes for {self.mission}"

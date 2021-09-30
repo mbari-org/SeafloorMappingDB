@@ -127,31 +127,6 @@ snapshots['test_all_expeditions 1'] = {
     'data': {
         'all_expeditions': [
             {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
                 'end_date': '1998-07-20T00:00:00',
                 'name': 'Initial',
                 'start_date': '1998-07-01T00:00:00'
@@ -163,31 +138,6 @@ snapshots['test_all_expeditions 1'] = {
 snapshots['test_all_expeditions_empty 1'] = {
     'data': {
         'all_expeditions': [
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            },
-            {
-                'end_date': None,
-                'name': None,
-                'start_date': None
-            }
         ]
     }
 }
@@ -197,7 +147,7 @@ snapshots['test_all_missions 1'] = {
         'all_missions': [
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190124m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -225,13 +175,13 @@ snapshots['test_all_missions 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190124m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190125m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -259,13 +209,13 @@ snapshots['test_all_missions 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190125m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -293,13 +243,13 @@ snapshots['test_all_missions 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190308m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190308m2',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -327,13 +277,13 @@ snapshots['test_all_missions 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190308m2/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190314m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -361,8 +311,8 @@ snapshots['test_all_missions 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190314m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
@@ -408,7 +358,7 @@ snapshots['test_all_missions_empty 1'] = {
         'all_missions': [
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190124m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -436,13 +386,13 @@ snapshots['test_all_missions_empty 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190124m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190125m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -470,13 +420,13 @@ snapshots['test_all_missions_empty 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190125m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -504,13 +454,13 @@ snapshots['test_all_missions_empty 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190308m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190308m2',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -538,13 +488,13 @@ snapshots['test_all_missions_empty 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190308m2/ZTopoSlopeNav.jpg',
                 'update_status': None
             },
             {
                 'comment': None,
-                'directory': None,
+                'directory': '/mbari/SeafloorMapping/2019/20190314m1',
                 'grid_bounds': {
                     'coordinates': [
                         [
@@ -572,8 +522,8 @@ snapshots['test_all_missions_empty 1'] = {
                     ],
                     'type': 'Polygon'
                 },
-                'kml_filename': '',
-                'thumbnail_filename': '',
+                'kml_filename': None,
+                'thumbnail_filename': '/mbari/SeafloorMapping/2019/20190314m1/ZTopoSlopeNav.jpg',
                 'update_status': None
             }
         ]
@@ -583,108 +533,6 @@ snapshots['test_all_missions_empty 1'] = {
 snapshots['test_all_missiontypes_empty 1'] = {
     'data': {
         'all_missiontypes': [
-        ]
-    }
-}
-
-snapshots['test_all_notes 1'] = {
-    'data': {
-        'all_notes': [
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190124m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190125m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190308m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190308m2'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190314m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': 'ENn1'
-                    },
-                    'name': 'Mn1_test'
-                }
-            }
-        ]
-    }
-}
-
-snapshots['test_all_notes_empty 1'] = {
-    'data': {
-        'all_notes': [
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190124m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190125m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190308m1'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190308m2'
-                }
-            },
-            {
-                'mission': {
-                    'expedition': {
-                        'name': None
-                    },
-                    'name': '2019/20190314m1'
-                }
-            }
         ]
     }
 }
@@ -712,6 +560,22 @@ snapshots['test_all_platforms 1'] = {
     'data': {
         'all_platforms': [
             {
+                'name': 'R/V Rachel Carson'
+            },
+            {
+                'name': 'Dorado'
+            }
+        ]
+    }
+}
+
+snapshots['test_all_platforms 2'] = {
+    'data': {
+        'all_platforms': [
+            {
+                'name': 'R/V Rachel Carson'
+            },
+            {
                 'name': 'Dorado'
             }
         ]
@@ -721,6 +585,10 @@ snapshots['test_all_platforms 1'] = {
 snapshots['test_all_platforms_empty 1'] = {
     'data': {
         'all_platforms': [
+            {
+                'name': 'R/V Rachel Carson',
+                'uuid': 'a6be3a82-dd34-4a3d-94d5-688f9170a6d2'
+            }
         ]
     }
 }
@@ -728,6 +596,9 @@ snapshots['test_all_platforms_empty 1'] = {
 snapshots['test_all_platformtypes 1'] = {
     'data': {
         'all_platformtypes': [
+            {
+                'name': 'ship'
+            },
             {
                 'name': 'Initial'
             }
@@ -738,6 +609,10 @@ snapshots['test_all_platformtypes 1'] = {
 snapshots['test_all_platformtypes_empty 1'] = {
     'data': {
         'all_platformtypes': [
+            {
+                'name': 'ship',
+                'uuid': 'c883f2f5-df64-4390-bef8-2c4e25f68c92'
+            }
         ]
     }
 }
@@ -1019,23 +894,6 @@ snapshots['test_create_missiontype_not_authenticated 1'] = {
     ]
 }
 
-snapshots['test_create_note 1'] = {
-    'data': {
-        'create_note': {
-            'note': {
-                'mission': {
-                    'expedition': {
-                        'name': 'ENn1'
-                    },
-                    'name': 'Mn1_test'
-                },
-                'text': '''Here is some text that may be in a Note.
-And another line of text.'''
-            }
-        }
-    }
-}
-
 snapshots['test_create_person 1'] = {
     'data': {
         'create_person': {
@@ -1059,6 +917,19 @@ snapshots['test_create_platform 1'] = {
                 }
             }
         }
+    }
+}
+
+snapshots['test_create_platform 2'] = {
+    'data': {
+        'all_platforms': [
+            {
+                'name': 'R/V Rachel Carson'
+            },
+            {
+                'name': 'Dorado'
+            }
+        ]
     }
 }
 
@@ -1260,23 +1131,6 @@ snapshots['test_delete_missiontype 1'] = {
     }
 }
 
-snapshots['test_delete_note 1'] = {
-    'data': {
-        'delete_note': {
-            'note': {
-                'mission': {
-                    'expedition': {
-                        'name': 'ENn1'
-                    },
-                    'name': 'Mn1_test'
-                },
-                'text': '''Here is some text that may be in a Note.
-And another line of text.'''
-            }
-        }
-    }
-}
-
 snapshots['test_delete_person 1'] = {
     'data': {
         'delete_person': {
@@ -1335,6 +1189,18 @@ snapshots['test_expedition_by_name 1'] = {
         'expedition_by_name': {
             'name': 'Initial'
         }
+    }
+}
+
+snapshots['test_expedition_by_name 2'] = {
+    'data': {
+        'all_expeditions': [
+            {
+                'end_date': '1998-07-20T00:00:00',
+                'name': 'Initial',
+                'start_date': '1998-07-01T00:00:00'
+            }
+        ]
     }
 }
 
@@ -1580,22 +1446,6 @@ snapshots['test_update_missiontype 1'] = {
     }
 }
 
-snapshots['test_update_note 1'] = {
-    'data': {
-        'update_note': {
-            'note': {
-                'mission': {
-                    'expedition': {
-                        'name': 'EN3'
-                    },
-                    'name': 'Mn1_updated'
-                },
-                'text': 'Updated single line of text.'
-            }
-        }
-    }
-}
-
 snapshots['test_update_person 1'] = {
     'data': {
         'update_person': {
@@ -1610,6 +1460,19 @@ snapshots['test_update_person 1'] = {
 
 snapshots['test_update_platform 1'] = {
     'data': {
+        'all_platforms': [
+            {
+                'name': 'R/V Rachel Carson'
+            },
+            {
+                'name': 'Dorado'
+            }
+        ]
+    }
+}
+
+snapshots['test_update_platform 2'] = {
+    'data': {
         'update_platform': {
             'platform': {
                 'name': 'Updated',
@@ -1622,13 +1485,49 @@ snapshots['test_update_platform 1'] = {
     }
 }
 
+snapshots['test_update_platform 3'] = {
+    'data': {
+        'all_platforms': [
+            {
+                'name': 'R/V Rachel Carson'
+            },
+            {
+                'name': 'Updated'
+            }
+        ]
+    }
+}
+
 snapshots['test_update_platformtype 1'] = {
+    'data': {
+        'create_platformtype': {
+            'platformtype': {
+                'name': 'Initial'
+            }
+        }
+    }
+}
+
+snapshots['test_update_platformtype 2'] = {
     'data': {
         'update_platformtype': {
             'platformtype': {
                 'name': 'Updated'
             }
         }
+    }
+}
+
+snapshots['test_update_platformtype 3'] = {
+    'data': {
+        'all_platformtypes': [
+            {
+                'name': 'ship'
+            },
+            {
+                'name': 'Updated'
+            }
+        ]
     }
 }
 

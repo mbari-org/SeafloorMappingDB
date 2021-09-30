@@ -8,7 +8,7 @@ from django.db import connection
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 
-from smdb.models import Mission, Note
+from smdb.models import Mission
 
 
 class MissionOverView(TemplateView):
@@ -76,7 +76,6 @@ class MissionDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         # Add in a QuerySet of all the books
         mission = super().get_object()
-        context["note_text"] = Note.objects.get(mission=mission).text
         try:
             context["thumbnail_url"] = mission.thumbnail_image.url
         except (AttributeError, ValueError):

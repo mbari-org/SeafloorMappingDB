@@ -27,7 +27,7 @@ from dateutil.parser import ParserError, parse  # noqa F402
 from django.core.files import File  # noqa F402
 from django.contrib.gis.geos import Point, Polygon  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
-from smdb.models import Expedition, Mission, Note, Platform, Platformtype  # noqa F402
+from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
@@ -167,10 +167,12 @@ class BaseLoader:
 class NoteParser(BaseLoader):
     BOUNDARY_DASHES = "------------------------------------"
 
-    def comment_from_text(self, note: Note) -> str:
+    def comment_from_text(self, mission: Mission) -> str:
         comment_captured = False
         comment = ""
-        for line in note.text.split("\n"):
+        if not mission.notes_text:
+            return comment
+        for line in mission.notes_text.split("\n"):
             if not comment_captured:
                 self.logger.debug(line)
                 # Capture lines starting at the first line
@@ -178,8 +180,8 @@ class NoteParser(BaseLoader):
             if line == self.BOUNDARY_DASHES and not comment_captured:
                 comment_captured = True
                 comment = comment.replace(self.BOUNDARY_DASHES, "").strip()
-                if note.mission.comment == "":
-                    self.logger.warning("Empty comment for mission %s", note.mission)
+                if mission.comment == "":
+                    self.logger.warning("Empty comment for mission %s", mission)
             if line.strip() in (
                 "TN199 Expedition to the Juan de Fuca Ridge",
                 "2007 PMEL Nemo Expedition (AT15-21)",
@@ -193,18 +195,18 @@ class NoteParser(BaseLoader):
 
         return comment
 
-    def expd_db_id_from_text(self, note: Note) -> int:
+    def expd_db_id_from_text(self, mission: Mission) -> int:
         next_line_is_expd_db_id = False
         expd_db_id = None
-        for line in note.text.split("\n"):
+        for line in mission.notes_text.split("\n"):
             if next_line_is_expd_db_id:
                 try:
                     expd_db_id = int(line)
                 except ValueError:
                     self.logger.warning(
                         "Could not get expd_db_id for %s from Notes file %s",
-                        note.mission.name,
-                        note.mission.notes_filename,
+                        mission.name,
+                        mission.notes_filename,
                     )
                 next_line_is_expd_db_id = False
             if "ExpeditionID" in line:
@@ -222,14 +224,8 @@ class NoteParser(BaseLoader):
         expd_name = ""
         if not mission.comment:
             self.logger.warning("Empty comment for mission %s", mission)
-            try:
-                if hasattr(Note.objects.get(mission=mission), "text"):
-                    self.logger.debug(
-                        "note.text = \n%s",
-                        Note.objects.get(mission=mission).text,
-                    )
-            except Note.DoesNotExist:
-                self.logger.debug("No Note saved for mission %s", mission)
+            if mission.notes_text:
+                self.logger.debug("misison.notes_text = \n%s", mission.notes_text)
             return expd_name.strip()
         for count, line in enumerate(mission.comment.split("\n")):
             if count > 1:
@@ -248,20 +244,20 @@ class NoteParser(BaseLoader):
         return platform
 
     def parse_notes(self):
-        for note_count, note in enumerate(Note.objects.all(), start=1):
-            self.logger.info("======== %d. %s ========", note_count, note.mission.name)
-            note.mission.comment = self.comment_from_text(note)
-            if len(note.mission.comment) > 512:
+        for note_count, mission in enumerate(Mission.objects.all(), start=1):
+            self.logger.info("======== %d. %s ========", note_count, mission.name)
+            mission.comment = self.comment_from_text(mission)
+            if len(mission.comment) > 512:
                 self.logger.warning(
-                    "Comment parsed from Note %s is too long at %d characters",
-                    note.mission.notes_filename,
-                    len(note.mission.comment),
+                    "Comment parsed from notes_text %s is too long at %d characters",
+                    mission.notes_filename,
+                    len(mission.comment),
                 )
                 self.logger.info("Truncating it to first 5 lines")
-                note.mission.comment = "\n".join(note.mission.comment.split("\n")[:5])
+                mission.comment = "\n".join(mission.comment.split("\n")[:5])
             expedition, created = Expedition.objects.get_or_create(
-                expd_db_id=self.expd_db_id_from_text(note),
-                name=self.expedition_name_from_comment(note.mission),
+                expd_db_id=self.expd_db_id_from_text(mission),
+                name=self.expedition_name_from_comment(mission),
             )
             if created:
                 self.logger.info("Saved <Expedition: %s>", expedition)
@@ -272,17 +268,17 @@ class NoteParser(BaseLoader):
                     expedition,
                     ", ".join(
                         Mission.objects.filter(expedition=expedition)
-                        .exclude(note=note)
+                        .exclude(pk=mission.pk)
                         .values_list("name", flat=True)
                     ),
                 )
-            note.mission.expedition = expedition
-            note.mission.platform = self.platform_from_comment(note.mission)
-            note.mission.save()
+            mission.expedition = expedition
+            mission.platform = self.platform_from_comment(mission)
+            mission.save()
             self.logger.info(
                 "%3d. Saved Mission with <Platform: %s>",
                 note_count,
-                note.mission.platform,
+                mission.platform,
             )
 
 
@@ -555,7 +551,8 @@ class BootStrapper(BaseLoader):
         if not note_text:
             raise FileExistsError(f"No Notes found for {mission}")
 
-        Note.objects.get_or_create(mission=mission, text=note_text)
+        mission.notes_text = note_text
+        mission.save()
         self.logger.info(f"Saved note text: %d lines", line_count)
 
     def save_thumbnail(self, mission):
@@ -589,13 +586,27 @@ class BootStrapper(BaseLoader):
 
     def flush_database(self):
         self.logger.info(
-            "Deleting %d stored thumbnail_images", Mission.objects.all().count()
+            "Deleting %d stored thumbnail_images",
+            Mission.objects.all().count(),
         )
+        self.logger.info("Deleting %d Missions", Mission.objects.all().count())
         for mission in Mission.objects.all():
             mission.thumbnail_image.delete(save=False)
-        self.logger.info("Deleting %s Expeditions", Expedition.objects.all().count())
+        self.logger.info(
+            "Deleting %d Expeditions",
+            Expedition.objects.all().count(),
+        )
         for expd in Expedition.objects.all():
             expd.delete()
+
+        # Here's how to automatically flush the whole database:
+        # Satellite (Type) tables may have data - May also want to reset pk's
+        # Also removes superuser - Might be better to do this at command line:
+        # smdb/manage.py flush
+        # smdb/manage.py createsuperuser
+        ##from django.core.management import call_command  # noqa F402
+        ##from django.core.management.commands import flush  # noqa F40
+        ##call_command(flush.Command(), verbosity=1, interactive=False)
 
     def load_from_grds(self):
         self.process_command_line()
@@ -603,7 +614,12 @@ class BootStrapper(BaseLoader):
         if self.args.clobber:
             # Will cascade delete Missions and Notes loaded by bootstrap load
             if not self.args.noinput:
-                ans = input("\nDelete all existing Expeditions? [y/N] ")
+                ans = input(
+                    "\nDelete {} Expeditions and {} Missions? [y/N] ".format(
+                        Expedition.objects.all().count(),
+                        Mission.objects.all().count(),
+                    )
+                )
                 if ans.lower() == "y":
                     self.flush_database()
             else:
@@ -692,6 +708,9 @@ def run(*args):
     if bl.args.bootstrap:
         bootstrap_load()
     elif bl.args.notes:
+        notes_load()
+    elif bl.args.bootstrap and bl.args.note:
+        bootstrap_load()
         notes_load()
     elif bl.args.mbsystem:
         mbsystem_load()

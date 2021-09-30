@@ -14,8 +14,11 @@ from smdb.tests.factories import MissiontypeFactory, PersonFactory, Platformtype
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
     """Create smdb/smdb/fixtures/missions_notes_5.json thusly:
-    1. Modify smdb/scripts/load.py to exit after saving 5 missions
-    2. python smdb/manage.py dumpdata -o smdb/smdb/fixtures/missions_notes_5.json
+    1. smdb/manage.py flush
+    2. smdb/scripts/load.py --bootstrap --notes --clobber --limit 5 -v
+    3. smdb/manage.py dumpdata smdb -o smdb/smdb/fixtures/missions_notes_5.json
+    4. Save the .json file from VS Code so that it's formatted for version controlled edits
+    5. smdb/manage.py createsuperuser
     See: https://pytest-django.readthedocs.io/en/latest/database.html#populate-the-database-with-initial-test-data
     """
     with django_db_blocker.unblock():
