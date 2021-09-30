@@ -26,4 +26,5 @@ def test_search_missions(client):
     assert response.status_code == 200
     missions = response.context["missions"]["features"]
     # Depends on missions_notes_5.json fixture being loaded
-    assert len(missions) == 2
+    # As of 30 Sep 2021 notes_text are also searched, returning 3
+    assert len(missions) == 3
