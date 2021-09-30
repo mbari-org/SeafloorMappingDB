@@ -26,7 +26,7 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     path("missions/", MissionListView.as_view()),
     path(
-        "missions/<int:pk>/",
+        "missions/<str:slug>/",
         MissionDetailView.as_view(),
         name="mission-detail",
     ),

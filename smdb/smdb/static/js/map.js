@@ -14,15 +14,13 @@ let feature = L.geoJSON(missions)
     function (layer) {
       return (
         "<a target='_blank' href='/missions/" +
-        layer.feature.properties.pk +
+        layer.feature.properties.slug +
         "'>" +
-        layer.feature.properties.name +
-        "</a>" +
-        "<br>" +
         "<img src='" +
         media_url +
         layer.feature.properties.thumbnail_image +
-        "' />"
+        "' />" +
+        "</a>"
       );
     },
     {

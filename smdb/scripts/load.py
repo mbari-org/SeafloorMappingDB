@@ -198,6 +198,8 @@ class NoteParser(BaseLoader):
     def expd_db_id_from_text(self, mission: Mission) -> int:
         next_line_is_expd_db_id = False
         expd_db_id = None
+        if not mission.notes_text:
+            return expd_db_id
         for line in mission.notes_text.split("\n"):
             if next_line_is_expd_db_id:
                 try:
@@ -234,6 +236,8 @@ class NoteParser(BaseLoader):
 
     def platform_from_comment(self, mission: Mission) -> str:
         # It looks like the third line has the Platform (ship) name
+        if not mission.comment:
+            return None
         platform_name = mission.comment.split("\n")[2]
         platformtype, _ = Platformtype.objects.get_or_create(name="ship")
         platform, _ = Platform.objects.get_or_create(
@@ -705,12 +709,12 @@ def run(*args):
     bl = BaseLoader()
     bl.process_command_line()
     bl.logger.debug("Arguments passed to run(): %s", " ".join(args))
-    if bl.args.bootstrap:
+    if bl.args.bootstrap and bl.args.notes:
+        bootstrap_load()
+        notes_load()
+    elif bl.args.bootstrap:
         bootstrap_load()
     elif bl.args.notes:
-        notes_load()
-    elif bl.args.bootstrap and bl.args.note:
-        bootstrap_load()
         notes_load()
     elif bl.args.mbsystem:
         mbsystem_load()

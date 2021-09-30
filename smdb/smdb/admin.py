@@ -40,6 +40,7 @@ class ExpeditionAdmin(GeoModelAdmin):
         "mission__name",
         "expd_db_id",
     ]
+    prepopulated_fields = {"slug": ("name",)}
 
 
 @register(Mission)
@@ -55,6 +56,7 @@ class MissionAdmin(GeoModelAdmin):
         "image_tag",
         "expedition",
         "name",
+        "slug",
         "start_date",
         "end_date",
         "start_depth",
@@ -73,6 +75,7 @@ class MissionAdmin(GeoModelAdmin):
         "update_status",
     ]
     readonly_fields = ["image_tag"]
+    prepopulated_fields = {"slug": ("name",)}
 
 
 @register(Missiontype)

@@ -9,6 +9,7 @@ import uuid as uuid_lib
 
 from django.contrib.gis.db import models
 from django.utils.html import mark_safe
+from django.utils.text import slugify
 
 
 class Person(models.Model):
@@ -72,6 +73,7 @@ class Sensor(models.Model):
 class Expedition(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=512, null=True)
+    slug = models.SlugField(max_length=512)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     investigator = models.ForeignKey(
@@ -92,6 +94,12 @@ class Expedition(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = slugify(self.name)
+
+        super(Expedition, self).save(*args, **kwargs)
 
 
 class Compilation(models.Model):
@@ -116,6 +124,7 @@ class Compilation(models.Model):
 class Mission(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=256, db_index=True)
+    slug = models.SlugField(max_length=256)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
@@ -186,6 +195,12 @@ class Mission(models.Model):
         return mark_safe('<img src="{}" />'.format(self.thumbnail_image.url))
 
     image_tag.short_description = "Thumbnail image"
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = slugify(self.name.replace("/", " "))
+
+        super(Mission, self).save(*args, **kwargs)
 
 
 class DataArchival(models.Model):

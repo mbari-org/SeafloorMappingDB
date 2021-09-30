@@ -5,6 +5,7 @@ from os.path import join
 from django.conf import settings
 from django.core.serializers import serialize
 from django.db import connection
+from django.db.models import Q
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 
@@ -21,7 +22,10 @@ class MissionOverView(TemplateView):
         context = super().get_context_data(**kwargs)
         search_string = context["view"].request.GET.get("q")
         if search_string:
-            missions = Mission.objects.filter(name__icontains=search_string)
+            missions = Mission.objects.filter(
+                Q(name__icontains=search_string)
+                | Q(notes_text__icontains=search_string)
+            )
         else:
             missions = Mission.objects.all()
 
@@ -34,9 +38,8 @@ class MissionOverView(TemplateView):
                 "geojson",
                 missions,
                 fields=(
-                    "pk",
+                    "slug",
                     "grid_bounds",
-                    "name",
                     "thumbnail_image",
                 ),
             )

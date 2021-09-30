@@ -127,6 +127,26 @@ snapshots['test_all_expeditions 1'] = {
     'data': {
         'all_expeditions': [
             {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Testing Terrain Relative Navigation for the Axial Geodesy project and Precisions Controls Project',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Testing Mapping AUV 1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Morro Bay Expedition',
+                'start_date': None
+            },
+            {
                 'end_date': '1998-07-20T00:00:00',
                 'name': 'Initial',
                 'start_date': '1998-07-01T00:00:00'
@@ -138,6 +158,26 @@ snapshots['test_all_expeditions 1'] = {
 snapshots['test_all_expeditions_empty 1'] = {
     'data': {
         'all_expeditions': [
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Testing Terrain Relative Navigation for the Axial Geodesy project and Precisions Controls Project',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Testing Mapping AUV 1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Morro Bay Expedition',
+                'start_date': None
+            }
         ]
     }
 }
@@ -146,7 +186,10 @@ snapshots['test_all_missions 1'] = {
     'data': {
         'all_missions': [
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+24 January 2019
+R/V Rachel Carson
+Testing Terrain Relative Navigation for the Axial Geodesy project and Precisions Controls Project''',
                 'directory': '/mbari/SeafloorMapping/2019/20190124m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -180,7 +223,10 @@ snapshots['test_all_missions 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+25 January 2019
+R/V Rachel Carson
+Testing Mapping AUV 1''',
                 'directory': '/mbari/SeafloorMapping/2019/20190125m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -214,7 +260,10 @@ snapshots['test_all_missions 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+8 March 2019
+R/V Rachel Carson
+Mapping AUV Testing in upper Monterey Canyon''',
                 'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -248,7 +297,10 @@ snapshots['test_all_missions 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+8 March 2019
+R/V Rachel Carson
+Mapping AUV Testing in upper Monterey Canyon''',
                 'directory': '/mbari/SeafloorMapping/2019/20190308m2',
                 'grid_bounds': {
                     'coordinates': [
@@ -282,7 +334,10 @@ snapshots['test_all_missions 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+14 March 2019
+R/V Rachel Carson
+Morro Bay Expedition''',
                 'directory': '/mbari/SeafloorMapping/2019/20190314m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -357,7 +412,10 @@ snapshots['test_all_missions_empty 1'] = {
     'data': {
         'all_missions': [
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+24 January 2019
+R/V Rachel Carson
+Testing Terrain Relative Navigation for the Axial Geodesy project and Precisions Controls Project''',
                 'directory': '/mbari/SeafloorMapping/2019/20190124m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -391,7 +449,10 @@ snapshots['test_all_missions_empty 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+25 January 2019
+R/V Rachel Carson
+Testing Mapping AUV 1''',
                 'directory': '/mbari/SeafloorMapping/2019/20190125m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -425,7 +486,10 @@ snapshots['test_all_missions_empty 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+8 March 2019
+R/V Rachel Carson
+Mapping AUV Testing in upper Monterey Canyon''',
                 'directory': '/mbari/SeafloorMapping/2019/20190308m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -459,7 +523,10 @@ snapshots['test_all_missions_empty 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+8 March 2019
+R/V Rachel Carson
+Mapping AUV Testing in upper Monterey Canyon''',
                 'directory': '/mbari/SeafloorMapping/2019/20190308m2',
                 'grid_bounds': {
                     'coordinates': [
@@ -493,7 +560,10 @@ snapshots['test_all_missions_empty 1'] = {
                 'update_status': None
             },
             {
-                'comment': None,
+                'comment': '''MBARI Mapping AUV Operations
+14 March 2019
+R/V Rachel Carson
+Morro Bay Expedition''',
                 'directory': '/mbari/SeafloorMapping/2019/20190314m1',
                 'grid_bounds': {
                     'coordinates': [
@@ -587,7 +657,7 @@ snapshots['test_all_platforms_empty 1'] = {
         'all_platforms': [
             {
                 'name': 'R/V Rachel Carson',
-                'uuid': 'a6be3a82-dd34-4a3d-94d5-688f9170a6d2'
+                'uuid': 'd009435a-7aa7-46aa-b5a8-dc36810b0802'
             }
         ]
     }
@@ -611,7 +681,7 @@ snapshots['test_all_platformtypes_empty 1'] = {
         'all_platformtypes': [
             {
                 'name': 'ship',
-                'uuid': 'c883f2f5-df64-4390-bef8-2c4e25f68c92'
+                'uuid': '4fbbbad6-da73-4783-b849-fab0d6904aeb'
             }
         ]
     }
@@ -1195,6 +1265,26 @@ snapshots['test_expedition_by_name 1'] = {
 snapshots['test_expedition_by_name 2'] = {
     'data': {
         'all_expeditions': [
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Testing Terrain Relative Navigation for the Axial Geodesy project and Precisions Controls Project',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Testing Mapping AUV 1',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon',
+                'start_date': None
+            },
+            {
+                'end_date': None,
+                'name': 'R/V Rachel Carson Morro Bay Expedition',
+                'start_date': None
+            },
             {
                 'end_date': '1998-07-20T00:00:00',
                 'name': 'Initial',
