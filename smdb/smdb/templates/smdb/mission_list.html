@@ -4,7 +4,7 @@
     <h2>Missions</h2>
     <ul>
         {% for mission in mission_list %}
-            <li><a href="{% url 'mission-detail' mission.pk %}">{{ mission.name }}</a>
+            <li><a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
         {% endfor %}
     </ul>
 {% endblock %}
