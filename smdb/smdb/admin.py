@@ -59,6 +59,7 @@ class MissionAdmin(GeoModelAdmin):
         "slug",
         "start_date",
         "end_date",
+        "nav_track",
         "start_depth",
         "comment",
         "quality_comment",
