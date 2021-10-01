@@ -128,6 +128,9 @@ class Mission(models.Model):
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
+    nav_track = models.LineStringField(
+        srid=4326, spatial_index=True, blank=True, null=True
+    )
     expedition = models.ForeignKey(
         Expedition, on_delete=models.CASCADE, blank=True, null=True
     )
