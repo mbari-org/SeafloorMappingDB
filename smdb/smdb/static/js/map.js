@@ -27,5 +27,8 @@ let feature = L.geoJSON(missions)
       maxWidth: "600px",
     }
   )
+  .bindTooltip(function (layer) {
+    return layer.feature.properties.slug;
+  })
   .addTo(map);
 map.fitBounds(feature.getBounds(), { padding: [100, 100] });
