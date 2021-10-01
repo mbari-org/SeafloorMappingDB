@@ -22,10 +22,10 @@ import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
 from netCDF4 import Dataset  # noqa F402
-from datetime import datetime  # noqa F402
+from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
 from django.core.files import File  # noqa F402
-from django.contrib.gis.geos import Point, Polygon  # noqa F402
+from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
@@ -387,6 +387,105 @@ class MBSystem(BaseLoader):
             elif re.match(r".+\.mb\d\d", last_sonar_item):
                 return self.sonar_end_time(os.path.join(path, item))
 
+    def fnv_determine_subsample(
+        self,
+        fnv_file: str,
+        interval: timedelta,
+    ) -> int:
+        # Read records to determine number of records to subsample
+        # Return after getting 2 successive identical intervals
+        last_subsample = 0
+        interval_count = 0
+        with open(fnv_file) as fh:
+            for line_count, line in enumerate(fh.readlines()):
+                interval_count += 1
+                dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                if line_count == 0:
+                    last_dt = dt
+                if dt - last_dt > interval:
+                    subsample = interval_count
+                    if subsample == last_subsample:
+                        return subsample
+                    last_dt = dt
+                    last_subsample = subsample
+                    interval_count = 0
+        raise EOFError(
+            "{} has {} records lasting {} - shorter than interval {}".format(
+                fnv_file,
+                line_count,
+                dt - last_dt,
+                interval,
+            ),
+        )
+
+    def fnv_points_to_linestring(
+        self,
+        fnv_list: list,
+        interval: timedelta = timedelta(seconds=30),
+        tolerance: float = 0.00001,
+    ) -> LineString:
+        """Can tune the quality of simplified LineString by adjusting
+        `interval` and `tolerance`. Reasonable defaults are provided
+        for quick rendering of maybe 100 Missions on a Leaflet map."""
+        point_list = []
+        for fnv_file in fnv_list:
+            try:
+                subsample = self.fnv_determine_subsample(fnv_file, interval)
+                break
+            except EOFError as e:
+                self.logger.debug(e)
+
+        for fnv in fnv_list:
+            with open(fnv) as fh:
+                for line_count, line in enumerate(fh.readlines(), start=1):
+                    if line_count % subsample:
+                        continue
+                    # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
+                    lon = float(line.split()[7])
+                    lat = float(line.split()[8])
+                    point_list.append(Point((lon, lat), srid=4326))
+            self.logger.debug(
+                "Collected %d points every %s from %s", line_count, interval, fnv
+            )
+        self.logger.debug(
+            "%d points collected from %d .fnv files",
+            len(point_list),
+            len(fnv_list),
+        )
+        nav_track = LineString(point_list).simplify(tolerance=tolerance)
+        self.logger.info(
+            "Simplified %d to %d points in nav_track with tolerance = %f",
+            len(point_list),
+            len(nav_track),
+            tolerance,
+        )
+        return nav_track
+
+    def fnv_file_track(self, path: str, datalist: str) -> LineString:
+        fnv_list = []
+        with open(datalist) as fh:
+            for line in fh.readlines():
+                if line.startswith("#"):
+                    continue
+                item = line.split()[0].strip()
+                if item.endswith("mb-1"):
+                    return self.fnv_file_track(
+                        path,
+                        os.path.join(path, item),
+                    )
+                elif re.match(r".+\.mb\d\d", item):
+                    fnv_list.append(os.path.join(path, item + ".fnv"))
+        if path.endswith("lidar"):
+            nav_track = self.fnv_points_to_linestring(
+                fnv_list,
+                interval=timedelta(
+                    seconds=5,
+                ),
+            )
+        else:
+            nav_track = self.fnv_points_to_linestring(fnv_list)
+        return nav_track
+
     def execute_mbinfos(self):
         start_processing = True
         if self.args.skipuntil:
@@ -401,25 +500,26 @@ class MBSystem(BaseLoader):
                 continue
             try:
                 self.logger.info("======= %d. %s ========", miss_count, mission)
-                self.update_mission_times(mission)
+                self.update_mission_data(mission)
             except (ParserError, FileNotFoundError) as e:
                 self.logger.warning(e)
             if self.args.limit:
                 if miss_count >= self.args.limit:
                     break
 
-    def update_mission_times(self, mission: Mission):
+    def update_mission_data(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
         # to find first and last sonar file and corresponding
         # first and last data values for the mission
         path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
-        (
-            mission.start_date,
-            mission.start_point,
-            mission.start_depth,
-        ) = self.first_sonar_data(path, datalist)
-        mission.end_date = self.last_sonar_time(path, datalist)
+        mission.nav_track = self.fnv_file_track(path, datalist)
+        ##(
+        ##    mission.start_date,
+        ##    mission.start_point,
+        ##    mission.start_depth,
+        ##) = self.first_sonar_data(path, datalist)
+        ##mission.end_date = self.last_sonar_time(path, datalist)
         mission.save()
         self.logger.info(
             "Saved start & end: %s to %s", mission.start_date, mission.end_date
@@ -429,6 +529,7 @@ class MBSystem(BaseLoader):
             mission.start_point,
             mission.start_depth,
         )
+        self.logger.info("Saved nav_track: %d points", len(mission.nav_track))
 
 
 class BootStrapper(BaseLoader):
