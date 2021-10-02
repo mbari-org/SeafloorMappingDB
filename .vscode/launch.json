@@ -45,15 +45,8 @@
       //"args": ["--notes", "-v 2", "--limit", "1"],
       //"args": ["--notes", "-v", "1"],
       //"args": ["--mbsystem", "-v", "2", "--skipuntil", "2021/20210326m1"],
-      "args": [
-        "--mbsystem",
-        "-v",
-        "1",
-        "--limit",
-        "50",
-        "--skipuntil",
-        "2019/20190628d1/lidar"
-      ],
+      //"args": ["--mbsystem", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
+      "args": ["--fnv", "-v", "1", "--limit", "2"],
       "justMyCode": false
     }
   ]
