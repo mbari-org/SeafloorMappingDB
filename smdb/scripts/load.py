@@ -114,9 +114,9 @@ class BaseLoader:
             help="Process the notes loaded by a bootstrap load - do not do bootstrap load",
         )
         parser.add_argument(
-            "--mbsystem",
+            "--mbinfo",
             action="store_true",
-            help="Run the loading steps that require MB-System commands - do not do other load steps",
+            help="Run the loading steps that uses MB-System mbinfo commands",
         )
         parser.add_argument(
             "--fnv",
@@ -587,7 +587,6 @@ class MBSystem(BaseLoader):
             mission.start_point,
             mission.start_depth,
         )
-        self.logger.info("Saved nav_track: %d points", len(mission.nav_track))
 
 
 class BootStrapper(BaseLoader):
@@ -875,8 +874,8 @@ def run(*args):
         bootstrap_load()
     elif bl.args.notes:
         notes_load()
-    elif bl.args.mbsystem:
-        mbsystem_load()
+    elif bl.args.mbinfo:
+        mbinfo_load()
     elif bl.args.fnv:
         fnv_load()
     else:
@@ -897,7 +896,7 @@ def notes_load():
     np.parse_notes()
 
 
-def mbsystem_load():
+def mbinfo_load():
     mbs = MBSystem()
     mbs.process_command_line()
     mbs.update_missions("mbinfo_update_mission_data")
