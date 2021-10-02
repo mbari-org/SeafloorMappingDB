@@ -21,11 +21,12 @@ import math  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
+import timing  # noqa F402
 from netCDF4 import Dataset  # noqa F402
-from datetime import datetime  # noqa F402
+from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
 from django.core.files import File  # noqa F402
-from django.contrib.gis.geos import Point, Polygon  # noqa F402
+from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
@@ -113,9 +114,14 @@ class BaseLoader:
             help="Process the notes loaded by a bootstrap load - do not do bootstrap load",
         )
         parser.add_argument(
-            "--mbsystem",
+            "--mbinfo",
             action="store_true",
-            help="Run the loading steps that require MB-System commands - do not do other load steps",
+            help="Run the loading steps that uses MB-System mbinfo commands",
+        )
+        parser.add_argument(
+            "--fnv",
+            action="store_true",
+            help="Run the loading steps that parse .fnv files for nav_track and other data",
         )
         parser.add_argument(
             "--limit",
@@ -162,6 +168,31 @@ class BaseLoader:
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
         )
+
+    def update_missions(self, method_to_run: str) -> None:
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
+        for miss_count, mission in enumerate(
+            Mission.objects.all().order_by("name"), start=1
+        ):
+            if self.args.skipuntil:
+                if mission.name == self.args.skipuntil:
+                    start_processing = True
+            if not start_processing:
+                continue
+            try:
+                self.logger.info("======= %d. %s ========", miss_count, mission)
+                # The passed method_to_run can be anything that updates
+                # the fields of a mission object.  Initial ones include:
+                #   self.mbinfo_update_mission_data(mission)
+                #   self.fnv_update_mission_data(mission)
+                getattr(self, method_to_run)(mission)
+            except (ParserError, FileNotFoundError) as e:
+                self.logger.warning(e)
+            if self.args.limit:
+                if miss_count >= self.args.limit:
+                    return
 
 
 class NoteParser(BaseLoader):
@@ -286,6 +317,154 @@ class NoteParser(BaseLoader):
             )
 
 
+class FNVLoader(BaseLoader):
+    def fnv_file_list(self, path: str, datalist: str) -> list:
+        fnv_list = []
+        with open(datalist) as fh:
+            for line in fh.readlines():
+                if line.startswith("#"):
+                    continue
+                item = line.split()[0].strip()
+                if item.endswith("mb-1"):
+                    return self.fnv_file_list(
+                        path,
+                        os.path.join(path, item),
+                    )
+                elif re.match(r".+\.mb\d\d", item):
+                    fnv_list.append(os.path.join(path, item + ".fnv"))
+        return fnv_list
+
+    def fnv_start_and_end_data(
+        self, fnv_list: list
+    ) -> Tuple[datetime, datetime, float, float, Point, Point]:
+        # Expect that fnv_list files are ordered in time
+        # Assume mblist(1) output options of -OtMXYHSc
+        # 11. c for sonar tranducer depth (m)
+        with open(fnv_list[0]) as fh:
+            line = fh.readlines()[0]
+            start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+            lon = float(line.split()[7])
+            lat = float(line.split()[8])
+            start_point = Point((lon, lat), srid=4326)
+            start_depth = float(line.split()[11])
+        with open(fnv_list[-1]) as fh:
+            line = fh.readlines()[-1]
+            end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+            lon = float(line.split()[7])
+            lat = float(line.split()[8])
+            end_point = Point((lon, lat), srid=4326)
+            end_depth = float(line.split()[11])
+
+        return start_dt, end_dt, start_depth, end_depth, start_point, end_point
+
+    def fnv_determine_subsample(
+        self,
+        fnv_file: str,
+        interval: timedelta,
+    ) -> int:
+        # Read records to determine number of records to subsample
+        # Return after getting 2 successive identical intervals
+        last_subsample = 0
+        interval_count = 0
+        with open(fnv_file) as fh:
+            for line_count, line in enumerate(fh.readlines()):
+                interval_count += 1
+                dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                if line_count == 0:
+                    last_dt = dt
+                if dt - last_dt > interval:
+                    subsample = interval_count
+                    if subsample == last_subsample:
+                        return subsample
+                    last_dt = dt
+                    last_subsample = subsample
+                    interval_count = 0
+        raise EOFError(
+            "{} has {} records lasting {} - shorter than interval {}".format(
+                fnv_file,
+                line_count,
+                dt - last_dt,
+                interval,
+            ),
+        )
+
+    def fnv_points_to_linestring(
+        self,
+        fnv_list: list,
+        interval: timedelta = timedelta(seconds=30),
+        tolerance: float = 0.00001,
+    ) -> LineString:
+        """Can tune the quality of simplified LineString by adjusting
+        `interval` and `tolerance`. Reasonable defaults are provided
+        for quick rendering of maybe 100 Missions on a Leaflet map."""
+        point_list = []
+        for fnv_file in fnv_list:
+            try:
+                subsample = self.fnv_determine_subsample(fnv_file, interval)
+                break
+            except EOFError as e:
+                self.logger.debug(e)
+
+        for fnv in fnv_list:
+            with open(fnv) as fh:
+                for line_count, line in enumerate(fh.readlines(), start=1):
+                    if line_count % subsample:
+                        continue
+                    # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
+                    lon = float(line.split()[7])
+                    lat = float(line.split()[8])
+                    point_list.append(Point((lon, lat), srid=4326))
+            self.logger.debug(
+                "Collected %d points every %s from %s", line_count, interval, fnv
+            )
+        self.logger.debug(
+            "%d points collected from %d .fnv files",
+            len(point_list),
+            len(fnv_list),
+        )
+        nav_track = LineString(point_list).simplify(tolerance=tolerance)
+        self.logger.info(
+            "Simplified %d to %d points in nav_track with tolerance = %f",
+            len(point_list),
+            len(nav_track),
+            tolerance,
+        )
+        return nav_track
+
+    def fnv_update_mission_data(self, mission: Mission):
+        # Start with datalistp.mb-1 and recurse down
+        # to find list of .fnv files.  Construct data
+        # for Mission fields.
+        path = mission.directory
+        datalist = os.path.join(path, "datalistp.mb-1")
+        fnv_list = self.fnv_file_list(path, datalist)
+        if path.endswith("lidar"):
+            mission.nav_track = self.fnv_points_to_linestring(
+                fnv_list,
+                interval=timedelta(seconds=5),
+            )
+        else:
+            mission.nav_track = self.fnv_points_to_linestring(fnv_list)
+        (
+            mission.start_date,
+            mission.end_date,
+            mission.start_depth,
+            _,  # mission.end_depth,
+            mission.start_point,
+            _,  # mission.end_point,
+        ) = self.fnv_start_and_end_data(fnv_list)
+        mission.save()
+        self.logger.info(
+            "Saved start & end: %s to %s", mission.start_date, mission.end_date
+        )
+        self.logger.info(
+            "Saved start_point & start_depth: %s & %s meters",
+            mission.start_point,
+            mission.start_depth,
+        )
+        self.logger.info("Saved nav_track: %d points", len(mission.nav_track))
+
+
 class MBSystem(BaseLoader):
     SSH_CMD = f"ssh {getpass.getuser()}@mb-system"
     TIMEOUT = 360  # Max seconds to retreive file from tertiary storage
@@ -387,28 +566,7 @@ class MBSystem(BaseLoader):
             elif re.match(r".+\.mb\d\d", last_sonar_item):
                 return self.sonar_end_time(os.path.join(path, item))
 
-    def execute_mbinfos(self):
-        start_processing = True
-        if self.args.skipuntil:
-            start_processing = False
-        for miss_count, mission in enumerate(
-            Mission.objects.all().order_by("name"), start=1
-        ):
-            if self.args.skipuntil:
-                if mission.name == self.args.skipuntil:
-                    start_processing = True
-            if not start_processing:
-                continue
-            try:
-                self.logger.info("======= %d. %s ========", miss_count, mission)
-                self.update_mission_times(mission)
-            except (ParserError, FileNotFoundError) as e:
-                self.logger.warning(e)
-            if self.args.limit:
-                if miss_count >= self.args.limit:
-                    break
-
-    def update_mission_times(self, mission: Mission):
+    def mbinfo_update_mission_data(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
         # to find first and last sonar file and corresponding
         # first and last data values for the mission
@@ -533,7 +691,7 @@ class BootStrapper(BaseLoader):
 
         return thumbnail_file
 
-    def save_note_to_db(self, mission):
+    def save_note_todb(self, mission):
         if not mission.notes_filename:
             raise FileExistsError(f"No Notes found for {mission}")
         note_text = ""
@@ -689,7 +847,7 @@ class BootStrapper(BaseLoader):
                     directory=os.path.dirname(fp),
                 )
                 try:
-                    self.save_note_to_db(mission)
+                    self.save_note_todb(mission)
                     self.save_thumbnail(mission)
                 except FileExistsError as e:
                     self.logger.warning(str(e))
@@ -716,12 +874,14 @@ def run(*args):
         bootstrap_load()
     elif bl.args.notes:
         notes_load()
-    elif bl.args.mbsystem:
-        mbsystem_load()
+    elif bl.args.mbinfo:
+        mbinfo_load()
+    elif bl.args.fnv:
+        fnv_load()
     else:
         bootstrap_load()
         notes_load()
-        mbsystem_load()
+        fnv_load()
 
 
 def bootstrap_load():
@@ -736,10 +896,16 @@ def notes_load():
     np.parse_notes()
 
 
-def mbsystem_load():
+def mbinfo_load():
     mbs = MBSystem()
     mbs.process_command_line()
-    mbs.execute_mbinfos()
+    mbs.update_missions("mbinfo_update_mission_data")
+
+
+def fnv_load():
+    fnv = FNVLoader()
+    fnv.process_command_line()
+    fnv.update_missions("fnv_update_mission_data")
 
 
 if __name__ == "__main__":
