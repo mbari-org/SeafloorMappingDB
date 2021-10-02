@@ -340,20 +340,30 @@ class FNVLoader(BaseLoader):
         # Expect that fnv_list files are ordered in time
         # Assume mblist(1) output options of -OtMXYHSc
         # 11. c for sonar tranducer depth (m)
-        with open(fnv_list[0]) as fh:
-            line = fh.readlines()[0]
-            start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-            lon = float(line.split()[7])
-            lat = float(line.split()[8])
-            start_point = Point((lon, lat), srid=4326)
-            start_depth = float(line.split()[11])
-        with open(fnv_list[-1]) as fh:
-            line = fh.readlines()[-1]
-            end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-            lon = float(line.split()[7])
-            lat = float(line.split()[8])
-            end_point = Point((lon, lat), srid=4326)
-            end_depth = float(line.split()[11])
+        for fnv_file in fnv_list:
+            with open(fnv_file) as fh:
+                try:
+                    line = fh.readlines()[0]
+                except IndexError:
+                    self.logger.debug("Cannot read first record from %s", fnv_file)
+                    continue
+                start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                lon = float(line.split()[7])
+                lat = float(line.split()[8])
+                start_point = Point((lon, lat), srid=4326)
+                start_depth = float(line.split()[11])
+        for fnv_file in reversed(fnv_list):
+            with open(fnv_file) as fh:
+                try:
+                    line = fh.readlines()[-1]
+                except IndexError:
+                    self.logger.debug("Cannot read last record from %s", fnv_file)
+                    continue
+                end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                lon = float(line.split()[7])
+                lat = float(line.split()[8])
+                end_point = Point((lon, lat), srid=4326)
+                end_depth = float(line.split()[11])
 
         return start_dt, end_dt, start_depth, end_depth, start_point, end_point
 
@@ -366,6 +376,7 @@ class FNVLoader(BaseLoader):
         # Return after getting 2 successive identical intervals
         last_subsample = 0
         interval_count = 0
+        line_count = 0
         with open(fnv_file) as fh:
             for line_count, line in enumerate(fh.readlines()):
                 interval_count += 1
@@ -379,14 +390,17 @@ class FNVLoader(BaseLoader):
                     last_dt = dt
                     last_subsample = subsample
                     interval_count = 0
-        raise EOFError(
-            "{} has {} records lasting {} - shorter than interval {}".format(
-                fnv_file,
-                line_count,
-                dt - last_dt,
-                interval,
-            ),
-        )
+        if line_count:
+            raise EOFError(
+                "{} has {} records lasting {} - shorter than interval {}".format(
+                    fnv_file,
+                    line_count,
+                    dt - last_dt,
+                    interval,
+                ),
+            )
+        else:
+            raise EOFError(f"{fnv_file} is empty")
 
     def fnv_points_to_linestring(
         self,
@@ -403,8 +417,11 @@ class FNVLoader(BaseLoader):
                 subsample = self.fnv_determine_subsample(fnv_file, interval)
                 break
             except EOFError as e:
-                self.logger.debug(e)
-
+                self.logger.warning(e)
+        if "subsample" not in locals():
+            self.logger.info("Not getting nav_track for this mission.")
+            return
+        line_count = 0
         for fnv in fnv_list:
             with open(fnv) as fh:
                 for line_count, line in enumerate(fh.readlines(), start=1):
@@ -414,9 +431,10 @@ class FNVLoader(BaseLoader):
                     lon = float(line.split()[7])
                     lat = float(line.split()[8])
                     point_list.append(Point((lon, lat), srid=4326))
-            self.logger.debug(
-                "Collected %d points every %s from %s", line_count, interval, fnv
-            )
+            if line_count:
+                self.logger.debug(
+                    "Collected %d points every %s from %s", line_count, interval, fnv
+                )
         self.logger.debug(
             "%d points collected from %d .fnv files",
             len(point_list),
@@ -438,7 +456,7 @@ class FNVLoader(BaseLoader):
         path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
         fnv_list = self.fnv_file_list(path, datalist)
-        if path.endswith("lidar"):
+        if path.endswith("lidar") or path.endswith("lidartest"):
             mission.nav_track = self.fnv_points_to_linestring(
                 fnv_list,
                 interval=timedelta(seconds=5),
@@ -462,7 +480,8 @@ class FNVLoader(BaseLoader):
             mission.start_point,
             mission.start_depth,
         )
-        self.logger.info("Saved nav_track: %d points", len(mission.nav_track))
+        if mission.nav_track:
+            self.logger.info("Saved nav_track: %d points", len(mission.nav_track))
 
 
 class MBSystem(BaseLoader):
