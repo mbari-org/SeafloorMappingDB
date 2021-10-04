@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 
-from smdb.models import Mission
+from smdb.models import Expedition, Mission
 
 
 class MissionOverView(TemplateView):
@@ -22,6 +22,7 @@ class MissionOverView(TemplateView):
         context = super().get_context_data(**kwargs)
         search_string = context["view"].request.GET.get("q")
         if search_string:
+            self.logger.info("search_string = %s", search_string)
             missions = Mission.objects.filter(
                 Q(name__icontains=search_string)
                 | Q(notes_text__icontains=search_string)
@@ -39,14 +40,15 @@ class MissionOverView(TemplateView):
                 missions,
                 fields=(
                     "slug",
-                    "grid_bounds",
+                    "nav_track",
                     "thumbnail_image",
                 ),
+                geometry_field="nav_track",
             )
         )
-        self.logger.info("# of Queries: %s", len(connection.queries))
-        self.logger.info(
-            ("Size of context['missions']: %s", len(str(context["missions"])))
+        self.logger.debug("# of Queries: %d", len(connection.queries))
+        self.logger.debug(
+            "Size of context['missions']: %d", len(str(context["missions"]))
         )
         self.logger.debug(
             "context['missions'] = %s",
@@ -67,17 +69,16 @@ class MissionOverView(TemplateView):
 
 class MissionListView(ListView):
     model = Mission
+    ordering = ["-start_date"]
 
 
 class MissionDetailView(DetailView):
-
     model = Mission
     queryset = Mission.objects.all()
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
-        # Add in a QuerySet of all the books
         mission = super().get_object()
         try:
             context["thumbnail_url"] = mission.thumbnail_image.url
