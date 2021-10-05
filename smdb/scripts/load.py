@@ -290,9 +290,14 @@ class NoteParser(BaseLoader):
                 )
                 self.logger.info("Truncating it to first 5 lines")
                 mission.comment = "\n".join(mission.comment.split("\n")[:5])
+            # Append Expedition Database expd_id to name parsed from notes
+            # to ensure unique names. TODO: consider using a m2m table fr this.
+            expd_db_id = self.expd_db_id_from_text(mission)
+            name = f"{self.expedition_name_from_comment(mission)}"
+            if expd_db_id:
+                name += f" - {expd_db_id}"
             expedition, created = Expedition.objects.get_or_create(
-                expd_db_id=self.expd_db_id_from_text(mission),
-                name=self.expedition_name_from_comment(mission),
+                expd_db_id=expd_db_id, name=name
             )
             if created:
                 self.logger.info("Saved <Expedition: %s>", expedition)
@@ -402,7 +407,7 @@ class FNVLoader(BaseLoader):
         else:
             raise EOFError(f"{fnv_file} is empty")
 
-    def fnv_points_to_linestring(
+    def fnv_points_tolinestring(
         self,
         fnv_list: list,
         interval: timedelta = timedelta(seconds=30),
@@ -457,12 +462,12 @@ class FNVLoader(BaseLoader):
         datalist = os.path.join(path, "datalistp.mb-1")
         fnv_list = self.fnv_file_list(path, datalist)
         if path.endswith("lidar") or path.endswith("lidartest"):
-            mission.nav_track = self.fnv_points_to_linestring(
+            mission.nav_track = self.fnv_points_tolinestring(
                 fnv_list,
                 interval=timedelta(seconds=5),
             )
         else:
-            mission.nav_track = self.fnv_points_to_linestring(fnv_list)
+            mission.nav_track = self.fnv_points_tolinestring(fnv_list)
         (
             mission.start_date,
             mission.end_date,
@@ -766,23 +771,24 @@ class BootStrapper(BaseLoader):
                 self.logger.info("Saved thumbnail image of size %dx%s", nx, ny)
 
     def flush_database(self):
-        self.logger.info(
-            "Deleting %d stored thumbnail_images",
-            Mission.objects.all().count(),
-        )
-        self.logger.info("Deleting %d Missions", Mission.objects.all().count())
+        """Delete all records without resetting primary keys"""
+        self.logger.info("Deleting...")
+        self.logger.info("%d stored thumbnail_images", Mission.objects.all().count())
+        self.logger.info("%d Missions", Mission.objects.all().count())
         for mission in Mission.objects.all():
             mission.thumbnail_image.delete(save=False)
-        self.logger.info(
-            "Deleting %d Expeditions",
-            Expedition.objects.all().count(),
-        )
+        self.logger.info("%d Expeditions", Expedition.objects.all().count())
         for expd in Expedition.objects.all():
             expd.delete()
+        self.logger.info("%d Platformtypes", Platformtype.objects.all().count())
+        for pt in Platformtype.objects.all():
+            pt.delete()
+        self.logger.info("%d Platforms", Platform.objects.all().count())
+        for platform in Platform.objects.all():
+            platform.delete()
 
-        # Here's how to automatically flush the whole database:
-        # Satellite (Type) tables may have data - May also want to reset pk's
-        # Also removes superuser - Might be better to do this at command line:
+        # Here's how to automatically flush the whole database resetting pk's:
+        # Also removes superuser - Might want to do this at command line:
         # smdb/manage.py flush
         # smdb/manage.py createsuperuser
         ##from django.core.management import call_command  # noqa F402
