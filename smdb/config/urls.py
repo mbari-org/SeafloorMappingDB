@@ -9,7 +9,13 @@ from graphene_django.views import GraphQLView
 from rest_framework.authtoken.views import obtain_auth_token
 
 from smdb.api.base import router as api_v1_router
-from smdb.views import MissionOverView, MissionListView, MissionDetailView
+from smdb.views import (
+    ExpeditionDetailView,
+    ExpeditionListView,
+    MissionDetailView,
+    MissionListView,
+    MissionOverView,
+)
 
 GraphQLView.graphiql_template = "graphene_graphiql_explorer/graphiql.html"
 
@@ -29,6 +35,12 @@ urlpatterns = [
         "missions/<str:slug>/",
         MissionDetailView.as_view(),
         name="mission-detail",
+    ),
+    path("expeditions/", ExpeditionListView.as_view()),
+    path(
+        "expeditions/<str:slug>/",
+        ExpeditionDetailView.as_view(),
+        name="expedition-detail",
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

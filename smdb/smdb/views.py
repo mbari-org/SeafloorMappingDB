@@ -91,3 +91,25 @@ class MissionDetailView(DetailView):
     def get_object(self):
         obj = super().get_object()
         return obj
+
+
+class ExpeditionListView(ListView):
+    model = Expedition
+    ordering = ["name"]
+    queryset = Expedition.objects.all()
+
+
+class ExpeditionDetailView(DetailView):
+    model = Expedition
+    queryset = Expedition.objects.all()
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        expedition = super().get_object()
+
+        return context
+
+    def get_object(self):
+        obj = super().get_object()
+        return obj
