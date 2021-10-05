@@ -14,7 +14,7 @@
     <h2>{{ expedition.name }}</h2>
     Missions:
     <div class="container-fluid">
-        {% for mission in expedition.mission_set.all %}
+        {% for mission in expedition.mission_set.all|dictsort:"name" %}
         <div class="row">
             <div class="col">
                 <a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>

@@ -11,7 +11,7 @@
                 Missions
             </div>
         </div>
-        {% for expedition in expedition_list %}
+        {% for expedition in expedition_list|dictsort:"name" %}
         <div class="row">
             <div class="col-6">
                 <a href="{% url 'expedition-detail' expedition.slug %}">{{ expedition.name }}</a>
