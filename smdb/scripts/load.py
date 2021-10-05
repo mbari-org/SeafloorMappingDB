@@ -295,6 +295,9 @@ class NoteParser(BaseLoader):
             "R/V Zephyr",
         ):
             operator_org_name = "MBARI"
+        else:
+            # TODO: Make additional assignments
+            operator_org_name = ""
         platformtype, _ = Platformtype.objects.get_or_create(name="ship")
         platform, _ = Platform.objects.get_or_create(
             name=platform_name,
@@ -348,7 +351,7 @@ class NoteParser(BaseLoader):
 
 
 class FNVLoader(BaseLoader):
-    def fnv_file_list(self, path: str, datalist: str) -> list:
+    def fnv_file_list(self, path: str, datalist: str) -> Tuple[list, str]:
         fnv_list = []
         with open(datalist) as fh:
             for line in fh.readlines():
@@ -360,9 +363,18 @@ class FNVLoader(BaseLoader):
                         path,
                         os.path.join(path, item),
                     )
-                elif re.match(r".+\.mb\d\d", item):
-                    fnv_list.append(os.path.join(path, item + ".fnv"))
-        return fnv_list
+                elif ma := re.match(r"(.+)(\.mb\d\d)", item):
+                    # Prefer processes '*p.mb8[8-9]' files
+                    fnv_type = "processed"
+                    fnv_file = os.path.join(
+                        path,
+                        ma.group(1) + "p" + ma.group(2) + ".fnv",
+                    )
+                    if not os.path.exists(fnv_file):
+                        fnv_type = "unprocessed"
+                        fnv_file = os.path.join(path, item + ".fnv")
+                    fnv_list.append(fnv_file)
+        return fnv_list, fnv_type
 
     def fnv_start_and_end_data(
         self, fnv_list: list
@@ -437,7 +449,7 @@ class FNVLoader(BaseLoader):
         fnv_list: list,
         interval: timedelta = timedelta(seconds=30),
         tolerance: float = 0.00001,
-    ) -> LineString:
+    ) -> Tuple[int, LineString]:
         """Can tune the quality of simplified LineString by adjusting
         `interval` and `tolerance`. Reasonable defaults are provided
         for quick rendering of maybe 100 Missions on a Leaflet map."""
@@ -463,7 +475,10 @@ class FNVLoader(BaseLoader):
                     point_list.append(Point((lon, lat), srid=4326))
             if line_count:
                 self.logger.debug(
-                    "Collected %d points every %s from %s", line_count, interval, fnv
+                    "Collected %d points every %s from %s",
+                    line_count,
+                    interval,
+                    fnv,
                 )
         self.logger.debug(
             "%d points collected from %d .fnv files",
@@ -471,13 +486,14 @@ class FNVLoader(BaseLoader):
             len(fnv_list),
         )
         nav_track = LineString(point_list).simplify(tolerance=tolerance)
-        self.logger.info(
-            "Simplified %d to %d points in nav_track with tolerance = %f",
+        self.logger.debug(
+            "Simplified %d points from %d files to %d points with tolerance = %f",
             len(point_list),
+            len(fnv_list),
             len(nav_track),
             tolerance,
         )
-        return nav_track
+        return len(point_list), nav_track
 
     def fnv_update_mission_data(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
@@ -485,14 +501,14 @@ class FNVLoader(BaseLoader):
         # for Mission fields.
         path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
-        fnv_list = self.fnv_file_list(path, datalist)
+        fnv_list, fnv_type = self.fnv_file_list(path, datalist)
         if path.endswith("lidar") or path.endswith("lidartest"):
-            mission.nav_track = self.fnv_points_tolinestring(
+            original, mission.nav_track = self.fnv_points_tolinestring(
                 fnv_list,
                 interval=timedelta(seconds=5),
             )
         else:
-            mission.nav_track = self.fnv_points_tolinestring(fnv_list)
+            original, mission.nav_track = self.fnv_points_tolinestring(fnv_list)
         (
             mission.start_date,
             mission.end_date,
@@ -511,7 +527,13 @@ class FNVLoader(BaseLoader):
             mission.start_depth,
         )
         if mission.nav_track:
-            self.logger.info("Saved nav_track: %d points", len(mission.nav_track))
+            self.logger.info(
+                "Saved nav_track: %d points (originally %d) from %d %s files",
+                len(mission.nav_track),
+                original,
+                len(fnv_list),
+                fnv_type,
+            )
 
 
 class MBSystem(BaseLoader):
