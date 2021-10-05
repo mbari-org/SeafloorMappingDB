@@ -266,15 +266,40 @@ class NoteParser(BaseLoader):
         return expd_name.strip()
 
     def platform_from_comment(self, mission: Mission) -> str:
+        standard_platform_names = (
+            "Icebreaker Araon",
+            "R/V Falkor",
+            "R/V Kilo Moana",
+            "R/V Rachel Carson",
+            "R/V Western Flyer",
+            "R/V Zephyr",
+        )
         # It looks like the third line has the Platform (ship) name
+        # Pull out just the ship name using standard_platform_names
         if not mission.comment:
             return None
-        platform_name = mission.comment.split("\n")[2]
+        platform_name = ""
+        maybe_platform_name = mission.comment.split("\n")[2]
+        if "Zephyr" in maybe_platform_name:
+            self.logger.info(maybe_platform_name)
+        for standard_platform_name in standard_platform_names:
+            if standard_platform_name in maybe_platform_name:
+                platform_name = standard_platform_name
+                break
+        if not platform_name:
+            platform_name = maybe_platform_name
+
+        if platform_name in (
+            "R/V Rachel Carson",
+            "R/V Western Flyer",
+            "R/V Zephyr",
+        ):
+            operator_org_name = "MBARI"
         platformtype, _ = Platformtype.objects.get_or_create(name="ship")
         platform, _ = Platform.objects.get_or_create(
             name=platform_name,
             platformtype=platformtype,
-            operator_org_name="MBARI",
+            operator_org_name=operator_org_name,
         )
         return platform
 
