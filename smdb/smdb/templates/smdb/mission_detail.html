@@ -14,6 +14,11 @@
     <h2>{{ mission.name }}</h2>
     <img src="{{ thumbnail_url }}" />
     <div>
-        <pre>{{ mission.notes_text }}</pre>
+      <span class="font-weight-bold">Expedition:</span>
+      <a href="{% url 'expedition-detail' mission.expedition.slug %}">{{ mission.expedition.name }}</a>
+    </div>
+    <div>
+      <p class="font-weight-bold">Note:</p>
+      <pre>{{ mission.notes_text }}</pre>
     </div>
 {% endblock %}

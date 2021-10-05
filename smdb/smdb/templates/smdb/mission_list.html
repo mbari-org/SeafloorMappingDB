@@ -2,10 +2,20 @@
 
 {% block content %}
     <h2>Missions</h2>
-    <ul>
-        {% for mission in mission_list %}
-            <li><a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
+    <div class="container-fluid">
+        {% for mission in mission_list|dictsort:"name" %}
+        <div class="row">
+            <div class="col-2">
+                <a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
+            </div>
+            <div class="col-10">
+                {% if mission.expedition %}
+                <a href="{% url 'expedition-detail' mission.expedition.slug %}">{{ mission.expedition.name }}</a>
+                {% else %}
+                Expedition name not assigned during load
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
-    </ul>
 {% endblock %}
 
