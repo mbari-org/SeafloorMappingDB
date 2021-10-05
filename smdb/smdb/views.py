@@ -69,7 +69,6 @@ class MissionOverView(TemplateView):
 
 class MissionListView(ListView):
     model = Mission
-    ordering = ["-start_date"]
 
 
 class MissionDetailView(DetailView):
@@ -95,7 +94,6 @@ class MissionDetailView(DetailView):
 
 class ExpeditionListView(ListView):
     model = Expedition
-    ordering = ["name"]
     queryset = Expedition.objects.all()
 
 
