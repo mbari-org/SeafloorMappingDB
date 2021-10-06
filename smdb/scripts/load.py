@@ -364,7 +364,7 @@ class FNVLoader(BaseLoader):
                         os.path.join(path, item),
                     )
                 elif ma := re.match(r"(.+)(\.mb\d\d)", item):
-                    # Prefer processes '*p.mb8[8-9]' files
+                    # Prefer processed '*p.mb8[8-9]' files
                     fnv_type = "processed"
                     fnv_file = os.path.join(
                         path,
@@ -452,17 +452,17 @@ class FNVLoader(BaseLoader):
     ) -> Tuple[int, LineString]:
         """Can tune the quality of simplified LineString by adjusting
         `interval` and `tolerance`. Reasonable defaults are provided
-        for quick rendering of maybe 100 Missions on a Leaflet map."""
+        for quick rendering of maybe 600 Missions on a Leaflet map."""
         point_list = []
         for fnv_file in fnv_list:
             try:
                 subsample = self.fnv_determine_subsample(fnv_file, interval)
                 break
             except EOFError as e:
-                self.logger.warning(e)
+                self.logger.debug(e)
         if "subsample" not in locals():
             self.logger.info("Not getting nav_track for this mission.")
-            return
+            return len(point_list), None
         line_count = 0
         for fnv in fnv_list:
             with open(fnv) as fh:
