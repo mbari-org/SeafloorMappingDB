@@ -34,12 +34,11 @@
       "request": "launch",
       "program": "${workspaceFolder}/smdb/scripts/load.py",
       "console": "integratedTerminal",
-      //"args": ["-v", "2", "--regex", "mbsystem/Data/2019/20191106m3/ZTopo.grd$"],
-      //"args": ["-v", "2", "--regex", "MappingAUVOps2015/20150312m2/ZTopo.grd$"],
-      //"args": ["-v", "1", "--regex", "MappingAUVOps2013/TN293_Moyer13/sentry171/sentry171-raw/ZTopo.grd$", "--limit", "1"],
+      //"args": ["-v", "1", "--skipuntil_regex", "--regex", "2020/20200220d1/lidar/ZTopo.grd$", "--limit", "2"],
       //"args": ["-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "OceanImaging2013/monterey/ZTopo.grd$"],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2016/20160321m1/ZTopo.grd$", "--limit", "1"],
-      "args": ["-v", "--limit", "20", "--clobber", "--noinput"],
+      //"args": ["-v", "1", "--skipuntil_regex", "--regex", "2020/20200924t1/lidar/ZTopo.grd$", "--limit", "1"],
+      //"args": ["-v", "--limit", "20", "--clobber", "--noinput"],
       //"args": ["--bootstrap", "-v 2", "--clobber", "--limit", "50"],
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
       //"args": ["--notes", "-v 2", "--limit", "1"],
@@ -47,7 +46,8 @@
       //"args": ["--mbinfo", "-v", "2", "--skipuntil", "2021/20210326m1"],
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
       //"args": ["--bootstrap", "-v", "2", "--limit", "2", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd" ],
-      //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2020/20200804m1"],
+      //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "2020/20200220d1/lidartest"],
+      "args": ["--fnv", "-v", "1"],
       "justMyCode": false
     }
   ]

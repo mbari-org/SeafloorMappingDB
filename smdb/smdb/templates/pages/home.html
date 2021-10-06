@@ -28,7 +28,8 @@
       <form id="changelist-search" method="get">
         <div class="float-right"><!-- DIV needed for valid HTML -->
           <label for="searchbar"><img src="/static/admin/img/search.svg" alt="Search"></label>
-          <input type="text" size="40" name="q" value="" id="searchbar" autofocus="">
+          <input title="Search for Notes text or Mission name" type="text" size="30" name="q" value="" id="searchbar" autofocus="">
+          <input type="hidden" name="bounds" value="" id="bounds">
           <input type="submit" value="Search">
         </div>
       </form>
