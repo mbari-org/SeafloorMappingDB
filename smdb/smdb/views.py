@@ -3,6 +3,7 @@ import logging
 from os.path import join
 
 from django.conf import settings
+from django.contrib.gis.geos import Polygon
 from django.core.serializers import serialize
 from django.db import connection
 from django.db.models import Q
@@ -21,14 +22,30 @@ class MissionOverView(TemplateView):
         """Return the view context data."""
         context = super().get_context_data(**kwargs)
         search_string = context["view"].request.GET.get("q")
+        search_geom = None
+        if context["view"].request.GET.get("bounds"):
+            min_lon, min_lat, max_lon, max_lat = (
+                context["view"].request.GET.get("bounds").split(",")
+            )
+            search_geom = Polygon(
+                (
+                    (float(min_lon), float(min_lat)),
+                    (float(min_lon), float(max_lat)),
+                    (float(max_lon), float(max_lat)),
+                    (float(max_lon), float(min_lat)),
+                    (float(min_lon), float(min_lat)),
+                ),
+                srid=4326,
+            )
+        missions = Mission.objects.all()
         if search_string:
             self.logger.info("search_string = %s", search_string)
-            missions = Mission.objects.filter(
+            missions = missions.filter(
                 Q(name__icontains=search_string)
                 | Q(notes_text__icontains=search_string)
             )
-        else:
-            missions = Mission.objects.all()
+        if search_geom:
+            missions = missions.filter(grid_bounds__contained=search_geom)
 
         self.logger.info(
             "Serializing %s missions to geojson...",
@@ -62,7 +79,7 @@ class MissionOverView(TemplateView):
         else:
             context[
                 "search_string"
-            ] = f"All {len(context['missions']['features'])} Missions"
+            ] = f"Displaying {len(context['missions']['features'])} Missions"
 
         return context
 

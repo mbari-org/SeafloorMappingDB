@@ -32,3 +32,19 @@ let feature = L.geoJSON(missions)
   })
   .addTo(map);
 map.fitBounds(feature.getBounds(), { padding: [100, 100] });
+map.on("zoomend", function () {
+  // Reduce precision from defaut 14 (!) to 4 digits
+  var xmin = map.getBounds().toBBoxString().split(",")[0];
+  var ymin = map.getBounds().toBBoxString().split(",")[1];
+  var xmax = map.getBounds().toBBoxString().split(",")[2];
+  var ymax = map.getBounds().toBBoxString().split(",")[3];
+  xmin = Math.round(parseFloat(xmin) * 10000) / 10000;
+  ymin = Math.round(parseFloat(ymin) * 10000) / 10000;
+  xmax = Math.round(parseFloat(xmax) * 10000) / 10000;
+  ymax = Math.round(parseFloat(ymax) * 10000) / 10000;
+  var bboxString = xmin.toString() + "," + ymin.toString();
+  bboxString += "," + xmax.toString() + "," + ymax.toString();
+  // Add bbox to query string
+  var bElement = document.getElementById("bounds");
+  bElement.setAttribute("value", bboxString);
+});

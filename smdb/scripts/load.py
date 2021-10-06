@@ -364,7 +364,7 @@ class FNVLoader(BaseLoader):
                         os.path.join(path, item),
                     )
                 elif ma := re.match(r"(.+)(\.mb\d\d)", item):
-                    # Prefer processes '*p.mb8[8-9]' files
+                    # Prefer processed '*p.mb8[8-9]' files
                     fnv_type = "processed"
                     fnv_file = os.path.join(
                         path,
@@ -401,9 +401,18 @@ class FNVLoader(BaseLoader):
                 except IndexError:
                     self.logger.debug("Cannot read last record from %s", fnv_file)
                     continue
+                try:
+                    end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                except IndexError:
+                    self.logger.debug("Failed to parse datetime from %s", line)
+                    continue
+                try:
+                    lon = float(line.split()[7])
+                    lat = float(line.split()[8])
+                except IndexError:
+                    self.logger.debug("Failed to parse lon or lat from %s", line)
+                    continue
                 end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-                lon = float(line.split()[7])
-                lat = float(line.split()[8])
                 end_point = Point((lon, lat), srid=4326)
                 end_depth = float(line.split()[11])
 
@@ -452,17 +461,17 @@ class FNVLoader(BaseLoader):
     ) -> Tuple[int, LineString]:
         """Can tune the quality of simplified LineString by adjusting
         `interval` and `tolerance`. Reasonable defaults are provided
-        for quick rendering of maybe 100 Missions on a Leaflet map."""
+        for quick rendering of maybe 600 Missions on a Leaflet map."""
         point_list = []
         for fnv_file in fnv_list:
             try:
                 subsample = self.fnv_determine_subsample(fnv_file, interval)
                 break
             except EOFError as e:
-                self.logger.warning(e)
+                self.logger.debug(e)
         if "subsample" not in locals():
             self.logger.info("Not getting nav_track for this mission.")
-            return
+            return len(point_list), None
         line_count = 0
         for fnv in fnv_list:
             with open(fnv) as fh:
