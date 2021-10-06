@@ -401,9 +401,18 @@ class FNVLoader(BaseLoader):
                 except IndexError:
                     self.logger.debug("Cannot read last record from %s", fnv_file)
                     continue
+                try:
+                    end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                except IndexError:
+                    self.logger.debug("Failed to parse datetime from %s", line)
+                    continue
+                try:
+                    lon = float(line.split()[7])
+                    lat = float(line.split()[8])
+                except IndexError:
+                    self.logger.debug("Failed to parse lon or lat from %s", line)
+                    continue
                 end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-                lon = float(line.split()[7])
-                lat = float(line.split()[8])
                 end_point = Point((lon, lat), srid=4326)
                 end_depth = float(line.split()[11])
 

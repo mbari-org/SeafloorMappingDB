@@ -34,7 +34,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/smdb/scripts/load.py",
       "console": "integratedTerminal",
-      //"args": ["-v", "1", "--skipuntil_regex", "--regex", "2020/20200220d1/lidar/ZTopo.grd$", "--limit", "2"],
+      //"args": ["-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2011/20110718m1/ZTopo.grd$", "--limit", "2"],
       //"args": ["-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "OceanImaging2013/monterey/ZTopo.grd$"],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2016/20160321m1/ZTopo.grd$", "--limit", "1"],
       //"args": ["-v", "1", "--skipuntil_regex", "--regex", "2020/20200924t1/lidar/ZTopo.grd$", "--limit", "1"],
@@ -46,7 +46,7 @@
       //"args": ["--mbinfo", "-v", "2", "--skipuntil", "2021/20210326m1"],
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
       //"args": ["--bootstrap", "-v", "2", "--limit", "2", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd" ],
-      //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "2020/20200220d1/lidartest"],
+      //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
       "args": ["--fnv", "-v", "1"],
       "justMyCode": false
     }
