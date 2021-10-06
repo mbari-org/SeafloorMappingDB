@@ -412,7 +412,6 @@ class FNVLoader(BaseLoader):
                 except IndexError:
                     self.logger.debug("Failed to parse lon or lat from %s", line)
                     continue
-                end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
                 end_point = Point((lon, lat), srid=4326)
                 end_depth = float(line.split()[11])
 
