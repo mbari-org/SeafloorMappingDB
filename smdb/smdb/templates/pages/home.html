@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static bleach_tags %}
+{% load static bleach_tags timetags %}
 
 <!-- Overview first - display a map of all grid_bounds -->
 <!-- https://www.paulox.net/2020/12/08/maps-with-django-part-1-geodjango-spatialite-and-leaflet/ -->
@@ -27,10 +27,11 @@
       </div>
       <div class="col-6">
         <div class="min-max-slider" data-legendnum="2">
+          {{ start_esec|to_date }} {{ end_esec|to_date }}
           <label for="min">Start date</label>
-          <input id="min" class="min" name="min" type="range" step="1" min="0" max="3000" />
+          <input id="min" class="min" name="min" type="range" step="1" min="{{ start_esec }}" max="{{ end_esec }}" />
           <label for="max">End date</label>
-          <input id="max" class="max" name="max" type="range" step="1" min="0" max="3000" />
+          <input id="max" class="max" name="max" type="range" step="1" min="{{ start_esec }}" max="{{ end_esec }}" />
         </div>
       </div>
       <div class="col-3">

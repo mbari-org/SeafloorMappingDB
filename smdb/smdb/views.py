@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.gis.geos import Polygon
 from django.core.serializers import serialize
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Min, Max
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 
@@ -71,16 +71,18 @@ class MissionOverView(TemplateView):
             "context['missions'] = %s",
             json.dumps(context["missions"], indent=4, sort_keys=True),
         )
-
         if search_string:
-            context[
-                "search_string"
-            ] = f"{len(context['missions']['features'])} Missions containing '{search_string}'"
+            context["search_string"] = "{:d} Missions containing '{:s}'".format(
+                len(context["missions"]["features"]),
+                search_string,
+            )
         else:
             context[
                 "search_string"
             ] = f"Displaying {len(context['missions']['features'])} Missions"
-
+        time_bounds = missions.aggregate(Min("start_date"), Max("end_date"))
+        context["start_esec"] = time_bounds["start_date__min"].timestamp()
+        context["end_esec"] = time_bounds["end_date__max"].timestamp()
         return context
 
 

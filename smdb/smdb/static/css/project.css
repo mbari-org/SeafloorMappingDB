@@ -21,16 +21,14 @@ body {
 
 .min-max-slider {
   position: relative;
-  width: 200px;
+  width: 100%;
   text-align: center;
-  margin-bottom: 50px;
 }
 .min-max-slider > label {
   display: none;
 }
 span.value {
   height: 1.7em;
-  font-weight: bold;
   display: inline-block;
 }
 span.value.lower::before {
