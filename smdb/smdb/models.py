@@ -207,19 +207,23 @@ class Mission(models.Model):
 
     @property
     def start_esec(self):
-        return self.start_date.timestamp()
+        if self.start_date:
+            return self.start_date.timestamp()
 
     @property
     def end_esec(self):
-        return self.end_date.timestamp()
+        if self.end_date:
+            return self.end_date.timestamp()
 
     @property
     def start_ems(self):
-        return self.start_date.timestamp() * 1000.0
+        if self.start_date:
+            return self.start_date.timestamp() * 1000.0
 
     @property
     def end_ems(self):
-        return self.end_date.timestamp() * 1000.0
+        if self.end_date:
+            return self.end_date.timestamp() * 1000.0
 
 
 class DataArchival(models.Model):

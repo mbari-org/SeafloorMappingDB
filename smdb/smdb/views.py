@@ -87,8 +87,10 @@ class MissionOverView(TemplateView):
                 "search_string"
             ] = f"Displaying {len(context['missions']['features'])} Missions"
         time_bounds = missions.aggregate(Min("start_date"), Max("end_date"))
-        context["start_ems"] = time_bounds["start_date__min"].timestamp() * 1000.0
-        context["end_ems"] = time_bounds["end_date__max"].timestamp() * 1000.0
+        if time_bounds["start_date__min"]:
+            context["start_ems"] = time_bounds["start_date__min"].timestamp() * 1000.0
+        if time_bounds["end_date__max"]:
+            context["end_ems"] = time_bounds["end_date__max"].timestamp() * 1000.0
         return context
 
 
