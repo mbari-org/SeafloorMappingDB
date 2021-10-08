@@ -9,11 +9,16 @@
   {{ block.super }}
   <link rel="stylesheet" type="text/css" href="{% static 'css/map.css' %}">
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" type="text/css">
 {% endblock %}
 
 {% block javascript %}
   {{ block.super }}
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+  <script src="{% static 'js/SliderControl.js' %}"></script>
 {% endblock %}
 
 {% block title %}Overview first{% endblock %}
@@ -21,18 +26,11 @@
 {% block content %}
 <div class="container-fluid">
   <form id="changelist-search" method="get">
-    <div class="row">
+    <div class="row" id="filter-row">
       <div class="col-3">
         {{ search_string|bleach }}
       </div>
-      <div class="col-6">
-        <div class="min-max-slider" data-legendnum="2">
-          {{ start_esec|to_date }} {{ end_esec|to_date }}
-          <label for="min">Start date</label>
-          <input id="min" class="min" name="min" type="range" step="1" min="{{ start_esec }}" max="{{ end_esec }}" />
-          <label for="max">End date</label>
-          <input id="max" class="max" name="max" type="range" step="1" min="{{ start_esec }}" max="{{ end_esec }}" />
-        </div>
+      <div class="col-6" id="filter-center">
       </div>
       <div class="col-3">
         <div class="float-right"><!-- div needed inside form for valid HTML -->
@@ -42,11 +40,14 @@
           <input type="submit" value="Search">
         </div>
       </div>
+
     </div>
   </form>
 </div>
   {{ missions|json_script:"missions-data" }}
   {{ MEDIA_URL|json_script:"MEDIA-URL" }}
-  <div id="map"></div>
+  <div id="map">
+    <div class="leaflet-bottom leaflet-left" id="map_bounds"></div>
+  </div>
   <script src="{% static 'js/map.js' %}"></script>
 {% endblock %}
