@@ -10,14 +10,6 @@ const missions = JSON.parse(
   document.getElementById("missions-data").textContent
 );
 
-missionsLayer = L.geoJson(missions);
-var sliderControl = L.control.sliderControl({
-  position: "topright",
-  timeAttribute: "start_date",
-  layer: missionsLayer,
-  range: true,
-});
-
 let feature = L.geoJSON(missions)
   .bindPopup(
     function (layer) {
@@ -59,7 +51,17 @@ map.on("zoomend", function () {
   mbElement.innerHTML = bboxString;
 });
 
+var sliderControl = L.control.sliderControl({
+  position: "topright",
+  isEpoch: true,
+  timeAttribute: "start_ems",
+  layer: feature,
+  range: true,
+  showAllOnStart: true,
+  alwaysShowDate: true,
+  startTimeIdx: 4,
+  timeStrLength: 8,
+});
 map.addControl(sliderControl);
-var htmlObject = sliderControl.getContainer();
-$("#filter-center").html(htmlObject);
+$("#filter-center").html(sliderControl.getContainer());
 sliderControl.startSlider();
