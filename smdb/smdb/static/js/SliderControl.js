@@ -127,22 +127,22 @@ L.Control.SliderControl = L.Control.extend({
     return sliderContainer;
   },
   _updateCurrentDiv: function (startIdx, endIdx) {
-    this.$currentStartDiv.html(
-      this.extractTimestamp(
-        this.options.markers[startIdx].feature.properties[
-          this.options.timeAttribute
-        ],
-        this.options
-      )
+    var min_date = this.extractTimestamp(
+      this.options.markers[startIdx].feature.properties[
+        this.options.timeAttribute
+      ],
+      this.options
     );
-    this.$currentEndDiv.html(
-      this.extractTimestamp(
-        this.options.markers[endIdx].feature.properties[
-          this.options.timeAttribute
-        ],
-        this.options
-      )
+    var max_date = this.extractTimestamp(
+      this.options.markers[endIdx].feature.properties[
+        this.options.timeAttribute
+      ],
+      this.options
     );
+    this.$currentStartDiv.html(min_date);
+    $("#tmin").attr("value", min_date);
+    this.$currentEndDiv.html(max_date);
+    $("#tmax").attr("value", max_date);
   },
   onRemove: function (map) {
     //Delete all markers which where added via the slider and remove the slider div
