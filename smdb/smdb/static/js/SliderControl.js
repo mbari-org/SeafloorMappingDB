@@ -24,7 +24,8 @@ L.Control.SliderControl = L.Control.extend({
 
   extractTimestamp: function (time, options) {
     if (options.isEpoch) {
-      time = new Date(parseInt(time)).toString(); // this is local time
+      //time = new Date(parseInt(time)).toUTCShortFormat();  // not a function ?
+      time = new Date(parseInt(time)).toISOString();
     }
     return time.substr(
       options.startTimeIdx,
@@ -54,7 +55,24 @@ L.Control.SliderControl = L.Control.extend({
     // Create a control sliderContainer with a jquery ui slider
     var sliderContainer = L.DomUtil.create("div", "slider", this._container);
     $(sliderContainer).append(
-      '<div id="slider-min"></div><div id="leaflet-slider" style="inline-block; margin: 0 5px 0 5px;"></div><div id="slider-max"></div><div id="slider-current"><span class="start-time"></span>-<span class="end-time"></span></div>'
+      '<div class="row">' +
+        '  <div class="col-12">' +
+        '    <div id="leaflet-slider" style="inline-block; margin: 0 5px 0 5px;"></div>' +
+        "  </div>" +
+        "</div>" +
+        '<div class="row">' +
+        '  <div class="col-2">' +
+        '    <div id="slider-min" style="color: lightgrey;"></div>' +
+        "  </div>" +
+        '  <div class="col-8">' +
+        '    <div id="slider-current" style="text-align: center;">' +
+        '      <span class="start-time"></span> to <span class="end-time"></span>' +
+        "    </div>" +
+        "  </div>" +
+        '  <div class="col-2">' +
+        '    <div id="slider-max" style="text-align: right; color: lightgrey;"></div>' +
+        "  </div>" +
+        "</div>"
     );
     //Prevent map panning/zooming while using the slider
     $(sliderContainer).mousedown(function () {
@@ -104,20 +122,26 @@ L.Control.SliderControl = L.Control.extend({
     );
     this.$currentStartDiv = $("#slider-current .start-time", sliderContainer);
     this.$currentEndDiv = $("#slider-current .end-time", sliderContainer);
-    this._updateCurrentDiv(0, 1);
+    this._updateCurrentDiv(0, this.options.maxValue);
 
     return sliderContainer;
   },
   _updateCurrentDiv: function (startIdx, endIdx) {
     this.$currentStartDiv.html(
-      this.options.markers[startIdx].feature.properties[
-        this.options.timeAttribute
-      ]
+      this.extractTimestamp(
+        this.options.markers[startIdx].feature.properties[
+          this.options.timeAttribute
+        ],
+        this.options
+      )
     );
     this.$currentEndDiv.html(
-      this.options.markers[endIdx].feature.properties[
-        this.options.timeAttribute
-      ]
+      this.extractTimestamp(
+        this.options.markers[endIdx].feature.properties[
+          this.options.timeAttribute
+        ],
+        this.options
+      )
     );
   },
   onRemove: function (map) {
