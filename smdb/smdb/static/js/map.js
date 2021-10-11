@@ -9,6 +9,7 @@ map.fitWorld();
 const missions = JSON.parse(
   document.getElementById("missions-data").textContent
 );
+
 let feature = L.geoJSON(missions)
   .bindPopup(
     function (layer) {
@@ -17,7 +18,6 @@ let feature = L.geoJSON(missions)
         layer.feature.properties.slug +
         "'>" +
         "<img src='" +
-        media_url +
         layer.feature.properties.thumbnail_image +
         "' />" +
         "</a>"
@@ -47,4 +47,21 @@ map.on("zoomend", function () {
   // Add bbox to query string
   var bElement = document.getElementById("bounds");
   bElement.setAttribute("value", bboxString);
+  var mbElement = document.getElementById("map_bounds");
+  mbElement.innerHTML = bboxString;
 });
+
+var sliderControl = L.control.sliderControl({
+  position: "topright",
+  isEpoch: true,
+  timeAttribute: "start_ems",
+  layer: feature,
+  range: true,
+  showAllOnStart: true,
+  alwaysShowDate: true,
+  startTimeIdx: 0,
+  timeStrLength: 10,
+});
+map.addControl(sliderControl);
+$("#filter-center").html(sliderControl.getContainer());
+sliderControl.startSlider();

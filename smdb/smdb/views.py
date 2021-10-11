@@ -6,11 +6,28 @@ from django.conf import settings
 from django.contrib.gis.geos import Polygon
 from django.core.serializers import serialize
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Max, Min, Q
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework_gis.serializers import (
+    GeoFeatureModelSerializer,
+    GeometrySerializerMethodField,
+)
+from rest_framework.renderers import JSONRenderer
 
 from smdb.models import Expedition, Mission
+
+
+class MissionSerializer(GeoFeatureModelSerializer):
+    """Should probably be in smdb.api.base.serializers with a complete
+    list fields, but here we have it just delivering meeting our needs."""
+
+    class Meta:
+        model = Mission
+        geo_field = "nav_track"
+        fields = ("slug", "thumbnail_image", "start_date", "start_ems", "end_ems")
+        nav_track = GeometrySerializerMethodField()
 
 
 class MissionOverView(TemplateView):
@@ -37,7 +54,7 @@ class MissionOverView(TemplateView):
                 ),
                 srid=4326,
             )
-        missions = Mission.objects.all()
+        missions = Mission.objects.order_by("start_date").all()
         if search_string:
             self.logger.info("search_string = %s", search_string)
             missions = missions.filter(
@@ -51,18 +68,7 @@ class MissionOverView(TemplateView):
             "Serializing %s missions to geojson...",
             missions.count(),
         )
-        context["missions"] = json.loads(
-            serialize(
-                "geojson",
-                missions,
-                fields=(
-                    "slug",
-                    "nav_track",
-                    "thumbnail_image",
-                ),
-                geometry_field="nav_track",
-            )
-        )
+        context["missions"] = MissionSerializer(missions, many=True).data
         self.logger.debug("# of Queries: %d", len(connection.queries))
         self.logger.debug(
             "Size of context['missions']: %d", len(str(context["missions"]))
@@ -71,16 +77,20 @@ class MissionOverView(TemplateView):
             "context['missions'] = %s",
             json.dumps(context["missions"], indent=4, sort_keys=True),
         )
-
         if search_string:
-            context[
-                "search_string"
-            ] = f"{len(context['missions']['features'])} Missions containing '{search_string}'"
+            context["search_string"] = "{:d} Missions containing '{:s}'".format(
+                len(context["missions"]["features"]),
+                search_string,
+            )
         else:
             context[
                 "search_string"
             ] = f"Displaying {len(context['missions']['features'])} Missions"
-
+        time_bounds = missions.aggregate(Min("start_date"), Max("end_date"))
+        if time_bounds["start_date__min"]:
+            context["start_ems"] = time_bounds["start_date__min"].timestamp() * 1000.0
+        if time_bounds["end_date__max"]:
+            context["end_ems"] = time_bounds["end_date__max"].timestamp() * 1000.0
         return context
 
 

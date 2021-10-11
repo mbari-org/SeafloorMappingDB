@@ -205,6 +205,26 @@ class Mission(models.Model):
 
         super(Mission, self).save(*args, **kwargs)
 
+    @property
+    def start_esec(self):
+        if self.start_date:
+            return self.start_date.timestamp()
+
+    @property
+    def end_esec(self):
+        if self.end_date:
+            return self.end_date.timestamp()
+
+    @property
+    def start_ems(self):
+        if self.start_date:
+            return self.start_date.timestamp() * 1000.0
+
+    @property
+    def end_ems(self):
+        if self.end_date:
+            return self.end_date.timestamp() * 1000.0
+
 
 class DataArchival(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
