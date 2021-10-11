@@ -54,7 +54,7 @@ class MissionOverView(TemplateView):
                 ),
                 srid=4326,
             )
-        missions = Mission.objects.all()
+        missions = Mission.objects.order_by("start_date").all()
         if search_string:
             self.logger.info("search_string = %s", search_string)
             missions = missions.filter(
