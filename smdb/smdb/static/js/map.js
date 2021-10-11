@@ -59,8 +59,8 @@ var sliderControl = L.control.sliderControl({
   range: true,
   showAllOnStart: true,
   alwaysShowDate: true,
-  startTimeIdx: 4,
-  timeStrLength: 8,
+  startTimeIdx: 0,
+  timeStrLength: 10,
 });
 map.addControl(sliderControl);
 $("#filter-center").html(sliderControl.getContainer());
