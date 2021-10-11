@@ -44,11 +44,15 @@ map.on("zoomend", function () {
   ymax = Math.round(parseFloat(ymax) * 10000) / 10000;
   var bboxString = xmin.toString() + "," + ymin.toString();
   bboxString += "," + xmax.toString() + "," + ymax.toString();
-  // Add bbox to query string
-  var bElement = document.getElementById("bounds");
-  bElement.setAttribute("value", bboxString);
-  var mbElement = document.getElementById("map_bounds");
-  mbElement.innerHTML = bboxString;
+  // Add map bounds to form elements for next query
+  document.getElementById("xmin").setAttribute("value", xmin);
+  document.getElementById("xmax").setAttribute("value", xmax);
+  document.getElementById("ymin").setAttribute("value", ymin);
+  document.getElementById("ymax").setAttribute("value", ymax);
+  document.getElementById("map_bounds").innerHTML = bboxString;
+  // Remove any time constraints following zoom event
+  $("#tmin").removeAttr("value");
+  $("#tmax").removeAttr("value");
 });
 
 var sliderControl = L.control.sliderControl({
