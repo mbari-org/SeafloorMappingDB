@@ -140,9 +140,24 @@ L.Control.SliderControl = L.Control.extend({
       this.options
     );
     this.$currentStartDiv.html(min_date);
-    $("#tmin").attr("value", min_date);
     this.$currentEndDiv.html(max_date);
+    // Add to hidden form elements
+    $("#tmin").attr("value", min_date);
     $("#tmax").attr("value", max_date);
+    // Also add map bounds for when zoom event doesn't update them
+    var xmin = map.getBounds().toBBoxString().split(",")[0];
+    var ymin = map.getBounds().toBBoxString().split(",")[1];
+    var xmax = map.getBounds().toBBoxString().split(",")[2];
+    var ymax = map.getBounds().toBBoxString().split(",")[3];
+    // Reduce precision from defaut 14 (!) to 4 digits
+    xmin = Math.round(parseFloat(xmin) * 10000) / 10000;
+    ymin = Math.round(parseFloat(ymin) * 10000) / 10000;
+    xmax = Math.round(parseFloat(xmax) * 10000) / 10000;
+    ymax = Math.round(parseFloat(ymax) * 10000) / 10000;
+    document.getElementById("xmin").setAttribute("value", xmin);
+    document.getElementById("xmax").setAttribute("value", xmax);
+    document.getElementById("ymin").setAttribute("value", ymin);
+    document.getElementById("ymax").setAttribute("value", ymax);
   },
   onRemove: function (map) {
     //Delete all markers which where added via the slider and remove the slider div
