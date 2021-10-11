@@ -1,3 +1,4 @@
+/* https://stackoverflow.com/a/33181806/1281657 and http://jsfiddle.net/nathansnider/mos9Lr5v/ */
 L.Control.SliderControl = L.Control.extend({
   options: {
     position: "topright",
@@ -12,7 +13,6 @@ L.Control.SliderControl = L.Control.extend({
     markers: null,
     range: false,
     follow: false,
-    sameDate: false,
     alwaysShowDate: false,
     rezoom: null,
   },
@@ -54,12 +54,13 @@ L.Control.SliderControl = L.Control.extend({
     // Create a control sliderContainer with a jquery ui slider
     var sliderContainer = L.DomUtil.create("div", "slider", this._container);
     $(sliderContainer).append(
-      '<div id="leaflet-slider"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="margin-top:13px; background-color:#FFFFFF; text-align:center; border-radius:5px;"></div></div>'
+      '<div id="slider-min"></div><div id="leaflet-slider" style="inline-block; margin: 0 5px 0 5px;"></div><div id="slider-max"></div><div id="slider-current"><span class="start-time"></span>-<span class="end-time"></span></div>'
     );
     //Prevent map panning/zooming while using the slider
     $(sliderContainer).mousedown(function () {
       map.dragging.disable();
     });
+
     $(document).mouseup(function () {
       map.dragging.enable();
       //Hide the slider timestamp if not range and option alwaysShowDate is set on false
@@ -85,22 +86,50 @@ L.Control.SliderControl = L.Control.extend({
         "Error: You have to specify a layer via new SliderControl({layer: your_layer});"
       );
     }
+    $("#slider-min", sliderContainer).html(
+      this.extractTimestamp(
+        this.options.markers[this.options.minValue].feature.properties[
+          this.options.timeAttribute
+        ],
+        this.options
+      )
+    );
+    $("#slider-max", sliderContainer).html(
+      this.extractTimestamp(
+        this.options.markers[this.options.maxValue].feature.properties[
+          this.options.timeAttribute
+        ],
+        this.options
+      )
+    );
+    this.$currentStartDiv = $("#slider-current .start-time", sliderContainer);
+    this.$currentEndDiv = $("#slider-current .end-time", sliderContainer);
+    this._updateCurrentDiv(0, 1);
+
     return sliderContainer;
   },
-
+  _updateCurrentDiv: function (startIdx, endIdx) {
+    this.$currentStartDiv.html(
+      this.options.markers[startIdx].feature.properties[
+        this.options.timeAttribute
+      ]
+    );
+    this.$currentEndDiv.html(
+      this.options.markers[endIdx].feature.properties[
+        this.options.timeAttribute
+      ]
+    );
+  },
   onRemove: function (map) {
     //Delete all markers which where added via the slider and remove the slider div
-    for (i = this.options.minValue; i <= this.options.maxValue; i++) {
+    for (i = this.options.minValue; i < this.options.maxValue; i++) {
       map.removeLayer(this.options.markers[i]);
     }
     $("#leaflet-slider").remove();
-
-    // unbind listeners to prevent memory leaks
-    $(document).off("mouseup");
-    $(".slider").off("mousedown");
   },
 
   startSlider: function () {
+    self = this;
     _options = this.options;
     _extractTimestamp = this.extractTimestamp;
     var index_start = _options.minValue;
@@ -116,7 +145,6 @@ L.Control.SliderControl = L.Control.extend({
       values: _options.values,
       min: _options.minValue,
       max: _options.maxValue,
-      sameDate: _options.sameDate,
       step: 1,
       slide: function (e, ui) {
         var map = _options.map;
@@ -173,23 +201,13 @@ L.Control.SliderControl = L.Control.extend({
                 fg.addLayer(_options.markers[i]);
               }
             }
+            self._updateCurrentDiv(ui.values[0], ui.values[1]);
           } else if (_options.follow) {
             for (i = ui.value - _options.follow + 1; i <= ui.value; i++) {
               if (_options.markers[i]) {
                 map.addLayer(_options.markers[i]);
                 fg.addLayer(_options.markers[i]);
               }
-            }
-          } else if (_options.sameDate) {
-            var currentTime;
-            if (_options.markers[ui.value].feature !== undefined) {
-              currentTime = _options.markers[ui.value].feature.properties.time;
-            } else {
-              currentTime = _options.markers[ui.value].options.time;
-            }
-            for (i = _options.minValue; i <= _options.maxValue; i++) {
-              if (_options.markers[i].options.time == currentTime)
-                map.addLayer(_options.markers[i]);
             }
           } else {
             for (i = _options.minValue; i <= ui.value; i++) {
