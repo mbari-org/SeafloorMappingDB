@@ -56,9 +56,9 @@ map.on("zoomend", function () {
 });
 
 var sliderControl = L.control.sliderControl({
-  position: "topright",
   isEpoch: true,
-  timeAttribute: "start_ems",
+  startTimeAttribute: "start_ems",
+  endTimeAttribute: "end_ems",
   layer: feature,
   range: true,
   showAllOnStart: true,
