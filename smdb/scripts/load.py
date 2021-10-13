@@ -394,6 +394,7 @@ class FNVLoader(BaseLoader):
                 lat = float(line.split()[8])
                 start_point = Point((lon, lat), srid=4326)
                 start_depth = float(line.split()[11])
+            break
         for fnv_file in reversed(fnv_list):
             with open(fnv_file) as fh:
                 try:
@@ -414,6 +415,7 @@ class FNVLoader(BaseLoader):
                     continue
                 end_point = Point((lon, lat), srid=4326)
                 end_depth = float(line.split()[11])
+            break
 
         return start_dt, end_dt, start_depth, end_depth, start_point, end_point
 

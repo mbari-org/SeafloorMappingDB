@@ -40,10 +40,11 @@ class MissionOverView(TemplateView):
         context = super().get_context_data(**kwargs)
         search_string = context["view"].request.GET.get("q")
         search_geom = None
-        if context["view"].request.GET.get("bounds"):
-            min_lon, min_lat, max_lon, max_lat = (
-                context["view"].request.GET.get("bounds").split(",")
-            )
+        if context["view"].request.GET.get("xmin"):
+            min_lon = context["view"].request.GET.get("xmin")
+            max_lon = context["view"].request.GET.get("xmax")
+            min_lat = context["view"].request.GET.get("ymin")
+            max_lat = context["view"].request.GET.get("ymax")
             search_geom = Polygon(
                 (
                     (float(min_lon), float(min_lat)),
@@ -63,6 +64,13 @@ class MissionOverView(TemplateView):
             )
         if search_geom:
             missions = missions.filter(grid_bounds__contained=search_geom)
+        if context["view"].request.GET.get("tmin"):
+            min_date = context["view"].request.GET.get("tmin")
+            max_date = context["view"].request.GET.get("tmax")
+            missions = missions.filter(
+                start_date__gte=min_date,
+                end_date__lte=max_date,
+            )
 
         self.logger.info(
             "Serializing %s missions to geojson...",

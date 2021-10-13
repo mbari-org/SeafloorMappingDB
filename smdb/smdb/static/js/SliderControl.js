@@ -3,7 +3,8 @@ L.Control.SliderControl = L.Control.extend({
   options: {
     position: "topright",
     layers: null,
-    timeAttribute: "time",
+    startTimeAttribute: "start_time",
+    endTimeAttribute: "end_time",
     isEpoch: false, // whether the time attribute is seconds elapsed from epoch
     startTimeIdx: 0, // where to start looking for a timestring
     timeStrLength: 19, // the size of  yyyy-mm-dd hh:mm:ss - if millis are present this will be larger
@@ -31,6 +32,21 @@ L.Control.SliderControl = L.Control.extend({
       options.startTimeIdx,
       options.startTimeIdx + options.timeStrLength
     );
+  },
+
+  setSliderMarks: function (layers, minIndx, maxIndx) {
+    // Add marker tics to range slider
+    var min_ems =
+      layers[minIndx].feature.properties[this.options.startTimeAttribute];
+    var max_ems =
+      layers[maxIndx].feature.properties[this.options.endTimeAttribute];
+    this._layer.eachLayer(function (layer) {
+      s_frac =
+        (layer.feature.properties.start_ems - min_ems) / (max_ems - min_ems);
+      e_frac =
+        (layer.feature.properties.end_ems - min_ems) / (max_ems - min_ems);
+      // TODO: Add marks to the slider
+    });
   },
 
   setPosition: function (position) {
@@ -99,6 +115,8 @@ L.Control.SliderControl = L.Control.extend({
       });
       options.maxValue = index_temp - 1;
       this.options = options;
+      // Add tics to slider
+      this.setSliderMarks(options.markers, options.minValue, options.maxValue);
     } else {
       console.log(
         "Error: You have to specify a layer via new SliderControl({layer: your_layer});"
@@ -107,7 +125,7 @@ L.Control.SliderControl = L.Control.extend({
     $("#slider-min", sliderContainer).html(
       this.extractTimestamp(
         this.options.markers[this.options.minValue].feature.properties[
-          this.options.timeAttribute
+          this.options.startTimeAttribute
         ],
         this.options
       )
@@ -115,7 +133,7 @@ L.Control.SliderControl = L.Control.extend({
     $("#slider-max", sliderContainer).html(
       this.extractTimestamp(
         this.options.markers[this.options.maxValue].feature.properties[
-          this.options.timeAttribute
+          this.options.startTimeAttribute
         ],
         this.options
       )
@@ -127,22 +145,37 @@ L.Control.SliderControl = L.Control.extend({
     return sliderContainer;
   },
   _updateCurrentDiv: function (startIdx, endIdx) {
-    this.$currentStartDiv.html(
-      this.extractTimestamp(
-        this.options.markers[startIdx].feature.properties[
-          this.options.timeAttribute
-        ],
-        this.options
-      )
+    var min_date = this.extractTimestamp(
+      this.options.markers[startIdx].feature.properties[
+        this.options.startTimeAttribute
+      ],
+      this.options
     );
-    this.$currentEndDiv.html(
-      this.extractTimestamp(
-        this.options.markers[endIdx].feature.properties[
-          this.options.timeAttribute
-        ],
-        this.options
-      )
+    var max_date = this.extractTimestamp(
+      this.options.markers[endIdx].feature.properties[
+        this.options.endTimeAttribute
+      ],
+      this.options
     );
+    this.$currentStartDiv.html(min_date);
+    this.$currentEndDiv.html(max_date);
+    // Add to hidden form elements
+    $("#tmin").attr("value", min_date);
+    $("#tmax").attr("value", max_date);
+    // Also add map bounds for when zoom event doesn't update them
+    var xmin = map.getBounds().toBBoxString().split(",")[0];
+    var ymin = map.getBounds().toBBoxString().split(",")[1];
+    var xmax = map.getBounds().toBBoxString().split(",")[2];
+    var ymax = map.getBounds().toBBoxString().split(",")[3];
+    // Reduce precision from defaut 14 (!) to 4 digits
+    xmin = Math.round(parseFloat(xmin) * 10000) / 10000;
+    ymin = Math.round(parseFloat(ymin) * 10000) / 10000;
+    xmax = Math.round(parseFloat(xmax) * 10000) / 10000;
+    ymax = Math.round(parseFloat(ymax) * 10000) / 10000;
+    document.getElementById("xmin").setAttribute("value", xmin);
+    document.getElementById("xmax").setAttribute("value", xmax);
+    document.getElementById("ymin").setAttribute("value", ymin);
+    document.getElementById("ymax").setAttribute("value", ymax);
   },
   onRemove: function (map) {
     //Delete all markers which where added via the slider and remove the slider div
@@ -173,41 +206,43 @@ L.Control.SliderControl = L.Control.extend({
       slide: function (e, ui) {
         var map = _options.map;
         var fg = L.featureGroup();
+        var timeAttribute;
+        if ($(ui.handle).index() == 1) {
+          timeAttribute = _options.startTimeAttribute;
+        } else if ($(ui.handle).index() == 2) {
+          timeAttribute = _options.endTimeAttribute;
+        }
         if (!!_options.markers[ui.value]) {
           // If there is no time property, this line has to be removed (or exchanged with a different property)
           if (_options.markers[ui.value].feature !== undefined) {
-            if (
-              _options.markers[ui.value].feature.properties[
-                _options.timeAttribute
-              ]
-            ) {
+            if (_options.markers[ui.value].feature.properties[timeAttribute]) {
               if (_options.markers[ui.value])
                 $("#slider-timestamp").html(
                   _extractTimestamp(
                     _options.markers[ui.value].feature.properties[
-                      _options.timeAttribute
+                      timeAttribute
                     ],
                     _options
                   )
                 );
             } else {
               console.error(
-                "Time property " + _options.timeAttribute + " not found in data"
+                "Time property " + timeAttribute + " not found in data"
               );
             }
           } else {
             // set by leaflet Vector Layers
-            if (_options.markers[ui.value].options[_options.timeAttribute]) {
+            if (_options.markers[ui.value].options[timeAttribute]) {
               if (_options.markers[ui.value])
                 $("#slider-timestamp").html(
                   _extractTimestamp(
-                    _options.markers[ui.value].options[_options.timeAttribute],
+                    _options.markers[ui.value].options[timeAttribute],
                     _options
                   )
                 );
             } else {
               console.error(
-                "Time property " + _options.timeAttribute + " not found in data"
+                "Time property " + timeAttribute + " not found in data"
               );
             }
           }
@@ -253,7 +288,7 @@ L.Control.SliderControl = L.Control.extend({
       $("#slider-timestamp").html(
         _extractTimeStamp(
           _options.markers[index_start].feature.properties[
-            _options.timeAttribute
+            _options.startTimeAttribute
           ],
           _options
         )
