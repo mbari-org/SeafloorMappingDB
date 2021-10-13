@@ -13,7 +13,7 @@ psycopg2==2.9.1  # https://github.com/psycopg/psycopg2
 django==3.2.8  # pyup: < 3.2  # https://www.djangoproject.com/
 django-bleach==0.9.0  # https://pypi.org/project/django-bleach/
 django-environ==0.7.0  # https://github.com/joke2k/django-environ
-django-model-utils==4.1.1  # https://github.com/jazzband/django-model-utils
+django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
 django-allauth==0.45.0  # https://github.com/pennersr/django-allauth
 django-crispy-forms==1.13.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-compressor==2.4.1  # https://github.com/django-compressor/django-compressor
@@ -38,4 +38,4 @@ pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testi
 pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest-camel-collect
 pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
-uritemplate==4.0.0 # For python manage.py generateschema
+uritemplate==4.1.1 # For python manage.py generateschema
