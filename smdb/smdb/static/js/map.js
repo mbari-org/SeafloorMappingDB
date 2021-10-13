@@ -32,7 +32,23 @@ let feature = L.geoJSON(missions)
   })
   .addTo(map);
 map.fitBounds(feature.getBounds(), { padding: [100, 100] });
-map.on("zoomend", function () {
+
+var bounds = L.control({ position: "bottomleft" });
+bounds.onAdd = function (map) {
+  var div = L.DomUtil.create("div", "bounds-container row");
+  var bboxString = getMapBounds();
+  div.innerHTML =
+    '<div id="map-bounds">' +
+    bboxString +
+    "</div>" +
+    "<div>&nbsp;" +
+    '<input title="Use map bounds in Update" type="checkbox" id="use_bounds">' +
+    "</div>";
+  return div;
+};
+bounds.addTo(map);
+
+function getMapBounds() {
   // Reduce precision from defaut 14 (!) to 4 digits
   var xmin = map.getBounds().toBBoxString().split(",")[0];
   var ymin = map.getBounds().toBBoxString().split(",")[1];
@@ -49,10 +65,12 @@ map.on("zoomend", function () {
   document.getElementById("xmax").setAttribute("value", xmax);
   document.getElementById("ymin").setAttribute("value", ymin);
   document.getElementById("ymax").setAttribute("value", ymax);
-  document.getElementById("map_bounds").innerHTML = bboxString;
-  // Remove any time constraints following zoom event
-  $("#tmin").removeAttr("value");
-  $("#tmax").removeAttr("value");
+  return bboxString;
+}
+
+map.on("zoomend", function () {
+  bboxString = getMapBounds();
+  document.getElementById("map-bounds").innerHTML = bboxString;
 });
 
 var sliderControl = L.control.sliderControl({
