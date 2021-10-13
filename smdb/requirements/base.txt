@@ -38,4 +38,4 @@ pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testi
 pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest-camel-collect
 pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
-uritemplate==4.0.0 # For python manage.py generateschema
+uritemplate==4.1.0 # For python manage.py generateschema
