@@ -83,6 +83,7 @@ L.Control.SliderControl = L.Control.extend({
         '  <div class="col-8">' +
         '    <div id="slider-current" style="text-align: center;">' +
         '      <span class="start-time"></span> to <span class="end-time"></span>' +
+        '      <input title="Use time bounds in Update" type="checkbox" id="use_time">' +
         "    </div>" +
         "  </div>" +
         '  <div class="col-2">' +
