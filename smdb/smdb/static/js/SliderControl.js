@@ -80,15 +80,11 @@ L.Control.SliderControl = L.Control.extend({
         '  <div class="col-2">' +
         '    <div id="slider-min" style="color: lightgrey;"></div>' +
         "  </div>" +
-        '  <div class="col-1">' +
-        "  </div>" +
-        '  <div class="col-6">' +
+        '  <div class="col-8">' +
         '    <div id="slider-current" style="text-align: center;">' +
         '      <span class="start-time"></span> to <span class="end-time"></span>' +
+        '      <input title="Use time bounds in Update" type="checkbox" id="use_time">' +
         "    </div>" +
-        "  </div>" +
-        '  <div class="col-1">' +
-        '    <input title="Use time bounds in Update" type="checkbox" name="use_time">' +
         "  </div>" +
         '  <div class="col-2">' +
         '    <div id="slider-max" style="text-align: right; color: lightgrey;"></div>' +
