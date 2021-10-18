@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-Scan SeafloorMapping share for data to load into smdb
+Load a data from SeafloorMapping share into a postgis database
 """
 
 import os
@@ -35,27 +35,38 @@ from time import time  # noqa F402
 MBARI_DIR = "/mbari/SeafloorMapping/"
 
 instructions = f"""
+Loading a Seafloor Mapping Database is at least a three step process, with
+some steps requiring access to the SeafloorMapping share on titan. They are:
+
+1. --bootstrap          Requires SeafloorMapping access
+2. --notes
+3. --fnv                Requires SeafloorMapping access
+
+With none of these options specified all are executed. Specify one or more
+of these options to debug portions of code or to pick up where a previous
+load may have failed. The --skipuntil option may be used to skip over missions
+that have already been loaded. (See the .vscode/launch.json file for various
+options that have proved useful.)
+
+A locate(1) database is used to speed lookups of files from the SeafloorMapping
+share. Make sure you have an up to date copy on your development system, e.g.:
+
+  cd ~/
+  scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
+
 Can be run from smdb Docker environment thusly...
-    First time - install necessary things:
-        git clone git@github.com:mbari-org/SeafloorMappingDB.git
-        cd SeafloorMappingDB
-        export SMDB_HOME=$(pwd)
-        export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-        docker-compose up -d
-    Thereafter, on command line:
-        cd SeafloorMappingDB
-        export SMDB_HOME=$(pwd)
-        export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-        docker-compose run --rm -u $UID -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -h
-        -- or, on production --
-        export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
-        docker-compose run --rm -u $UID -v /mbari/SeafloorMapping:/mbari/SeafloorMapping django {__file__} -h
     From VS Code:
         - Mount smb://titan.shore.mbari.org/SeafloorMapping
-        - Open zsh terminal, at ➜  /app/smdb prompt:
+        - Open zsh terminal, cd to /app/smdb, at ➜  smdb git:(main) prompt:
           scripts/load.py --help
-          scripts/load.py -v --clobber # To reload database
-          or use the "load.py" Debug launch configuration
+          scripts/load.py -v --clobber
+          or use the "load.py" Run and Debug launch configuration
+    On production server:
+        - From account with permissions in /opt/SeafloorMappingDB:
+          export SMDB_HOME=$(pwd)
+          export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
+          docker-compose run --rm  django scripts/load.py -v --clobber | tee load.out
+        - It's useful to capture the output and use the WARNING statements to fix problems
 
 """
 
@@ -116,7 +127,7 @@ class BaseLoader:
         parser.add_argument(
             "--mbinfo",
             action="store_true",
-            help="Run the loading steps that uses MB-System mbinfo commands",
+            help="Deprecated in favor of --fnv. Run the loading steps that uses MB-System mbinfo commands",
         )
         parser.add_argument(
             "--fnv",
@@ -132,7 +143,7 @@ class BaseLoader:
         parser.add_argument(
             "--noinput",
             action="store_true",
-            help="Don't ask to confirm --clobber",
+            help="Don't ask to confirm when --clobber is specified",
         )
         parser.add_argument(
             "--skipuntil_regex",
