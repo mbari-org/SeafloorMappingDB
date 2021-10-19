@@ -17,7 +17,7 @@
         "config.settings.local"
       ],
       "django": true,
-      "justMyCode": false
+      "justMyCode": true
     },
     {
       "name": "shell_plus",
