@@ -20,6 +20,7 @@ services:
       - /Users/mccann/docker_smdb_vol:/etc/smdb:z
       - .:/app:z
       - local_media_files:/media:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
