@@ -48,6 +48,7 @@ cd SeafloorMappingDB
 # Edit smdb/local.yml with fully qualified location of docker_smdb_vol
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
+# Mount `smb://titan.shore.mbari.org/SeafloorMapping` using MacOS Finder
 docker-compose up -d
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
@@ -68,20 +69,24 @@ docker-compose down
 docker-compose up -d --build
 ```
 
-Mount `smb://titan.shore.mbari.org/SeafloorMapping` and load initial Mission data with:
+Load some sample data (5 Missions) with:
 
 ```
-# Replace <uid> with return from 'id -u'
-docker-compose run --rm -u <uid> -v /Volumes/SeafloorMapping:/mbari/SeafloorMapping django scripts/load.py -v
+docker-compose run --rm django scripts/load.py -v --limit 5
 ```
 
 ### Work on the code with VS Code
 
 1. Perform the [First time](https://github.com/mbari-org/SeafloorMappingDB#first-time)
-   steps above.
-   Install [VS Code](https://code.visualstudio.com/download) and the
-   [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-   extension.
+   steps above and then shut down the containers that use smdb/local.yml:
+
+```
+docker-compose -f $SMDB_HOME/smdb/local.yml down
+```
+
+Install [VS Code](https://code.visualstudio.com/download) and the
+[Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+extension.
 
 2. From VS Code: File -> Open and select your SMDB_HOME directory. The `devcontainer.json`
    file will be detected and you will be prompted to "Reopen in Container". Click the button
@@ -90,7 +95,7 @@ docker-compose run --rm -u <uid> -v /Volumes/SeafloorMapping:/mbari/SeafloorMapp
 3. To monitor the docker container logs in a terminal use the `debug.yml` configuration:
 
 ```
-export COMPOSE_FILE=$SMDB_HOME/smdb/debug.yml
+export COMPOSE_FILE=$SMDB_HOME/debug.yml
 docker-compose logs -f
 ```
 
