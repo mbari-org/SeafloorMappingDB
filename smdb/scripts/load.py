@@ -908,8 +908,11 @@ class BootStrapper(BaseLoader):
                     miss_count,
                     os.path.dirname(fp).replace(MBARI_DIR, ""),
                 )
-                if not matches.group(4):
-                    self.logger.info("Name missing 2 character mission sequence")
+                try:
+                    if not matches.group(4):
+                        self.logger.info("Name missing 2 character mission sequence")
+                except (AttributeError, IndexError):
+                    self.logger.debug("regex match has no group(4)")
                 try:
                     ds = Dataset(fp)
                     self.logger.debug(ds)
