@@ -38,7 +38,7 @@
       //"args": ["-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "OceanImaging2013/monterey/ZTopo.grd$"],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2016/20160321m1/ZTopo.grd$", "--limit", "1"],
       //"args": ["-v", "1", "--skipuntil_regex", "--regex", "2020/20200924t1/lidar/ZTopo.grd$", "--limit", "1"],
-      //"args": ["-v", "--limit", "20", "--clobber", "--noinput"],
+      "args": ["-v", "--limit", "5", "--clobber", "--noinput"],
       //"args": ["--bootstrap", "-v 2", "--clobber", "--limit", "50"],
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
       //"args": ["--notes", "-v 2", "--limit", "1"],
@@ -47,16 +47,7 @@
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
       //"args": ["--bootstrap", "-v", "2", "--limit", "2", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
-      "args": [
-        "-v",
-        "2",
-        "--bootstrap",
-        "--skipuntil_regex",
-        "--regex",
-        "MappingAUVOps2006/20060828/ZTopo.grd$",
-        "--limit",
-        "1"
-      ],
+      //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2006/20060828"]
       //"args": ["--fnv", "-v", "1"],
       "justMyCode": false
