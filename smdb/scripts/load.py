@@ -815,7 +815,7 @@ class BootStrapper(BaseLoader):
         scale_factor = 8
         try:
             im = Image.open(mission.thumbnail_filename)
-        except UnidentifiedImageError as e:
+        except (UnidentifiedImageError, FileNotFoundError) as e:
             self.logger.warning(f"{e}")
             return
         width, height = im.size
