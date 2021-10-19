@@ -48,15 +48,17 @@ cd SeafloorMappingDB
 # Edit smdb/local.yml with fully qualified location of docker_smdb_vol
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
-# Mount `smb://titan.shore.mbari.org/SeafloorMapping` using MacOS Finder
+# Mount `smb://titan.shore.mbari.org/SeafloorMapping` on your system
 docker-compose up -d
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
 ```
 
 Then navigate to http://localhost:8000 to see the web application in local
-development mode. Log into the admin interface using the credentials you
-created in the last step above.
+development mode. Sign In to the admin interface using the credentials you
+created in the last step above. You will then need to open an email in
+MailHog at http://localhost:8025 to click on the link and confirm the
+account registration. Click on Admin to administer the site.
 
 #### Thereafter
 
@@ -65,8 +67,10 @@ cd ${SMDB_HOME}
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 # Shut down the services
 docker-compose down
-# Bring back up - must be done to use new edits, e.g. in scripts/load.py
+# Bring back up
 docker-compose up -d --build
+# Monitor container logs (nice to always have running in its own window)
+docker-compose logs -f
 ```
 
 Load some sample data (5 Missions) with:
@@ -88,7 +92,7 @@ Install [VS Code](https://code.visualstudio.com/download) and the
 [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 extension.
 
-2. From VS Code: File -> Open and select your SMDB_HOME directory. The `devcontainer.json`
+2. From VS Code go to File -> Open and select your SMDB_HOME directory. The `devcontainer.json`
    file will be detected and you will be prompted to "Reopen in Container". Click the button
    and wait for the containers to build and run.
 
@@ -99,16 +103,31 @@ export COMPOSE_FILE=$SMDB_HOME/debug.yml
 docker-compose logs -f
 ```
 
-4. Use the debug launch configurations to Run and Debug the server, execute load.py, or run an
-   IPython shell giving access through Django to the database. For example,
-   In the Debug panel click the play button next to the "manage.py shell_plus" item in the pick list at top.
-   A "In [1]:" prompt should appear in the Terminal pane - test by printing all the Missions in the database:
+4. The debug.yml "recipe" has the Django development server running at http://localhost:8001/,
+   so to load and see some data there open a zsh terminal and execute at the ➜ /app git:(main) prompt:
+
+```
+cd smdb
+scripts/load.py -v --limit 5
+```
+
+5. Use the debug launch configurations to Run and Debug the server (at port 8000),
+   execute load.py, or run an IPython shell giving access through Django to the database.
+   For example, In the Debug panel click the play button next to the "manage.py shell_plus"
+   item in the pick list at top. A "In [1]:" prompt should appear in the Terminal pane -
+   test by printing all the Missions in the database:
 
 ```
     In [1]: Mission.objects.all()
 ```
 
 You may set breakpoints and examine variables in VS Code while the Python code is executing.
+The other advantages of editing in VS Code is syntax highlighting, code completion,
+and automated formatting. Source code control is also a little nicer than usin the
+command line for all the `git` commands. One caveat is that if you save a code change
+that crashes the django container (e.g. a syntax error in models.py) then you'll
+have to correct the error in another editor before you can bring back up the container
+in VS Code.
 
 ### Deploy a production instance of smdb
 
