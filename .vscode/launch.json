@@ -37,11 +37,10 @@
       //"args": ["-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2011/20110718m1/ZTopo.grd$", "--limit", "2"],
       "args": [
         "-v",
-        "1",
-        "--bootstrap",
-        "--skipuntil_regex",
-        "--regex",
-        "MappingAUVOps2012/20120322m1/ZTopo.grd$"
+        "2",
+        "--fnv",
+        "--skipuntil",
+        "mbsystem/Data/2012/20120103_MB-System_Tutorial_OFG/ProprietaryOFGSampleData/20101127OFGSample/multibeam_hsx"
       ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2016/20160321m1/ZTopo.grd$", "--limit", "1"],
       //"args": ["-v", "1", "--skipuntil_regex", "--regex", "2020/20200924t1/lidar/ZTopo.grd$", "--limit", "1"],
