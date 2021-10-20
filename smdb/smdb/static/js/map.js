@@ -31,7 +31,11 @@ let feature = L.geoJSON(missions)
     return layer.feature.properties.slug;
   })
   .addTo(map);
-map.fitBounds(feature.getBounds(), { padding: [100, 100] });
+try {
+  map.fitBounds(feature.getBounds(), { padding: [100, 100] });
+} catch (err) {
+  console.log(err.message);
+}
 
 var bounds = L.control({ position: "bottomleft" });
 bounds.onAdd = function (map) {
