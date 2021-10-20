@@ -112,7 +112,7 @@ class BaseLoader:
             "--regex",
             action="store",
             help="Load only ZTopo.grd files that have this regular expression in their path",
-            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)\/",
+            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)*\/",
         )
         parser.add_argument(
             "--bootstrap",
@@ -815,7 +815,7 @@ class BootStrapper(BaseLoader):
         scale_factor = 8
         try:
             im = Image.open(mission.thumbnail_filename)
-        except UnidentifiedImageError as e:
+        except (UnidentifiedImageError, FileNotFoundError) as e:
             self.logger.warning(f"{e}")
             return
         width, height = im.size
@@ -890,16 +890,12 @@ class BootStrapper(BaseLoader):
             start=1,
         ):
             self.logger.debug("%3d. file: %s", count, fp)
-            if self.args.regex:
-                if self.args.skipuntil_regex and re.search(
-                    re.compile(self.args.regex), fp
-                ):
-                    start_processing = True
-                if not self.args.skipuntil_regex and not re.search(
-                    re.compile(self.args.regex), fp
-                ):
-                    self.logger.debug("Does not match --regex '%s'", self.args.regex)
-                    continue
+            matches = re.search(re.compile(self.args.regex), fp)
+            if self.args.skipuntil_regex and matches:
+                start_processing = True
+            if not self.args.skipuntil_regex and not matches:
+                self.logger.debug("Does not match --regex '%s'", self.args.regex)
+                continue
             if not start_processing:
                 self.logger.debug("Skipping until %s", self.args.regex)
                 continue
@@ -912,6 +908,11 @@ class BootStrapper(BaseLoader):
                     miss_count,
                     os.path.dirname(fp).replace(MBARI_DIR, ""),
                 )
+                try:
+                    if not matches.group(4):
+                        self.logger.info("Name missing 2 character mission sequence")
+                except (AttributeError, IndexError):
+                    self.logger.debug("regex match has no group(4)")
                 try:
                     ds = Dataset(fp)
                     self.logger.debug(ds)
