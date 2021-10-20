@@ -364,6 +364,7 @@ class NoteParser(BaseLoader):
 class FNVLoader(BaseLoader):
     def fnv_file_list(self, path: str, datalist: str) -> Tuple[list, str]:
         fnv_list = []
+        fnv_type = ""
         with open(datalist) as fh:
             for line in fh.readlines():
                 if line.startswith("#"):
@@ -406,6 +407,8 @@ class FNVLoader(BaseLoader):
                 start_point = Point((lon, lat), srid=4326)
                 start_depth = float(line.split()[11])
             break
+        if "start_dt" not in locals():
+            raise ParserError(f"Could not get start_dt from {fh.name}")
         for fnv_file in reversed(fnv_list):
             with open(fnv_file) as fh:
                 try:
@@ -427,6 +430,8 @@ class FNVLoader(BaseLoader):
                 end_point = Point((lon, lat), srid=4326)
                 end_depth = float(line.split()[11])
             break
+        if "end_dt" not in locals():
+            raise ParserError(f"Could not get end_dt from {fh.name}")
 
         return start_dt, end_dt, start_depth, end_depth, start_point, end_point
 
@@ -523,6 +528,8 @@ class FNVLoader(BaseLoader):
         path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
         fnv_list, fnv_type = self.fnv_file_list(path, datalist)
+        if not fnv_list:
+            raise FileNotFoundError(f"No .fnv files found in {path}")
         if path.endswith("lidar") or path.endswith("lidartest"):
             original, mission.nav_track = self.fnv_points_tolinestring(
                 fnv_list,
