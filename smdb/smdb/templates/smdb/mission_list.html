@@ -5,11 +5,11 @@
     <div class="container-fluid">
         {% for mission in mission_list|dictsort:"name" %}
         <div class="row">
-            <div class="col-2">
+            <div class="col-6">
                 <a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
             </div>
-            <div class="col-10">
-                {% if mission.expedition %}
+            <div class="col-6">
+                {% if mission.expedition.slug %}
                 <a href="{% url 'expedition-detail' mission.expedition.slug %}">{{ mission.expedition.name }}</a>
                 {% else %}
                 Expedition name not assigned during load

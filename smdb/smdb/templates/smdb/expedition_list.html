@@ -14,7 +14,11 @@
         {% for expedition in expedition_list|dictsort:"name" %}
         <div class="row">
             <div class="col-6">
+                {% if expedition.slug %}
                 <a href="{% url 'expedition-detail' expedition.slug %}">{{ expedition.name }}</a>
+                {% else %}
+                Expedition name not assigned during load
+                {% endif %}
             </div>
             <div class="col-6">
                 {% for mission in expedition.mission_set.all|dictsort:"name" %}
