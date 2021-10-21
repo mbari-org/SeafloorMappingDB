@@ -27,7 +27,8 @@
 <div class="container-fluid">
   <div class="row" id="filter-row">
     <div class="col-3">
-      {{ search_string|bleach }}
+      <span id="num-missions">{{ num_missions }}</span> Missions
+      <span id="search-string">{{ search_string|bleach }}</span>
     </div>
     <div class="col-6" id="filter-center">
     </div>

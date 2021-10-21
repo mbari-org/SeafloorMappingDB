@@ -163,6 +163,7 @@ L.Control.SliderControl = L.Control.extend({
     // Add to hidden form elements
     $("#tmin").attr("value", min_date);
     $("#tmax").attr("value", max_date);
+    $("#num-missions").html(endIdx - startIdx + 1);
     // Also add map bounds for when zoom event doesn't update them
     var xmin = map.getBounds().toBBoxString().split(",")[0];
     var ymin = map.getBounds().toBBoxString().split(",")[1];
