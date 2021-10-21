@@ -13,12 +13,17 @@ const missions = JSON.parse(
 let feature = L.geoJSON(missions)
   .bindPopup(
     function (layer) {
+      if (layer.feature.properties.thumbnail_image) {
+        image_url = layer.feature.properties.thumbnail_image;
+      } else {
+        image_url = "static/images/No_ZTopoSlopeNav_image.jpg";
+      }
       return (
         "<a target='_blank' href='/missions/" +
         layer.feature.properties.slug +
         "'>" +
         "<img src='" +
-        layer.feature.properties.thumbnail_image +
+        image_url +
         "' />" +
         "</a>"
       );
