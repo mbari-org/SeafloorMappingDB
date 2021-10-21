@@ -21,12 +21,12 @@ import math  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
-import timing  # noqa F402
+import timing  # noqa F402 - needed for nice elapsed time reporting
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
-from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
+from django.core.files.storage import FileSystemStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
@@ -73,12 +73,16 @@ Can be run from smdb Docker environment thusly...
 
 
 class BaseLoader:
+    LOCAL_LOG_FILE = "/etc/smdb/load.txt"
+    MEDIA_LOG_FILE = "logs/load.txt"
+
     def __init__(self):
         self.logger = logging.getLogger("load")
         self._log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
         self._log_strings = ("WARN", "INFO", "DEBUG")
         self.commandline = None
         self.exclude_paths = []
+        self.start_proc = datetime.now()
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -162,18 +166,17 @@ class BaseLoader:
 
         # Override Django's logging so that we can setLevel() with --verbose
         logging.getLogger().handlers.clear()
-        stream_handler = logging.StreamHandler()
-        file_handler = logging.FileHandler(
-            os.path.join(settings.MEDIA_ROOT, "logs", "load.txt")
-        )
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
-        stream_handler.setFormatter(_formatter)
-        file_handler.setFormatter(_formatter)
         if not self.logger.handlers:
-            # Don't add handler for sub class
+            # Don't add handlers when sub class runs
+            stream_handler = logging.StreamHandler()
+            os.remove(self.LOCAL_LOG_FILE)
+            file_handler = logging.FileHandler(self.LOCAL_LOG_FILE)
+            stream_handler.setFormatter(_formatter)
+            file_handler.setFormatter(_formatter)
             self.logger.addHandler(stream_handler)
             self.logger.addHandler(file_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
@@ -211,6 +214,17 @@ class BaseLoader:
             if self.args.limit:
                 if miss_count >= self.args.limit:
                     return
+
+    def save_logger_output(self) -> None:
+        self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
+        for handler in self.logger.handlers[:]:
+            self.logger.debug("Closing handler: %s", handler)
+            handler.close()
+            self.logger.removeHandler(handler)
+        log_file = open(self.LOCAL_LOG_FILE)
+        fs = FileSystemStorage()
+        fs.delete(self.MEDIA_LOG_FILE)
+        fs.save(self.MEDIA_LOG_FILE, log_file)
 
 
 class NoteParser(BaseLoader):
@@ -996,6 +1010,7 @@ def run(*args):
         bootstrap_load()
         notes_load()
         fnv_load()
+    bl.save_logger_output()
 
 
 def bootstrap_load():
