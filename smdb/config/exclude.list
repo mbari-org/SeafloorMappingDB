@@ -7,9 +7,6 @@
 #   that contain data Dave received from others as part of MB-System development and
 #   trouble-shooting. These are from directories like mbsystem/Data/2008/...IFREMER...
 #   that whole "mbsystem" subdirectory does not need to be searched for content.
-/mbari/SeafloorMapping/mbsystem/Data/2008/20080303OysteinIFREMER/84000411/ZTopo.grd
-/mbari/SeafloorMapping/mbsystem/Data/2010/20100119FerreiraIFREMER/ZTopo.grd
-/mbari/SeafloorMapping/mbsystem/Data/2012/20120312DiazNaveasIFREMERMBB/ZTopo.grd
 /mbari/SeafloorMapping/swathdata/surveys/IFREMER/ACT/ZTopo.grd
 # - There are other boxes that enclose ship-collected data copied into MappingAUVOps
 #   mission planning directories for basemaps upon which AUV surveys were designed
@@ -23,4 +20,4 @@
 /mbari/SeafloorMapping/MappingAUVOps2018/PescaderoBasin/swathdata/surveys/SOI/FK181031/EM302/ZTopo.grd
 # https://github.com/mbari-org/SeafloorMappingDB/issues/96#issuecomment-948003350
 # - Data in the mbsystem directory can all be excluded
-/mbari/SeafloorMapping/mbsystem
+/mbari/SeafloorMapping/mbsystem/

@@ -78,7 +78,7 @@ class BaseLoader:
         self._log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
         self._log_strings = ("WARN", "INFO", "DEBUG")
         self.commandline = None
-        self.exclude_files = []
+        self.exclude_paths = []
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -106,7 +106,7 @@ class BaseLoader:
         parser.add_argument(
             "--exclude",
             action="store",
-            help="Name of file containing Mission names to exclude",
+            help="Name of file containing Mission paths to exclude",
             default="/etc/smdb/exclude.list",
         )
         parser.add_argument(
@@ -178,9 +178,10 @@ class BaseLoader:
             self.logger.addHandler(file_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
-        for line in open(self.args.exclude):
-            if not line.startswith("#"):
-                self.exclude_files.append(line.strip())
+        if not self.exclude_paths:
+            for line in open(self.args.exclude):
+                if not line.startswith("#"):
+                    self.exclude_paths.append(line.strip())
 
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
@@ -876,6 +877,13 @@ class BootStrapper(BaseLoader):
         ##from django.core.management.commands import flush  # noqa F40
         ##call_command(flush.Command(), verbosity=1, interactive=False)
 
+    def _exclude_path(self, fp):
+        for e_path in self.exclude_paths:
+            if fp.startswith(e_path):
+                self.logger.debug("Excluding file: %s", fp)
+                return True
+        return False
+
     def load_from_grds(self):
         self.process_command_line()
 
@@ -912,61 +920,60 @@ class BootStrapper(BaseLoader):
             if not start_processing:
                 self.logger.debug("Skipping until %s", self.args.regex)
                 continue
-            if fp in self.exclude_files:
-                self.logger.debug("Excluding file: %s", fp)
+            if self._exclude_path(fp):
+                continue
+            miss_count += 1
+            self.logger.info(
+                "======== %3d. %s ========",
+                miss_count,
+                os.path.dirname(fp).replace(MBARI_DIR, ""),
+            )
+            try:
+                if not matches.group(4):
+                    self.logger.info("Name missing 2 character mission sequence")
+            except (AttributeError, IndexError):
+                self.logger.debug("regex match has no group(4)")
+            try:
+                ds = Dataset(fp)
+                self.logger.debug(ds)
+            except PermissionError as e:
+                self.logger.warning(str(e))
+            except FileNotFoundError:
+                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
+            if not self.is_geographic(ds):
+                self.logger.warning("%s is not Projection: Geographic", fp)
+                continue
+            try:
+                grid_bounds = self.extent(ds, fp)
+            except ValueError as e:
+                self.logger.warning(e)
+                continue
+            self.logger.debug("grid_bounds: %s", grid_bounds)
+
+            notes_filename = self.notes_filename(os.path.dirname(fp))
+            thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
+
+            mission, created = Mission.objects.get_or_create(
+                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
+                grid_bounds=grid_bounds,
+                notes_filename=notes_filename,
+                thumbnail_filename=thumbnail_filename,
+                directory=os.path.dirname(fp),
+            )
+            try:
+                self.save_note_todb(mission)
+                self.save_thumbnail(mission)
+            except FileExistsError as e:
+                self.logger.warning(str(e))
+
+            if created:
+                self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
             else:
-                miss_count += 1
-                self.logger.info(
-                    "======== %3d. %s ========",
-                    miss_count,
-                    os.path.dirname(fp).replace(MBARI_DIR, ""),
-                )
-                try:
-                    if not matches.group(4):
-                        self.logger.info("Name missing 2 character mission sequence")
-                except (AttributeError, IndexError):
-                    self.logger.debug("regex match has no group(4)")
-                try:
-                    ds = Dataset(fp)
-                    self.logger.debug(ds)
-                except PermissionError as e:
-                    self.logger.warning(str(e))
-                except FileNotFoundError:
-                    raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
-                if not self.is_geographic(ds):
-                    self.logger.warning("%s is not Projection: Geographic", fp)
-                    continue
-                try:
-                    grid_bounds = self.extent(ds, fp)
-                except ValueError as e:
-                    self.logger.warning(e)
-                    continue
-                self.logger.debug("grid_bounds: %s", grid_bounds)
-
-                notes_filename = self.notes_filename(os.path.dirname(fp))
-                thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
-
-                mission, created = Mission.objects.get_or_create(
-                    name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                    grid_bounds=grid_bounds,
-                    notes_filename=notes_filename,
-                    thumbnail_filename=thumbnail_filename,
-                    directory=os.path.dirname(fp),
-                )
-                try:
-                    self.save_note_todb(mission)
-                    self.save_thumbnail(mission)
-                except FileExistsError as e:
-                    self.logger.warning(str(e))
-
-                if created:
-                    self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
-                else:
-                    self.logger.info("%3d. Resaved %s", miss_count, mission)
-                if self.args.limit:
-                    if miss_count >= self.args.limit:
-                        self.logger.info("Stopping after %s records", self.args.limit)
-                        return
+                self.logger.info("%3d. Resaved %s", miss_count, mission)
+            if self.args.limit:
+                if miss_count >= self.args.limit:
+                    self.logger.info("Stopping after %s records", self.args.limit)
+                    return
 
 
 def run(*args):
