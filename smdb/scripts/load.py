@@ -173,7 +173,8 @@ class BaseLoader:
         if not self.logger.handlers:
             # Don't add handlers when sub class runs
             stream_handler = logging.StreamHandler()
-            os.remove(self.LOCAL_LOG_FILE)
+            if os.path.exists(self.LOCAL_LOG_FILE):
+                os.remove(self.LOCAL_LOG_FILE)
             file_handler = logging.FileHandler(self.LOCAL_LOG_FILE)
             stream_handler.setFormatter(_formatter)
             file_handler.setFormatter(_formatter)
