@@ -25,6 +25,7 @@ import timing  # noqa F402
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
+from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
@@ -161,15 +162,20 @@ class BaseLoader:
 
         # Override Django's logging so that we can setLevel() with --verbose
         logging.getLogger().handlers.clear()
-        _handler = logging.StreamHandler()
+        stream_handler = logging.StreamHandler()
+        file_handler = logging.FileHandler(
+            os.path.join(settings.MEDIA_ROOT, "logs", "load.txt")
+        )
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
-        _handler.setFormatter(_formatter)
+        stream_handler.setFormatter(_formatter)
+        file_handler.setFormatter(_formatter)
         if not self.logger.handlers:
             # Don't add handler for sub class
-            self.logger.addHandler(_handler)
+            self.logger.addHandler(stream_handler)
+            self.logger.addHandler(file_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
         for line in open(self.args.exclude):
