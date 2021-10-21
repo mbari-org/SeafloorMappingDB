@@ -25,6 +25,7 @@ import timing  # noqa F402 - needed for nice elapsed time reporting
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
+from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
 from django.core.files.storage import FileSystemStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
@@ -111,7 +112,7 @@ class BaseLoader:
             "--exclude",
             action="store",
             help="Name of file containing Mission paths to exclude",
-            default="smdb/config/exclude.list",
+            default=os.path.join(settings.ROOT_DIR, "config/exclude.list"),
         )
         parser.add_argument(
             "--regex",
