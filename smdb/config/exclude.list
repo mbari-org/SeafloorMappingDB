@@ -1,6 +1,7 @@
 # Exclude from smdb loads files containing these strings
 # Can find fully qualified file names by grepping, e.g.:
 # docker-compose run --rm django locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$' | grep -i ifremer
+# >>> Copy this file to your docker_smdb_vol directory that's mounted to /etc/smdb in the django container
 # ------------------------------------------------------
 # - There are a number of boxes in places we've not worked, like the Indian Ocean, 
 #   that contain data Dave received from others as part of MB-System development and
