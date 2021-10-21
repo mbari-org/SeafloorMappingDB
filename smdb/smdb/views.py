@@ -85,15 +85,9 @@ class MissionOverView(TemplateView):
             "context['missions'] = %s",
             json.dumps(context["missions"], indent=4, sort_keys=True),
         )
+        context["num_missions"] = len(context["missions"]["features"])
         if search_string:
-            context["search_string"] = "{:d} Missions containing '{:s}'".format(
-                len(context["missions"]["features"]),
-                search_string,
-            )
-        else:
-            context[
-                "search_string"
-            ] = f"Displaying {len(context['missions']['features'])} Missions"
+            context["search_string"] = f"containing '{search_string}'"
         time_bounds = missions.aggregate(Min("start_date"), Max("end_date"))
         if time_bounds["start_date__min"]:
             context["start_ems"] = time_bounds["start_date__min"].timestamp() * 1000.0
