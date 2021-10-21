@@ -111,7 +111,7 @@ class BaseLoader:
             "--exclude",
             action="store",
             help="Name of file containing Mission paths to exclude",
-            default="/etc/smdb/exclude.list",
+            default="smdb/config/exclude.list",
         )
         parser.add_argument(
             "--regex",

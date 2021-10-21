@@ -41,7 +41,6 @@ these commands:
 # In your home directory or other preferred location copy the file locate database
 mkdir docker_smdb_vol
 scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
-scp smdb.shore.mbari.org:/opt/docker_smdb_vol/exclude.list docker_smdb_vol
 # cd to a development directory, e.g. ~/GitHub
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB
