@@ -21,12 +21,13 @@ import math  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
-import timing  # noqa F402
+import timing  # noqa F402 - needed for nice elapsed time reporting
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
 from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
+from django.core.files.storage import FileSystemStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
@@ -73,12 +74,16 @@ Can be run from smdb Docker environment thusly...
 
 
 class BaseLoader:
+    LOCAL_LOG_FILE = "/etc/smdb/load.txt"
+    MEDIA_LOG_FILE = "logs/load.txt"
+
     def __init__(self):
         self.logger = logging.getLogger("load")
         self._log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
         self._log_strings = ("WARN", "INFO", "DEBUG")
         self.commandline = None
-        self.exclude_files = []
+        self.exclude_paths = []
+        self.start_proc = datetime.now()
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -106,8 +111,8 @@ class BaseLoader:
         parser.add_argument(
             "--exclude",
             action="store",
-            help="Name of file containing Mission names to exclude",
-            default="/etc/smdb/exclude.list",
+            help="Name of file containing Mission paths to exclude",
+            default=os.path.join(settings.ROOT_DIR, "config/exclude.list"),
         )
         parser.add_argument(
             "--regex",
@@ -162,25 +167,26 @@ class BaseLoader:
 
         # Override Django's logging so that we can setLevel() with --verbose
         logging.getLogger().handlers.clear()
-        stream_handler = logging.StreamHandler()
-        file_handler = logging.FileHandler(
-            os.path.join(settings.MEDIA_ROOT, "logs", "load.txt")
-        )
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
-        stream_handler.setFormatter(_formatter)
-        file_handler.setFormatter(_formatter)
         if not self.logger.handlers:
-            # Don't add handler for sub class
+            # Don't add handlers when sub class runs
+            stream_handler = logging.StreamHandler()
+            if os.path.exists(self.LOCAL_LOG_FILE):
+                os.remove(self.LOCAL_LOG_FILE)
+            file_handler = logging.FileHandler(self.LOCAL_LOG_FILE)
+            stream_handler.setFormatter(_formatter)
+            file_handler.setFormatter(_formatter)
             self.logger.addHandler(stream_handler)
             self.logger.addHandler(file_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
-        for line in open(self.args.exclude):
-            if not line.startswith("#"):
-                self.exclude_files.append(line.strip())
+        if not self.exclude_paths:
+            for line in open(self.args.exclude):
+                if not line.startswith("#"):
+                    self.exclude_paths.append(line.strip())
 
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
@@ -210,6 +216,17 @@ class BaseLoader:
             if self.args.limit:
                 if miss_count >= self.args.limit:
                     return
+
+    def save_logger_output(self) -> None:
+        self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
+        for handler in self.logger.handlers[:]:
+            self.logger.debug("Closing handler: %s", handler)
+            handler.close()
+            self.logger.removeHandler(handler)
+        log_file = open(self.LOCAL_LOG_FILE)
+        fs = FileSystemStorage()
+        fs.delete(self.MEDIA_LOG_FILE)
+        fs.save(self.MEDIA_LOG_FILE, log_file)
 
 
 class NoteParser(BaseLoader):
@@ -876,6 +893,13 @@ class BootStrapper(BaseLoader):
         ##from django.core.management.commands import flush  # noqa F40
         ##call_command(flush.Command(), verbosity=1, interactive=False)
 
+    def _exclude_path(self, fp):
+        for e_path in self.exclude_paths:
+            if fp.startswith(e_path):
+                self.logger.debug("Excluding file: %s", fp)
+                return True
+        return False
+
     def load_from_grds(self):
         self.process_command_line()
 
@@ -912,61 +936,60 @@ class BootStrapper(BaseLoader):
             if not start_processing:
                 self.logger.debug("Skipping until %s", self.args.regex)
                 continue
-            if fp in self.exclude_files:
-                self.logger.debug("Excluding file: %s", fp)
+            if self._exclude_path(fp):
+                continue
+            miss_count += 1
+            self.logger.info(
+                "======== %3d. %s ========",
+                miss_count,
+                os.path.dirname(fp).replace(MBARI_DIR, ""),
+            )
+            try:
+                if not matches.group(4):
+                    self.logger.info("Name missing 2 character mission sequence")
+            except (AttributeError, IndexError):
+                self.logger.debug("regex match has no group(4)")
+            try:
+                ds = Dataset(fp)
+                self.logger.debug(ds)
+            except PermissionError as e:
+                self.logger.warning(str(e))
+            except FileNotFoundError:
+                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
+            if not self.is_geographic(ds):
+                self.logger.warning("%s is not Projection: Geographic", fp)
+                continue
+            try:
+                grid_bounds = self.extent(ds, fp)
+            except ValueError as e:
+                self.logger.warning(e)
+                continue
+            self.logger.debug("grid_bounds: %s", grid_bounds)
+
+            notes_filename = self.notes_filename(os.path.dirname(fp))
+            thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
+
+            mission, created = Mission.objects.get_or_create(
+                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
+                grid_bounds=grid_bounds,
+                notes_filename=notes_filename,
+                thumbnail_filename=thumbnail_filename,
+                directory=os.path.dirname(fp),
+            )
+            try:
+                self.save_note_todb(mission)
+                self.save_thumbnail(mission)
+            except FileExistsError as e:
+                self.logger.warning(str(e))
+
+            if created:
+                self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
             else:
-                miss_count += 1
-                self.logger.info(
-                    "======== %3d. %s ========",
-                    miss_count,
-                    os.path.dirname(fp).replace(MBARI_DIR, ""),
-                )
-                try:
-                    if not matches.group(4):
-                        self.logger.info("Name missing 2 character mission sequence")
-                except (AttributeError, IndexError):
-                    self.logger.debug("regex match has no group(4)")
-                try:
-                    ds = Dataset(fp)
-                    self.logger.debug(ds)
-                except PermissionError as e:
-                    self.logger.warning(str(e))
-                except FileNotFoundError:
-                    raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
-                if not self.is_geographic(ds):
-                    self.logger.warning("%s is not Projection: Geographic", fp)
-                    continue
-                try:
-                    grid_bounds = self.extent(ds, fp)
-                except ValueError as e:
-                    self.logger.warning(e)
-                    continue
-                self.logger.debug("grid_bounds: %s", grid_bounds)
-
-                notes_filename = self.notes_filename(os.path.dirname(fp))
-                thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
-
-                mission, created = Mission.objects.get_or_create(
-                    name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                    grid_bounds=grid_bounds,
-                    notes_filename=notes_filename,
-                    thumbnail_filename=thumbnail_filename,
-                    directory=os.path.dirname(fp),
-                )
-                try:
-                    self.save_note_todb(mission)
-                    self.save_thumbnail(mission)
-                except FileExistsError as e:
-                    self.logger.warning(str(e))
-
-                if created:
-                    self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
-                else:
-                    self.logger.info("%3d. Resaved %s", miss_count, mission)
-                if self.args.limit:
-                    if miss_count >= self.args.limit:
-                        self.logger.info("Stopping after %s records", self.args.limit)
-                        return
+                self.logger.info("%3d. Resaved %s", miss_count, mission)
+            if self.args.limit:
+                if miss_count >= self.args.limit:
+                    self.logger.info("Stopping after %s records", self.args.limit)
+                    return
 
 
 def run(*args):
@@ -989,6 +1012,7 @@ def run(*args):
         bootstrap_load()
         notes_load()
         fnv_load()
+    bl.save_logger_output()
 
 
 def bootstrap_load():
