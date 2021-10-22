@@ -27,7 +27,8 @@ from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
 from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
-from django.core.files.storage import FileSystemStorage  # noqa F402
+from django.core.files.base import ContentFile  # noqa F402
+from django.core.files.storage import DefaultStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
@@ -224,9 +225,9 @@ class BaseLoader:
             handler.close()
             self.logger.removeHandler(handler)
         log_file = open(self.LOCAL_LOG_FILE)
-        fs = FileSystemStorage()
-        fs.delete(self.MEDIA_LOG_FILE)
-        fs.save(self.MEDIA_LOG_FILE, log_file)
+        ds = DefaultStorage()
+        ds.delete(self.MEDIA_LOG_FILE)
+        ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
 
 
 class NoteParser(BaseLoader):
