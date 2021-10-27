@@ -21,3 +21,5 @@
 # https://github.com/mbari-org/SeafloorMappingDB/issues/96#issuecomment-948003350
 # - Data in the mbsystem directory can all be excluded
 /mbari/SeafloorMapping/mbsystem/
+# https://github.com/mbari-org/SeafloorMappingDB/issues/96#issuecomment-948013710
+/mbari/SeafloorMapping/swathdata/
