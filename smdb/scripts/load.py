@@ -805,12 +805,18 @@ class BootStrapper(BaseLoader):
 
         return notes_file
 
-    def thumbnail_filename(self, sm_dir):
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}/ZTopoSlopeNav.jpg'"
+    def thumbnail_filename(self, sm_dir: str) -> str:
+        locate_base = f"locate -d {self.LOCATE_DB} -r '{sm_dir}"
+        locate_cmd = f"{locate_base}/ZTopoSlopeNav.jpg'"
         thumbnail_file = None
         for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("Potential thumbnail file: %s", jpg_file)
+            self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
             thumbnail_file = jpg_file
+        if not thumbnail_file:
+            locate_cmd = f"{locate_base}/ZTopoSlopeNav.png'"
+            for png_file in subprocess.getoutput(locate_cmd).split("\n"):
+                self.logger.debug("Potential png thumbnail file: %s", png_file)
+                thumbnail_file = png_file
 
         return thumbnail_file
 
@@ -859,7 +865,10 @@ class BootStrapper(BaseLoader):
         )
         with tempfile.TemporaryDirectory() as thumbdir:
             im_path = os.path.join(thumbdir, new_name)
-            new_im.save(im_path, "JPEG")
+            if im_path.endswith(".jpg"):
+                new_im.save(im_path, "JPEG")
+            if im_path.endswith(".png"):
+                new_im.save(im_path, "PNG")
             with open(im_path, "rb") as fh:
                 # Original file will not be overwritten, delete first
                 mission.thumbnail_image.delete()
@@ -979,6 +988,9 @@ class BootStrapper(BaseLoader):
             )
             try:
                 self.save_note_todb(mission)
+            except FileExistsError as e:
+                self.logger.warning(str(e))
+            try:
                 self.save_thumbnail(mission)
             except FileExistsError as e:
                 self.logger.warning(str(e))
