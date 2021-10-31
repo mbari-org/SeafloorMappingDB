@@ -31,6 +31,10 @@ using the PostGIS extension. The entire software stack is free and open source.
 
 ### Install a local development system using Docker
 
+This software is placed in the open for the potential benefit of the wider
+MB-System community. The instructions here are tailored for its development and
+operation on internal MBARI servers.
+
 #### First time
 
 Install [Docker](https://docker.io) and change directory to a location where
