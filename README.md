@@ -31,6 +31,10 @@ using the PostGIS extension. The entire software stack is free and open source.
 
 ### Install a local development system using Docker
 
+This software is placed in the open for the potential benefit of the wider
+MB-System community. The instructions here are tailored for its development and
+operation on internal MBARI servers.
+
 #### First time
 
 Install [Docker](https://docker.io) and change directory to a location where
@@ -41,14 +45,15 @@ these commands:
 # In your home directory or other preferred location copy the file locate database
 mkdir docker_smdb_vol
 scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
-scp smdb.shore.mbari.org:/opt/docker_smdb_vol/exclude.list docker_smdb_vol
 # cd to a development directory, e.g. ~/GitHub
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB
-# Edit smdb/local.yml with fully qualified location of docker_smdb_vol
+# Edit smdb/local.yml and replace "mccann" with full paths to your files
+# Make the same edits in debug.yml if you intend to use VS Code
 export SMDB_HOME=$(pwd)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 # Mount `smb://titan.shore.mbari.org/SeafloorMapping` on your system
+# Create smdb/.envs per https://docs.mbari.org/internal/smdb-docs/dev/
 docker-compose up -d
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
@@ -161,17 +166,31 @@ docker-compose run --rm -u <uid> -v /mbari/SeafloorMapping:/mbari/SeafloorMappin
 
 4. Navigate to https://smdb.shore.mbari.org (for example) to see the production web application.
 
-5. To drop the database data and start over - use with caution:
+### Starting over - if you've run into problems
+
+1. To drop the database - do with caution:
 
 ```
 docker-compose stop django
+# Lookup the <dba> (POSTGRES_USER) value in file smdb/.envs/.production/.postgres
 docker-compose exec postgres psql -U <dba> -d postgres
 drop database smdb; \q
 docker-compose down
-docker volume rm $(docker volume ls -q)     # for good measure
+```
+
+2. To remove the postgres data volumes - do with extreme caution:
+
+```
+# List your docker volumes
+docker volume ls
+# Select the volumes you want to remove and remove them, e.g.:
+docker volume rm seafloormappingdb_local_postgres_data
+docker volume rm seafloormappingdb_local_postgres_data_backups
+docker volume rm smdb_local_postgres_data
+docker volume rm smdb_local_postgres_data_backups
+# You will need to recreate your admin account
 git pull
 docker-compose up -d --build
-docker-compose run --rm django python manage.py makemigrations
 docker-compose run --rm django python manage.py migrate
 docker-compose run --rm django python manage.py createsuperuser
 ```

@@ -25,29 +25,27 @@
 
 {% block content %}
 <div class="container-fluid">
-  <form id="update-map" method="get">
-    <div class="row" id="filter-row">
-      <div class="col-3">
-        {{ search_string|bleach }}
-      </div>
-      <div class="col-6" id="filter-center">
-      </div>
-      <div class="col-3">
-        <div class="float-right"><!-- div needed inside form for valid HTML -->
-          <input type="hidden" name="xmin" value="" id="xmin">
-          <input type="hidden" name="xmax" value="" id="xmax">
-          <input type="hidden" name="ymin" value="" id="ymin">
-          <input type="hidden" name="ymax" value="" id="ymax">
-          <input type="hidden" name="tmin" value="" id="tmin">
-          <input type="hidden" name="tmax" value="" id="tmax">
-          <label for="searchbar"><img src="/static/admin/img/search.svg" alt="Search"></label>
-          <input title="Search for Notes text or Mission name" type="text" size="20" name="q" value="" id="searchbar" autofocus="">
-          <a href="javascript: updateMap()">Update</a>
-        </div>
-      </div>
-
+  <div class="row" id="filter-row">
+    <div class="col-3">
+      <span id="num-missions">{{ num_missions }}</span> Missions
+      <span id="search-string">{{ search_string|bleach }}</span>
     </div>
-  </form>
+    <div class="col-6" id="filter-center">
+    </div>
+    <div class="col-3">
+      <div class="float-right">
+        <input type="hidden" name="xmin" value="" id="xmin">
+        <input type="hidden" name="xmax" value="" id="xmax">
+        <input type="hidden" name="ymin" value="" id="ymin">
+        <input type="hidden" name="ymax" value="" id="ymax">
+        <input type="hidden" name="tmin" value="" id="tmin">
+        <input type="hidden" name="tmax" value="" id="tmax">
+        <label for="searchbar"><img src="/static/admin/img/search.svg" alt="Search"></label>
+        <input title="Search for Notes text or Mission name" type="text" size="20" name="q" value="" id="searchbar" onkeypress="if(event.key == 'Enter') {updateMap();}">
+        <a href="javascript: updateMap()">Update</a>
+      </div>
+    </div>
+  </div>
 </div>
   {{ missions|json_script:"missions-data" }}
   {{ MEDIA_URL|json_script:"MEDIA-URL" }}

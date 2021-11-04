@@ -13,12 +13,17 @@ const missions = JSON.parse(
 let feature = L.geoJSON(missions)
   .bindPopup(
     function (layer) {
+      if (layer.feature.properties.thumbnail_image) {
+        image_url = layer.feature.properties.thumbnail_image;
+      } else {
+        image_url = "static/images/No_ZTopoSlopeNav_image.jpg";
+      }
       return (
         "<a target='_blank' href='/missions/" +
         layer.feature.properties.slug +
         "'>" +
         "<img src='" +
-        layer.feature.properties.thumbnail_image +
+        image_url +
         "' />" +
         "</a>"
       );
@@ -31,18 +36,23 @@ let feature = L.geoJSON(missions)
     return layer.feature.properties.slug;
   })
   .addTo(map);
-map.fitBounds(feature.getBounds(), { padding: [100, 100] });
+try {
+  map.fitBounds(feature.getBounds(), { padding: [100, 100] });
+} catch (err) {
+  console.log(err.message);
+}
 
-var bounds = L.control({ position: "bottomleft" });
+var bounds = L.control({ position: "topright" });
 bounds.onAdd = function (map) {
   var div = L.DomUtil.create("div", "bounds-container row");
   var bboxString = getMapBounds();
   div.innerHTML =
+    "<div>" +
+    '<input title="Use map bounds in Update" type="checkbox" id="use_bounds">' +
+    "&nbsp;" +
+    "</div>" +
     '<div id="map-bounds">' +
     bboxString +
-    "</div>" +
-    "<div>&nbsp;" +
-    '<input title="Use map bounds in Update" type="checkbox" id="use_bounds">' +
     "</div>";
   return div;
 };

@@ -98,8 +98,8 @@ RUN chmod +x /start
 # copy application code to WORKDIR
 COPY --from=client-builder --chown=docker_user:django ${APP_HOME} ${APP_HOME}
 
-RUN mkdir -p /media/thumbnails
-RUN chown docker_user:django /media/thumbnails
+RUN mkdir -p /media/thumbnails /media/logs
+RUN chown docker_user:django /media/thumbnails /media/logs
 
 # make django owner of the WORKDIR directory as well.
 RUN chown docker_user:django ${APP_HOME}

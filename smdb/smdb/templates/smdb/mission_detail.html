@@ -15,7 +15,11 @@
     <img src="{{ thumbnail_url }}" />
     <div>
       <span class="font-weight-bold">Expedition:</span>
+      {% if mission.expedition.slug %}
       <a href="{% url 'expedition-detail' mission.expedition.slug %}">{{ mission.expedition.name }}</a>
+      {% else %}
+      Expedition name not assigned during load
+      {% endif %}
     </div>
     <div>
       <p class="font-weight-bold">Note:</p>

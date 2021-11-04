@@ -21,11 +21,14 @@ import math  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
-import timing  # noqa F402
+import timing  # noqa F402 - needed for nice elapsed time reporting
 from netCDF4 import Dataset  # noqa F402
 from datetime import datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
+from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
+from django.core.files.base import ContentFile  # noqa F402
+from django.core.files.storage import DefaultStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
@@ -72,12 +75,16 @@ Can be run from smdb Docker environment thusly...
 
 
 class BaseLoader:
+    LOCAL_LOG_FILE = "/etc/smdb/load.txt"
+    MEDIA_LOG_FILE = "logs/load.txt"
+
     def __init__(self):
         self.logger = logging.getLogger("load")
         self._log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
         self._log_strings = ("WARN", "INFO", "DEBUG")
         self.commandline = None
-        self.exclude_files = []
+        self.exclude_paths = []
+        self.start_proc = datetime.now()
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -105,8 +112,8 @@ class BaseLoader:
         parser.add_argument(
             "--exclude",
             action="store",
-            help="Name of file containing Mission names to exclude",
-            default="/etc/smdb/exclude.list",
+            help="Name of file containing Mission paths to exclude",
+            default=os.path.join(settings.ROOT_DIR, "config/exclude.list"),
         )
         parser.add_argument(
             "--regex",
@@ -161,20 +168,26 @@ class BaseLoader:
 
         # Override Django's logging so that we can setLevel() with --verbose
         logging.getLogger().handlers.clear()
-        _handler = logging.StreamHandler()
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
-        _handler.setFormatter(_formatter)
         if not self.logger.handlers:
-            # Don't add handler for sub class
-            self.logger.addHandler(_handler)
+            # Don't add handlers when sub class runs
+            stream_handler = logging.StreamHandler()
+            if os.path.exists(self.LOCAL_LOG_FILE):
+                os.remove(self.LOCAL_LOG_FILE)
+            file_handler = logging.FileHandler(self.LOCAL_LOG_FILE)
+            stream_handler.setFormatter(_formatter)
+            file_handler.setFormatter(_formatter)
+            self.logger.addHandler(stream_handler)
+            self.logger.addHandler(file_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
-        for line in open(self.args.exclude):
-            if not line.startswith("#"):
-                self.exclude_files.append(line.strip())
+        if not self.exclude_paths:
+            for line in open(self.args.exclude):
+                if not line.startswith("#"):
+                    self.exclude_paths.append(line.strip())
 
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
@@ -204,6 +217,17 @@ class BaseLoader:
             if self.args.limit:
                 if miss_count >= self.args.limit:
                     return
+
+    def save_logger_output(self) -> None:
+        self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
+        for handler in self.logger.handlers[:]:
+            self.logger.debug("Closing handler: %s", handler)
+            handler.close()
+            self.logger.removeHandler(handler)
+        log_file = open(self.LOCAL_LOG_FILE)
+        ds = DefaultStorage()
+        ds.delete(self.MEDIA_LOG_FILE)
+        ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
 
 
 class NoteParser(BaseLoader):
@@ -364,6 +388,7 @@ class NoteParser(BaseLoader):
 class FNVLoader(BaseLoader):
     def fnv_file_list(self, path: str, datalist: str) -> Tuple[list, str]:
         fnv_list = []
+        fnv_type = ""
         with open(datalist) as fh:
             for line in fh.readlines():
                 if line.startswith("#"):
@@ -406,6 +431,8 @@ class FNVLoader(BaseLoader):
                 start_point = Point((lon, lat), srid=4326)
                 start_depth = float(line.split()[11])
             break
+        if "start_dt" not in locals():
+            raise ParserError(f"Could not get start_dt from {fh.name}")
         for fnv_file in reversed(fnv_list):
             with open(fnv_file) as fh:
                 try:
@@ -427,6 +454,8 @@ class FNVLoader(BaseLoader):
                 end_point = Point((lon, lat), srid=4326)
                 end_depth = float(line.split()[11])
             break
+        if "end_dt" not in locals():
+            raise ParserError(f"Could not get end_dt from {fh.name}")
 
         return start_dt, end_dt, start_depth, end_depth, start_point, end_point
 
@@ -486,14 +515,18 @@ class FNVLoader(BaseLoader):
             return len(point_list), None
         line_count = 0
         for fnv in fnv_list:
-            with open(fnv) as fh:
-                for line_count, line in enumerate(fh.readlines(), start=1):
-                    if line_count % subsample:
-                        continue
-                    # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
-                    lon = float(line.split()[7])
-                    lat = float(line.split()[8])
-                    point_list.append(Point((lon, lat), srid=4326))
+            try:
+                with open(fnv) as fh:
+                    for line_count, line in enumerate(fh.readlines(), start=1):
+                        if line_count % subsample:
+                            continue
+                        # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
+                        lon = float(line.split()[7])
+                        lat = float(line.split()[8])
+                        point_list.append(Point((lon, lat), srid=4326))
+            except UnicodeDecodeError:
+                self.logger.debug("UnicodeDecodeError with file %s", fnv)
+                continue
             if line_count:
                 self.logger.debug(
                     "Collected %d points every %s from %s",
@@ -523,6 +556,8 @@ class FNVLoader(BaseLoader):
         path = mission.directory
         datalist = os.path.join(path, "datalistp.mb-1")
         fnv_list, fnv_type = self.fnv_file_list(path, datalist)
+        if not fnv_list:
+            raise FileNotFoundError(f"No .fnv files found in {path}")
         if path.endswith("lidar") or path.endswith("lidartest"):
             original, mission.nav_track = self.fnv_points_tolinestring(
                 fnv_list,
@@ -774,12 +809,18 @@ class BootStrapper(BaseLoader):
 
         return notes_file
 
-    def thumbnail_filename(self, sm_dir):
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}/ZTopoSlopeNav.jpg'"
+    def thumbnail_filename(self, sm_dir: str) -> str:
+        locate_base = f"locate -d {self.LOCATE_DB} -r '{sm_dir}"
+        locate_cmd = f"{locate_base}/ZTopoSlopeNav.jpg'"
         thumbnail_file = None
         for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("Potential thumbnail file: %s", jpg_file)
+            self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
             thumbnail_file = jpg_file
+        if not thumbnail_file:
+            locate_cmd = f"{locate_base}/ZTopoSlopeNav.png'"
+            for png_file in subprocess.getoutput(locate_cmd).split("\n"):
+                self.logger.debug("Potential png thumbnail file: %s", png_file)
+                thumbnail_file = png_file
 
         return thumbnail_file
 
@@ -828,7 +869,10 @@ class BootStrapper(BaseLoader):
         )
         with tempfile.TemporaryDirectory() as thumbdir:
             im_path = os.path.join(thumbdir, new_name)
-            new_im.save(im_path, "JPEG")
+            if im_path.endswith(".jpg"):
+                new_im.save(im_path, "JPEG")
+            if im_path.endswith(".png"):
+                new_im.save(im_path, "PNG")
             with open(im_path, "rb") as fh:
                 # Original file will not be overwritten, delete first
                 mission.thumbnail_image.delete()
@@ -862,6 +906,13 @@ class BootStrapper(BaseLoader):
         ##from django.core.management import call_command  # noqa F402
         ##from django.core.management.commands import flush  # noqa F40
         ##call_command(flush.Command(), verbosity=1, interactive=False)
+
+    def _exclude_path(self, fp):
+        for e_path in self.exclude_paths:
+            if fp.startswith(e_path):
+                self.logger.debug("Excluding file: %s", fp)
+                return True
+        return False
 
     def load_from_grds(self):
         self.process_command_line()
@@ -899,61 +950,63 @@ class BootStrapper(BaseLoader):
             if not start_processing:
                 self.logger.debug("Skipping until %s", self.args.regex)
                 continue
-            if fp in self.exclude_files:
-                self.logger.debug("Excluding file: %s", fp)
+            if self._exclude_path(fp):
+                continue
+            miss_count += 1
+            self.logger.info(
+                "======== %3d. %s ========",
+                miss_count,
+                os.path.dirname(fp).replace(MBARI_DIR, ""),
+            )
+            try:
+                if not matches.group(4):
+                    self.logger.info("Name missing 2 character mission sequence")
+            except (AttributeError, IndexError):
+                self.logger.debug("regex match has no group(4)")
+            try:
+                ds = Dataset(fp)
+                self.logger.debug(ds)
+            except PermissionError as e:
+                self.logger.warning(str(e))
+            except FileNotFoundError:
+                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
+            if not self.is_geographic(ds):
+                self.logger.warning("%s is not Projection: Geographic", fp)
+                continue
+            try:
+                grid_bounds = self.extent(ds, fp)
+            except ValueError as e:
+                self.logger.warning(e)
+                continue
+            self.logger.debug("grid_bounds: %s", grid_bounds)
+
+            notes_filename = self.notes_filename(os.path.dirname(fp))
+            thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
+
+            mission, created = Mission.objects.get_or_create(
+                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
+                grid_bounds=grid_bounds,
+                notes_filename=notes_filename,
+                thumbnail_filename=thumbnail_filename,
+                directory=os.path.dirname(fp),
+            )
+            try:
+                self.save_note_todb(mission)
+            except FileExistsError as e:
+                self.logger.warning(str(e))
+            try:
+                self.save_thumbnail(mission)
+            except FileExistsError as e:
+                self.logger.warning(str(e))
+
+            if created:
+                self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
             else:
-                miss_count += 1
-                self.logger.info(
-                    "======== %3d. %s ========",
-                    miss_count,
-                    os.path.dirname(fp).replace(MBARI_DIR, ""),
-                )
-                try:
-                    if not matches.group(4):
-                        self.logger.info("Name missing 2 character mission sequence")
-                except (AttributeError, IndexError):
-                    self.logger.debug("regex match has no group(4)")
-                try:
-                    ds = Dataset(fp)
-                    self.logger.debug(ds)
-                except PermissionError as e:
-                    self.logger.warning(str(e))
-                except FileNotFoundError:
-                    raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
-                if not self.is_geographic(ds):
-                    self.logger.warning("%s is not Projection: Geographic", fp)
-                    continue
-                try:
-                    grid_bounds = self.extent(ds, fp)
-                except ValueError as e:
-                    self.logger.warning(e)
-                    continue
-                self.logger.debug("grid_bounds: %s", grid_bounds)
-
-                notes_filename = self.notes_filename(os.path.dirname(fp))
-                thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
-
-                mission, created = Mission.objects.get_or_create(
-                    name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                    grid_bounds=grid_bounds,
-                    notes_filename=notes_filename,
-                    thumbnail_filename=thumbnail_filename,
-                    directory=os.path.dirname(fp),
-                )
-                try:
-                    self.save_note_todb(mission)
-                    self.save_thumbnail(mission)
-                except FileExistsError as e:
-                    self.logger.warning(str(e))
-
-                if created:
-                    self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
-                else:
-                    self.logger.info("%3d. Resaved %s", miss_count, mission)
-                if self.args.limit:
-                    if miss_count >= self.args.limit:
-                        self.logger.info("Stopping after %s records", self.args.limit)
-                        return
+                self.logger.info("%3d. Resaved %s", miss_count, mission)
+            if self.args.limit:
+                if miss_count >= self.args.limit:
+                    self.logger.info("Stopping after %s records", self.args.limit)
+                    return
 
 
 def run(*args):
@@ -976,6 +1029,7 @@ def run(*args):
         bootstrap_load()
         notes_load()
         fnv_load()
+    bl.save_logger_output()
 
 
 def bootstrap_load():
