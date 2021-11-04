@@ -1,1 +1,18 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load static bleach_tags timetags %}
+<!-- About SMDB -->
+<!-- https://docs.djangoproject.com/en/3.2/ref/templates/language/ -->{% block css %} {{ block.super }}
+{% endblock %}
+
+{% block title %}About SMDB{% endblock %}
+
+{% block content %}
+<div>
+    <p>
+        MBARI Seafloor Mapping Database
+    </p>
+
+    <p>
+        Developers: Mike McCann, Karen Salamy, Jennifer Paduan, David Caress</p>
+</div>
+
+{% endblock %}
