@@ -119,7 +119,7 @@ class BaseLoader:
             "--regex",
             action="store",
             help="Load only ZTopo.grd files that have this regular expression in their path",
-            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)*\/",
+            default=".*",
         )
         parser.add_argument(
             "--bootstrap",
@@ -936,12 +936,16 @@ class BootStrapper(BaseLoader):
         if self.args.skipuntil_regex:
             start_processing = False
         miss_count = 0
+        match_count = 0
+        miss_loaded = 0
         for count, fp in enumerate(
             subprocess.getoutput(locate_cmd).split("\n"),
             start=1,
         ):
             self.logger.debug("%3d. file: %s", count, fp)
             matches = re.search(re.compile(self.args.regex), fp)
+            if matches:
+                match_count += 1
             if self.args.skipuntil_regex and matches:
                 start_processing = True
             if not self.args.skipuntil_regex and not matches:
@@ -990,6 +994,7 @@ class BootStrapper(BaseLoader):
                 thumbnail_filename=thumbnail_filename,
                 directory=os.path.dirname(fp),
             )
+            miss_loaded += 1
             try:
                 self.save_note_todb(mission)
             except FileExistsError as e:
@@ -1007,6 +1012,14 @@ class BootStrapper(BaseLoader):
                 if miss_count >= self.args.limit:
                     self.logger.info("Stopping after %s records", self.args.limit)
                     return
+        self.logger.info(
+            "Count of ZTopo.grd files found with '%s': %d", locate_cmd, count
+        )
+        self.logger.info(
+            "Missions matching regex '%s': %d", self.args.regex, match_count
+        )
+        self.logger.info("Count of Missions not excluded: %d", miss_count)
+        self.logger.info("Missions loaded: %d", miss_loaded)
 
 
 def run(*args):
