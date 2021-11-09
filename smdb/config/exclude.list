@@ -1,13 +1,11 @@
 # Exclude from smdb loads files containing these strings
 # Can find fully qualified file names by grepping, e.g.:
 # docker-compose run --rm django locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$' | grep -i ifremer
-# >>> Copy this file to your docker_smdb_vol directory that's mounted to /etc/smdb in the django container
 # ------------------------------------------------------
 # - There are a number of boxes in places we've not worked, like the Indian Ocean, 
 #   that contain data Dave received from others as part of MB-System development and
 #   trouble-shooting. These are from directories like mbsystem/Data/2008/...IFREMER...
 #   that whole "mbsystem" subdirectory does not need to be searched for content.
-/mbari/SeafloorMapping/swathdata/surveys/IFREMER/ACT/ZTopo.grd
 # - There are other boxes that enclose ship-collected data copied into MappingAUVOps
 #   mission planning directories for basemaps upon which AUV surveys were designed
 #   (such as in Pescadero Basin, which has data from directories like
@@ -23,3 +21,5 @@
 /mbari/SeafloorMapping/mbsystem/
 # https://github.com/mbari-org/SeafloorMappingDB/issues/96#issuecomment-948013710
 /mbari/SeafloorMapping/swathdata/
+/mbari/SeafloorMapping/MappingAUVOpsStuff/
+/mbari/SeafloorMapping/2021/SouthernGOCFalkor/
