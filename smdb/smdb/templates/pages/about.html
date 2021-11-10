@@ -25,7 +25,15 @@
             target="_blank">Mapping AUV</a> 
             and <a href="https://www.mbari.org/technology/ocean-imaging/" target="_blank">
             Low-Altitude Survey System </a> 
-            (LASS) data collected by MBARI and our collaborators. It is currently in the beginning stage of development. 
+            (LASS) data collected by MBARI and our collaborators. 
+            It is a relational database with geographic capability, 
+            a geo-spatially enabled web query interface on Canyon Head, load scripts for mining data from the 
+            SeafloorMapping archive, and user interfaces for testing and manually adding data. It is
+            built in Python with Django and PostgreSQL using the PostGIS extension. The entire 
+            software stack is free and open source.
+            </p>      
+            
+            <p>The SMDB is currently in the beginning stage of development. 
             If you have suggestions for the SMDB, please contact one of the developers.</p>
        
      <strong>
@@ -37,40 +45,48 @@
                 <a href="https://www.mbari.org/paduan-jennifer" target="_blank">Jennifer Paduan</a>, 
                 <a href="https://www.mbari.org/caress-dave/" target="_blank">David Caress</a>
           </p>
+          <p><a href="https://github.com/mbari-org/SeafloorMappingDB" target="_blank">>> GitHub repository</a></p>
+ 
+     <strong>Proposed work
+            </strong>    
+
+        <p>MBARI has now conducted hundreds of Mapping AUV missions and several dozen low altitude survey ROV dives. 
+        Much of the resulting data have value to others in the MBARI community, but the survey data and data 
+        products are only accessible to those with knowledge of where the data are stored, how they are organized, 
+        and how to run the software used to process the data in maps, images, and GIS objects. 
+        In order to make the Mapping AUV and LASS survey data more accessible, we propose to capture metadata 
+        such as geographic location and server storage paths in a relational database, in a way that doesn't 
+        change the current file-based structure on the SeafloorMapping share or impact the work-flow 
+        for processing the sensor data, and display it with a queryable web interface. 
+        The envisioned system will utilize the same approach and open-source software tools as the MBARI STOQS 
+        database for water-column data. 
+                </p>
 
      <strong>
          Motivation
         </strong>
 
         <p>The quickly growing number of AUV and LASS surveys need to become more discoverable and accessible, 
-        and their interconnectedness and repeat mapping require a new level of documentation and organizational discipline. 
-        This all can be done without changing the current file-based structure on the SeafloorMapping share 
-        by capturing metadata such as geographic location and server storage paths in a database and presenting 
-        it through a queryable web interface. </p>
-
-        <p>As our data volume grows, this need is becoming critical even for experienced users. It will be useful 
+        and their interconnectedness and repeat mapping require a new level of documentation and organizational 
+        discipline. As our data volume grows, this need is becoming critical even for experienced users. It will be useful 
         for users less familiar with the surveys or MB-System to access the current data products without 
         digging around on the server. It is necessary for making sense of the data archive in perpetuity, 
         and is advisable in the spirit of FAIR data principles (findable, accessible, interoperable, reusable). </p>
 
-        <p>This is not intended to change the structure or processing of the sensor data. Those will 
-        remain as files on the SeafloorMapping share. Because tha share is web-accessible, 
-        metadata and data products can be mined for populating the database and viewed through the query interface.</p>
-
-        <p>The quality  of particular survey data influences the prioritization - or even inclusion - for 
-        working with it and make data products. Currently this is tracked by users in their own spreadsheets 
+        <p>The quality of particular survey data influences the prioritization - or even inclusion - for 
+        working with it and to make data products. Currently this is tracked by users in their own spreadsheets 
         and datalists. It needs to become an assessment that is accessible and clearly presented. 
         Likewise, whether a survey is repeated over a previously mapped area also needs to be tracked.</p>
-        
+
 <strong>Functional requirements
     </strong>
 <ul>
     <li>Relational database with geographic capability (we have decided to use PostgreSQL with PostGIS 
         extension). </li>
-    <li>Web-based query, appearing like STOQS (campaign list) or the samplesDB (multiple queryable items), from 
-        Canyon Head. The language is Django with PostgreSQL.</li>
+    <li>Web-based query, from a map, appearing like STOQS (campaign list) or the samplesDB (multiple queryable items), from 
+        Canyon Head.</li>
     <li>Interface for populating the database needs to be useable by knowledgeable AUV data processing 
-        staff on Mac computers, and not expensive (argument for using PostgreSQL). </li>
+        staff on Mac computers, and not expensive. </li>
     <li>Maintained and backed up by MBARI IS.</li>
 </ul>
 
