@@ -13,3 +13,17 @@
 #filter-center {
   width: 100%;
 }
+
+body {
+  background-color: lightblue;
+}
+
+div {
+  padding: 10px 50px 0px 50px;
+}
+
+h1 {
+  color: black;
+  text-align: center;
+}
+
