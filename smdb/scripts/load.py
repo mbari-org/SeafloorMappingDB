@@ -186,7 +186,7 @@ class BaseLoader:
 
         if not self.exclude_paths:
             for line in open(self.args.exclude):
-                if not line.startswith("#"):
+                if line.startswith("/mbari/SeafloorMapping/"):
                     self.exclude_paths.append(line.strip())
 
         self.logger.debug(
