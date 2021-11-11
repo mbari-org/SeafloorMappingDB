@@ -828,20 +828,12 @@ class BootStrapper(BaseLoader):
         if not mission.notes_filename:
             raise FileExistsError(f"No Notes found for {mission}")
         note_text = ""
-        with open(mission.notes_filename) as fh:
-            try:
-                for line_count, line in enumerate(fh.readlines()):
-                    if "password" in line.lower():
-                        # Blank out actual passwords
-                        line = (
-                            line.lower().split("password")[0] + "password: **********"
-                        )
-                    note_text += line
-            except UnicodeDecodeError as e:
-                self.logger.warning(
-                    "Cannot read Notes file: %s", mission.notes_filename
-                )
-                raise FileExistsError(f"No Notes found for {mission}")
+        with open(mission.notes_filename, errors="ignore") as fh:
+            for line_count, line in enumerate(fh.readlines()):
+                if "password" in line.lower():
+                    # Blank out actual passwords
+                    line = line.lower().split("password")[0] + "password: **********"
+                note_text += line
 
         if not note_text:
             raise FileExistsError(f"No Notes found for {mission}")
