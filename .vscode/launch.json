@@ -42,7 +42,7 @@
         "1",
         "--skipuntil_regex",
         "--regex",
-        "MappingAUVOps2006/20060608/ZTopo.grd$",
+        "2021/20210905d1/lidar/ZTopo.grd$",
         "--limit",
         "1",
         "--clobber",
