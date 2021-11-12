@@ -391,6 +391,8 @@ class FNVLoader(BaseLoader):
         fnv_type = ""
         with open(datalist) as fh:
             for line in fh.readlines():
+                if not line.strip():
+                    continue
                 if line.startswith("#"):
                     continue
                 item = line.split()[0].strip()
