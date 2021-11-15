@@ -1,15 +1,16 @@
-{% extends "base.html" %}{% load static bleach_tags timetags %}
+{% extends "base.html" %}
+{% load static bleach_tags timetags %}
 <!-- About SMDB -->
 <!-- https://docs.djangoproject.com/en/3.2/ref/templates/language/ -->
-{% block css %} {{ block.super }}
-{% load static %} <!--Prepare django to load static files -->
+{% block css %} 
+{{ block.super }}
 {% endblock %}
 
 {% block title %}About SMDB{% endblock %}
 
 {% block content %}
 <div>
-    <h1>
+    <h1 class="center">
         <img src={% static "images/SMDB_logo.jpg" %}>
         <br>
   
