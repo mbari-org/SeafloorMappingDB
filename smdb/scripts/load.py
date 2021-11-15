@@ -391,6 +391,8 @@ class FNVLoader(BaseLoader):
         fnv_type = ""
         with open(datalist) as fh:
             for line in fh.readlines():
+                if not line.strip():
+                    continue
                 if line.startswith("#"):
                     continue
                 item = line.split()[0].strip()
@@ -989,7 +991,7 @@ class BootStrapper(BaseLoader):
             miss_loaded += 1
             try:
                 self.save_note_todb(mission)
-            except FileExistsError as e:
+            except (FileExistsError, OSError) as e:
                 self.logger.warning(str(e))
             try:
                 self.save_thumbnail(mission)

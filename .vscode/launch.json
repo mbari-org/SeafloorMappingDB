@@ -42,7 +42,7 @@
         "1",
         "--skipuntil_regex",
         "--regex",
-        "MappingAUVOps2006/20060608/ZTopo.grd$",
+        "MappingAUVOps2013/TN293_Moyer13/sentry165/sentry165-proc/ZTopo.grd$",
         "--limit",
         "1",
         "--clobber",
