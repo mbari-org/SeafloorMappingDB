@@ -1,3 +1,9 @@
+html,
+body {
+  height: 100%;
+  margin: 8px;
+}
+
 .alert-debug {
   background-color: #fff;
   border-color: #d6e9c6;
@@ -14,15 +20,6 @@
   width: 100%;
 }
 
-body {
-  background-color: white;
-}
-
-div {
-  padding: 10px 50px 0px 50px;
-}
-
-h1 {
-  color: black;
+.center {
   text-align: center;
 }
