@@ -5,10 +5,10 @@
 
 const map = L.map("map");
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
-const options  = { minZoom: 5 }
+const options  = { minZoom: 1, maxZoom: 16, }
 
 L.esri.basemapLayer('Oceans', options).addTo(map);
-//L.esri.basemapLayer('Streets', options).addTo(map);
+L.esri.basemapLayer('OceansLabels', options).addTo(map);
 
 map.fitWorld();
 const missions = JSON.parse(
