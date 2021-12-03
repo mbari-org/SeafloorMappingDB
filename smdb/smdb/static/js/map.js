@@ -1,10 +1,15 @@
-const attribution =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+// /lib/leaflet.css
+// /lib/leaflet.js
+// /lib/esri-leaflet.js
+
 const map = L.map("map");
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: attribution,
-}).addTo(map);
+const options  = { minZoom: 5 }
+
+L.esri.basemapLayer('Oceans', options).addTo(map);
+L.esri.basemapLayer('OceansLabels', options).addTo(map);
+//L.esri.basemapLayer('Streets', options).addTo(map);
+
 map.fitWorld();
 const missions = JSON.parse(
   document.getElementById("missions-data").textContent
