@@ -1,0 +1,67 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "runserver_plus",
+      "type": "python",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/smdb",
+      "program": "${workspaceFolder}/smdb/manage.py",
+      "args": [
+        "runserver_plus",
+        "0.0.0.0:8000",
+        "--settings",
+        "config.settings.local"
+      ],
+      "django": true,
+      "justMyCode": true
+    },
+    {
+      "name": "shell_plus",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/smdb/manage.py",
+      "console": "integratedTerminal",
+      "args": ["shell_plus"],
+      "justMyCode": false
+    },
+    {
+      "name": "load.py",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/smdb/scripts/load.py",
+      "console": "integratedTerminal",
+      //"args": ["-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2011/20110718m1/ZTopo.grd$", "--limit", "2"],
+      //"args": [ "-v", "2", "--clobber", "--skipuntil_regex", "--regex", "mbsystem/Data/2012/20120103_MB-System_Tutorial_OFG/ProprietaryOFGSampleData/20101127OFGSample/multibeam_hsx"],
+      //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2016/20160321m1/ZTopo.grd$", "--limit", "1"],
+      "args": [
+        "-v",
+        "1",
+        "--skipuntil_regex",
+        "--regex",
+        "MappingAUVOps2013/TN293_Moyer13/sentry165/sentry165-proc/ZTopo.grd$",
+        "--limit",
+        "1",
+        "--clobber",
+        "--noinput"
+      ],
+      //"args": ["-v", "1", "--limit", "5", "--clobber", "--noinput"],
+      //"args": ["--bootstrap", "-v 2", "--clobber", "--limit", "50"],
+      //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
+      //"args": ["--notes", "-v 2", "--limit", "1"],
+      //"args": ["--notes", "-v", "1"],
+      //"args": ["--mbinfo", "-v", "2", "--skipuntil", "2021/20210326m1"],
+      //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
+      //"args": ["--bootstrap", "-v", "2", "--limit", "2", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd" ],
+      //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
+      //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
+      //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2006/20060828"]
+      //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2021/20210906d1/lidar"]
+      //"args": ["--fnv", "-v", "1"],
+      "justMyCode": false
+    }
+  ]
+}

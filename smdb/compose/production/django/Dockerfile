@@ -1,5 +1,6 @@
 FROM node:10-stretch-slim as client-builder
 
+ARG DOCKER_USER_ID
 ARG APP_HOME=/app
 WORKDIR ${APP_HOME}
 
@@ -11,9 +12,12 @@ RUN npm run build
 # Base the build off of recent stable GDAL image
 FROM osgeo/gdal:ubuntu-small-3.3.0 as python
 
+ARG DOCKER_USER_ID
+
 # Python build stage
 FROM python as python-build-stage
 
+ARG DOCKER_USER_ID
 ARG BUILD_ENVIRONMENT=production
 
 # Install apt packages
@@ -37,6 +41,7 @@ RUN pip wheel --wheel-dir /usr/src/app/wheels  \
 # Python 'run' stage
 FROM python as python-run-stage
 
+ARG DOCKER_USER_ID
 ARG BUILD_ENVIRONMENT=production
 ARG APP_HOME=/app
 
@@ -48,6 +53,8 @@ WORKDIR ${APP_HOME}
 
 RUN addgroup --system django \
     && adduser --system --ingroup django django
+
+RUN adduser docker_user --ingroup django --uid $DOCKER_USER_ID
 
 
 # Install required system dependencies
@@ -62,6 +69,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   mlocate \
   postgresql-client \
   python3-pip \
+  ssh-client \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -77,23 +85,27 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
   && rm -rf /wheels/
 
 
-COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
+COPY --chown=docker_user:django ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
 
-COPY --chown=django:django ./compose/production/django/start /start
+COPY --chown=docker_user:django ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
 
 # copy application code to WORKDIR
-COPY --from=client-builder --chown=django:django ${APP_HOME} ${APP_HOME}
+# - for some reason project.css isn't copied from APP_HOME, copy separately
+COPY --from=client-builder --chown=docker_user:django ${APP_HOME} ${APP_HOME}
+COPY ./smdb/static/css/project.css /app/smdb/static/css/
 
+RUN mkdir -p /media/thumbnails /media/logs
+RUN chown docker_user:django /media/thumbnails /media/logs
 
 # make django owner of the WORKDIR directory as well.
-RUN chown django:django ${APP_HOME}
+RUN chown docker_user:django ${APP_HOME}
 
-USER django
+USER docker_user
 
 ENTRYPOINT ["/entrypoint"]

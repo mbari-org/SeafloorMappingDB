@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Expeditions</h2>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-6">
+                Expedition
+            </div>
+            <div class="col-6">
+                Missions
+            </div>
+        </div>
+        {% for expedition in expedition_list|dictsort:"name" %}
+        <div class="row">
+            <div class="col-6">
+                {% if expedition.slug %}
+                <a href="{% url 'expedition-detail' expedition.slug %}">{{ expedition.name }}</a>
+                {% else %}
+                Expedition name not assigned during load
+                {% endif %}
+            </div>
+            <div class="col-6">
+                {% for mission in expedition.mission_set.all|dictsort:"name" %}
+                <a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+{% endblock %}

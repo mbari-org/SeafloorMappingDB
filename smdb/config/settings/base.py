@@ -33,7 +33,7 @@ USE_I18N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
 USE_L10N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
-USE_TZ = True
+USE_TZ = False
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
 LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 
@@ -42,7 +42,7 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
-DATABASES["default"]["ENGINE"] = 'django.contrib.gis.db.backends.postgis'
+DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 
 # URLS
 # ------------------------------------------------------------------------------
@@ -71,15 +71,19 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "rest_framework",
+    "rest_framework_gis",
     "rest_framework.authtoken",
     "corsheaders",
     "django_bleach",
+    "graphene_django",
+    "graphene_graphiql_explorer",
+    "graphene_gis",
 ]
 
 LOCAL_APPS = [
     "smdb.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    "smdb"
+    "smdb",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -157,7 +161,7 @@ STATICFILES_FINDERS = [
 # MEDIA
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = str(APPS_DIR / "media")
+MEDIA_ROOT = "/media"
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "/media/"
 
@@ -292,4 +296,12 @@ REST_FRAMEWORK = {
 CORS_URLS_REGEX = r"^/api/.*$"
 # Your stuff...
 # ------------------------------------------------------------------------------
-GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH', default='/usr/lib/libgdal.so')
+GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="/usr/lib/libgdal.so")
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+GRAPHENE = {
+    "SCHEMA": "smdb.schema.schema",
+    "MIDDLEWARE": [
+        "graphene_django.debug.DjangoDebugMiddleware",
+    ],
+}
+TEST_RUNNER = "snapshottest.django.TestRunner"

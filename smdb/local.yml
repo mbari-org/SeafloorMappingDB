@@ -1,8 +1,9 @@
-version: '3'
+version: "3"
 
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
+  local_media_files: {}
 
 services:
   django:
@@ -15,16 +16,17 @@ services:
       - postgres
       - mailhog
     volumes:
+      # Edit to use directory on your host
+      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
       - .:/app:z
+      - local_media_files:/media:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     ports:
       - "8000:8000"
     command: /start
-    volumes:
-      # Edit to use directory on your host
-      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
 
   postgres:
     build:
@@ -38,21 +40,21 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 
-##  docs:
-##    image: smdb_local_docs
-##    container_name: docs
-##    build:
-##      context: .
-##      dockerfile: ./compose/local/docs/Dockerfile
-##    env_file:
-##      - ./.envs/.local/.django
-##    volumes:
-##      - ./docs:/docs:z
-##      - ./config:/app/config:z
-##      - ./smdb:/app/smdb:z
-##    ports:
-##      - "7000:7000"
-##    command: /start-docs
+  ##  docs:
+  ##    image: smdb_local_docs
+  ##    container_name: docs
+  ##    build:
+  ##      context: .
+  ##      dockerfile: ./compose/local/docs/Dockerfile
+  ##    env_file:
+  ##      - ./.envs/.local/.django
+  ##    volumes:
+  ##      - ./docs:/docs:z
+  ##      - ./config:/app/config:z
+  ##      - ./smdb:/app/smdb:z
+  ##    ports:
+  ##      - "7000:7000"
+  ##    command: /start-docs
 
   mailhog:
     image: mailhog/mailhog:v1.0.0
@@ -60,20 +62,12 @@ services:
     ports:
       - "8025:8025"
 
-  node:
-    build:
-      context: .
-      dockerfile: ./compose/local/node/Dockerfile
-    image: smdb_local_node
-    container_name: node
-    depends_on:
-      - django
+  mb-system:
+    image: mbari/mbsystem:latest
+    container_name: mb-system
     volumes:
-      - .:/app:z
-      # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
-      - /app/node_modules
-    command: npm run dev
-    ports:
-      - "3000:3000"
-      # Expose browsersync UI: https://www.browsersync.io/docs/options/#option-ui
-      - "3001:3001"
+      # Edit source path to use directories from *your* host
+      # Copy your public key to your ~/.ssh/authorized_keys file
+      - /Users/mccann/.ssh:/root/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+    command: /usr/sbin/sshd -D

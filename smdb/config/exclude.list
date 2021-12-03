@@ -1,0 +1,158 @@
+# Exclude from smdb loads files containing these strings
+# Can find fully qualified file names by grepping, e.g.:
+# docker-compose run --rm django locate -d /etc/smdb/SeafloorMapping.db -r '\/ZTopo.grd$' | grep -i ifremer
+# ------------------------------------------------------
+# - There are a number of boxes in places we've not worked, like the Indian Ocean, 
+#   that contain data Dave received from others as part of MB-System development and
+#   trouble-shooting. These are from directories like mbsystem/Data/2008/...IFREMER...
+#   that whole "mbsystem" subdirectory does not need to be searched for content.
+#
+# - There are other boxes that enclose ship-collected data copied into MappingAUVOps
+#   mission planning directories for basemaps upon which AUV surveys were designed
+#   (such as in Pescadero Basin, which has data from directories like
+#   MappingAUVOps2018/PescaderoBasin/swathdata/surveys/...) Those don't need to be
+#   included in the database, but may take specific excluding since they are parallel
+#   with our working directories that contain the figures made from the surveys after
+#   they've been gridded together.
+
+# https://github.com/mbari-org/SeafloorMappingDB/issues/96#issuecomment-948003350
+# - Data in the mbsystem directory can all be excluded
+/mbari/SeafloorMapping/mbsystem/
+
+# https://github.com/mbari-org/SeafloorMappingDB/issues/96#issuecomment-948013710
+/mbari/SeafloorMapping/swathdata/
+/mbari/SeafloorMapping/MappingAUVOpsStuff/
+
+/mbari/SeafloorMapping/MappingAUVOps2006/20060222old/
+/mbari/SeafloorMapping/MappingAUVOps2006/20060812_org/
+/mbari/SeafloorMapping/MappingAUVOps2006/20060816_org/
+/mbari/SeafloorMapping/MappingAUVOps2006/20060817_org/
+/mbari/SeafloorMapping/MappingAUVOps2006/Old/
+/mbari/SeafloorMapping/MappingAUVOps2006/Axial/
+/mbari/SeafloorMapping/MappingAUVOps2006/BarkleyHydrates/
+/mbari/SeafloorMapping/MappingAUVOps2006/Davidson2006/
+/mbari/SeafloorMapping/MappingAUVOps2006/Davidson2008/
+
+/mbari/SeafloorMapping/MappingAUVOps2007/Axial2007/swathdata/
+/mbari/SeafloorMapping/MappingAUVOps2007/Axial2007old/swathdata/
+/mbari/SeafloorMapping/MappingAUVOps2007/Lucia/Figures/
+/mbari/SeafloorMapping/MappingAUVOps2007/Old/
+/mbari/SeafloorMapping/MappingAUVOps2007/RepeatMapping/
+
+/mbari/SeafloorMapping/MappingAUVOps2008/20080331/tmp/
+/mbari/SeafloorMapping/MappingAUVOps2008/20080424old/
+/mbari/SeafloorMapping/MappingAUVOps2008/Axial2008/swathdata_surveys/
+/mbari/SeafloorMapping/MappingAUVOps2008/Axial2008precruise/swathdata_surveys/
+/mbari/SeafloorMapping/MappingAUVOps2008/Davidson2008/
+/mbari/SeafloorMapping/MappingAUVOps2008/MarilenaTest/
+/mbari/SeafloorMapping/MappingAUVOps2008/MontereyBay/
+
+/mbari/SeafloorMapping/MappingAUVOps2009/20090717old/
+/mbari/SeafloorMapping/MappingAUVOps2009/20090718old/
+/mbari/SeafloorMapping/MappingAUVOps2009/20090722_org/
+/mbari/SeafloorMapping/MappingAUVOps2009/20091203/test/
+/mbari/SeafloorMapping/MappingAUVOps2009/Lau/
+/mbari/SeafloorMapping/MappingAUVOps2009/MontereyCanyon/
+/mbari/SeafloorMapping/MappingAUVOps2009/NorthernExpedition/
+/mbari/SeafloorMapping/MappingAUVOps2009/NorthernExpeditionold/
+
+/mbari/SeafloorMapping/MappingAUVOps2010/AUVTutorial/
+/mbari/SeafloorMapping/MappingAUVOps2010/BenthicImaging/
+/mbari/SeafloorMapping/MappingAUVOps2010/MontereyCanyon/
+/mbari/SeafloorMapping/MappingAUVOps2010/OEPlumeData/
+/mbari/SeafloorMapping/MappingAUVOps2010/Reson7125A400kHzTestData/
+/mbari/SeafloorMapping/MappingAUVOps2010/RodriguezSeamount/
+/mbari/SeafloorMapping/MappingAUVOps2010/test/
+
+/mbari/SeafloorMapping/MappingAUVOps2011/20110712m1/test/
+/mbari/SeafloorMapping/MappingAUVOps2011/Bluefin_Raw_MBE_Files_S7K_Format/
+/mbari/SeafloorMapping/MappingAUVOps2011/MontereyCanyon/
+/mbari/SeafloorMapping/MappingAUVOps2011/NorthernExpedition/
+/mbari/SeafloorMapping/MappingAUVOps2011/sentry050_s7k_Galapagos/
+
+/mbari/SeafloorMapping/MappingAUVOps2012/20120406m1/20140407_003043_reextract/
+/mbari/SeafloorMapping/MappingAUVOps2012/GOC/
+/mbari/SeafloorMapping/MappingAUVOps2012/Old/
+/mbari/SeafloorMapping/MappingAUVOps2012/test/
+
+/mbari/SeafloorMapping/MappingAUVOps2013/TN293_Moyer13/sentry172/sentry171-raw/
+/mbari/SeafloorMapping/MappingAUVOps2013/TN293_Moyer13/sentry172/sentry172-raw/
+/mbari/SeafloorMapping/MappingAUVOps2013/Taiwan/
+
+/mbari/SeafloorMapping/MappingAUVOps2014/20140422m1/DataStore6046/
+/mbari/SeafloorMapping/MappingAUVOps2014/20140611SchmidtEM3002/
+/mbari/SeafloorMapping/MappingAUVOps2014/AUVBootcamp/
+
+/mbari/SeafloorMapping/MappingAUVOps2015/20150325m1/test/
+/mbari/SeafloorMapping/MappingAUVOps2015/20151104m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2015/20151201m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2015/Axial/
+/mbari/SeafloorMapping/MappingAUVOps2015/temp/
+
+/mbari/SeafloorMapping/MappingAUVOps2016/20070201/
+/mbari/SeafloorMapping/MappingAUVOps2016/20070201_Example/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160128m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160128m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160129m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160129m1_restored_03-16-2018_notneeded/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160321m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160321m2_restored_03-15-2018_notneeded/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160321m2_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160807m2/sslo_Orig/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160807m2/sslo_Orig/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160809m2/Test/
+/mbari/SeafloorMapping/MappingAUVOps2016/20160919OCEANSTutorial/
+/mbari/SeafloorMapping/MappingAUVOps2016/20161206m1_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2016/Arctic_2016/
+/mbari/SeafloorMapping/MappingAUVOps2016/Taiwan_2017_old/
+
+/mbari/SeafloorMapping/MappingAUVOps2017/20170221m3_messedup/
+/mbari/SeafloorMapping/MappingAUVOps2017/20170507m1/test/
+/mbari/SeafloorMapping/MappingAUVOps2017/20170517m2/Test/
+/mbari/SeafloorMapping/MappingAUVOps2017/Arctic/
+/mbari/SeafloorMapping/MappingAUVOps2017/MAUV1test/
+/mbari/SeafloorMapping/MappingAUVOps2017/ZTest/
+
+/mbari/SeafloorMapping/MappingAUVOps2018/PescaderoBasin/
+/mbari/SeafloorMapping/MappingAUVOps2018/SouthernCalifornia/
+
+/mbari/SeafloorMapping/OceanImaging2012/MissionPlanning/
+
+/mbari/SeafloorMapping/OceanImaging2013/20130625WesternFlyer/PhotomosaicTest/
+/mbari/SeafloorMapping/OceanImaging2013/20130625WesternFlyer/d20130626/Photomosaic/
+/mbari/SeafloorMapping/OceanImaging2013/20130625WesternFlyer/d20130627/Photomosaic/
+/mbari/SeafloorMapping/OceanImaging2013/20130625WesternFlyer/d20130628/Photomosaic/
+/mbari/SeafloorMapping/OceanImaging2013/20130625WesternFlyer/d20130628/oi_survey_0815/images/
+/mbari/SeafloorMapping/OceanImaging2013/20130801Proposal/
+/mbari/SeafloorMapping/OceanImaging2013/20131203WesternFlyer/d20131204/3DatDepth_120413_Delivered/
+/mbari/SeafloorMapping/OceanImaging2013/20131203WesternFlyer/d20131204/Photomosaic/
+/mbari/SeafloorMapping/OceanImaging2013/20131203WesternFlyer/d20131205/3DatDepth_MBARI_120513_Delivered/
+/mbari/SeafloorMapping/OceanImaging2013/MappingAUV/20091203/
+/mbari/SeafloorMapping/OceanImaging2013/MissionPlanning/
+/mbari/SeafloorMapping/OceanImaging2013/monterey/
+
+/mbari/SeafloorMapping/OceanImaging2014/20140816RachelCarson/d20140816/Photogrammetry/
+/mbari/SeafloorMapping/OceanImaging2014/20140816RachelCarson/d20140816/PhotogrammetryOld/
+/mbari/SeafloorMapping/OceanImaging2014/20140816RachelCarson/d20140816-org/
+/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141206/lidarold/Site0Survey/
+/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141207/lidar/20141207-patch-test/
+/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141207/lidar/20141207-patch-test-bad/
+
+/mbari/SeafloorMapping/OceanImaging2018/20180612DOEST/
+/mbari/SeafloorMapping/OceanImaging2018/20180519d1/lidartest/
+
+/mbari/SeafloorMapping/2019/ExtravertCliff/ForJose/Example1/multibeam/
+/mbari/SeafloorMapping/2019/SentryTesting/
+/mbari/SeafloorMapping/2019/sentry539/
+/mbari/SeafloorMapping/2019/sentry540/
+/mbari/SeafloorMapping/2019/sentry541/
+
+/mbari/SeafloorMapping/2020/20200220d1/lidartest/
+/mbari/SeafloorMapping/2020/20200924t1/lidar/
+/mbari/SeafloorMapping/2020/20201013d1/multibeampatch/
+/mbari/SeafloorMapping/2020/20201014d1/lidartest/
+/mbari/SeafloorMapping/2020/Sentry568/multibeam/test/
+/mbari/SeafloorMapping/2020/TRN/MbtrnppTest3/
+
+/mbari/SeafloorMapping/2021/SouthernGOCFalkor/
+/mbari/SeafloorMapping/2021/test/

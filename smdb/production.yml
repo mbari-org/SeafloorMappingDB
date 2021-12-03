@@ -1,15 +1,18 @@
-version: '3'
+version: "3"
 
 volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
   production_traefik: {}
+  local_media_files: {}
 
 services:
   django:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
     image: smdb_production_django
     depends_on:
       - postgres
@@ -19,7 +22,10 @@ services:
       - ./.envs/.production/.postgres
     command: /start
     volumes:
+      - /home/docker_user/.ssh:/home/docker_user/.ssh:z
+      - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
       - /opt/docker_smdb_vol:/etc/smdb:z
+      - local_media_files:/media:z
 
   postgres:
     build:
@@ -47,3 +53,20 @@ services:
 
   redis:
     image: redis:5.0
+
+  mb-system:
+    build:
+      # Build image that has user docker_user already added - needed before volume mount
+      # Make sure DOCKER_USER_ID is set in the environment before build - see README.md
+      context: .
+      dockerfile: ./compose/production/mb-system/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    image: mb-system
+    container_name: mb-system
+    volumes:
+      # Edit source path to use directories from *your* host
+      # Copy your public key to your ~/.ssh/authorized_keys file
+      - /home/docker_user/.ssh:/home/docker_user/.ssh:z
+      - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
+    command: /usr/sbin/sshd -D

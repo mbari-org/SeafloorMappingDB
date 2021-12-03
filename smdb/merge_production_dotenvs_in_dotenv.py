@@ -16,6 +16,7 @@ DOTENV_FILE_PATH = ROOT_DIR_PATH / ".env"
 def merge(
     output_file_path: str, merged_file_paths: Sequence[str], append_linesep: bool = True
 ) -> None:
+    print(f"Writing to {output_file_path}")
     with open(output_file_path, "w") as output_file:
         for merged_file_path in merged_file_paths:
             with open(merged_file_path, "r") as merged_file:
@@ -34,7 +35,7 @@ def main():
 def test_merge(tmpdir_factory, merged_file_count: int, append_linesep: bool):
     tmp_dir_path = Path(str(tmpdir_factory.getbasetemp()))
 
-    output_file_path = tmp_dir_path / ".env"
+    output_file_path = tmp_dir_path / "production.env"
 
     expected_output_file_content = ""
     merged_file_paths = []

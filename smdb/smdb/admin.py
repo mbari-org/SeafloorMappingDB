@@ -6,12 +6,12 @@ from smdb.models import (
     DataArchival,
     Expedition,
     Mission,
-    MissionType,
+    Missiontype,
     Person,
     Platform,
-    PlatformType,
+    Platformtype,
     Sensor,
-    SensorType,
+    Sensortype,
 )
 
 
@@ -32,23 +32,61 @@ class DataArchivalAdmin(GeoModelAdmin):
 
 @register(Expedition)
 class ExpeditionAdmin(GeoModelAdmin):
-    pass
+    ordering = [
+        "name",
+    ]
+    search_fields = [
+        "name",
+        "mission__name",
+        "expd_db_id",
+    ]
+    prepopulated_fields = {"slug": ("name",)}
 
 
 @register(Mission)
 class MissionAdmin(GeoModelAdmin):
-    search_fields = ['mission_name',]
+    ordering = [
+        "name",
+    ]
+    search_fields = [
+        "name",
+        "notes_text",
+    ]
+    fields = [
+        "image_tag",
+        "expedition",
+        "name",
+        "slug",
+        "start_date",
+        "end_date",
+        "nav_track",
+        "start_depth",
+        "comment",
+        "quality_comment",
+        "repeat_survey",
+        "directory",
+        "notes_filename",
+        "notes_text",
+        "region_name",
+        "site_detail",
+        "thumbnail_filename",
+        "thumbnail_image",
+        "kml_filename",
+        "compilation",
+        "update_status",
+    ]
+    readonly_fields = ["image_tag"]
+    prepopulated_fields = {"slug": ("name",)}
 
 
-@register(MissionType)
-class MissionTypeAdmin(GeoModelAdmin):
+@register(Missiontype)
+class MissiontypeAdmin(GeoModelAdmin):
     pass
 
 
 @register(Person)
 class PersonAdmin(GeoModelAdmin):
     list_display = ("last_name", "first_name", "institution_name")
-    pass
 
 
 @register(Platform)
@@ -56,8 +94,8 @@ class PlatformAdmin(GeoModelAdmin):
     pass
 
 
-@register(PlatformType)
-class PlatformTypeAdmin(GeoModelAdmin):
+@register(Platformtype)
+class PlatformtypeAdmin(GeoModelAdmin):
     pass
 
 
@@ -66,6 +104,6 @@ class SensorAdmin(GeoModelAdmin):
     pass
 
 
-@register(SensorType)
-class SensorTypeAdmin(GeoModelAdmin):
+@register(Sensortype)
+class SensortypeAdmin(GeoModelAdmin):
     pass

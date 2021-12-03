@@ -1,3 +1,4 @@
+
 // /lib/leaflet.css
 // /lib/leaflet.js
 // /lib/esri-leaflet.js
@@ -46,16 +47,20 @@ try {
   console.log(err.message);
 }
 
-var bounds = L.control({ position: "bottomleft" });
+var bounds = L.control({ position: "topright" });
+
 bounds.onAdd = function (map) {
   var div = L.DomUtil.create("div", "bounds-container row");
   var bboxString = getMapBounds();
   div.innerHTML =
+
+    "<div>" +
+    '<input title="Use map bounds in Update" type="checkbox" id="use_bounds">' +
+    "&nbsp;" +
+    "</div>" +
     '<div id="map-bounds">' +
     bboxString +
-    "</div>" +
-    "<div>&nbsp;" +
-    '<input title="Use map bounds in Update" type="checkbox" id="use_bounds">' +
+
     "</div>";
   return div;
 };

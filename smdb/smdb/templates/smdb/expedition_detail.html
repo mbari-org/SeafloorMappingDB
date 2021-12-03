@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block css %}
+  {{ block.super }}
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+{% endblock %}
+
+{% block title %}Expedition details on demand{% endblock %}
+
+{% block content %}
+    <h2>{{ expedition.name }}</h2>
+    Missions:
+    <div class="container-fluid">
+        {% for mission in expedition.mission_set.all|dictsort:"name" %}
+        <div class="row">
+            <div class="col">
+                <a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

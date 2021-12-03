@@ -3,9 +3,21 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views import defaults as default_views
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
+from graphene_django.views import GraphQLView
 from rest_framework.authtoken.views import obtain_auth_token
-from views import MissionOverView
+
+from smdb.api.base import router as api_v1_router
+from smdb.views import (
+    ExpeditionDetailView,
+    ExpeditionListView,
+    MissionDetailView,
+    MissionListView,
+    MissionOverView,
+)
+
+GraphQLView.graphiql_template = "graphene_graphiql_explorer/graphiql.html"
 
 urlpatterns = [
     path("", MissionOverView.as_view(), name="home"),
@@ -18,14 +30,27 @@ urlpatterns = [
     path("users/", include("smdb.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
+    path("missions/", MissionListView.as_view()),
+    path(
+        "missions/<str:slug>/",
+        MissionDetailView.as_view(),
+        name="mission-detail",
+    ),
+    path("expeditions/", ExpeditionListView.as_view()),
+    path(
+        "expeditions/<str:slug>/",
+        ExpeditionDetailView.as_view(),
+        name="expedition-detail",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # API URLS
 urlpatterns += [
     # API base url
-    path("api/", include("config.api_router")),
+    path("api/v1/", include(api_v1_router)),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
+    path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
 
 if settings.DEBUG:
