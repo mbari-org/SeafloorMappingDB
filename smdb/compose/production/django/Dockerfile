@@ -96,7 +96,9 @@ RUN chmod +x /start
 
 
 # copy application code to WORKDIR
+# - for some reason project.css isn't copied from APP_HOME, copy separately
 COPY --from=client-builder --chown=docker_user:django ${APP_HOME} ${APP_HOME}
+COPY ./smdb/static/css/project.css /app/smdb/static/css/
 
 RUN mkdir -p /media/thumbnails /media/logs
 RUN chown docker_user:django /media/thumbnails /media/logs
