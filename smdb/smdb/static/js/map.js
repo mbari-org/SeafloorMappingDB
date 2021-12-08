@@ -4,7 +4,7 @@
 
 const map = L.map("map");
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
-const options  = { minZoom: 1, maxZoom: 16, }
+const options  = { minZoom: 1, maxNativeZoom: 13, }
 
 L.esri.basemapLayer('Oceans', options).addTo(map);
 L.esri.basemapLayer('OceansLabels', options).addTo(map);
