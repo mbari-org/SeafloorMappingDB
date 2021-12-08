@@ -1,11 +1,11 @@
-
-
-
-
 // project specific CSS goes here
+.leaflet-zoom-box {
+  border: 2px dotted #fe9414;
+  background: rgba(255, 255, 255, 0.5);
+}
 
 ////////////////////////////////
-		//Variables//
+//Variables//
 ////////////////////////////////
 
 // Alert colors
@@ -18,7 +18,7 @@ $dark-pink: #eed3d7;
 $red: #b94a48;
 
 ////////////////////////////////
-		//Alerts//
+//Alerts//
 ////////////////////////////////
 
 // bootstrap alert CSS, translated to the django-standard levels of

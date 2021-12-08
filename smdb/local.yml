@@ -17,7 +17,7 @@ services:
       - mailhog
     volumes:
       # Edit to use directory on your host
-      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      - /Users/salamy/docker_smdb_vol:/etc/smdb:z
       - .:/app:z
       - local_media_files:/media:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
@@ -68,6 +68,6 @@ services:
     volumes:
       # Edit source path to use directories from *your* host
       # Copy your public key to your ~/.ssh/authorized_keys file
-      - /Users/mccann/.ssh:/root/.ssh:z
+      - /Users/salamy/.ssh:/root/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     command: /usr/sbin/sshd -D
