@@ -10,3 +10,7 @@ body {
 .slider {
   width: 100%;
 }
+.leaflet-zoom-box {
+  border: 2px dotted #c50;
+  background: rgba(255, 255, 255, 0.5);
+}

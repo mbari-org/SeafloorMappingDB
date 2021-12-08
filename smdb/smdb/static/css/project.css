@@ -18,23 +18,6 @@
   text-align: center;
 }
 
-svg.leaflet-image-layer.leaflet-interactive path {
-  pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-  pointer-events: auto;
-}
-
-/* visual tweaks */
-
-.leaflet-container {
-  background: #ddd;
-  outline: 0;
-}
-.leaflet-container a {
-  color: #0078a8;
-}
-.leaflet-container a.leaflet-active {
-  outline: 2px solid orange;
-}
 .leaflet-zoom-box {
   border: 2px dotted #c50;
   background: rgba(255, 255, 255, 0.5);
