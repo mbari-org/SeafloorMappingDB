@@ -799,6 +799,7 @@ class BootStrapper(BaseLoader):
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
             if txt_file:
                 self.logger.debug("Potential notes file: %s", txt_file)
+                notes_file = txt_file
 
         if not notes_file:
             # Try parent directory

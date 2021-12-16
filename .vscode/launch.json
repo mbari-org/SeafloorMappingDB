@@ -43,7 +43,7 @@
         "--noinput",
         "--skipuntil_regex",
         "--regex",
-        "OceanImaging2014/20140816RachelCarson/d20140816/multibeam/ZTopo.grd$",
+        "MappingAUVOps2013/20130928m1/ZTopo.grd$",
         "--limit",
         "1"
       ],
