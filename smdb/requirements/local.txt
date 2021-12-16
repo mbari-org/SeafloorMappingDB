@@ -19,7 +19,7 @@ sphinx-autobuild==2021.3.14 # https://github.com/GaretJax/sphinx-autobuild
 flake8==4.0.1  # https://github.com/PyCQA/flake8
 flake8-isort==4.1.1  # https://github.com/gforcada/flake8-isort
 coverage==6.2  # https://github.com/nedbat/coveragepy
-black==21.11b1  # https://github.com/ambv/black
+black==21.12b0  # https://github.com/ambv/black
 pylint-django==2.4.4  # https://github.com/PyCQA/pylint-django
 pre-commit==2.16.0  # https://github.com/pre-commit/pre-commit
 
@@ -27,7 +27,7 @@ pre-commit==2.16.0  # https://github.com/pre-commit/pre-commit
 # ------------------------------------------------------------------------------
 factory-boy==3.2.1  # https://github.com/FactoryBoy/factory_boy
 
-django-debug-toolbar==3.2.2  # https://github.com/jazzband/django-debug-toolbar
+django-debug-toolbar==3.2.4  # https://github.com/jazzband/django-debug-toolbar
 django-extensions==3.1.5  # https://github.com/django-extensions/django-extensions
 django-coverage-plugin==2.0.2  # https://github.com/nedbat/django_coverage_plugin
-pytest-django==4.5.1  # https://github.com/pytest-dev/pytest-django
+pytest-django==4.5.2  # https://github.com/pytest-dev/pytest-django

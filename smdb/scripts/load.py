@@ -777,25 +777,35 @@ class BootStrapper(BaseLoader):
 
         return False
 
+    def valid_notes_filename(self, txt_file):
+        if "junk" in txt_file:
+            self.logger.debug("Directory contains'junk': %s", txt_file)
+            return False
+        if self._exclude_path(txt_file):
+            self.logger.debug("Directory in exclude.list: %s", txt_file)
+            return False
+        try:
+            if os.stat(txt_file).st_size == 0:
+                self.logger.debug("Empty notes file: %s", txt_file)
+                return False
+        except FileNotFoundError:
+            self.logger.debug("Note file not found: %s", txt_file)
+            return False
+        return True
+
     def notes_filename(self, sm_dir):
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
             if txt_file:
                 self.logger.debug("Potential notes file: %s", txt_file)
-                if "junk" in txt_file:
-                    self.logger.debug(
-                        "Skipping over Notes file found in junk dir: %s", txt_file
-                    )
-                    continue
-                notes_file = txt_file
 
         if not notes_file:
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
             locate_cmd = f"locate -d {self.LOCATE_DB} -r '{parent_dir}.*Notes.txt$'"
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-                if txt_file:
+                if self.valid_notes_filename(txt_file):
                     self.logger.debug("Potential notes file: %s", txt_file)
                     notes_file = txt_file
         if not notes_file:
@@ -805,7 +815,7 @@ class BootStrapper(BaseLoader):
                 f"locate -d {self.LOCATE_DB} -r '{grandparent_dir}.*Notes.txt$'"
             )
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-                if txt_file:
+                if self.valid_notes_filename(txt_file):
                     self.logger.debug("Potential notes file: %s", txt_file)
                     notes_file = txt_file
 
