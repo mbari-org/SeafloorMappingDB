@@ -798,7 +798,7 @@ class BootStrapper(BaseLoader):
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
             if txt_file:
-                self.logger.debug("Potential notes file: %s", txt_file)
+                self.logger.info("Potential notes file: %s", txt_file)
                 notes_file = txt_file
 
         if not notes_file:
@@ -807,7 +807,7 @@ class BootStrapper(BaseLoader):
             locate_cmd = f"locate -d {self.LOCATE_DB} -r '{parent_dir}.*Notes.txt$'"
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
                 if self.valid_notes_filename(txt_file):
-                    self.logger.debug("Potential notes file: %s", txt_file)
+                    self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
         if not notes_file:
             # Try grandparent directory
@@ -817,7 +817,7 @@ class BootStrapper(BaseLoader):
             )
             for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
                 if self.valid_notes_filename(txt_file):
-                    self.logger.debug("Potential notes file: %s", txt_file)
+                    self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
 
         return notes_file

@@ -38,7 +38,7 @@
       //"args": [ "-v", "2", "--clobber", "--skipuntil_regex", "--regex", "mbsystem/Data/2012/20120103_MB-System_Tutorial_OFG/ProprietaryOFGSampleData/20101127OFGSample/multibeam_hsx"],
       "args": [
         "-v",
-        "2",
+        "1",
         "--clobber",
         "--noinput",
         "--skipuntil_regex",
