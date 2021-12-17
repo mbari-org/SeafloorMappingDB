@@ -38,12 +38,12 @@
       //"args": [ "-v", "2", "--clobber", "--skipuntil_regex", "--regex", "mbsystem/Data/2012/20120103_MB-System_Tutorial_OFG/ProprietaryOFGSampleData/20101127OFGSample/multibeam_hsx"],
       "args": [
         "-v",
-        "2",
+        "1",
         "--clobber",
         "--noinput",
         "--skipuntil_regex",
         "--regex",
-        "MappingAUVOps2015/20150312m2/ZTopo.grd$",
+        "2019/20190511m2new/ZTopo.grd$",
         "--limit",
         "1"
       ],

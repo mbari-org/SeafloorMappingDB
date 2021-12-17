@@ -30,6 +30,7 @@ from django.core.files import File  # noqa F402
 from django.core.files.base import ContentFile  # noqa F402
 from django.core.files.storage import DefaultStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
+from glob import glob
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
@@ -804,18 +805,14 @@ class BootStrapper(BaseLoader):
         if not notes_file:
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
-            locate_cmd = f"locate -d {self.LOCATE_DB} -r '{parent_dir}.*Notes.txt$'"
-            for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
+            for txt_file in glob(f"{parent_dir}/*Notes.txt"):
                 if self.valid_notes_filename(txt_file):
                     self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
         if not notes_file:
             # Try grandparent directory
             grandparent_dir = os.path.abspath(os.path.join(sm_dir, "../.."))
-            locate_cmd = (
-                f"locate -d {self.LOCATE_DB} -r '{grandparent_dir}.*Notes.txt$'"
-            )
-            for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
+            for txt_file in glob(f"{grandparent_dir}/*Notes.txt"):
                 if self.valid_notes_filename(txt_file):
                     self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
