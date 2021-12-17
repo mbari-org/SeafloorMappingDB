@@ -797,7 +797,7 @@ class BootStrapper(BaseLoader):
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-            if txt_file:
+            if self.valid_notes_filename(txt_file):
                 self.logger.info("Potential notes file: %s", txt_file)
                 notes_file = txt_file
 
@@ -1002,11 +1002,11 @@ class BootStrapper(BaseLoader):
             miss_loaded += 1
             try:
                 self.save_note_todb(mission)
-            except (FileExistsError, OSError) as e:
+            except (FileExistsError, OSError, ValueError) as e:
                 self.logger.warning(str(e))
             try:
                 self.save_thumbnail(mission)
-            except FileExistsError as e:
+            except (FileExistsError, ValueError) as e:
                 self.logger.warning(str(e))
 
             if created:
