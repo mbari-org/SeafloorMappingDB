@@ -361,9 +361,15 @@ class NoteParser(BaseLoader):
                 self.logger.info("Truncating it to first 5 lines")
                 mission.comment = "\n".join(mission.comment.split("\n")[:5])
             # Append Expedition Database expd_id to name parsed from notes
-            # to ensure unique names. TODO: consider using a m2m table fr this.
+            # to ensure unique names. TODO: consider using a m2m table for this.
             expd_db_id = self.expd_db_id_from_text(mission)
             name = f"{self.expedition_name_from_comment(mission)}"
+            if len(name) > 200:
+                self.logger.warning(
+                    "Truncating 4th line (Expedition name) from %d characters to 200",
+                    len(name),
+                )
+                name = name[:200]
             if expd_db_id:
                 name += f" - {expd_db_id}"
             expedition, created = Expedition.objects.get_or_create(
