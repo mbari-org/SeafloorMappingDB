@@ -5,7 +5,7 @@ Load a data from SeafloorMapping share into a postgis database
 
 import os
 import sys
-from typing import Tuple
+from typing import Set, Tuple
 
 import django
 
@@ -78,6 +78,7 @@ Can be run from smdb Docker environment thusly...
 class BaseLoader:
     LOCAL_LOG_FILE = "/etc/smdb/load.txt"
     MEDIA_LOG_FILE = "logs/load.txt"
+    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def __init__(self):
         self.logger = logging.getLogger("load")
@@ -141,6 +142,11 @@ class BaseLoader:
             "--fnv",
             action="store_true",
             help="Run the loading steps that parse .fnv files for nav_track and other data",
+        )
+        parser.add_argument(
+            "--compilation",
+            action="store_true",
+            help="Finds directories with datalist*.mb-1, but without ZTopo.grd files, indicating a Compilation",
         )
         parser.add_argument(
             "--limit",
@@ -720,8 +726,6 @@ class MBSystem(BaseLoader):
 
 
 class BootStrapper(BaseLoader):
-    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
-
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
             X = "x"
@@ -1024,6 +1028,65 @@ class BootStrapper(BaseLoader):
         self.logger.info("Missions loaded: %d", miss_loaded)
 
 
+class Compiler(BaseLoader):
+    """Find directories with datalistp.mb-1 files but not a ZTopo.grd file
+    indicating a compilation directory where the data and figures in it
+    derive from Missions that have been loaded by BootStrapper."""
+
+    def comp_dirs(self):
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '\/datalist[p]*.mb-1$'"
+        seen_dirs = set()
+        self.logger.info(
+            "Finding potential compilation directories, those with datalistp.mb-1, but no ZTopo.grd files..."
+        )
+        for fp in subprocess.getoutput(locate_cmd).split("\n"):
+            self.logger.debug("%s", fp)
+            cdir = os.path.dirname(fp)
+            if os.path.exists(f"{cdir}/ZTopo.grd"):
+                self.logger.debug("Found ZTopo.grd")
+            else:
+                if cdir not in seen_dirs:
+                    yield cdir
+                seen_dirs.add(cdir)
+
+    def load_compilations(self):
+        for count, cdir in enumerate(self.comp_dirs()):
+            self.logger.info("%4d. %s", count, cdir)
+            # TODO: Figure out how to connect with Missions
+            ##datalist = os.path.join(cdir, "datalistp.mb-1")
+            ##comp_list, _ = self.comp_file_list(cdir, datalist)
+            ##self.logger.info("%s", " ".join(comp_list))
+
+    def comp_file_list(self, path: str, datalist: str) -> Tuple[list, str]:
+        comp_list = []
+        comp_type = ""
+        with open(datalist) as fh:
+            for line in fh.readlines():
+                if not line.strip():
+                    continue
+                if line.startswith("#"):
+                    continue
+                item = line.split()[0].strip()
+                if item.endswith("mb-1"):
+                    return self.comp_file_list(
+                        path,
+                        os.path.join(path, item),
+                    )
+                # TODO: What type of files do we want for Compilations?
+                elif ma := re.match(r"(.+)(\.mb\d\d)", item):
+                    # Prefer processed '*p.mb8[8-9]' files
+                    comp_type = "processed"
+                    comp_file = os.path.join(
+                        path,
+                        ma.group(1) + "p" + ma.group(2),
+                    )
+                    if not os.path.exists(comp_file):
+                        comp_type = "unprocessed"
+                        comp_file = os.path.join(path, item)
+                    comp_list.append(comp_file)
+        return comp_list, comp_type
+
+
 def run(*args):
     # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
     bl = BaseLoader()
@@ -1040,10 +1103,13 @@ def run(*args):
         mbinfo_load()
     elif bl.args.fnv:
         fnv_load()
+    elif bl.args.compilation:
+        compilation_load()
     else:
         bootstrap_load()
         notes_load()
         fnv_load()
+        compilation_load()
     bl.save_logger_output()
 
 
@@ -1069,6 +1135,12 @@ def fnv_load():
     fnv = FNVLoader()
     fnv.process_command_line()
     fnv.update_missions("fnv_update_mission_data")
+
+
+def compilation_load():
+    comp = Compiler()
+    comp.process_command_line()
+    comp.load_compilations()
 
 
 if __name__ == "__main__":
