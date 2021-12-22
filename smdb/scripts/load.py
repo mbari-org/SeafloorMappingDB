@@ -850,11 +850,18 @@ class BootStrapper(BaseLoader):
         note_text = ""
         with open(mission.notes_filename, errors="ignore") as fh:
             for line_count, line in enumerate(fh.readlines()):
-                if "password" in line.lower():
-                    # Blank out actual passwords
-                    line = line.lower().split("password")[0] + "password: **********"
+                # Blank out potentially sensitive information
+                if ma := re.match(r"\s+password:\s*(.*)", line, re.IGNORECASE):
+                    line = line.replace(ma.group(1), "*********")
                 if re.search(r"\d+\.\d+\.\d+\.\d+", line):
-                    line = re.sub(r"\d+\.\d+\.\d+\.\d+", "***.***.***.***", line)
+                    # Remove everything after the IP address
+                    line = re.sub(
+                        r"\d+\.\d+\.\d+\.\d+.+",
+                        "***.***.***.***",
+                        line,
+                    )
+                if ma := re.match(r"\s+User:\s*(.*)", line, re.IGNORECASE):
+                    line = line.replace(ma.group(1), "*********")
                 note_text += line
 
         if not note_text:
@@ -1084,12 +1091,18 @@ class Compiler(BaseLoader):
                     item = line.split()[0].strip()
                     if item.endswith("mb-1"):
                         self.logger.debug("%s", item)
-                        if ma := re.match(r"^[\.\/]+(\S+)", item):
+                        if re.match(r"^[\.\/]+(\S+)", item):
+                            full_path = os.path.abspath(
+                                os.path.join(
+                                    path,
+                                    os.path.dirname(item),
+                                )
+                            )
                             self.logger.info(
                                 "From %s/%s, Potential Mission: %s",
                                 path,
                                 item,
-                                os.path.dirname(ma.group(1)),
+                                full_path.replace(MBARI_DIR, ""),
                             )
                         self.logger.debug("Opening %s", os.path.join(path, item))
                         if (
@@ -1108,7 +1121,13 @@ class Compiler(BaseLoader):
                         )
                     # Match relative directory path
                     elif ma := re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
-                        missions.add(os.path.dirname(ma.group(1)))
+                        full_path = os.path.abspath(
+                            os.path.join(
+                                path,
+                                os.path.dirname(item),
+                            )
+                        )
+                        missions.add(full_path.replace(MBARI_DIR, ""))
         except FileNotFoundError as e:
             self.logger.info("File not found: %s", datalist)
         return list(missions), datalist
