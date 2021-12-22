@@ -295,7 +295,7 @@ class NoteParser(BaseLoader):
         return expd_db_id
 
     def expedition_name_from_comment(self, mission: Mission) -> str:
-        # It looks like the fourth line begins with an Expedition name
+        # Take the third and following lines (count > 1) from the comment
         expd_name = ""
         if not mission.comment:
             self.logger.warning("Empty comment for mission %s", mission)
@@ -1050,6 +1050,8 @@ class Compiler(BaseLoader):
             cdir = os.path.dirname(fp)
             if os.path.exists(f"{cdir}/ZTopo.grd"):
                 self.logger.debug("Found ZTopo.grd")
+            elif "Navadjust" in fp:
+                continue
             else:
                 if cdir not in seen_dirs:
                     yield cdir
@@ -1058,39 +1060,45 @@ class Compiler(BaseLoader):
     def load_compilations(self):
         for count, cdir in enumerate(self.comp_dirs()):
             self.logger.info("%4d. %s", count, cdir)
-            # TODO: Figure out how to connect with Missions
-            ##datalist = os.path.join(cdir, "datalistp.mb-1")
-            ##comp_list, _ = self.comp_file_list(cdir, datalist)
-            ##self.logger.info("%s", " ".join(comp_list))
+            datalist = os.path.join(cdir, "datalistp.mb-1")
+            mission_names, dlist_file = self.missions_list(cdir, datalist)
+            if mission_names:
+                self.logger.info(
+                    "From %s/%s, Potential Missions: %s",
+                    cdir,
+                    dlist_file,
+                    " ".join(mission_names),
+                )
 
-    def comp_file_list(self, path: str, datalist: str) -> Tuple[list, str]:
-        comp_list = []
-        comp_type = ""
-        with open(datalist) as fh:
-            for line in fh.readlines():
-                if not line.strip():
-                    continue
-                if line.startswith("#"):
-                    continue
-                item = line.split()[0].strip()
-                if item.endswith("mb-1"):
-                    return self.comp_file_list(
-                        path,
-                        os.path.join(path, item),
-                    )
-                # TODO: What type of files do we want for Compilations?
-                elif ma := re.match(r"(.+)(\.mb\d\d)", item):
-                    # Prefer processed '*p.mb8[8-9]' files
-                    comp_type = "processed"
-                    comp_file = os.path.join(
-                        path,
-                        ma.group(1) + "p" + ma.group(2),
-                    )
-                    if not os.path.exists(comp_file):
-                        comp_type = "unprocessed"
-                        comp_file = os.path.join(path, item)
-                    comp_list.append(comp_file)
-        return comp_list, comp_type
+    def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
+        missions = set()
+        try:
+            with open(datalist) as fh:
+                for line in fh.readlines():
+                    if not line.strip():
+                        continue
+                    if line.startswith("#"):
+                        continue
+                    item = line.split()[0].strip()
+                    if item.endswith("mb-1"):
+                        self.logger.debug("%s", item)
+                        if ma := re.match(r"^[\.\/]+(\S+)", item):
+                            self.logger.info(
+                                "From %s/%s, Potential Mission: %s",
+                                path,
+                                item,
+                                os.path.dirname(ma.group(1)),
+                            )
+                        return self.missions_list(
+                            path,
+                            os.path.join(path, item),
+                        )
+                    # Match relative directory path
+                    elif ma := re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
+                        missions.add(os.path.dirname(ma.group(1)))
+        except FileNotFoundError as e:
+            self.logger.info("File not found: %s", datalist)
+        return list(missions), datalist
 
 
 def run(*args):
