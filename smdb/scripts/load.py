@@ -853,6 +853,8 @@ class BootStrapper(BaseLoader):
                 if "password" in line.lower():
                     # Blank out actual passwords
                     line = line.lower().split("password")[0] + "password: **********"
+                if re.search(r"\d+\.\d+\.\d+\.\d+", line):
+                    line = re.sub(r"\d+\.\d+\.\d+\.\d+", "***.***.***.***", line)
                 note_text += line
 
         if not note_text:
