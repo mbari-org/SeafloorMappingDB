@@ -1091,6 +1091,17 @@ class Compiler(BaseLoader):
                                 item,
                                 os.path.dirname(ma.group(1)),
                             )
+                        self.logger.debug("Opening %s", os.path.join(path, item))
+                        if (
+                            datalist.endswith("datalist.mb-1")
+                            and item == "datalistp.mb-1"
+                        ):
+                            self.logger.warning(
+                                "Dangerous recursion detected with %s in %s",
+                                item,
+                                datalist,
+                            )
+                            return list(missions), datalist
                         return self.missions_list(
                             path,
                             os.path.join(path, item),
