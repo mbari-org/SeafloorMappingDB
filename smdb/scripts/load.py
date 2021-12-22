@@ -1097,7 +1097,7 @@ class Compiler(BaseLoader):
                             and item == "datalistp.mb-1"
                         ):
                             self.logger.warning(
-                                "Dangerous recursion detected with %s in %s",
+                                "Dangerous recursion detected with '%s' in %s",
                                 item,
                                 datalist,
                             )
