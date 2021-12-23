@@ -1078,6 +1078,20 @@ class Compiler(BaseLoader):
                     dlist_file,
                     " ".join(mission_names),
                 )
+                mission_ids = []
+                for mission_name in mission_names:
+                    try:
+                        mission = Mission.objects.get(name=mission_name)
+                        mission_ids.append(mission.id)
+                    except Mission.DoesNotExist:
+                        self.logger.debug(
+                            "Mission %s not found in database", mission_name
+                        )
+                if mission_ids:
+                    self.logger.info(
+                        "Able to link to Mission ids: %s",
+                        mission_ids,
+                    )
 
     def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
         missions = set()
@@ -1120,7 +1134,7 @@ class Compiler(BaseLoader):
                             os.path.join(path, item),
                         )
                     # Match relative directory path
-                    elif ma := re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
+                    elif re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
                         full_path = os.path.abspath(
                             os.path.join(
                                 path,
