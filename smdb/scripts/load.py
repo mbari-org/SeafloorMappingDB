@@ -1048,33 +1048,36 @@ class Compiler(BaseLoader):
     indicating a compilation directory where the data and figures in it
     derive from Missions that have been loaded by BootStrapper."""
 
-    def comp_dirs(self):
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '\/datalist[p]*.mb-1$'"
-        seen_dirs = set()
+    def comp_files(self):
+        dl_pattern = r"\/datalist.*[p]*.mb-1$"
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{dl_pattern}'"
+        seen_files = set()
         self.logger.info(
-            "Finding potential compilation directories, those with datalistp.mb-1, but no ZTopo.grd files..."
+            "Finding potential compilation directories, those with r'%s', but no ZTopo.grd files...",
+            dl_pattern,
         )
         for fp in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("%s", fp)
-            cdir = os.path.dirname(fp)
-            if os.path.exists(f"{cdir}/ZTopo.grd"):
+            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
                 self.logger.debug("Found ZTopo.grd")
             elif "Navadjust" in fp:
                 continue
             else:
-                if cdir not in seen_dirs:
-                    yield cdir
-                seen_dirs.add(cdir)
+                if fp not in seen_files:
+                    yield fp
+                seen_files.add(fp)
 
     def load_compilations(self):
-        for count, cdir in enumerate(self.comp_dirs()):
-            self.logger.info("%4d. %s", count, cdir)
-            datalist = os.path.join(cdir, "datalistp.mb-1")
-            mission_names, dlist_file = self.missions_list(cdir, datalist)
+        for count, datalist in enumerate(self.comp_files()):
+            self.logger.debug("%4d. %s", count, datalist)
+            mission_names, dlist_file = self.missions_list(
+                os.path.dirname(datalist),
+                datalist,
+            )
             if mission_names:
                 self.logger.info(
                     "From %s/%s, Potential Missions: %s",
-                    cdir,
+                    datalist,
                     dlist_file,
                     " ".join(mission_names),
                 )
@@ -1103,8 +1106,16 @@ class Compiler(BaseLoader):
                     if line.startswith("#"):
                         continue
                     item = line.split()[0].strip()
+                    item = re.sub(r"^\/Volumes", "/mbari", item)
                     if item.endswith("mb-1"):
                         self.logger.debug("%s", item)
+                        if item == os.path.basename(datalist):
+                            self.logger.warning(
+                                "Dangerous recursion detected with '%s' in %s",
+                                item,
+                                datalist,
+                            )
+                            return list(missions), datalist
                         if re.match(r"^[\.\/]+(\S+)", item):
                             full_path = os.path.abspath(
                                 os.path.join(
@@ -1129,10 +1140,15 @@ class Compiler(BaseLoader):
                                 datalist,
                             )
                             return list(missions), datalist
-                        return self.missions_list(
-                            path,
-                            os.path.join(path, item),
+                        self.logger.debug("Found '%s' in %s", item, datalist)
+                        cfile = os.path.abspath(os.path.join(path, item))
+                        cpath = os.path.dirname(cfile)
+                        self.logger.debug(
+                            "Returning path %s and file %s",
+                            cpath,
+                            cfile,
                         )
+                        return self.missions_list(cpath, cfile)
                     # Match relative directory path
                     elif re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
                         full_path = os.path.abspath(
