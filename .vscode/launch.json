@@ -45,13 +45,13 @@
       //"args": ["--notes", "-v", "1"],
       //"args": ["--mbinfo", "-v", "2", "--skipuntil", "2021/20210326m1"],
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
-      //"args": ["--bootstrap", "-v", "2", "--limit", "2", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd" ],
+      //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2018/20180504m3/ZTopo.grd$" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2006/20060828"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2021/20210906d1/lidar"]
       //"args": ["--fnv", "-v", "1"],
-      "args": ["--compilation", "-v", "2"],
+      "args": ["--compilation", "-v", "1"],
       "justMyCode": false
     }
   ]
