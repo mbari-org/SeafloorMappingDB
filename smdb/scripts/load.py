@@ -1052,7 +1052,9 @@ class Compiler(BaseLoader):
         dl_pattern = r"\/datalist.*[p]*.mb-1$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{dl_pattern}'"
         seen_files = set()
-        start_processing = False
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
         self.logger.info(
             "Finding potential compilation directories, those with r'%s', but no ZTopo.grd files...",
             dl_pattern,

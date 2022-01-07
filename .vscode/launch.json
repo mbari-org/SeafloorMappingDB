@@ -51,13 +51,8 @@
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2006/20060828"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2021/20210906d1/lidar"]
       //"args": ["--fnv", "-v", "1"],
-      "args": [
-        "--compilation",
-        "-v",
-        "1",
-        "--skipuntil",
-        "MappingAUVOps2014/PortugueseLedge2008/Figures"
-      ],
+      //"args": [ "--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2014/PortugueseLedge2008/Figures" ],
+      "args": ["--compilation", "-v", "1"],
       "justMyCode": false
     }
   ]
