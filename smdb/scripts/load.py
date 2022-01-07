@@ -45,6 +45,7 @@ some steps requiring access to the SeafloorMapping share on titan. They are:
 1. --bootstrap          Requires SeafloorMapping access
 2. --notes
 3. --fnv                Requires SeafloorMapping access
+4. --compilation        Requires SeafloorMapping access
 
 With none of these options specified all are executed. Specify one or more
 of these options to debug portions of code or to pick up where a previous
@@ -76,8 +77,9 @@ Can be run from smdb Docker environment thusly...
 
 
 class BaseLoader:
-    LOCAL_LOG_FILE = "/etc/smdb/load.txt"
-    MEDIA_LOG_FILE = "logs/load.txt"
+    LOG_FILE = "load.txt"
+    LOCAL_LOG_FILE = f"/etc/smdb/{LOG_FILE}"
+    MEDIA_LOG_FILE = f"logs/{LOG_FILE}"
     LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def __init__(self):
@@ -169,6 +171,11 @@ class BaseLoader:
             action="store",
             help="Start processing at mission name provided",
         )
+        parser.add_argument(
+            "--log_file",
+            action="store",
+            help=f"Override log file name {self.LOG_FILE}",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -179,6 +186,9 @@ class BaseLoader:
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
+        if self.args.log_file:
+            self.LOCAL_LOG_FILE = f"/etc/smdb/{self.args.log_file}"
+            self.MEDIA_LOG_FILE = f"logs/{self.args.log_file}"
         if not self.logger.handlers:
             # Don't add handlers when sub class runs
             stream_handler = logging.StreamHandler()
@@ -226,6 +236,8 @@ class BaseLoader:
                     return
 
     def save_logger_output(self) -> None:
+        self.logger.info("Saving to local log file: %s", self.LOCAL_LOG_FILE)
+        self.logger.info("Saving to media log file: %s", self.MEDIA_LOG_FILE)
         self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
         for handler in self.logger.handlers[:]:
             self.logger.debug("Closing handler: %s", handler)
