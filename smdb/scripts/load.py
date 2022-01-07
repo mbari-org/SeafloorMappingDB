@@ -1052,12 +1052,18 @@ class Compiler(BaseLoader):
         dl_pattern = r"\/datalist.*[p]*.mb-1$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{dl_pattern}'"
         seen_files = set()
+        start_processing = False
         self.logger.info(
             "Finding potential compilation directories, those with r'%s', but no ZTopo.grd files...",
             dl_pattern,
         )
         for fp in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("%s", fp)
+            if self.args.skipuntil:
+                if self.args.skipuntil in fp:
+                    start_processing = True
+            if not start_processing:
+                continue
             if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
                 self.logger.debug("Found ZTopo.grd")
             elif "Navadjust" in fp:
@@ -1125,6 +1131,9 @@ class Compiler(BaseLoader):
             self.logger.debug("Opening %s", datalist)
             with open(datalist) as fh:
                 for line in fh.readlines():
+                    # MappingAUVOps2014/PortugueseLedge2008/Figures
+                    # contains null characters
+                    line = line.strip("\x00")
                     if not line.strip():
                         continue
                     if line.startswith("#") or line.startswith("$"):
