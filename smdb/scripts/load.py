@@ -1088,69 +1088,65 @@ class Compiler(BaseLoader):
                         mission_ids.append(mission.id)
                     except Mission.DoesNotExist:
                         self.logger.debug(
-                            "Mission %s not found in database", mission_name
+                            "Mission not found in database: %s", mission_name
                         )
                 if mission_ids:
                     self.logger.info(
-                        "Able to link to Mission ids: %s",
+                        "Able to link Mission ids %s to %s",
                         mission_ids,
+                        datalist,
                     )
 
+    def _examine_mb1_line(
+        self, path: str, datalist: str, item: str
+    ) -> Tuple[str, str,]:
+        if item == os.path.basename(datalist) or (
+            datalist.endswith("datalist.mb-1") and item == "datalistp.mb-1"
+        ):
+            raise RecursionError(
+                f"Dangerous recursion detected with '{item}' in {datalist}"
+            )
+        self.logger.debug("Found '%s' in %s", item, datalist)
+        cfile = os.path.abspath(os.path.join(path, item))
+        cpath = os.path.dirname(cfile)
+        self.logger.debug("Returning path %s and file %s", cpath, cfile)
+        return cpath, cfile
+
     def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
+        """Starting at a datalist*.mb-1 file recursively examine each line
+        until lines specifying sonar files are found. The paths for those
+        files get added to a set that's returned as a list. These are the
+        potential Misisons that comprise the Figure/Project/Compilation
+        that's defined by the datalist file."""
         missions = set()
         try:
+            if "PacNW-Cascadia-Axial/" in datalist:
+                self.logger.info(datalist)
+            self.logger.debug("Opening %s", datalist)
             with open(datalist) as fh:
                 for line in fh.readlines():
                     if not line.strip():
                         continue
-                    if line.startswith("#"):
+                    if line.startswith("#") or line.startswith("$"):
                         continue
                     item = line.split()[0].strip()
                     item = re.sub(r"^\/Volumes", "/mbari", item)
                     if item.endswith("mb-1"):
-                        self.logger.debug("%s", item)
-                        if item == os.path.basename(datalist):
-                            self.logger.warning(
-                                "Dangerous recursion detected with '%s' in %s",
-                                item,
-                                datalist,
-                            )
-                            return list(missions), datalist
-                        if re.match(r"^[\.\/]+(\S+)", item):
-                            full_path = os.path.abspath(
-                                os.path.join(
-                                    path,
-                                    os.path.dirname(item),
-                                )
-                            )
-                            self.logger.info(
-                                "From %s/%s, Potential Mission: %s",
+                        # line is another file, recurse into it
+                        try:
+                            cpath, cfile = self._examine_mb1_line(
                                 path,
-                                item,
-                                full_path.replace(MBARI_DIR, ""),
-                            )
-                        self.logger.debug("Opening %s", os.path.join(path, item))
-                        if (
-                            datalist.endswith("datalist.mb-1")
-                            and item == "datalistp.mb-1"
-                        ):
-                            self.logger.warning(
-                                "Dangerous recursion detected with '%s' in %s",
-                                item,
                                 datalist,
+                                item,
                             )
+                        except RecursionError as e:
+                            self.logger.debug(e)
                             return list(missions), datalist
-                        self.logger.debug("Found '%s' in %s", item, datalist)
-                        cfile = os.path.abspath(os.path.join(path, item))
-                        cpath = os.path.dirname(cfile)
-                        self.logger.debug(
-                            "Returning path %s and file %s",
-                            cpath,
-                            cfile,
-                        )
-                        return self.missions_list(cpath, cfile)
-                    # Match relative directory path
-                    elif re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
+                        sub_missions, _ = self.missions_list(cpath, cfile)
+                        missions.update(sub_missions)
+                    elif re.match(r"(^[\.\/]*)(\S+)\s+(\d+)", line):
+                        # line begins with optional relative or absolute path,
+                        # then space and number - add paths to missions set
                         full_path = os.path.abspath(
                             os.path.join(
                                 path,
@@ -1158,8 +1154,16 @@ class Compiler(BaseLoader):
                             )
                         )
                         missions.add(full_path.replace(MBARI_DIR, ""))
+                    else:
+                        # line is likely missing the integer number following
+                        # the space or is not a .mb-1 file
+                        self.logger.info(
+                            f"Ignoring line: %s from %s",
+                            line.strip(),
+                            datalist,
+                        )
         except FileNotFoundError as e:
-            self.logger.info("File not found: %s", datalist)
+            self.logger.debug("File not found: %s", datalist)
         return list(missions), datalist
 
 
