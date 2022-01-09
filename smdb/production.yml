@@ -21,6 +21,7 @@ services:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
+    restart: always
     volumes:
       - /home/docker_user/.ssh:/home/docker_user/.ssh:z
       - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
@@ -32,6 +33,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: smdb_production_postgres
+    restart: always
     volumes:
       - production_postgres_data:/var/lib/postgresql/data:Z
       - production_postgres_data_backups:/backups:z
@@ -45,6 +47,7 @@ services:
     image: smdb_production_traefik
     depends_on:
       - django
+    restart: always
     volumes:
       - production_traefik:/etc/traefik/acme:z
     ports:
@@ -53,6 +56,7 @@ services:
 
   redis:
     image: redis:5.0
+    restart: always
 
   mb-system:
     build:
@@ -64,6 +68,7 @@ services:
         - DOCKER_USER_ID=$DOCKER_USER_ID
     image: mb-system
     container_name: mb-system
+    restart: always
     volumes:
       # Edit source path to use directories from *your* host
       # Copy your public key to your ~/.ssh/authorized_keys file

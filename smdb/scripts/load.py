@@ -45,6 +45,7 @@ some steps requiring access to the SeafloorMapping share on titan. They are:
 1. --bootstrap          Requires SeafloorMapping access
 2. --notes
 3. --fnv                Requires SeafloorMapping access
+4. --compilation        Requires SeafloorMapping access
 
 With none of these options specified all are executed. Specify one or more
 of these options to debug portions of code or to pick up where a previous
@@ -76,8 +77,9 @@ Can be run from smdb Docker environment thusly...
 
 
 class BaseLoader:
-    LOCAL_LOG_FILE = "/etc/smdb/load.txt"
-    MEDIA_LOG_FILE = "logs/load.txt"
+    LOG_FILE = "load.txt"
+    LOCAL_LOG_FILE = f"/etc/smdb/{LOG_FILE}"
+    MEDIA_LOG_FILE = f"logs/{LOG_FILE}"
     LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def __init__(self):
@@ -169,6 +171,11 @@ class BaseLoader:
             action="store",
             help="Start processing at mission name provided",
         )
+        parser.add_argument(
+            "--log_file",
+            action="store",
+            help=f"Override log file name {self.LOG_FILE}",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -179,6 +186,9 @@ class BaseLoader:
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
+        if self.args.log_file:
+            self.LOCAL_LOG_FILE = f"/etc/smdb/{self.args.log_file}"
+            self.MEDIA_LOG_FILE = f"logs/{self.args.log_file}"
         if not self.logger.handlers:
             # Don't add handlers when sub class runs
             stream_handler = logging.StreamHandler()
@@ -226,6 +236,8 @@ class BaseLoader:
                     return
 
     def save_logger_output(self) -> None:
+        self.logger.info("Saving to local log file: %s", self.LOCAL_LOG_FILE)
+        self.logger.info("Saving to media log file: %s", self.MEDIA_LOG_FILE)
         self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
         for handler in self.logger.handlers[:]:
             self.logger.debug("Closing handler: %s", handler)
@@ -1048,33 +1060,44 @@ class Compiler(BaseLoader):
     indicating a compilation directory where the data and figures in it
     derive from Missions that have been loaded by BootStrapper."""
 
-    def comp_dirs(self):
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '\/datalist[p]*.mb-1$'"
-        seen_dirs = set()
+    def comp_files(self):
+        dl_pattern = r"\/datalist.*[p]*.mb-1$"
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{dl_pattern}'"
+        seen_files = set()
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
         self.logger.info(
-            "Finding potential compilation directories, those with datalistp.mb-1, but no ZTopo.grd files..."
+            "Finding potential compilation directories, those with r'%s', but no ZTopo.grd files...",
+            dl_pattern,
         )
         for fp in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("%s", fp)
-            cdir = os.path.dirname(fp)
-            if os.path.exists(f"{cdir}/ZTopo.grd"):
+            if self.args.skipuntil:
+                if self.args.skipuntil in fp:
+                    start_processing = True
+            if not start_processing:
+                continue
+            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
                 self.logger.debug("Found ZTopo.grd")
             elif "Navadjust" in fp:
                 continue
             else:
-                if cdir not in seen_dirs:
-                    yield cdir
-                seen_dirs.add(cdir)
+                if fp not in seen_files:
+                    yield fp
+                seen_files.add(fp)
 
     def load_compilations(self):
-        for count, cdir in enumerate(self.comp_dirs()):
-            self.logger.info("%4d. %s", count, cdir)
-            datalist = os.path.join(cdir, "datalistp.mb-1")
-            mission_names, dlist_file = self.missions_list(cdir, datalist)
+        for count, datalist in enumerate(self.comp_files()):
+            self.logger.debug("%4d. %s", count, datalist)
+            mission_names, dlist_file = self.missions_list(
+                os.path.dirname(datalist),
+                datalist,
+            )
             if mission_names:
                 self.logger.info(
                     "From %s/%s, Potential Missions: %s",
-                    cdir,
+                    datalist,
                     dlist_file,
                     " ".join(mission_names),
                 )
@@ -1085,56 +1108,68 @@ class Compiler(BaseLoader):
                         mission_ids.append(mission.id)
                     except Mission.DoesNotExist:
                         self.logger.debug(
-                            "Mission %s not found in database", mission_name
+                            "Mission not found in database: %s", mission_name
                         )
                 if mission_ids:
                     self.logger.info(
-                        "Able to link to Mission ids: %s",
+                        "Able to link Mission ids %s to %s",
                         mission_ids,
+                        datalist,
                     )
 
+    def _examine_mb1_line(
+        self, path: str, datalist: str, item: str
+    ) -> Tuple[str, str,]:
+        if item == os.path.basename(datalist) or (
+            datalist.endswith("datalist.mb-1") and item == "datalistp.mb-1"
+        ):
+            raise RecursionError(
+                f"Dangerous recursion detected with '{item}' in {datalist}"
+            )
+        self.logger.debug("Found '%s' in %s", item, datalist)
+        cfile = os.path.abspath(os.path.join(path, item))
+        cpath = os.path.dirname(cfile)
+        self.logger.debug("Returning path %s and file %s", cpath, cfile)
+        return cpath, cfile
+
     def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
+        """Starting at a datalist*.mb-1 file recursively examine each line
+        until lines specifying sonar files are found. The paths for those
+        files get added to a set that's returned as a list. These are the
+        potential Misisons that comprise the Figure/Project/Compilation
+        that's defined by the datalist file."""
         missions = set()
         try:
+            if "PacNW-Cascadia-Axial/" in datalist:
+                self.logger.info(datalist)
+            self.logger.debug("Opening %s", datalist)
             with open(datalist) as fh:
                 for line in fh.readlines():
+                    # MappingAUVOps2014/PortugueseLedge2008/Figures
+                    # contains null characters
+                    line = line.strip("\x00")
                     if not line.strip():
                         continue
-                    if line.startswith("#"):
+                    if line.startswith("#") or line.startswith("$"):
                         continue
                     item = line.split()[0].strip()
+                    item = re.sub(r"^\/Volumes", "/mbari", item)
                     if item.endswith("mb-1"):
-                        self.logger.debug("%s", item)
-                        if re.match(r"^[\.\/]+(\S+)", item):
-                            full_path = os.path.abspath(
-                                os.path.join(
-                                    path,
-                                    os.path.dirname(item),
-                                )
-                            )
-                            self.logger.info(
-                                "From %s/%s, Potential Mission: %s",
+                        # line is another file, recurse into it
+                        try:
+                            cpath, cfile = self._examine_mb1_line(
                                 path,
-                                item,
-                                full_path.replace(MBARI_DIR, ""),
-                            )
-                        self.logger.debug("Opening %s", os.path.join(path, item))
-                        if (
-                            datalist.endswith("datalist.mb-1")
-                            and item == "datalistp.mb-1"
-                        ):
-                            self.logger.warning(
-                                "Dangerous recursion detected with '%s' in %s",
-                                item,
                                 datalist,
+                                item,
                             )
+                        except RecursionError as e:
+                            self.logger.debug(e)
                             return list(missions), datalist
-                        return self.missions_list(
-                            path,
-                            os.path.join(path, item),
-                        )
-                    # Match relative directory path
-                    elif re.match(r"^[\.\/]+(\S+)\s+(\d+)", line):
+                        sub_missions, _ = self.missions_list(cpath, cfile)
+                        missions.update(sub_missions)
+                    elif re.match(r"(^[\.\/]*)(\S+)\s+(\d+)", line):
+                        # line begins with optional relative or absolute path,
+                        # then space and number - add paths to missions set
                         full_path = os.path.abspath(
                             os.path.join(
                                 path,
@@ -1142,8 +1177,16 @@ class Compiler(BaseLoader):
                             )
                         )
                         missions.add(full_path.replace(MBARI_DIR, ""))
+                    else:
+                        # line is likely missing the integer number following
+                        # the space or is not a .mb-1 file
+                        self.logger.info(
+                            f"Ignoring line: %s from %s",
+                            line.strip(),
+                            datalist,
+                        )
         except FileNotFoundError as e:
-            self.logger.info("File not found: %s", datalist)
+            self.logger.debug("File not found: %s", datalist)
         return list(missions), datalist
 
 
