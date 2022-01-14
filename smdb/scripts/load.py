@@ -18,6 +18,7 @@ import argparse  # noqa F402
 import getpass  # noqa F402
 import logging  # noqa F402
 import math  # noqa F402
+import pathlib  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
@@ -621,7 +622,7 @@ class FNVLoader(BaseLoader):
 
 class MBSystem(BaseLoader):
     SSH_CMD = f"ssh {getpass.getuser()}@mb-system"
-    TIMEOUT = 360  # Max seconds to retreive file from tertiary storage
+    TIMEOUT = 360  # Max seconds to retrieve file from tertiary storage
 
     def sonar_start_data(self, sonar_file: str) -> Tuple[datetime, Point, float]:
         cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
@@ -1087,6 +1088,50 @@ class Compiler(BaseLoader):
                     yield fp
                 seen_files.add(fp)
 
+    def dlist_products(self, dlist_file):
+        prods = {}
+        comp_dir = os.path.dirname(dlist_file)
+        for cmd_file in glob(f"{comp_dir}/*.cmd"):
+            self.logger.debug(cmd_file)
+            # Find multiple lines like this:
+            # mbgrid -I datalist_MAUV_AxialSeamount_2021p.mb-1 \
+            #       -R-130.1010316/-129.8350251/45.8289526/46.0569144 \
+            #       -A2 -N -F5 -E1/1 -C4 -JU \
+            #       -O AxialSummit_2021_Topo1m_UTM
+            pattern = re.compile(
+                r"""
+                mbgrid            # The mbgrid command
+                [\s\S]*?          # Zero or more spaces including new lines
+                -I\s*(\S+)        # Input file
+                [\s\S]*?          # Zero or more spaces including new lines
+                -O\s*(\S+)        # Output file
+                """,
+                re.VERBOSE | re.MULTILINE,
+            )
+            for ma in pattern.finditer(open(cmd_file).read()):
+                grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
+                grd_file = pathlib.Path(grd_filename)
+                datalist_file = os.path.join(comp_dir, ma.group(1))
+                if grd_file.exists():
+                    prods[datalist_file] = grd_filename
+                    mod_time = datetime.fromtimestamp(
+                        pathlib.Path(grd_file).stat().st_mtime
+                    )
+                    self.logger.info(
+                        "%s was created on %s from %s in %s",
+                        grd_filename,
+                        mod_time,
+                        datalist_file,
+                        cmd_file,
+                    )
+                else:
+                    self.logger.debug(
+                        "Referenced from %s %s does not exist",
+                        datalist_file,
+                        grd_filename,
+                    )
+        return prods
+
     def load_compilations(self):
         for count, datalist in enumerate(self.comp_files()):
             self.logger.debug("%4d. %s", count, datalist)
@@ -1095,6 +1140,7 @@ class Compiler(BaseLoader):
                 datalist,
             )
             if mission_names:
+                products = self.dlist_products(dlist_file)
                 self.logger.info(
                     "From %s/%s, Potential Missions: %s",
                     datalist,
@@ -1181,11 +1227,11 @@ class Compiler(BaseLoader):
                         # line is likely missing the integer number following
                         # the space or is not a .mb-1 file
                         self.logger.info(
-                            f"Ignoring line: %s from %s",
+                            "Ignoring line: %s from %s",
                             line.strip(),
                             datalist,
                         )
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             self.logger.debug("File not found: %s", datalist)
         return list(missions), datalist
 
