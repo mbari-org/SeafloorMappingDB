@@ -32,7 +32,7 @@ path.leaflet-interactive {
   /* orange */
   /* stroke: rgb(218, 135, 29); */
   stroke-opacity: 100;
-  stroke-width: 5;
+  stroke-width: 3.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
