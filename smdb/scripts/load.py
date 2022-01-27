@@ -1108,7 +1108,7 @@ class Compiler(BaseLoader):
                 """,
                 re.VERBOSE | re.MULTILINE,
             )
-            for ma in pattern.finditer(open(cmd_file).read()):
+            for ma in pattern.finditer(open(cmd_file, errors="ignore").read()):
                 grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
                 grd_file = pathlib.Path(grd_filename)
                 datalist_file = os.path.join(comp_dir, ma.group(1))

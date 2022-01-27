@@ -4,7 +4,7 @@ Pillow==9.0.0  # https://github.com/python-pillow/Pillow
 rcssmin==1.1.0  # https://github.com/ndparker/rcssmin
 argon2-cffi==21.3.0  # https://github.com/hynek/argon2_cffi
 whitenoise==5.3.0  # https://github.com/evansd/whitenoise
-redis==4.1.0  # https://github.com/andymccurdy/redis-py
+redis==4.1.2  # https://github.com/andymccurdy/redis-py
 hiredis==2.0.0  # https://github.com/redis/hiredis-py
 psycopg2==2.9.3  # https://github.com/psycopg/psycopg2
 
@@ -15,7 +15,7 @@ django-bleach==1.0.0  # https://pypi.org/project/django-bleach/
 django-environ==0.8.1  # https://github.com/joke2k/django-environ
 django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
 django-allauth==0.47.0  # https://github.com/pennersr/django-allauth
-django-crispy-forms==1.13.0  # https://github.com/django-crispy-forms/django-crispy-forms
+django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-compressor==3.1  # https://github.com/django-compressor/django-compressor
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
 # Django REST Framework
@@ -33,7 +33,7 @@ graphviz==0.19.1 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
 netCDF4==1.5.8 # https://pypi.org/project/netCDF4/
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
-pygraphviz==1.7 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
+pygraphviz==1.8 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
 pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest-camel-collect
 pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
