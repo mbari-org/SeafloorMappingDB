@@ -49,7 +49,10 @@ class Missiontype(models.Model):
 
     def __str__(self):
         return self.name
+
+
 # missiontype.name would be a pick list that includes AUV mapping, LASS mapping, ship-based mapping, iceberg AUV configuration
+
 
 class Sensortype(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
@@ -131,13 +134,14 @@ class Mission(models.Model):
     nav_track = models.LineStringField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
+    track_length = models.FloatField(blank=True, null=True)
     expedition = models.ForeignKey(
         Expedition, on_delete=models.CASCADE, blank=True, null=True
     )
     missiontype = models.ForeignKey(
         Missiontype, on_delete=models.CASCADE, blank=True, null=True
     )
-    #missiontype examples: AUV mapping, LASS survey, iceberg_configuration
+    # missiontype examples: AUV mapping, LASS survey, iceberg_configuration
     platform = models.ForeignKey(
         Platform, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -154,7 +158,7 @@ class Mission(models.Model):
     dont_use_survey = models.BooleanField(blank=True, null=True)
     use_survey_with_caution = models.BooleanField(blank=True, null=True)
     patch_test = models.BooleanField(blank=True, null=True)
-    #patch tests sometimes are included in larger mapping surveys, so should be a boolean rather than a missiontype
+    # patch tests sometimes are included in larger mapping surveys, so should be a boolean rather than a missiontype
     comment = models.TextField(blank=True, null=True)
     directory = models.CharField(max_length=256, null=True)
     notes_filename = models.CharField(

@@ -103,6 +103,7 @@ class CompilationNode(DjangoObjectNode):
 class MissionNode(DjangoObjectNode):
     class Meta:
         model = Mission
+        # nav_track not included due to serialization challenges
         fields = (
             "uuid",
             "name",
@@ -114,6 +115,7 @@ class MissionNode(DjangoObjectNode):
             "end_date",
             "start_depth",
             "start_point",
+            "track_length",
             "quality_comment",
             "repeat_survey",
             "comment",
@@ -743,6 +745,7 @@ class MissionInput(graphene.InputObjectType):
     end_date = graphene.String()
     start_depth = graphene.Float()
     start_point = graphene.Field(graphene.String, to=scalars.PointScalar())
+    track_length = graphene.Field(graphene.Float)
     quality_comment = graphene.String()
     repeat_survey = graphene.Boolean()
     comment = graphene.String()
@@ -824,6 +827,7 @@ class CreateMission(graphene.Mutation):
             end_date=parse(input.end_date),
             start_depth=input.start_depth,
             start_point=input.start_point,
+            track_length=input.track_length,
             quality_comment=input.quality_comment,
             repeat_survey=input.repeat_survey,
             comment=input.comment,
@@ -908,6 +912,7 @@ class UpdateMission(graphene.Mutation):
         mission.end_date = parse(input.end_date)
         mission.start_depth = input.start_depth
         mission.start_point = input.start_point
+        mission.track_length = input.track_length
         mission.quality_comment = input.quality_comment
         mission.repeat_survey = input.repeat_survey
         mission.comment = input.comment

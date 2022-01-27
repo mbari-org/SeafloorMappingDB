@@ -527,7 +527,7 @@ class FNVLoader(BaseLoader):
         fnv_list: list,
         interval: timedelta = timedelta(seconds=30),
         tolerance: float = 0.00001,
-    ) -> Tuple[int, LineString]:
+    ) -> Tuple[int, LineString, float]:
         """Can tune the quality of simplified LineString by adjusting
         `interval` and `tolerance`. Reasonable defaults are provided
         for quick rendering of maybe 600 Missions on a Leaflet map."""
@@ -567,7 +567,7 @@ class FNVLoader(BaseLoader):
             len(point_list),
             len(fnv_list),
         )
-        nav_track = LineString(point_list).simplify(tolerance=tolerance)
+        nav_track = LineString(point_list, srid=4326).simplify(tolerance=tolerance)
         self.logger.debug(
             "Simplified %d points from %d files to %d points with tolerance = %f",
             len(point_list),
@@ -575,7 +575,13 @@ class FNVLoader(BaseLoader):
             len(nav_track),
             tolerance,
         )
-        return len(point_list), nav_track
+        # Convert to web mercator and get length in meters
+        # https://gis.stackexchange.com/a/181251/62207
+        nav_track_wm = nav_track
+        nav_track_wm.transform(3857)
+        track_length = round(nav_track_wm.length, 1)
+        self.logger.info("track_length = %f m", track_length)
+        return len(point_list), nav_track, track_length
 
     def fnv_update_mission_data(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
@@ -592,7 +598,11 @@ class FNVLoader(BaseLoader):
                 interval=timedelta(seconds=5),
             )
         else:
-            original, mission.nav_track = self.fnv_points_tolinestring(fnv_list)
+            (
+                original,
+                mission.nav_track,
+                mission.track_length,
+            ) = self.fnv_points_tolinestring(fnv_list)
         (
             mission.start_date,
             mission.end_date,
