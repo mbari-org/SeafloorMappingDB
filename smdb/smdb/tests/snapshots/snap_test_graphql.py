@@ -928,6 +928,7 @@ snapshots['test_create_mission 1'] = {
                     'type': 'Point'
                 },
                 'thumbnail_filename': 'thumbnail.png',
+                'track_length': 24.1,
                 'update_status': 5
             }
         }
@@ -1520,6 +1521,7 @@ snapshots['test_update_mission 1'] = {
                     'type': 'Point'
                 },
                 'thumbnail_filename': 'tumbnail2.png',
+                'track_length': 24.2,
                 'update_status': 6
             }
         }
