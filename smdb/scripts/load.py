@@ -540,7 +540,7 @@ class FNVLoader(BaseLoader):
                 self.logger.debug(e)
         if "subsample" not in locals():
             self.logger.info("Not getting nav_track for this mission.")
-            return len(point_list), None
+            return len(point_list), None, None
         line_count = 0
         for fnv in fnv_list:
             try:
@@ -593,7 +593,11 @@ class FNVLoader(BaseLoader):
         if not fnv_list:
             raise FileNotFoundError(f"No .fnv files found in {path}")
         if path.endswith("lidar") or path.endswith("lidartest"):
-            original, mission.nav_track = self.fnv_points_tolinestring(
+            (
+                original,
+                mission.nav_track,
+                mission.track_length,
+            ) = self.fnv_points_tolinestring(
                 fnv_list,
                 interval=timedelta(seconds=5),
             )
