@@ -31,8 +31,10 @@ graphene-graphiql-explorer==0.0.1 # https://pypi.org/project/graphene-graphiql-e
 graphene-gis==0.0.6 # https://github.com/EverWinter23/graphene-gis
 graphviz==0.19.1 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
+ipykernel==6.7.0 # For use in Notebooks
+matplotlib==3.5.1 # For plotting in Notebooks
 netCDF4==1.5.8 # https://pypi.org/project/netCDF4/
-pandas==1.4.0 # For support in Notebooks
+pandas==1.4.0 # For use in Notebooks
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
 pygraphviz==1.8 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
