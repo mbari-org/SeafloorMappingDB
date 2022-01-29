@@ -575,12 +575,12 @@ class FNVLoader(BaseLoader):
             len(nav_track),
             tolerance,
         )
-        # Convert to web mercator and get length in meters
+        # Convert to web mercator and get length in km
         # https://gis.stackexchange.com/a/181251/62207
         nav_track_wm = nav_track
         nav_track_wm.transform(3857)
-        track_length = round(nav_track_wm.length, 1)
-        self.logger.info("track_length = %f m", track_length)
+        track_length = round(nav_track_wm.length / 1000.0, 4)
+        self.logger.info("track_length = %.4f km", track_length)
         return len(point_list), nav_track, track_length
 
     def fnv_update_mission_data(self, mission: Mission):
