@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Compilations</h2>
+    <div class="container-fluid">
+        {% for compilation in compilation_list|dictsort:"name" %}
+        <div class="row">
+            <div class="col-6">
+                <a href="{% url 'compilation-detail' compilation.slug %}">{{ compilation.name }}</a>
+            </div>
+        </div>
+        {% endfor %}
+{% endblock %}
+
