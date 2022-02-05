@@ -309,14 +309,13 @@ class BaseLoader:
 
         return grid_bounds
 
-    def save_thumbnail(self, mission):
+    def save_thumbnail(self, mission, scale_factor=8):
         # Factored out of BootStrapper() to be used also by Compiler()
         # (mission may also be a compilation object)
         # https://stackoverflow.com/a/51152514/1281657
         Image.MAX_IMAGE_PIXELS = 933120000
         if not mission.thumbnail_filename:
             raise FileExistsError(f"No thumbnail image found for {mission}")
-        scale_factor = 8
         try:
             im = Image.open(mission.thumbnail_filename)
         except (UnidentifiedImageError, FileNotFoundError) as e:
@@ -1169,7 +1168,7 @@ class Compiler(BaseLoader):
                     self.logger.warning(e)
                     grid_bounds = None
                 compilation, _ = Compilation.objects.get_or_create(
-                    name=grd_filename.replace(MBARI_DIR, ""),
+                    name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
                     thumbnail_filename=thumbnail_filename,
                     creation_date=mod_time,
                     cmd_filename=cmd_filename,
@@ -1229,7 +1228,7 @@ class Compiler(BaseLoader):
                         compilation.missions.add(Mission.objects.get(pk=mission_id))
                     compilation.save()
                     try:
-                        self.save_thumbnail(compilation)
+                        self.save_thumbnail(compilation, scale_factor=16)
                     except (FileExistsError, ValueError) as e:
                         self.logger.warning(str(e))
 
@@ -1285,118 +1284,6 @@ class Compiler(BaseLoader):
                     last_mod_time = mod_time
                 return latest_thumb
 
-    def dlist_compilations(self, dlist_file):
-        # DEPREACTED
-        compilations = []
-        comp_dir = os.path.dirname(dlist_file)
-        for cmd_filename in glob(f"{comp_dir}/*.cmd"):
-            self.logger.debug(cmd_filename)
-            # Find multiple lines like this:
-            # mbgrid -I datalist_MAUV_AxialSeamount_2021p.mb-1 \
-            #       -R-130.1010316/-129.8350251/45.8289526/46.0569144 \
-            #       -A2 -N -F5 -E1/1 -C4 -JU \
-            #       -O AxialSummit_2021_Topo1m_UTM
-            pattern = re.compile(
-                r"""
-                mbgrid            # The mbgrid command
-                [\s\S]*?          # Zero or more spaces including new lines
-                -I\s*(\S+)        # Input file
-                [\s\S]*?          # Zero or more spaces including new lines
-                -O\s*(\S+)        # Output file
-                """,
-                re.VERBOSE | re.MULTILINE,
-            )
-            for ma in pattern.finditer(open(cmd_filename, errors="ignore").read()):
-                grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
-                thumbnail_filename = self._thumbnail_filename(
-                    os.path.join(comp_dir, ma.group(2))
-                )
-                datalist_filename = os.path.join(comp_dir, ma.group(1))
-                if pathlib.Path(grd_filename).exists():
-                    mod_time = datetime.fromtimestamp(
-                        pathlib.Path(grd_filename).stat().st_mtime
-                    )
-                    self.logger.info(
-                        "%s was created on %s from %s in %s",
-                        grd_filename,
-                        mod_time,
-                        datalist_filename,
-                        cmd_filename,
-                    )
-                    try:
-                        grid_bounds = self.extent(
-                            Dataset(grd_filename),
-                            grd_filename,
-                        )
-                    except (ValueError, OSError) as e:
-                        self.logger.warning(e)
-                        grid_bounds = None
-                    compilation, _ = Compilation.objects.get_or_create(
-                        name=grd_filename.replace(MBARI_DIR, ""),
-                        thumbnail_filename=thumbnail_filename,
-                        creation_date=mod_time,
-                        cmd_filename=cmd_filename,
-                        grd_filename=grd_filename,
-                        proc_datalist_filename=datalist_filename,
-                        grid_bounds=grid_bounds,
-                    )
-                    compilations.append(compilation)
-                else:
-                    self.logger.debug(
-                        "Referenced from %s %s does not exist",
-                        datalist_filename,
-                        grd_filename,
-                    )
-        self.logger.info(
-            "Collected %d Compilations from %s in %s",
-            len(compilations),
-            datalist_filename,
-            cmd_filename,
-        )
-        return compilations
-
-    def load_compilations(self):
-        # DEPRECATED
-        # Could loop through all the datalist*.mb-1 files found in all
-        # comp_dirs (A LOT of files), or just the comp_dirs themselves
-        ##for count, datalist in enumerate(self.comp_files()):
-        ##comp_dir = os.path.dirname(datalist)
-        for count, comp_dir in enumerate(self.comp_dirs()):
-            self.logger.debug("%4d. %s", count, datalist)
-            mission_names, dlist_file = self.missions_list(comp_dir, datalist)
-            if mission_names:
-                self.logger.info(
-                    "From %s/%s, Potential Missions: %s",
-                    datalist,
-                    dlist_file,
-                    " ".join(mission_names),
-                )
-                mission_ids = []
-                for mission_name in mission_names:
-                    try:
-                        mission = Mission.objects.get(name=mission_name)
-                        mission_ids.append(mission.id)
-                    except Mission.DoesNotExist:
-                        self.logger.debug(
-                            "Mission not found in database: %s", mission_name
-                        )
-                if mission_ids:
-                    for compilation in self.dlist_compilations(dlist_file):
-                        if hasattr(compilation, "missions"):
-                            self.logger.info(
-                                "Linking Mission ids %s to %s",
-                                mission_ids,
-                                compilation,
-                            )
-                            for mission_id in mission_ids:
-                                compilation.missions.add(
-                                    Mission.objects.get(pk=mission_id)
-                                )
-                            compilation.save()
-            if self.args.limit:
-                if count >= self.args.limit:
-                    return
-
     def _examine_mb1_line(
         self, path: str, datalist: str, item: str
     ) -> Tuple[str, str,]:
@@ -1413,7 +1300,7 @@ class Compiler(BaseLoader):
         return cpath, cfile
 
     def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
-        """Starting at a datalist*.mb-1 file recursively examine each line
+        """Starting at a datalist file recursively examine each line
         until lines specifying sonar files are found. The paths for those
         files get added to a set that's returned as a list. These are the
         potential Misisons that comprise the Figure/Project/Compilation
@@ -1530,7 +1417,6 @@ def fnv_load():
 def compilation_load():
     comp = Compiler()
     comp.process_command_line()
-    ##comp.load_compilations()
     comp.link_compilation_to_missions()
 
 
