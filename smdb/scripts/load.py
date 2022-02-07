@@ -1106,15 +1106,23 @@ class Compiler(BaseLoader):
     derive from Missions that have been loaded by BootStrapper."""
 
     def comp_dirs(self) -> Iterator[str]:
-        """Return list of potential Compilation directory names, meaning
+        """Generate potential Compilation directory names, meaning
         there is no ZTopo.grd, but there is a Figures.cmd file.
         """
         pattern = r"\/Figures.cmd$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
         for fp in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("%s", fp)
             if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
-                self.logger.debug("Skipping %s as this is a Mission directory")
+                self.logger.debug("Skipping %s as it is a Mission directory")
+                continue
+            if self.args.skipuntil:
+                if self.args.skipuntil in fp:
+                    start_processing = True
+            if not start_processing:
                 continue
             if self.args.filter:
                 if self.args.filter not in fp:
@@ -1183,13 +1191,13 @@ class Compiler(BaseLoader):
                     datalist_filename,
                     grd_filename,
                 )
-
-        self.logger.info(
-            "Collected %d Compilations from %s in %s",
-            len(compilations),
-            datalist_filename,
-            cmd_filename,
-        )
+        if compilations:
+            self.logger.info(
+                "Collected %d Compilations from %s in %s",
+                len(compilations),
+                datalist_filename,
+                cmd_filename,
+            )
         return compilations
 
     def link_compilation_to_missions(self):
@@ -1231,40 +1239,6 @@ class Compiler(BaseLoader):
                         self.save_thumbnail(compilation, scale_factor=16)
                     except (FileExistsError, ValueError) as e:
                         self.logger.warning(str(e))
-
-    def comp_files(self) -> Iterator[str]:
-        """Generator of file names that match datalist*.mb-1 pattern in
-        Compilation directories."""
-        dl_pattern = r"\/datalist.*[p]*.mb-1$"
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{dl_pattern}'"
-        seen_files = set()
-        start_processing = True
-        if self.args.skipuntil:
-            start_processing = False
-        self.logger.info(
-            "Finding potential compilation directories, those with r'%s', but no ZTopo.grd files...",
-            dl_pattern,
-        )
-        for fp in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("%s", fp)
-            if self.args.skipuntil:
-                if self.args.skipuntil in fp:
-                    start_processing = True
-            if not start_processing:
-                continue
-            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
-                self.logger.debug("Found %s/ZTopo.grd", os.path.dirname(fp))
-                continue
-            if "Navadjust" in fp:
-                continue
-            if self.args.filter:
-                if self.args.filter not in fp:
-                    continue
-                else:
-                    self.logger.debug("Processing %s", fp)
-            if fp not in seen_files:
-                yield fp
-            seen_files.add(fp)
 
     def _thumbnail_filename(self, grd_filename: str) -> str:
         for ext in ("jpg", "png", "tif"):

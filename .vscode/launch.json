@@ -56,7 +56,8 @@
       // execute next line to build a fresh database, then the --compilation one can be used for testing
       //"args": ["--bootstrap", "--notes", "--fnv", "-v", "1", "--limit", "15", "--clobber"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2019/MorroBay/Figures", "--limit", "20"],
-      "args": ["--compilation", "-v", "1", "--filter", "2019/AxialSeamount/Figures_v2019Oct31", "--log_file", "compilation.txt"],
+      //"args": ["--compilation", "-v", "1", "--filter", "2019/AxialSeamount/Figures_v2019Oct31", "--log_file", "compilation.txt"],
+      "args": ["--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2007/Axial2007old/Figures/", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
       "justMyCode": false
     }
