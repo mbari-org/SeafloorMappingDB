@@ -16,12 +16,12 @@ from rest_framework_gis.serializers import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from smdb.models import Expedition, Mission
+from smdb.models import Compilation, Expedition, Mission
 
 
 class MissionSerializer(GeoFeatureModelSerializer):
     """Should probably be in smdb.api.base.serializers with a complete
-    list fields, but here we have it just delivering meeting our needs."""
+    list fields, but here we have it just meeting our needs for MissionOverView()."""
 
     class Meta:
         model = Mission
@@ -135,6 +135,31 @@ class ExpeditionDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         expedition = super().get_object()
 
+        return context
+
+    def get_object(self):
+        obj = super().get_object()
+        return obj
+
+
+class CompilationListView(ListView):
+    model = Compilation
+
+
+class CompilationDetailView(DetailView):
+    model = Compilation
+    queryset = Compilation.objects.all()
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        compilation = super().get_object()
+        try:
+            context["thumbnail_url"] = compilation.thumbnail_image.url
+        except (AttributeError, ValueError):
+            context["thumbnail_url"] = join(
+                settings.STATIC_URL, "images", "No_ZTopoSlopeNav_image.jpg"
+            )
         return context
 
     def get_object(self):

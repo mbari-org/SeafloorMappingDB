@@ -101,27 +101,44 @@ class Expedition(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.slug = slugify(self.name)
-
         super(Expedition, self).save(*args, **kwargs)
 
 
 class Compilation(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    dir_name = models.CharField(max_length=128, db_index=True)
+    name = models.CharField(max_length=256, db_index=True)
+    slug = models.SlugField(max_length=256)
+    missions = models.ManyToManyField("Mission", related_name="compilations")
+    creation_date = models.DateTimeField(max_length=256, blank=True, null=True)
+    cmd_filename = models.FileField(max_length=256, blank=True, null=True)
+    grd_filename = models.FileField(max_length=256, blank=True, null=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
-    path_name = models.CharField(max_length=128, db_index=True)
-    navadjust_dir_path = models.CharField(max_length=128, db_index=True)
-    figures_dir_path = models.CharField(max_length=128, db_index=True)
-    comment = models.TextField(blank=True, null=True)
-    thumbnail_filename = models.CharField(max_length=128, db_index=True)
-    kml_filename = models.CharField(max_length=128, db_index=True)
-    proc_datalist_filename = models.CharField(max_length=128, db_index=True)
+    path_name = models.CharField(max_length=256, blank=True, null=True)
+    navadjust_dir_path = models.CharField(max_length=256, blank=True, null=True)
+    figures_dir_path = models.CharField(max_length=256, blank=True, null=True)
+    comment = models.TextField(max_length=256, blank=True, null=True)
+    thumbnail_filename = models.CharField(max_length=256, blank=True, null=True)
+    thumbnail_image = models.ImageField(
+        max_length=256, upload_to="thumbnails", blank=True
+    )
+    kml_filename = models.CharField(max_length=256, blank=True, null=True)
+    proc_datalist_filename = models.CharField(max_length=256, blank=True, null=True)
     update_status = models.IntegerField(blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"{self.dir_name}"
+        return f"{self.name}"
+
+    def image_tag(self):
+        return mark_safe('<img src="{}" />'.format(self.thumbnail_image.url))
+
+    image_tag.short_description = "Thumbnail image"
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = slugify(self.name.replace("/", " "))
+        super(Compilation, self).save(*args, **kwargs)
 
 
 class Mission(models.Model):
