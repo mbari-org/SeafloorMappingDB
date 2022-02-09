@@ -71,3 +71,17 @@ services:
       - /Users/mccann/.ssh:/root/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     command: /usr/sbin/sshd -D
+
+  nginx:
+    image: smdb_debug_nginx
+    build:
+      context: ./smdb
+      dockerfile: ./compose/debug/nginx/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    container_name: nginx
+    volumes:
+      # User with $DOCKER_USER_ID needs read permissions on this share
+      - /Volumes/SeafloorMapping:/usr/share/nginx/html/SeafloorMapping:ro
+    ports:
+      - "80:80"
