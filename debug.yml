@@ -63,11 +63,13 @@ services:
   nginx:
     image: smdb_debug_nginx
     build:
-        context: ./smdb
-        dockerfile: compose/debug/nginx/Dockerfile
+      context: ./smdb
+      dockerfile: ./compose/debug/nginx/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
     container_name: nginx
     volumes:
-      # Requires configured nginx user to have read permissions
+      # User with $DOCKER_USER_ID needs read permissions on this share
       - /Volumes/SeafloorMapping:/usr/share/nginx/html/SeafloorMapping:ro
     ports:
       - "80:80"
