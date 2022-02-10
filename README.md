@@ -158,7 +158,7 @@ cd /opt/SeafloorMappingDB
 export SMDB_HOME=$(pwd)
 ```
 
-2. Acquire certificate files, name them smdb.crt, and smdb.key and place them in `${SMDB_HOME}/compose/production/traefik`
+2. Acquire certificate files, name them smdb.crt, and smdb.key and place them in `${SMDB_HOME}/smdb/compose/production/traefik`
 
 3. Start the app and load some data:
 
