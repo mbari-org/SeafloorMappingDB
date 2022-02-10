@@ -23,9 +23,9 @@ services:
     command: /start
     restart: always
     volumes:
-      - /home/docker_user/.ssh:/home/docker_user/.ssh:z
-      - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
-      - /opt/docker_smdb_vol:/etc/smdb:z
+      - /Users/mccann/.ssh:/home/docker_user/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
       - local_media_files:/media:z
 
   postgres:
@@ -72,6 +72,20 @@ services:
     volumes:
       # Edit source path to use directories from *your* host
       # Copy your public key to your ~/.ssh/authorized_keys file
-      - /home/docker_user/.ssh:/home/docker_user/.ssh:z
-      - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
+      - /Users/mccann/.ssh:/home/docker_user/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     command: /usr/sbin/sshd -D
+
+  nginx:
+    image: smdb_production_nginx
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    container_name: nginx
+    volumes:
+      # User with $DOCKER_USER_ID needs read permissions on this share
+      - /Volumes/SeafloorMapping:/srv/SeafloorMapping:ro
+    ports:
+      - "0.0.0.0:81:81"
