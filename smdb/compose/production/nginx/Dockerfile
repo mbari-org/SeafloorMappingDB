@@ -7,3 +7,7 @@ ARG DOCKER_USER_ID
 RUN adduser docker_user --uid $DOCKER_USER_ID
 
 ADD compose/production/nginx/nginx.conf /etc/nginx/
+
+# Add SSL certs to location specified in nginx.conf
+ADD ./compose/production/traefik/smdb.crt /etc/ssl/certs/
+ADD ./compose/production/traefik/smdb.key /etc/ssl/private/
