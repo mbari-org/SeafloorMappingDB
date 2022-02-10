@@ -18,8 +18,9 @@ entryPoints:
 http:
   routers:
     web-secure-router:
-      ##rule: "Host(`smdb.shore.mbari.org`)"
-      rule: "Host(`localhost`)"
+      rule: "Host(`smdb.shore.mbari.org`)"
+      # Use for testing on development system
+      ##rule: "Host(`localhost`)"
       entryPoints:
         - web-secure
       middlewares:

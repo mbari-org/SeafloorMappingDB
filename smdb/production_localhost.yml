@@ -1,5 +1,3 @@
-# production_localhost.yml
-# A version of production.yml for use on a MacOS localhost - to be used for development
 version: "3"
 
 volumes:
@@ -42,20 +40,6 @@ services:
     env_file:
       - ./.envs/.production/.postgres
 
-  traefik:
-    build:
-      context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
-    image: smdb_production_traefik
-    depends_on:
-      - django
-    restart: always
-    volumes:
-      - production_traefik:/etc/traefik/acme:z
-    ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:443:443"
-
   redis:
     image: redis:5.0
     restart: always
@@ -77,3 +61,18 @@ services:
       - /Users/mccann/.ssh:/home/docker_user/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     command: /usr/sbin/sshd -D
+
+  nginx:
+    image: smdb_production_nginx
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    container_name: nginx
+    volumes:
+      # User with $DOCKER_USER_ID needs read permissions on this share
+      - /Volumes/SeafloorMapping:/srv/SeafloorMapping:ro
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
