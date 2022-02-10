@@ -1,0 +1,79 @@
+# production_localhost.yml
+# A version of production.yml for use on a MacOS localhost - to be used for development
+version: "3"
+
+volumes:
+  production_postgres_data: {}
+  production_postgres_data_backups: {}
+  production_traefik: {}
+  local_media_files: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    image: smdb_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    command: /start
+    restart: always
+    volumes:
+      - /Users/mccann/.ssh:/home/docker_user/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      - local_media_files:/media:z
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: smdb_production_postgres
+    restart: always
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data:Z
+      - production_postgres_data_backups:/backups:z
+    env_file:
+      - ./.envs/.production/.postgres
+
+  traefik:
+    build:
+      context: .
+      dockerfile: ./compose/production/traefik/Dockerfile
+    image: smdb_production_traefik
+    depends_on:
+      - django
+    restart: always
+    volumes:
+      - production_traefik:/etc/traefik/acme:z
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+
+  redis:
+    image: redis:5.0
+    restart: always
+
+  mb-system:
+    build:
+      # Build image that has user docker_user already added - needed before volume mount
+      # Make sure DOCKER_USER_ID is set in the environment before build - see README.md
+      context: .
+      dockerfile: ./compose/production/mb-system/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    image: mb-system
+    container_name: mb-system
+    restart: always
+    volumes:
+      # Edit source path to use directories from *your* host
+      # Copy your public key to your ~/.ssh/authorized_keys file
+      - /Users/mccann/.ssh:/home/docker_user/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+    command: /usr/sbin/sshd -D
