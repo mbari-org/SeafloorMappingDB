@@ -28,7 +28,7 @@ django-cors-headers==3.11.0 # https://github.com/adamchainz/django-cors-headers
 django-extensions==3.1.5  # https://github.com/django-extensions/django-extensions
 graphene-django==2.15.0 # https://docs.graphene-python.org/projects/django/en/latest/installation/
 graphene-graphiql-explorer==0.0.1 # https://pypi.org/project/graphene-graphiql-explorer/
-graphene-gis==0.0.6 # https://github.com/EverWinter23/graphene-gis
+graphene-gis==0.0.7 # https://github.com/EverWinter23/graphene-gis
 graphviz==0.19.1 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
 ipykernel==6.9.0 # For use in Notebooks
