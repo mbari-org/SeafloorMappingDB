@@ -22,7 +22,25 @@ class CitationAdmin(GeoModelAdmin):
 
 @register(Compilation)
 class CompilationAdmin(GeoModelAdmin):
-    pass
+    ordering = [
+        "name",
+    ]
+    search_fields = [
+        "name",
+    ]
+    fields = [
+        "image_tag",
+        "name",
+        "slug",
+        "creation_date",
+        "cmd_filename",
+        "grd_filename",
+        "grid_bounds",
+        "thumbnail_filename",
+        "thumbnail_image",
+    ]
+    readonly_fields = ["image_tag"]
+    prepopulated_fields = {"slug": ("name",)}
 
 
 @register(DataArchival)

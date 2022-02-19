@@ -1,32 +1,41 @@
 {% extends "base.html" %}
 
 {% block css %}
-  {{ block.super }}
+{{ block.super }}
 {% endblock %}
 
 {% block javascript %}
-  {{ block.super }}
+{{ block.super }}
 {% endblock %}
 
 {% block title %}Mission details on demand{% endblock %}
 
 {% block content %}
-    <h2>{{ mission.name }}</h2>
-    <img src="{{ thumbnail_url }}" />
-    <div>
-      <span class="font-weight-bold">Expedition:</span>
-      {% if mission.expedition.slug %}
-      <a href="{% url 'expedition-detail' mission.expedition.slug %}">{{ mission.expedition.name }}</a>
-      {% else %}
-      <em>Expedition name not assigned during load</em>
-      {% endif %}
-    </div>
-    <div>
-      <p>
-        <span class="font-weight-bold">Track length:</span>
-        {{ mission.track_length }} km
-      </p>
-      <p class="font-weight-bold">Note:</p>
-      <pre>{{ mission.notes_text }}</pre>
-    </div>
+<h2>{{ mission.name }}</h2>
+<a href="{{ thumbnail_fullrez_url }}"><img src="{{ thumbnail_url }}" /></a>
+<div>
+  <span class=" font-weight-bold">View full resolution image:</span>
+  <a href="{{ thumbnail_fullrez_url }}">{{ thumbnail_fullrez_url }}</a>
+</div>
+<div>
+  <span class=" font-weight-bold">Expedition:</span>
+  {% if mission.expedition.slug %}
+  <a href="{% url 'expedition-detail' mission.expedition.slug %}">{{ mission.expedition.name }}</a>
+  {% else %}
+  <em>Expedition name not assigned during load</em>
+  {% endif %}
+</div>
+<div>
+  <p>
+    <span class="font-weight-bold">Track length:</span>
+    {{ mission.track_length }} km
+  </p>
+  <p><span class="font-weight-bold">Used in Compilations:</span>
+    {% for compilation in mission.compilations.all|dictsort:"name" %}
+    <br>&nbsp;&nbsp;&nbsp;<a href="{% url 'compilation-detail' compilation.slug %}">{{ compilation.name }}</a>
+    {% endfor %}
+  </p>
+  <p class="font-weight-bold">Note:</p>
+  <pre>{{ mission.notes_text }}</pre>
+</div>
 {% endblock %}

@@ -87,8 +87,11 @@ class CompilationNode(DjangoObjectNode):
         model = Compilation
         fields = (
             "uuid",
-            "dir_name",
+            "name",
+            "creation_date",
             "grid_bounds",
+            "cmd_filename",
+            "grd_filename",
             "path_name",
             "navadjust_dir_path",
             "figures_dir_path",
@@ -658,7 +661,10 @@ class DeleteExpedition(graphene.Mutation):
 
 # ===== Compilation =====
 class CompilationInput(graphene.InputObjectType):
-    dir_name = graphene.String()
+    name = graphene.String()
+    creation_date = graphene.String()
+    cmd_filename = graphene.String()
+    grd_filename = graphene.String()
     grid_bounds = graphene.Field(graphene.String, to=scalars.PolygonScalar())
     path_name = graphene.String()
     navadjust_dir_path = graphene.String()
@@ -680,7 +686,7 @@ class CreateCompilation(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         compilation = Compilation.objects.create(
-            dir_name=input.dir_name,
+            name=input.name,
             grid_bounds=input.grid_bounds,
             path_name=input.path_name,
             navadjust_dir_path=input.navadjust_dir_path,
@@ -706,7 +712,7 @@ class UpdateCompilation(graphene.Mutation):
         if not info.context.user.is_authenticated:  # pragma: no cover
             raise GraphQLError("You must be logged in")
         compilation = Compilation.objects.get(uuid=uuid)
-        compilation.dir_name = input.dir_name
+        compilation.name = input.name
         compilation.grid_bounds = input.grid_bounds
         compilation.path_name = input.path_name
         compilation.navadjust_dir_path = input.navadjust_dir_path
@@ -799,7 +805,7 @@ class CreateMission(graphene.Mutation):
             sensors.append(sensor)
 
         compilation, _ = Compilation.objects.get_or_create(
-            dir_name=input.compilation.dir_name,
+            name=input.compilation.name,
         )
         data_archivals = []
         for data_archival_input in input.data_archivals or ():
@@ -884,7 +890,7 @@ class UpdateMission(graphene.Mutation):
             )
             sensors.append(sensor)
         compilation, _ = Compilation.objects.get_or_create(
-            dir_name=input.compilation.dir_name,
+            name=input.compilation.name,
         )
         data_archivals = []
         for data_archival_input in input.data_archivals or ():

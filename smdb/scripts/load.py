@@ -309,14 +309,13 @@ class BaseLoader:
 
         return grid_bounds
 
-    def save_thumbnail(self, mission):
+    def save_thumbnail(self, mission, scale_factor=8):
         # Factored out of BootStrapper() to be used also by Compiler()
         # (mission may also be a compilation object)
         # https://stackoverflow.com/a/51152514/1281657
         Image.MAX_IMAGE_PIXELS = 933120000
         if not mission.thumbnail_filename:
             raise FileExistsError(f"No thumbnail image found for {mission}")
-        scale_factor = 8
         try:
             im = Image.open(mission.thumbnail_filename)
         except (UnidentifiedImageError, FileNotFoundError) as e:
@@ -624,6 +623,41 @@ class FNVLoader(BaseLoader):
         else:
             raise EOFError(f"{fnv_file} is empty")
 
+    def haversine(self, lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+        """
+        Calculate the great circle distance between two points
+        on the earth (specified in decimal degrees)
+        https://gis.stackexchange.com/a/56589/62207
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+        km = 6367 * c
+        return km
+
+    def linestring_length(self, linestring: LineString) -> float:
+        dist = 0
+        self.logger.debug(
+            "Computing linestring length for %s points",
+            len(linestring),
+        )
+        for i in range(len(linestring.coords) - 1):
+            dist += self.haversine(
+                linestring.coords[i][0],
+                linestring.coords[i][1],
+                linestring.coords[i + 1][0],
+                linestring.coords[i + 1][1],
+            )
+        self.logger.debug("Total distance: %f km", dist)
+        return dist
+
     def fnv_points_tolinestring(
         self,
         fnv_list: list,
@@ -677,11 +711,7 @@ class FNVLoader(BaseLoader):
             len(nav_track),
             tolerance,
         )
-        # Convert to web mercator and get length in km
-        # https://gis.stackexchange.com/a/181251/62207
-        nav_track_wm = nav_track
-        nav_track_wm.transform(3857)
-        track_length = round(nav_track_wm.length / 1000.0, 4)
+        track_length = round(self.linestring_length(nav_track), 4)
         self.logger.info("track_length = %.4f km", track_length)
         return len(point_list), nav_track, track_length
 
@@ -1107,15 +1137,23 @@ class Compiler(BaseLoader):
     derive from Missions that have been loaded by BootStrapper."""
 
     def comp_dirs(self) -> Iterator[str]:
-        """Return list of potential Compilation directory names, meaning
+        """Generate potential Compilation directory names, meaning
         there is no ZTopo.grd, but there is a Figures.cmd file.
         """
         pattern = r"\/Figures.cmd$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
         for fp in subprocess.getoutput(locate_cmd).split("\n"):
             self.logger.debug("%s", fp)
             if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
-                self.logger.debug("Skipping %s as this is a Mission directory")
+                self.logger.debug("Skipping %s as it is a Mission directory")
+                continue
+            if self.args.skipuntil:
+                if self.args.skipuntil in fp:
+                    start_processing = True
+            if not start_processing:
                 continue
             if self.args.filter:
                 if self.args.filter not in fp:
@@ -1169,7 +1207,7 @@ class Compiler(BaseLoader):
                     self.logger.warning(e)
                     grid_bounds = None
                 compilation, _ = Compilation.objects.get_or_create(
-                    name=grd_filename.replace(MBARI_DIR, ""),
+                    name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
                     thumbnail_filename=thumbnail_filename,
                     creation_date=mod_time,
                     cmd_filename=cmd_filename,
@@ -1184,13 +1222,13 @@ class Compiler(BaseLoader):
                     datalist_filename,
                     grd_filename,
                 )
-
-        self.logger.info(
-            "Collected %d Compilations from %s in %s",
-            len(compilations),
-            datalist_filename,
-            cmd_filename,
-        )
+        if compilations:
+            self.logger.info(
+                "Collected %d Compilations from %s in %s",
+                len(compilations),
+                datalist_filename,
+                cmd_filename,
+            )
         return compilations
 
     def link_compilation_to_missions(self):
@@ -1229,43 +1267,9 @@ class Compiler(BaseLoader):
                         compilation.missions.add(Mission.objects.get(pk=mission_id))
                     compilation.save()
                     try:
-                        self.save_thumbnail(compilation)
+                        self.save_thumbnail(compilation, scale_factor=16)
                     except (FileExistsError, ValueError) as e:
                         self.logger.warning(str(e))
-
-    def comp_files(self) -> Iterator[str]:
-        """Generator of file names that match datalist*.mb-1 pattern in
-        Compilation directories."""
-        dl_pattern = r"\/datalist.*[p]*.mb-1$"
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{dl_pattern}'"
-        seen_files = set()
-        start_processing = True
-        if self.args.skipuntil:
-            start_processing = False
-        self.logger.info(
-            "Finding potential compilation directories, those with r'%s', but no ZTopo.grd files...",
-            dl_pattern,
-        )
-        for fp in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("%s", fp)
-            if self.args.skipuntil:
-                if self.args.skipuntil in fp:
-                    start_processing = True
-            if not start_processing:
-                continue
-            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
-                self.logger.debug("Found %s/ZTopo.grd", os.path.dirname(fp))
-                continue
-            if "Navadjust" in fp:
-                continue
-            if self.args.filter:
-                if self.args.filter not in fp:
-                    continue
-                else:
-                    self.logger.debug("Processing %s", fp)
-            if fp not in seen_files:
-                yield fp
-            seen_files.add(fp)
 
     def _thumbnail_filename(self, grd_filename: str) -> str:
         for ext in ("jpg", "png", "tif"):
@@ -1285,118 +1289,6 @@ class Compiler(BaseLoader):
                     last_mod_time = mod_time
                 return latest_thumb
 
-    def dlist_compilations(self, dlist_file):
-        # DEPREACTED
-        compilations = []
-        comp_dir = os.path.dirname(dlist_file)
-        for cmd_filename in glob(f"{comp_dir}/*.cmd"):
-            self.logger.debug(cmd_filename)
-            # Find multiple lines like this:
-            # mbgrid -I datalist_MAUV_AxialSeamount_2021p.mb-1 \
-            #       -R-130.1010316/-129.8350251/45.8289526/46.0569144 \
-            #       -A2 -N -F5 -E1/1 -C4 -JU \
-            #       -O AxialSummit_2021_Topo1m_UTM
-            pattern = re.compile(
-                r"""
-                mbgrid            # The mbgrid command
-                [\s\S]*?          # Zero or more spaces including new lines
-                -I\s*(\S+)        # Input file
-                [\s\S]*?          # Zero or more spaces including new lines
-                -O\s*(\S+)        # Output file
-                """,
-                re.VERBOSE | re.MULTILINE,
-            )
-            for ma in pattern.finditer(open(cmd_filename, errors="ignore").read()):
-                grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
-                thumbnail_filename = self._thumbnail_filename(
-                    os.path.join(comp_dir, ma.group(2))
-                )
-                datalist_filename = os.path.join(comp_dir, ma.group(1))
-                if pathlib.Path(grd_filename).exists():
-                    mod_time = datetime.fromtimestamp(
-                        pathlib.Path(grd_filename).stat().st_mtime
-                    )
-                    self.logger.info(
-                        "%s was created on %s from %s in %s",
-                        grd_filename,
-                        mod_time,
-                        datalist_filename,
-                        cmd_filename,
-                    )
-                    try:
-                        grid_bounds = self.extent(
-                            Dataset(grd_filename),
-                            grd_filename,
-                        )
-                    except (ValueError, OSError) as e:
-                        self.logger.warning(e)
-                        grid_bounds = None
-                    compilation, _ = Compilation.objects.get_or_create(
-                        name=grd_filename.replace(MBARI_DIR, ""),
-                        thumbnail_filename=thumbnail_filename,
-                        creation_date=mod_time,
-                        cmd_filename=cmd_filename,
-                        grd_filename=grd_filename,
-                        proc_datalist_filename=datalist_filename,
-                        grid_bounds=grid_bounds,
-                    )
-                    compilations.append(compilation)
-                else:
-                    self.logger.debug(
-                        "Referenced from %s %s does not exist",
-                        datalist_filename,
-                        grd_filename,
-                    )
-        self.logger.info(
-            "Collected %d Compilations from %s in %s",
-            len(compilations),
-            datalist_filename,
-            cmd_filename,
-        )
-        return compilations
-
-    def load_compilations(self):
-        # DEPRECATED
-        # Could loop through all the datalist*.mb-1 files found in all
-        # comp_dirs (A LOT of files), or just the comp_dirs themselves
-        ##for count, datalist in enumerate(self.comp_files()):
-        ##comp_dir = os.path.dirname(datalist)
-        for count, comp_dir in enumerate(self.comp_dirs()):
-            self.logger.debug("%4d. %s", count, datalist)
-            mission_names, dlist_file = self.missions_list(comp_dir, datalist)
-            if mission_names:
-                self.logger.info(
-                    "From %s/%s, Potential Missions: %s",
-                    datalist,
-                    dlist_file,
-                    " ".join(mission_names),
-                )
-                mission_ids = []
-                for mission_name in mission_names:
-                    try:
-                        mission = Mission.objects.get(name=mission_name)
-                        mission_ids.append(mission.id)
-                    except Mission.DoesNotExist:
-                        self.logger.debug(
-                            "Mission not found in database: %s", mission_name
-                        )
-                if mission_ids:
-                    for compilation in self.dlist_compilations(dlist_file):
-                        if hasattr(compilation, "missions"):
-                            self.logger.info(
-                                "Linking Mission ids %s to %s",
-                                mission_ids,
-                                compilation,
-                            )
-                            for mission_id in mission_ids:
-                                compilation.missions.add(
-                                    Mission.objects.get(pk=mission_id)
-                                )
-                            compilation.save()
-            if self.args.limit:
-                if count >= self.args.limit:
-                    return
-
     def _examine_mb1_line(
         self, path: str, datalist: str, item: str
     ) -> Tuple[str, str,]:
@@ -1413,7 +1305,7 @@ class Compiler(BaseLoader):
         return cpath, cfile
 
     def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
-        """Starting at a datalist*.mb-1 file recursively examine each line
+        """Starting at a datalist file recursively examine each line
         until lines specifying sonar files are found. The paths for those
         files get added to a set that's returned as a list. These are the
         potential Misisons that comprise the Figure/Project/Compilation
@@ -1530,7 +1422,6 @@ def fnv_load():
 def compilation_load():
     comp = Compiler()
     comp.process_command_line()
-    ##comp.load_compilations()
     comp.link_compilation_to_missions()
 
 
