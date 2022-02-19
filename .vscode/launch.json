@@ -48,7 +48,7 @@
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2018/20180504m3/ZTopo.grd$" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
-      //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2006/20060828"]
+      "args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2019/20190820m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2021/20210906d1/lidar"]
       //"args": ["--fnv", "-v", "1"],
       //"args": [ "--compilation", "-v", "1", "--skipuntil", "swathdata/surveys/UH/kok0714", "--log_file", "compilation.txt" ],
@@ -57,7 +57,7 @@
       //"args": ["--bootstrap", "--notes", "--fnv", "-v", "1", "--limit", "15", "--clobber"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2019/MorroBay/Figures", "--limit", "20"],
       //"args": ["--compilation", "-v", "1", "--filter", "2019/AxialSeamount/Figures_v2019Oct31", "--log_file", "compilation.txt"],
-      "args": ["--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2007/Axial2007old/Figures/", "--log_file", "compilation.txt"],
+      //"args": ["--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2007/Axial2007old/Figures/", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
       "justMyCode": false
     }
