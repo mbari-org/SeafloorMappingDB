@@ -623,6 +623,41 @@ class FNVLoader(BaseLoader):
         else:
             raise EOFError(f"{fnv_file} is empty")
 
+    def haversine(self, lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+        """
+        Calculate the great circle distance between two points
+        on the earth (specified in decimal degrees)
+        https://gis.stackexchange.com/a/56589/62207
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+        km = 6367 * c
+        return km
+
+    def linestring_length(self, linestring: LineString) -> float:
+        dist = 0
+        self.logger.debug(
+            "Computing linestring length for %s points",
+            len(linestring),
+        )
+        for i in range(len(linestring.coords) - 1):
+            dist += self.haversine(
+                linestring.coords[i][0],
+                linestring.coords[i][1],
+                linestring.coords[i + 1][0],
+                linestring.coords[i + 1][1],
+            )
+        self.logger.debug("Total distance: %f km", dist)
+        return dist
+
     def fnv_points_tolinestring(
         self,
         fnv_list: list,
@@ -676,11 +711,7 @@ class FNVLoader(BaseLoader):
             len(nav_track),
             tolerance,
         )
-        # Convert to web mercator and get length in km
-        # https://gis.stackexchange.com/a/181251/62207
-        nav_track_wm = nav_track
-        nav_track_wm.transform(3857)
-        track_length = round(nav_track_wm.length / 1000.0, 4)
+        track_length = round(self.linestring_length(nav_track), 4)
         self.logger.info("track_length = %.4f km", track_length)
         return len(point_list), nav_track, track_length
 
