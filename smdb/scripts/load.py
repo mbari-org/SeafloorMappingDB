@@ -725,9 +725,10 @@ class FNVLoader(BaseLoader):
                         dist_sum += float(line.split()[-2])
                         break
         self.logger.info("dist_sum = %.4f km", dist_sum)
-        self.logger.info(
-            "track_length / dist_sum = %.2f%%", 100 * track_length / dist_sum
-        )
+        if dist_sum != 0:
+            self.logger.info(
+                "track_length / dist_sum = %.2f%%", 100 * track_length / dist_sum
+            )
         return len(point_list), nav_track, track_length
 
     def fnv_update_mission_data(self, mission: Mission):
