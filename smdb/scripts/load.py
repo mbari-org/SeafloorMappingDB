@@ -712,8 +712,8 @@ class FNVLoader(BaseLoader):
             tolerance,
         )
         # linestring_length() uses haversine() and is slow
-        track_length = round(self.linestring_length(nav_track), 4)
-        self.logger.info("track_length = %.4f km", track_length)
+        ##track_length = round(self.linestring_length(nav_track), 4)
+        ##self.logger.info("track_length = %.4f km", track_length)
         # Pulling values from .inf files is much faster
         dist_sum = 0
         for fnv in fnv_list:
@@ -729,7 +729,7 @@ class FNVLoader(BaseLoader):
             self.logger.info(
                 "track_length / dist_sum = %.2f%%", 100 * track_length / dist_sum
             )
-        return len(point_list), nav_track, track_length
+        return len(point_list), nav_track, dist_sum
 
     def fnv_update_mission_data(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
