@@ -1148,15 +1148,11 @@ class BootStrapper(BaseLoader):
 
 
 class Compiler(BaseLoader):
-    """Find directories with datalistp.mb-1 files but not a ZTopo.grd file
-    indicating a compilation directory where the data and figures in it
-    derive from Missions that have been loaded by BootStrapper."""
-
     def comp_dirs(self) -> Iterator[str]:
         """Generate potential Compilation directory names, meaning
-        there is no ZTopo.grd, but there is a Figures.cmd file.
+        there is no ZTopo.grd, but there is a Figure[s]*.cmd file.
         """
-        pattern = r"\/Figures.cmd$"
+        pattern = r"\/Figure[s]*.cmd$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
         start_processing = True
         if self.args.skipuntil:
@@ -1288,7 +1284,7 @@ class Compiler(BaseLoader):
                         self.logger.warning(str(e))
 
     def _thumbnail_filename(self, grd_filename: str) -> str:
-        for ext in ("jpg", "png", "tif"):
+        for ext in ("jpg", "jpeg", "png", "tif"):
             base_name = grd_filename.replace(".grd", "")
             thumbnail_filenames = glob(f"{base_name}*.{ext}")
             if thumbnail_filenames == 1:
