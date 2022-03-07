@@ -10,6 +10,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from smdb.api.base import router as api_v1_router
 from smdb.views import (
+    CompilationDetailView,
+    CompilationListView,
     ExpeditionDetailView,
     ExpeditionListView,
     MissionDetailView,
@@ -41,6 +43,12 @@ urlpatterns = [
         "expeditions/<str:slug>/",
         ExpeditionDetailView.as_view(),
         name="expedition-detail",
+    ),
+    path("compilations/", CompilationListView.as_view()),
+    path(
+        "compilations/<str:slug>/",
+        CompilationDetailView.as_view(),
+        name="compilation-detail",
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

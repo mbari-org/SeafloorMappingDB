@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block css %}
+{{ block.super }}
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+{% endblock %}
+
+{% block title %}Compilation details on demand{% endblock %}
+
+{% block content %}
+<h2>{{ compilation.name }}</h2>
+<!-- I think this would work if SeafloorMapping/{{ compilation.name }} were set up as a share
+    <div>
+      <a href="cifs://titan.shore.mbari.org/SeafloorMapping/{{ compilation.name }}">Open this folder on titan</a>
+    </div>
+    -->
+<a href="{{ thumbnail_fullrez_url }}"><img src="{{ thumbnail_url }}" /></a>
+<div>
+  <span class=" font-weight-bold">View full resolution image:</span>
+  <a href="{{ thumbnail_fullrez_url }}">{{ thumbnail_fullrez_url }}</a>
+</div>
+<div>
+  <span class="font-weight-bold">Thumbnail filename:</span>
+  {{ compilation.thumbnail_filename }}
+  <br>
+  <span class="font-weight-bold">Creation date:</span>
+  {{ compilation.creation_date }}
+  <br>
+  <span class="font-weight-bold">Cmd filename:</span>
+  {{ compilation.cmd_filename }}
+  <br>
+  <span class="font-weight-bold">Missions making up this Compilation:</span>
+  <br>
+  {% for mission in compilation.missions.all|dictsort:"name" %}
+  &nbsp;<a href="{% url 'mission-detail' mission.slug %}">{{ mission.name }}</a>
+  <br>
+  {% endfor %}
+</div>
+{% endblock %}
