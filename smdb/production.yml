@@ -25,7 +25,7 @@ services:
     volumes:
       - /home/docker_user/.ssh:/home/docker_user/.ssh:z
       - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
-      - /opt/mccann/docker_smdb_vol:/etc/smdb:z
+      - /opt/docker_smdb_vol:/etc/smdb:z
       - local_media_files:/media:z
 
   postgres:
@@ -70,6 +70,8 @@ services:
       args:
         - DOCKER_USER_ID=$DOCKER_USER_ID
     container_name: nginx
+    depends_on:
+      - django
     volumes:
       # User with $DOCKER_USER_ID needs read permissions on this share
       - /mbari/SeafloorMapping:/srv/SeafloorMapping:ro
