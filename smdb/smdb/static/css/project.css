@@ -3,40 +3,111 @@ body {
   height: 100%;
   margin: 8px;
 }
-
 .alert-debug {
   background-color: #fff;
   border-color: #d6e9c6;
   color: #000;
 }
-
 .alert-error {
   background-color: #f2dede;
   border-color: #eed3d7;
   color: #b94a48;
 }
-
+a {
+  font-size: 13px !important;
+}
 #filter-center {
   width: 100%;
 }
-
 .center {
   text-align: center;
 }
+.col-3 {
+  padding-right: 2%;
+}
 
-path.leaflet-interactive {
+/* General Typography*/
+.leaflet-control {
+  clear: both;
+}
+.leaflet-control-mouseposition,
+.leaflet-control {
+  color: #00008b;
+  font-family: monospace, serif !important;
+  font-size: small !important;
+  background-color: hsla(0, 0%, 100%, 0.75) !important;
+  padding: 0 4px 0 4px !important;
+  border: 1px solid #d3d3d3;
+  border-radius: 4px;
+  box-shadow: 0 5px 5px -3px rgb(0 0 0 / 20%), 0 8px 10px 1px rgb(0 0 0 / 14%), 0 3px 14px 2px rgb(0 0 0 / 12%);
+}
+.leaflet-control-measure h3,
+.leaflet-measure-resultpopup h3 {
+  font-size: 1em !important;
+  font-weight: 700;
+  color: #00008b
+}
+.leaflet-top,
+.leaflet-control {
+  margin-top: 10px;
+}
+.leaflet-right, 
+.leaflet-control {
+  float: right;
+}
+.leaflet-control-layers,
+.leaflet-control {
+  box-shadow: 0 1px 5px rgb(0 0 0 / 40%);
+  background: #fff;
+  border-radius: 5px;
+}
+.leaflet-control-measure {
+  max-width: 280px;
+  background: #fff;
+}
+.leaflet-bar {
+  box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+  border-radius: 4px;
+}
+.leaflet-control,
+.leaflet-popup-pane {
+  cursor: auto;
+}
+.leaflet-control-zoom,
+.leaflet-bar,
+leaflet-control {
+  margin-left: 5%;
+}
+.leaflet-retina .leaflet-control-layers-toggle {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAABmJLR0QA/wD/AP+gvaeTAAAE7klEQVR4nO2cTWwVVRTHfy32aUKLkkBTojViBBWIwRipCmzcuZC4cacm6lYiiXHlxo9E3Whi1MSPjRrjwuCCdCF+JET5kAjGQAQSlZRqCTRpBUFqKdK6OGcyd+bNe3nz3r0z8+D8kgnlvplz/ve++3HmzJ0HhmEYhmEYhmEYRswa4D3gff3baJF7gE+A/4AFPeaBUWBjiboqTQ/wMLCHuNFmgHf1mHHK9+i5PaUorRh9wBPAL8QN9DfwFrDCOW8Z8CIw5Zz3G/AscF2BeitDP1L5P4gb5BTSSNc3uW6xXjfuXHdar7shoN7KMIhUdpq4AQ4jvbAvh51eZBgfcOycQ3rujR71VoZbkcqFmMs2IQtMZPcisgjd0aHdSnA3UplLSOUuI5W9P6CvaPWOfN0XwFdwGvWKOwvwHbK3ByWal36kfl66qQQ90Xz7l6PnEPnn2+Bci4j6lfqVcWmJuiIGkJX7T2J9J7RscYm6MmOz36lubFZDvugjxHrPUh9zBucWdfqPI+QnFbeoSCFtknXXM4vM0atDOr6L5IrqTs7dyibgc2TFdlfue307GUVu6BeAOaQh1/l0UjK3IaPqXzx1jmhF/cExeF6d3Nyh2CozhMzrZ4jr/TMyPV2Tx9D3joFJ4AWqsaIWxVKkzqeJ2+G7rBN7CxR1VWFDuMMh7GKLiCeupjBmQ0inFkh7IutW7hjwNHJ/XDVqwFPAUWK9U0gdlpWoi0HgoCNqATgJPA8sKVFXxBJEywRJjQcR7aXRqAcecv5/Fnidgm/WlSHgNdXgprOOUXIPXAm8DVxwhOwDHkHCnx7gOMlvexb4ELi9AH2rgQ/Up6vhuGrrVa37nM8uaJ1WhhS2HviMeBWeB8aQu5Y0u7V8A7Cd5Cr3BTASQN+I2nZ9bVcNkZ4snWPEIdolpI7rfQprFAeuzWGjjIdKeR4feI8DFwGPknxseB54A3mWuzvjmr0tlA8Br5KM9A8Dj5Mvzd4HPKbXRnbOqO2hHHrS5SeQOp5z7B5A2iJXiNYsmdBsOLRaPgB8S7JHjiPZ7P4murIerM8A36jNdvWky1tOJjSiqGxMDXiSZJp9GngZWO6ct1zL3AfyR/XaWgBdHTdgoyH8JjDsnNfOMMkq/xrpSa1uLpoBvvLgN10+jKch7PIgsNMxOAd8hCwiPoZzunwjsIN4NY1W1B3E29t8+12L1Omi43MnUndvZIUxo8Bmn04c1iCbK0NusNxMMsIIEsakyQqk9wL78TOciyjfr/92HEi3kyQcA7YCLwHP6PGAfnYZSSZ8igwHiL/dNEWX15DQZ4R4PpsG3tFjKsNGIXRLMuEkV0Ayochhu0J9d2Uy4SFgl/N5lEyYxP+qnS6fVF9uMmGXaio1mdBOSr/Rnr0i9wc285W+zw+S0s+KAz8m30OlVUg44vaKCeBL6pMJeYZtj9pwk6Wz6mtVDn3rkDhwzrHTURzY6p1IXlpJJrQybPv0mmbJhHYYRuoYNJnggwHgOZI9ZxzYRvNkQr+e4yYTJtRWOpnQCV2fTHgFCTGiYTuoZW4y4QhXQDLBFz3AFuqTCfN6pJMJWwiz3zlIMqHonQllvCtXyM4ESyZ4wnYmeMI2mXvCXnPwhL1o4xF71csT9rKhJ+x1V0/YC9eesFf+PWE/OuEJ+9kTj9gP73iiiGSCYRiGYRiGYRhGF/I/OtkZeJ+MZpQAAAAASUVORK5CYII); 
+  background-size: 26px 26px;
+}
+.leaflet-container a {
+  color: #0078a8;
+}
+.leaflet-control-layers-toggle {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAQAAAADQ4RFAAACf0lEQVR4AY1UM3gkARTePdvdoTxXKc+qTl3aU5U6b2Kbkz3Gtq3Zw6ziLGNPzrYx7946Tr6/ee/XeCQ4D3ykPtL5tHno4n0d/h3+xfuWHGLX81cn7r0iTNzjr7LrlxCqPtkbTQEHeqOrTy4Yyt3VCi/IOB0v7rVC7q45Q3Gr5K6jt+3Gl5nCoDD4MtO+j96Wu8atmhGqcNGHObuf8OM/x3AMx38+4Z2sPqzCxRFK2aF2e5Jol56XTLyggAMTL56XOMoS1W4pOyjUcGGQdZxU6qRh7B9Zp+PfpOFlqt0zyDZckPi1ttmIp03jX8gyJ8a/PG2yutpS/Vol7peZIbZcKBAEEheEIAgFbDkz5H6Zrkm2hVWGiXKiF4Ycw0RWKdtC16Q7qe3X4iOMxruonzegJzWaXFrU9utOSsLUmrc0YjeWYjCW4PDMADElpJSSQ0vQvA1Tm6/JlKnqFs1EGyZiFCqnRZTEJJJiKRYzVYzJck2Rm6P4iH+cmSY0YzimYa8l0EtTODFWhcMIMVqdsI2uiTvKmTisIDHJ3od5GILVhBCarCfVRmo4uTjkhrhzkiBV7SsaqS+TzrzM1qpGGUFt28pIySQHR6h7F6KSwGWm97ay+Z+ZqMcEjEWebE7wxCSQwpkhJqoZA5ivCdZDjJepuJ9IQjGGUmuXJdBFUygxVqVsxFsLMbDe8ZbDYVCGKxs+W080max1hFCarCfV+C1KATwcnvE9gRRuMP2prdbWGowm1KB1y+zwMMENkM755cJ2yPDtqhTI6ED1M/82yIDtC/4j4BijjeObflpO9I9MwXTCsSX8jWAFeHr05WoLTJ5G8IQVS/7vwR6ohirYM7f6HzYpogfS3R2OAAAAAElFTkSuQmCC);
+  width: 36px;
+  height: 36px;
+}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  display: block;
+}
+.leaflet-interactive {
   /* rust */
   stroke: rgb(139, 64, 0);
-  /* orange */
-  /* stroke: rgb(218, 135, 29); */
   stroke-opacity: 100;
   stroke-width: 3.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
 }
-
-path.leaflet-interactive:hover {
-  /*stroke: lightgoldenrodyellow;*/
+.leaflet-interactive:hover {
   stroke: yellow;
+}
+.container-fluid {
+  padding-bottom: 1%;
 }

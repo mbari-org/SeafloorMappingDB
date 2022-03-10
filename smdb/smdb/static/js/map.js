@@ -5,14 +5,13 @@
 const map = L.map("map");
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
 const options = { minZoom: 1, maxNativeZoom: 13, maxZoom: 16 };
+//const menu = L.control("menu");
 
 //L.esri.Vector.vectorBasemapLayer("Oceans", options).addTo(map);
 //L.esri.Vector.vectorBasemapLayer("OceansLabels", options).addTo(map);
 
 L.esri.basemapLayer("Oceans", options).addTo(map);
 L.esri.basemapLayer("OceansLabels", options).addTo(map);
-//L.esri.basemapLayer('http://ows.mundialis.de/services/service?', wmsOptions).addTo(map);
-//var wmsLayer = L.tileLayer.wms('http://ows.mundialis.de/services/service?', wmsOptions).addTo(map);
 
 map.fitWorld();
 const missions = JSON.parse(
@@ -58,10 +57,9 @@ try {
   console.log(err.message);
 }
 
-var bounds = L.control({ position: "topright" });
-
-bounds.onAdd = function (map) {
-  var div = L.DomUtil.create("div", "bounds-container row");
+var bounds = L.control({});
+bounds.onAdd = function (menu) {
+  var div = L.DomUtil.create("div", "bounds-container row leaflet-control");
   var bboxString = getMapBounds();
   div.innerHTML =
     "<div>" +
@@ -74,6 +72,38 @@ bounds.onAdd = function (map) {
   return div;
 };
 bounds.addTo(map);
+
+var mousePosition = L.control({ position: "topright" });
+mousePosition.onAdd = function (map) {
+  var div = L.DomUtil.create("div", "bounds-container row");
+  var mousePos = L.DomUtil.create("div");
+    map.addEventListener("mousemove", e => {
+      mousePos.innerHTML = `${e.latlng.lat.toFixed( 4 )};  ${e.latlng.lng.toFixed(4)}`;
+   });
+  return mousePos;
+};
+mousePosition.addTo(map);
+
+var toggleMaps = L.control({ position: "topright" });
+toggleMaps.onAdd = function (map) {
+  var div = L.DomUtil.create("div", "leaflet-control-layers-toggle");
+  var ToggleMapbutton = L.DomUtil.create('a', '', div);
+    div.title = "Toggle Basemap View";
+    return div;
+    };
+toggleMaps.addTo(map);
+
+
+/* var measure = L.control.measure({
+    primaryLengthUnit: 'meters', secondaryLengthUnit: 'kilometers',
+    primaryAreaUnit: 'sqmeters'
+  }).addTo(map); */
+
+var scale = L.control.scale({
+    imperial: false,
+    position: "topright",
+    maxWidth: 70,
+  }).addTo(map);
 
 function getMapBounds() {
   // Reduce precision from defaut 14 (!) to 4 digits
@@ -95,11 +125,20 @@ function getMapBounds() {
   return bboxString;
 }
 
+function getCoordinates() {
+}
+
+function menu() {
+
+}
+
 var currentZoom;
 
 map.on("zoomend", function () {
   bboxString = getMapBounds();
   document.getElementById("map-bounds").innerHTML = bboxString;
+
+  var polygon = L.polygon({});
 
   currentZoom = map.getZoom();
   if (currentZoom >= 10) {
@@ -123,3 +162,4 @@ var sliderControl = L.control.sliderControl({
 map.addControl(sliderControl);
 $("#filter-center").html(sliderControl.getContainer());
 sliderControl.startSlider();
+

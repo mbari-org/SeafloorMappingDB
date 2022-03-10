@@ -58,7 +58,7 @@
     </div>
     <div class="col-6" id="filter-center">
     </div>
-    <div class="col-3">
+    <div class="col-3" id="filter-right">
       <div class="float-right">
         <input type="hidden" name="xmin" value="" id="xmin">
         <input type="hidden" name="xmax" value="" id="xmax">
@@ -67,8 +67,12 @@
         <input type="hidden" name="tmin" value="" id="tmin">
         <input type="hidden" name="tmax" value="" id="tmax">
         <label for="searchbar"><img src="/static/admin/img/search.svg" alt="Search"></label>
-        <input title="Search for Notes text or Mission name" type="text" size="20" name="q" value="" id="searchbar" onkeypress="if(event.key == 'Enter') {updateMap();}">
-        <a href="javascript: updateMap()">Update</a>
+        <input title="Search for Notes text or Mission name" type="text" size="20" name="q" value="" id="searchbar" onkeypress="if(event.key == 'Enter') {
+          updateMap();
+        }">
+        
+        <a href="javascript: updateMap()"><br>Update</a></div>
+            <!--<a href="https://icons8.com/icon/57586/layers">Layers icon by Icons8</a>-->
       </div>
     </div>
   </div>
@@ -76,6 +80,7 @@
   {{ missions|json_script:"missions-data" }}
   {{ MEDIA_URL|json_script:"MEDIA-URL" }}
   <div id="map">
+
   </div>
   <script src="{% static 'js/map.js' %}"></script>
 
