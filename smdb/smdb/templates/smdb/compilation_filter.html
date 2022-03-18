@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load django_tables2 %}
+
+{% block content %}
+    <h2>Compilations</h2>
+    {% if filter %}
+    <form method="get" class="form-inline">
+        {{ filter.form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+    {% endif %}
+    {% if table %}
+        {% render_table table %}
+    {% endif %}
+{% endblock %}
