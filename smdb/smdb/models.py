@@ -103,6 +103,9 @@ class Expedition(models.Model):
             self.slug = slugify(self.name)
         super(Expedition, self).save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return f"/expeditions/{self.slug}/"
+
 
 class Compilation(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
@@ -139,6 +142,9 @@ class Compilation(models.Model):
         if not self.id:
             self.slug = slugify(self.name.replace("/", " "))
         super(Compilation, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return f"/compilations/{self.slug}/"
 
 
 class Mission(models.Model):
@@ -252,6 +258,9 @@ class Mission(models.Model):
     def end_ems(self):
         if self.end_date:
             return self.end_date.timestamp() * 1000.0
+
+    def get_absolute_url(self):
+        return f"/missions/{self.slug}/"
 
 
 class DataArchival(models.Model):

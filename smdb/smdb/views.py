@@ -5,19 +5,20 @@ from os.path import join
 
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
-from django.core.serializers import serialize
 from django.db import connection
 from django.db.models import Max, Min, Q
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
-from rest_framework.renderers import JSONRenderer
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from django_filters.views import FilterView
+from django_tables2 import SingleTableView
 from rest_framework_gis.serializers import (
     GeoFeatureModelSerializer,
     GeometrySerializerMethodField,
 )
 
+from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
 from smdb.models import Compilation, Expedition, Mission
+from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
 
 # This is repeated in scripts/load.py but can't import because of timing
 MBARI_DIR = "/mbari/SeafloorMapping/"
@@ -100,8 +101,22 @@ class MissionOverView(TemplateView):
         return context
 
 
-class MissionListView(ListView):
-    model = Mission
+class CompilationTableView(FilterView, SingleTableView):
+    table_class = CompilationTable
+    queryset = Compilation.objects.all()
+    filterset_class = CompilationFilter
+
+
+class ExpeditionTableView(FilterView, SingleTableView):
+    table_class = ExpeditionTable
+    queryset = Expedition.objects.all()
+    filterset_class = ExpeditionFilter
+
+
+class MissionTableView(FilterView, SingleTableView):
+    table_class = MissionTable
+    queryset = Mission.objects.all()
+    filterset_class = MissionFilter
 
 
 class MissionDetailView(DetailView):
@@ -135,11 +150,6 @@ class MissionDetailView(DetailView):
         return obj
 
 
-class ExpeditionListView(ListView):
-    model = Expedition
-    queryset = Expedition.objects.all()
-
-
 class ExpeditionDetailView(DetailView):
     model = Expedition
     queryset = Expedition.objects.all()
@@ -154,10 +164,6 @@ class ExpeditionDetailView(DetailView):
     def get_object(self):
         obj = super().get_object()
         return obj
-
-
-class CompilationListView(ListView):
-    model = Compilation
 
 
 class CompilationDetailView(DetailView):
