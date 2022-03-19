@@ -42,3 +42,5 @@ pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest
 pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
 uritemplate==4.1.1 # For python manage.py generateschema
+django-tables2==2.4.1  # https://github.com/jieter/django-tables2
+django-filter==21.1  # https://youtu.be/G-Rct7Na0UQ
