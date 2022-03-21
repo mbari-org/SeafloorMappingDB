@@ -1,4 +1,4 @@
-from django_filters import FilterSet, CharFilter
+from django_filters import FilterSet, CharFilter, BooleanFilter
 from smdb.models import Mission, Expedition, Compilation
 
 
@@ -25,6 +25,9 @@ class ExpeditionFilter(FilterSet):
 
 class CompilationFilter(FilterSet):
     name = CharFilter(field_name="name", lookup_expr="icontains")
+    has_missions = BooleanFilter(
+        field_name="missions", lookup_expr="isnull", exclude=True, label="Has Missions"
+    )
 
     class Meta:
         model = Compilation

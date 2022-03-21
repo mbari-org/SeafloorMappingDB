@@ -13,14 +13,17 @@ class MissionTable(Table):
         model = Mission
         fields = (
             "name",
-            "nav_track_length",
+            "track_length",
             "start_depth",
         )
 
 
 class ExpeditionTable(Table):
     name = Column(linkify=True)
-    mission_set = ManyToManyColumn(linkify_item=True, verbose_name="Missions")
+    mission_set = ManyToManyColumn(
+        linkify_item=True,
+        verbose_name="Missions",
+    )
 
     class Meta:
         model = Expedition
@@ -30,7 +33,7 @@ class ExpeditionTable(Table):
 
 class CompilationTable(Table):
     name = Column(linkify=True)
-    missions = ManyToManyColumn(linkify=True, verbose_name="Missions")
+    missions = ManyToManyColumn(linkify_item=True, verbose_name="Missions")
 
     class Meta:
         model = Compilation
