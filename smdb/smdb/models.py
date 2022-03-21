@@ -197,9 +197,6 @@ class Mission(models.Model):
     kml_filename = models.CharField(
         max_length=128, db_index=True, blank=True, null=True
     )
-    compilation = models.ForeignKey(
-        Compilation, on_delete=models.CASCADE, blank=True, null=True
-    )
     # update_status: (0=up to date; 1=needs lookup; 2=not found)
     update_status = models.IntegerField(blank=True, null=True)
     sensors = models.ManyToManyField(Sensor, blank=True)
