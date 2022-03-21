@@ -138,12 +138,12 @@ snapshots['test_all_expeditions 1'] = {
             },
             {
                 'end_date': None,
-                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon',
+                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon - 6563',
                 'start_date': None
             },
             {
                 'end_date': None,
-                'name': 'R/V Rachel Carson Morro Bay Expedition',
+                'name': 'R/V Rachel Carson Morro Bay Expedition - 6570',
                 'start_date': None
             },
             {
@@ -170,12 +170,12 @@ snapshots['test_all_expeditions_empty 1'] = {
             },
             {
                 'end_date': None,
-                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon',
+                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon - 6563',
                 'start_date': None
             },
             {
                 'end_date': None,
-                'name': 'R/V Rachel Carson Morro Bay Expedition',
+                'name': 'R/V Rachel Carson Morro Bay Expedition - 6570',
                 'start_date': None
             }
         ]
@@ -657,7 +657,7 @@ snapshots['test_all_platforms_empty 1'] = {
         'all_platforms': [
             {
                 'name': 'R/V Rachel Carson',
-                'uuid': 'd009435a-7aa7-46aa-b5a8-dc36810b0802'
+                'uuid': '502b9e1c-5650-474e-87f8-1b2c3532b32f'
             }
         ]
     }
@@ -681,7 +681,7 @@ snapshots['test_all_platformtypes_empty 1'] = {
         'all_platformtypes': [
             {
                 'name': 'ship',
-                'uuid': '4fbbbad6-da73-4783-b849-fab0d6904aeb'
+                'uuid': '5de40722-589e-4cb8-a9b1-e52b1cb8399b'
             }
         ]
     }
@@ -852,9 +852,6 @@ snapshots['test_create_mission 1'] = {
                     }
                 ],
                 'comment': 'Initial comment.',
-                'compilation': {
-                    'name': 'Initial compilation'
-                },
                 'data_archivals': [
                     {
                         'archival_db_name': 'DA Initial 1',
@@ -1278,12 +1275,12 @@ snapshots['test_expedition_by_name 2'] = {
             },
             {
                 'end_date': None,
-                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon',
+                'name': 'R/V Rachel Carson Mapping AUV Testing in upper Monterey Canyon - 6563',
                 'start_date': None
             },
             {
                 'end_date': None,
-                'name': 'R/V Rachel Carson Morro Bay Expedition',
+                'name': 'R/V Rachel Carson Morro Bay Expedition - 6570',
                 'start_date': None
             },
             {
@@ -1445,9 +1442,6 @@ snapshots['test_update_mission 1'] = {
                     }
                 ],
                 'comment': 'Updates comment.',
-                'compilation': {
-                    'name': 'Updated compilation'
-                },
                 'data_archivals': [
                     {
                         'archival_db_name': 'DA Updated 1',
