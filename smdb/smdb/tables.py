@@ -2,7 +2,7 @@ from re import L, T
 from tabnanny import verbose
 from django_tables2 import Table, Column, ManyToManyColumn
 
-from smdb.models import Compilation, Expedition, Mission
+from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 
 
 class MissionTable(Table):
@@ -37,5 +37,8 @@ class CompilationTable(Table):
 
     class Meta:
         model = Compilation
-        fields = ("name",)
-        sequence = ("name", "missions")
+        fields = ("name", "thumbnail_filename")
+        sequence = ("name", "thumbnail_filename", "missions")
+
+    def render_thumbnail_filename(self, record):
+        return record.thumbnail_filename.replace(MBARI_DIR, "")

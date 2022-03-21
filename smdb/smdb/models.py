@@ -12,6 +12,10 @@ from django.utils.html import mark_safe
 from django.utils.text import slugify
 
 
+# Repeated in scripts/load.py but can't import because of timing
+MBARI_DIR = "/mbari/SeafloorMapping/"
+
+
 class Person(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     first_name = models.CharField(max_length=128, db_index=True, unique=True)
