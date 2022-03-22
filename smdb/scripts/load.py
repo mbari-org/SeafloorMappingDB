@@ -959,7 +959,13 @@ class BootStrapper(BaseLoader):
                 if self.valid_notes_filename(txt_file):
                     self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
-
+        if not notes_file:
+            # Try greatgrandparent directory
+            greatgrandparent_dir = os.path.abspath(os.path.join(sm_dir, "../../.."))
+            for txt_file in glob(f"{greatgrandparent_dir}/*Notes.txt"):
+                if self.valid_notes_filename(txt_file):
+                    self.logger.info("Potential notes file: %s", txt_file)
+                    notes_file = txt_file
         return notes_file
 
     def thumbnail_filename(self, sm_dir: str) -> str:
