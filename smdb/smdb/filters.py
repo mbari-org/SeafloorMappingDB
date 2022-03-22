@@ -1,4 +1,5 @@
-from django_filters import FilterSet, CharFilter, BooleanFilter
+from django import forms
+from django_filters import FilterSet, CharFilter, BooleanFilter, ChoiceFilter
 from smdb.models import Mission, Expedition, Compilation
 
 
@@ -25,12 +26,16 @@ class ExpeditionFilter(FilterSet):
 
 class CompilationFilter(FilterSet):
     name = CharFilter(field_name="name", lookup_expr="icontains")
+    has_thumbnail = BooleanFilter(
+        field_name="thumbnail_filename",
+        lookup_expr="isnull",
+        exclude=True,
+        label="Has Thumbnail Image",
+    )
     has_missions = BooleanFilter(
         field_name="missions", lookup_expr="isnull", exclude=True, label="Has Missions"
     )
 
     class Meta:
         model = Compilation
-        fields = [
-            "name",
-        ]
+        fields = ["name"]

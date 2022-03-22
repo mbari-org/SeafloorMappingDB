@@ -17,11 +17,8 @@ from rest_framework_gis.serializers import (
 )
 
 from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
-from smdb.models import Compilation, Expedition, Mission
+from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
-
-# This is repeated in scripts/load.py but can't import because of timing
-MBARI_DIR = "/mbari/SeafloorMapping/"
 
 
 class MissionSerializer(GeoFeatureModelSerializer):
