@@ -1,6 +1,6 @@
 -r base.txt
 
-Werkzeug==2.0.3 # https://github.com/pallets/werkzeug
+Werkzeug==2.1.0 # https://github.com/pallets/werkzeug
 
 # Testing
 # ------------------------------------------------------------------------------
