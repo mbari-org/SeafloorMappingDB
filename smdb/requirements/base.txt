@@ -34,7 +34,7 @@ ipdb==0.13.9  # https://github.com/gotcha/ipdb
 ipykernel==6.11.0 # For use in Notebooks
 matplotlib==3.5.1 # For plotting in Notebooks
 netCDF4==1.5.8 # https://pypi.org/project/netCDF4/
-pandas==1.4.1 # For use in Notebooks
+pandas==1.4.2 # For use in Notebooks
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
 pygraphviz==1.9 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
