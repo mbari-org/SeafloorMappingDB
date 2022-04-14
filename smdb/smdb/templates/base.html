@@ -15,12 +15,15 @@
     <![endif]-->
 
     <!-- If we come up with an icon for smdb replace the dummy with it here -->
-    <link rel="icon" type="image/png" href="{% static 'images/favicons/favicon-192.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon-192.png' %}">
     <!--<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo="> -->
 
     {% block css %}
     <!-- Latest compiled and minified Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Add leaflet CSS-->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
 
     <!-- Your stuff: Third-party CSS libraries go here -->{% compress css %}
     <!-- This file stores project-specific CSS -->

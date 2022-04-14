@@ -1,21 +1,32 @@
-
 // /lib/leaflet.css
 // /lib/leaflet.js
 // /lib/esri-leaflet.js
 
 const map = L.map("map");
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
-const options  = { minZoom: 1, maxZoom: 16, }
+const options = { minZoom: 1, maxNativeZoom: 13, maxZoom: 16 };
 
-L.esri.basemapLayer('Oceans', options).addTo(map);
-L.esri.basemapLayer('OceansLabels', options).addTo(map);
+//L.esri.Vector.vectorBasemapLayer("Oceans", options).addTo(map);
+//L.esri.Vector.vectorBasemapLayer("OceansLabels", options).addTo(map);
+
+L.esri.basemapLayer("Oceans", options).addTo(map);
+L.esri.basemapLayer("OceansLabels", options).addTo(map);
+//L.esri.basemapLayer('http://ows.mundialis.de/services/service?', wmsOptions).addTo(map);
+//var wmsLayer = L.tileLayer.wms('http://ows.mundialis.de/services/service?', wmsOptions).addTo(map);
 
 map.fitWorld();
 const missions = JSON.parse(
   document.getElementById("missions-data").textContent
 );
 
-let feature = L.geoJSON(missions)
+let feature = L.geoJSON(missions, {
+  style: function () {
+    return { color: "rust" };
+  },
+  hover: function () {
+    return { color: "blueviolet" };
+  },
+})
   .bindPopup(
     function (layer) {
       if (layer.feature.properties.thumbnail_image) {
@@ -53,14 +64,12 @@ bounds.onAdd = function (map) {
   var div = L.DomUtil.create("div", "bounds-container row");
   var bboxString = getMapBounds();
   div.innerHTML =
-
     "<div>" +
     '<input title="Use map bounds in Update" type="checkbox" id="use_bounds">' +
     "&nbsp;" +
     "</div>" +
     '<div id="map-bounds">' +
     bboxString +
-
     "</div>";
   return div;
 };
@@ -86,9 +95,18 @@ function getMapBounds() {
   return bboxString;
 }
 
+var currentZoom;
+
 map.on("zoomend", function () {
   bboxString = getMapBounds();
   document.getElementById("map-bounds").innerHTML = bboxString;
+
+  currentZoom = map.getZoom();
+  if (currentZoom >= 10) {
+    polygon.setStyle({ weight: 1 });
+  } else {
+    polygon.setStyle({ weight: 5 });
+  }
 });
 
 var sliderControl = L.control.sliderControl({

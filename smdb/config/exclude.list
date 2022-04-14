@@ -52,12 +52,13 @@
 /mbari/SeafloorMapping/MappingAUVOps2009/20090722_org/
 /mbari/SeafloorMapping/MappingAUVOps2009/20091203/test/
 /mbari/SeafloorMapping/MappingAUVOps2009/Lau/
-/mbari/SeafloorMapping/MappingAUVOps2009/MontereyCanyon/
+/mbari/SeafloorMapping/MappingAUVOps2009/MontereyCanyon2009/
 /mbari/SeafloorMapping/MappingAUVOps2009/NorthernExpedition/
 /mbari/SeafloorMapping/MappingAUVOps2009/NorthernExpeditionold/
 
+/mbari/SeafloorMapping/MappingAUVOps2010/20100726_Taney1v1_fromStromboli/
 /mbari/SeafloorMapping/MappingAUVOps2010/AUVTutorial/
-/mbari/SeafloorMapping/MappingAUVOps2010/BenthicImaging/
+/mbari/SeafloorMapping/MappingAUVOps2010/BenthicImaging2010/
 /mbari/SeafloorMapping/MappingAUVOps2010/MontereyCanyon/
 /mbari/SeafloorMapping/MappingAUVOps2010/OEPlumeData/
 /mbari/SeafloorMapping/MappingAUVOps2010/Reson7125A400kHzTestData/
@@ -106,6 +107,7 @@
 /mbari/SeafloorMapping/MappingAUVOps2016/Arctic_2016/
 /mbari/SeafloorMapping/MappingAUVOps2016/Taiwan_2017_old/
 
+/mbari/SeafloorMapping/MappingAUVOps2017/2017-Axial-Sentry-Data/Figures/
 /mbari/SeafloorMapping/MappingAUVOps2017/20170221m3_messedup/
 /mbari/SeafloorMapping/MappingAUVOps2017/20170507m1/test/
 /mbari/SeafloorMapping/MappingAUVOps2017/20170517m2/Test/
@@ -131,15 +133,27 @@
 /mbari/SeafloorMapping/OceanImaging2013/MissionPlanning/
 /mbari/SeafloorMapping/OceanImaging2013/monterey/
 
+/mbari/SeafloorMapping/OceanImaging2014/20140508WesternFlyer/d20140510/lidar/
+/mbari/SeafloorMapping/OceanImaging2014/20140508WesternFlyer/d20140511/lidar/
+/mbari/SeafloorMapping/OceanImaging2014/20140508WesternFlyer/d20140512/lidar/
 /mbari/SeafloorMapping/OceanImaging2014/20140816RachelCarson/d20140816/Photogrammetry/
 /mbari/SeafloorMapping/OceanImaging2014/20140816RachelCarson/d20140816/PhotogrammetryOld/
 /mbari/SeafloorMapping/OceanImaging2014/20140816RachelCarson/d20140816-org/
+/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141206/lidar/
 /mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141206/lidarold/Site0Survey/
-/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141207/lidar/20141207-patch-test/
-/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141207/lidar/20141207-patch-test-bad/
+/mbari/SeafloorMapping/OceanImaging2014/20141204WesternFlyer/d20141207/lidar/
+/mbari/SeafloorMapping/OceanImaging2014/MissionPlanning/
+
+/mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151117/lidar/CCEPatchTest2/RAA_SNR_100/
+/mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151118/lidar/CCEDeep2B/RAA_SNR_1000/
+/mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151119/lidar/CCEDeep2C/RAA_SNR_1000/
+/mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151120/lidar/CCEDeep2D/RAA_ALT2_SNR_1/
+/mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151121/lidar/SurRidgeCentralCrest/RAA_2m_10m_1m/
+/mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151122/lidar/SurRidgeNorthernCrest/RAA/
 
 /mbari/SeafloorMapping/OceanImaging2018/20180612DOEST/
 /mbari/SeafloorMapping/OceanImaging2018/20180519d1/lidartest/
+/mbari/SeafloorMapping/OceanImaging2018/20180724RachelCarson/MissionPlanning/
 
 /mbari/SeafloorMapping/2019/ExtravertCliff/ForJose/Example1/multibeam/
 /mbari/SeafloorMapping/2019/SentryTesting/

@@ -78,6 +78,8 @@ THIRD_PARTY_APPS = [
     "graphene_django",
     "graphene_graphiql_explorer",
     "graphene_gis",
+    "django_tables2",
+    "django_filters",
 ]
 
 LOCAL_APPS = [
@@ -202,6 +204,9 @@ FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 # http://django-crispy-forms.readthedocs.io/en/latest/install.html#template-packs
 CRISPY_TEMPLATE_PACK = "bootstrap4"
+
+# https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html#available-templates
+DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 
 # FIXTURES
 # ------------------------------------------------------------------------------
