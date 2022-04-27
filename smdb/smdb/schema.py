@@ -804,9 +804,6 @@ class CreateMission(graphene.Mutation):
             )
             sensors.append(sensor)
 
-        compilation, _ = Compilation.objects.get_or_create(
-            name=input.compilation.name,
-        )
         data_archivals = []
         for data_archival_input in input.data_archivals or ():
             data_archival, _ = DataArchival.objects.get_or_create(
@@ -844,7 +841,6 @@ class CreateMission(graphene.Mutation):
             thumbnail_filename=input.thumbnail_filename,
             kml_filename=input.kml_filename,
             update_status=input.update_status,
-            compilation=compilation,
         )
         mission.sensors.set(sensors)
         mission.data_archivals.set(data_archivals)
@@ -889,9 +885,6 @@ class UpdateMission(graphene.Mutation):
                 sensortype=sensortype,
             )
             sensors.append(sensor)
-        compilation, _ = Compilation.objects.get_or_create(
-            name=input.compilation.name,
-        )
         data_archivals = []
         for data_archival_input in input.data_archivals or ():
             data_archival, _ = DataArchival.objects.get_or_create(
@@ -929,7 +922,6 @@ class UpdateMission(graphene.Mutation):
         mission.thumbnail_filename = input.thumbnail_filename
         mission.kml_filename = input.kml_filename
         mission.update_status = input.update_status
-        mission.compilation = compilation
         mission.sensors.set(sensors)
         mission.data_archivals.set(data_archivals)
         mission.citations.set(citations)

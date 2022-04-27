@@ -11,11 +11,11 @@ from rest_framework.authtoken.views import obtain_auth_token
 from smdb.api.base import router as api_v1_router
 from smdb.views import (
     CompilationDetailView,
-    CompilationListView,
+    CompilationTableView,
     ExpeditionDetailView,
-    ExpeditionListView,
+    ExpeditionTableView,
     MissionDetailView,
-    MissionListView,
+    MissionTableView,
     MissionOverView,
 )
 
@@ -32,19 +32,19 @@ urlpatterns = [
     path("users/", include("smdb.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("missions/", MissionListView.as_view()),
+    path("missions/", MissionTableView.as_view()),
     path(
         "missions/<str:slug>/",
         MissionDetailView.as_view(),
         name="mission-detail",
     ),
-    path("expeditions/", ExpeditionListView.as_view()),
+    path("expeditions/", ExpeditionTableView.as_view()),
     path(
         "expeditions/<str:slug>/",
         ExpeditionDetailView.as_view(),
         name="expedition-detail",
     ),
-    path("compilations/", CompilationListView.as_view()),
+    path("compilations/", CompilationTableView.as_view()),
     path(
         "compilations/<str:slug>/",
         CompilationDetailView.as_view(),

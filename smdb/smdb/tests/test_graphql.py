@@ -1092,7 +1092,6 @@ create_mission_template = Template(
             site_detail: "site detail",
             thumbnail_filename: "thumbnail.png",
             kml_filename: "kml_file.kml",
-            compilation: {name: "Initial compilation"},
             update_status: 5,
             sensors: {comment: "C", model_name: "M", sensortype: {name: "ST1"}},
             data_archivals: [ {doi: "doi://da_initial/1", archival_db_name: "DA Initial 1"},
@@ -1129,9 +1128,6 @@ create_mission_template = Template(
                 site_detail
                 thumbnail_filename
                 kml_filename
-                compilation {
-                    name
-                }
                 update_status
                 sensors {
                     sensortype {
@@ -1229,7 +1225,6 @@ def test_update_mission(snapshot):
                     site_detail: "site detail 2",
                     thumbnail_filename: "tumbnail2.png",
                     kml_filename: "Added kml_file.kml",
-                    compilation: {name: "Updated compilation"},
                     update_status: 6,
                     sensors: {comment: "C", model_name: "M", sensortype: {name: "T1"}},
                     data_archivals: [ {doi: "doi://da_updated/1", archival_db_name: "DA Updated 1"},
@@ -1265,9 +1260,6 @@ def test_update_mission(snapshot):
                         site_detail
                         thumbnail_filename
                         kml_filename
-                        compilation {
-                            name
-                        }
                         update_status
                         sensors {
                             sensortype {
