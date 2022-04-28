@@ -1,1 +1,107 @@
 {% extends "base.html" %}
+{% load static bleach_tags timetags %}
+<!-- About SMDB -->
+<!-- https://docs.djangoproject.com/en/3.2/ref/templates/language/ -->
+{% block css %} 
+{{ block.super }}
+{% endblock %}
+
+{% block title %}About SMDB{% endblock %}
+
+{% block content %}
+<div>
+    <h1 class="center">
+        <img src={% static "images/SMDB_logo.jpg" %}>
+        <br>
+  
+        Seafloor Mapping Database
+        </h1>
+    
+    <h2>About the database
+        </h2>
+
+        <p>
+        The MBARI Seafloor Mapping Database (SMDB) provides access to  
+        <a href="https://www.mbari.org/at-sea/vehicles/autonomous-underwater-vehicles/seafloor-mapping-auv/" 
+            target="_blank">Mapping AUV</a> 
+            and <a href="https://www.mbari.org/technology/ocean-imaging/" target="_blank">
+            Low-Altitude Survey System </a> 
+            (LASS) data collected by MBARI and our collaborators. 
+            It is a relational database with geographic capability, 
+            a geo-spatially enabled web query interface on Canyon Head, load scripts for mining data from the 
+            SeafloorMapping archive, and user interfaces for testing and manually adding data. It is
+            built in Python with Django and PostgreSQL using the PostGIS extension. The entire 
+            software stack is free and open source.
+            </p>      
+            
+            <p>The SMDB is currently in the beginning stage of development. 
+            If you have suggestions for the SMDB, please contact one of the developers.</p>
+       
+     <strong>
+        Developers 
+            </strong>
+            <p>
+                <a href="https://www.mbari.org/mccann-mike/" target="_blank">Mike McCann</a>, 
+                <a href="https://www.mbari.org/salamy-karen-a/" target="_blank">Karen A. Salamy</a>, 
+                <a href="https://www.mbari.org/paduan-jennifer" target="_blank">Jennifer Paduan</a>, 
+                <a href="https://www.mbari.org/caress-dave/" target="_blank">David Caress</a>
+          </p>
+          <p><a href="https://github.com/mbari-org/SeafloorMappingDB" target="_blank">>> GitHub repository</a><br>
+            <a href="https://github.com/mbari-org/SeafloorMappingDB/tree/main/smdb/docs/original" target="_blank">>> 
+                Schema and Use Cases on file at GitHub</a> (still evolving)</p>
+ 
+     <strong>Proposed work
+            </strong>    
+
+        <p>MBARI has now conducted hundreds of Mapping AUV missions and several dozen low altitude survey ROV dives. 
+        Much of the resulting data have value to others in the MBARI community, but the survey data and data 
+        products are only accessible to those with knowledge of where the data are stored, how they are organized, 
+        and how to run the software used to process the data in maps, images, and GIS objects. 
+        In order to make the Mapping AUV and LASS survey data more accessible, we propose to capture metadata 
+        such as geographic location and server storage paths in a relational database, in a way that doesn't 
+        change the current file-based structure on the SeafloorMapping share or impact the work-flow 
+        for processing the sensor data, and display it with a queryable web interface. 
+        The envisioned system will utilize the same approach and open-source software tools as the MBARI STOQS 
+        database for water-column data. 
+                </p>
+
+     <strong>
+         Motivation
+        </strong>
+
+        <p>The quickly growing number of AUV and LASS surveys need to become more discoverable and accessible, 
+        and their interconnectedness and repeat mapping require a new level of documentation and organizational 
+        discipline. As our data volume grows, this need is becoming critical even for experienced users. It will be useful 
+        for users less familiar with the surveys or MB-System to access the current data products without 
+        digging around on the server. It is necessary for making sense of the data archive in perpetuity, 
+        and is advisable in the spirit of FAIR data principles (findable, accessible, interoperable, reusable). </p>
+
+        <p>The quality of particular survey data influences the prioritization - or even inclusion - for 
+        working with it and to make data products. Currently this is tracked by users in their own spreadsheets 
+        and datalists. It needs to become an assessment that is accessible and clearly presented. 
+        Likewise, whether a survey is repeated over a previously mapped area also needs to be tracked.</p>
+
+<strong>Functional requirements
+    </strong>
+<ul>
+    <li>Relational database with geographic capability (we have decided to use PostgreSQL with PostGIS 
+        extension). </li>
+    <li>Web-based query, from a map, appearing like STOQS (campaign list) or the samplesDB (multiple queryable items), from 
+        Canyon Head.</li>
+    <li>Interface for populating the database needs to be useable by knowledgeable AUV data processing 
+        staff on Mac computers, and not expensive. </li>
+    <li>Maintained and backed up by MBARI IS.</li>
+</ul>
+
+    <strong>Affiliated MBARI projects 
+        </strong>
+
+    <p><a href="https://www.mbari.org/technology/seafloor-mapping/" target="_blank">Seafloor Mapping Lab</a> <br>
+    <a href="https://www.mbari.org/technology/ocean-imaging/" target="_blank">Ocean Imaging Project</a> <br>
+    <a href="https://www.mbari.org/science/seafloor-processes/geological-changes/" target="_blank">Geological Changes Group</a> <br>
+    <a href="https://www.mbari.org/science/seafloor-processes/volcanoes/" target="_blank">Submarine Volcanism Project</a> <br>
+    </p>
+
+</div>
+
+{% endblock %}
