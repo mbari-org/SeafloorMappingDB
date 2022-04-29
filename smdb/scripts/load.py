@@ -3,9 +3,10 @@
 Load a data from SeafloorMapping share into a postgis database
 """
 
+from distutils import cmd
 import os
 import sys
-from typing import Tuple
+from typing import Iterator, List, Tuple
 
 import django
 
@@ -18,20 +19,28 @@ import argparse  # noqa F402
 import getpass  # noqa F402
 import logging  # noqa F402
 import math  # noqa F402
+import pathlib  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
 import timing  # noqa F402 - needed for nice elapsed time reporting
 from netCDF4 import Dataset  # noqa F402
-from datetime import datetime, timedelta  # noqa F402
+from datetime import date, datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
 from django.conf import settings  # noqa F402
 from django.core.files import File  # noqa F402
 from django.core.files.base import ContentFile  # noqa F402
 from django.core.files.storage import DefaultStorage  # noqa F402
 from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
+from glob import glob
 from PIL import Image, UnidentifiedImageError  # noqa F402
-from smdb.models import Expedition, Mission, Platform, Platformtype  # noqa F402
+from smdb.models import (
+    Compilation,
+    Expedition,
+    Mission,
+    Platform,
+    Platformtype,
+)  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
@@ -44,6 +53,7 @@ some steps requiring access to the SeafloorMapping share on titan. They are:
 1. --bootstrap          Requires SeafloorMapping access
 2. --notes
 3. --fnv                Requires SeafloorMapping access
+4. --compilation        Requires SeafloorMapping access
 
 With none of these options specified all are executed. Specify one or more
 of these options to debug portions of code or to pick up where a previous
@@ -75,8 +85,10 @@ Can be run from smdb Docker environment thusly...
 
 
 class BaseLoader:
-    LOCAL_LOG_FILE = "/etc/smdb/load.txt"
-    MEDIA_LOG_FILE = "logs/load.txt"
+    LOG_FILE = "load.txt"
+    LOCAL_LOG_FILE = f"/etc/smdb/{LOG_FILE}"
+    MEDIA_LOG_FILE = f"logs/{LOG_FILE}"
+    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def __init__(self):
         self.logger = logging.getLogger("load")
@@ -119,7 +131,7 @@ class BaseLoader:
             "--regex",
             action="store",
             help="Load only ZTopo.grd files that have this regular expression in their path",
-            default="\/(?P<yr>\d\d\d\d)(?P<mo>\d\d)(?P<da>\d\d)(?P<miss_seq>\S\S)*\/",
+            default=".*",
         )
         parser.add_argument(
             "--bootstrap",
@@ -142,6 +154,11 @@ class BaseLoader:
             help="Run the loading steps that parse .fnv files for nav_track and other data",
         )
         parser.add_argument(
+            "--compilation",
+            action="store_true",
+            help="Finds directories with datalist*.mb-1, but without ZTopo.grd files, indicating a Compilation",
+        )
+        parser.add_argument(
             "--limit",
             action="store",
             type=int,
@@ -162,6 +179,16 @@ class BaseLoader:
             action="store",
             help="Start processing at mission name provided",
         )
+        parser.add_argument(
+            "--log_file",
+            action="store",
+            help=f"Override log file name {self.LOG_FILE}",
+        )
+        parser.add_argument(
+            "--filter",
+            action="store",
+            help="Process only Compilation directories that match this text",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -172,6 +199,9 @@ class BaseLoader:
             "%(levelname)s %(asctime)s %(filename)s "
             "%(funcName)s():%(lineno)d %(message)s"
         )
+        if self.args.log_file:
+            self.LOCAL_LOG_FILE = f"/etc/smdb/{self.args.log_file}"
+            self.MEDIA_LOG_FILE = f"logs/{self.args.log_file}"
         if not self.logger.handlers:
             # Don't add handlers when sub class runs
             stream_handler = logging.StreamHandler()
@@ -186,7 +216,7 @@ class BaseLoader:
 
         if not self.exclude_paths:
             for line in open(self.args.exclude):
-                if not line.startswith("#"):
+                if line.startswith("/mbari/SeafloorMapping/"):
                     self.exclude_paths.append(line.strip())
 
         self.logger.debug(
@@ -219,6 +249,8 @@ class BaseLoader:
                     return
 
     def save_logger_output(self) -> None:
+        self.logger.info("Saving to local log file: %s", self.LOCAL_LOG_FILE)
+        self.logger.info("Saving to media log file: %s", self.MEDIA_LOG_FILE)
         self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
         for handler in self.logger.handlers[:]:
             self.logger.debug("Closing handler: %s", handler)
@@ -228,6 +260,95 @@ class BaseLoader:
         ds = DefaultStorage()
         ds.delete(self.MEDIA_LOG_FILE)
         ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
+
+    def extent(self, ds, file):
+        if "x" in ds.variables and "y" in ds.variables:
+            X = "x"
+            Y = "y"
+        elif "lon" in ds.variables and "lat" in ds.variables:
+            X = "lon"
+            Y = "lat"
+        else:
+            raise ValueError(f"Did not find x/y nor lon/lat in file {file}")
+        if (
+            ds[X].long_name.lower() != "longitude"
+            or ds[Y].long_name.lower() != "latitude"
+        ):
+            raise ValueError(
+                f"Expected Longitude/Latitude but found {ds[X].long_name}/{ds[Y].long_name}"
+            )
+        grid_bounds = Polygon(
+            (
+                (float(ds[X][0].data), float(ds[Y][0].data)),
+                (float(ds[X][0].data), float(ds[Y][-1].data)),
+                (float(ds[X][-1].data), float(ds[Y][-1].data)),
+                (float(ds[X][-1].data), float(ds[Y][0].data)),
+                (float(ds[X][0].data), float(ds[Y][0].data)),
+            ),
+            srid=4326,
+        )
+        for point in grid_bounds[0]:
+            self.logger.debug("Checking if point is on Earth: %s", point)
+            lon, lat = point
+            if lon < -180 or lon > 360:
+                raise ValueError(
+                    f"Bad longitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+            if lat < -90 or lat > 90:
+                raise ValueError(
+                    f"Bad latitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+            if math.isclose(lon, 0, abs_tol=1e-6):
+                raise ValueError(
+                    f"Near zero longitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+            if math.isclose(lat, 0, abs_tol=1e-6):
+                raise ValueError(
+                    f"Near zero latitude bounds ({str(grid_bounds)}) in file {file}"
+                )
+
+        return grid_bounds
+
+    def save_thumbnail(self, mission, scale_factor=8):
+        # Factored out of BootStrapper() to be used also by Compiler()
+        # (mission may also be a compilation object)
+        # https://stackoverflow.com/a/51152514/1281657
+        Image.MAX_IMAGE_PIXELS = 933120000
+        if not mission.thumbnail_filename:
+            raise FileExistsError(f"No thumbnail image found for {mission}")
+        try:
+            im = Image.open(mission.thumbnail_filename)
+        except (UnidentifiedImageError, FileNotFoundError) as e:
+            self.logger.warning(f"{e}")
+            return
+        width, height = im.size
+        nx = width // scale_factor
+        ny = height // scale_factor
+        self.logger.info(
+            "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
+        )
+        new_im = im.resize((nx, ny))
+
+        new_name = "_".join(
+            mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
+        )
+        with tempfile.TemporaryDirectory() as thumbdir:
+            im_path = os.path.join(thumbdir, new_name)
+            if im_path.endswith(".jpg"):
+                new_im.save(im_path, "JPEG")
+            if im_path.endswith(".png"):
+                new_im.save(im_path, "PNG")
+            if im_path.endswith(".tif"):
+                new_name = new_name.replace(".tif", ".png")
+                new_im.save(im_path, "PNG")
+            with open(im_path, "rb") as fh:
+                # Original file will not be overwritten, delete first
+                mission.thumbnail_image.delete()
+                mission.thumbnail_image.save(new_name, File(fh))
+                self.logger.debug(
+                    "thumbnail_image.url: %s", mission.thumbnail_image.url
+                )
+                self.logger.info("Saved thumbnail image of size %dx%s", nx, ny)
 
 
 class NoteParser(BaseLoader):
@@ -288,7 +409,7 @@ class NoteParser(BaseLoader):
         return expd_db_id
 
     def expedition_name_from_comment(self, mission: Mission) -> str:
-        # It looks like the fourth line begins with an Expedition name
+        # Take the third and following lines (count > 1) from the comment
         expd_name = ""
         if not mission.comment:
             self.logger.warning("Empty comment for mission %s", mission)
@@ -354,9 +475,15 @@ class NoteParser(BaseLoader):
                 self.logger.info("Truncating it to first 5 lines")
                 mission.comment = "\n".join(mission.comment.split("\n")[:5])
             # Append Expedition Database expd_id to name parsed from notes
-            # to ensure unique names. TODO: consider using a m2m table fr this.
+            # to ensure unique names. TODO: consider using a m2m table for this.
             expd_db_id = self.expd_db_id_from_text(mission)
             name = f"{self.expedition_name_from_comment(mission)}"
+            if len(name) > 200:
+                self.logger.warning(
+                    "Truncating 4th line (Expedition name) from %d characters to 200",
+                    len(name),
+                )
+                name = name[:200]
             if expd_db_id:
                 name += f" - {expd_db_id}"
             expedition, created = Expedition.objects.get_or_create(
@@ -391,6 +518,8 @@ class FNVLoader(BaseLoader):
         fnv_type = ""
         with open(datalist) as fh:
             for line in fh.readlines():
+                if not line.strip():
+                    continue
                 if line.startswith("#"):
                     continue
                 item = line.split()[0].strip()
@@ -494,12 +623,47 @@ class FNVLoader(BaseLoader):
         else:
             raise EOFError(f"{fnv_file} is empty")
 
+    def haversine(self, lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+        """
+        Calculate the great circle distance between two points
+        on the earth (specified in decimal degrees)
+        https://gis.stackexchange.com/a/56589/62207
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+        km = 6367 * c
+        return km
+
+    def linestring_length(self, linestring: LineString) -> float:
+        dist = 0
+        self.logger.debug(
+            "Computing linestring length for %s points",
+            len(linestring),
+        )
+        for i in range(len(linestring.coords) - 1):
+            dist += self.haversine(
+                linestring.coords[i][0],
+                linestring.coords[i][1],
+                linestring.coords[i + 1][0],
+                linestring.coords[i + 1][1],
+            )
+        self.logger.debug("Total distance: %f km", dist)
+        return dist
+
     def fnv_points_tolinestring(
         self,
         fnv_list: list,
         interval: timedelta = timedelta(seconds=30),
         tolerance: float = 0.00001,
-    ) -> Tuple[int, LineString]:
+    ) -> Tuple[int, LineString, float]:
         """Can tune the quality of simplified LineString by adjusting
         `interval` and `tolerance`. Reasonable defaults are provided
         for quick rendering of maybe 600 Missions on a Leaflet map."""
@@ -512,17 +676,21 @@ class FNVLoader(BaseLoader):
                 self.logger.debug(e)
         if "subsample" not in locals():
             self.logger.info("Not getting nav_track for this mission.")
-            return len(point_list), None
+            return len(point_list), None, None
         line_count = 0
         for fnv in fnv_list:
-            with open(fnv) as fh:
-                for line_count, line in enumerate(fh.readlines(), start=1):
-                    if line_count % subsample:
-                        continue
-                    # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
-                    lon = float(line.split()[7])
-                    lat = float(line.split()[8])
-                    point_list.append(Point((lon, lat), srid=4326))
+            try:
+                with open(fnv) as fh:
+                    for line_count, line in enumerate(fh.readlines(), start=1):
+                        if line_count % subsample:
+                            continue
+                        # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
+                        lon = float(line.split()[7])
+                        lat = float(line.split()[8])
+                        point_list.append(Point((lon, lat), srid=4326))
+            except UnicodeDecodeError:
+                self.logger.debug("UnicodeDecodeError with file %s", fnv)
+                continue
             if line_count:
                 self.logger.debug(
                     "Collected %d points every %s from %s",
@@ -535,7 +703,7 @@ class FNVLoader(BaseLoader):
             len(point_list),
             len(fnv_list),
         )
-        nav_track = LineString(point_list).simplify(tolerance=tolerance)
+        nav_track = LineString(point_list, srid=4326).simplify(tolerance=tolerance)
         self.logger.debug(
             "Simplified %d points from %d files to %d points with tolerance = %f",
             len(point_list),
@@ -543,7 +711,25 @@ class FNVLoader(BaseLoader):
             len(nav_track),
             tolerance,
         )
-        return len(point_list), nav_track
+        # linestring_length() uses haversine() and is slow
+        ##track_length = round(self.linestring_length(nav_track), 4)
+        ##self.logger.info("track_length = %.4f km", track_length)
+        # Pulling values from .inf files is much faster
+        dist_sum = 0
+        for fnv in fnv_list:
+            inf_file = fnv.replace(".fnv", ".inf")
+            with open(inf_file) as fh:
+                for line in fh.readlines():
+                    # Total Track Length:     0.6137 km
+                    if line.startswith("Total Track Length:"):
+                        dist_sum += float(line.split()[-2])
+                        break
+        self.logger.info("dist_sum = %.4f km", dist_sum)
+        ##if dist_sum != 0:
+        ##    self.logger.info(
+        ##        "track_length / dist_sum = %.2f%%", 100 * track_length / dist_sum
+        ##    )
+        return len(point_list), nav_track, dist_sum
 
     def fnv_update_mission_data(self, mission: Mission):
         # Start with datalistp.mb-1 and recurse down
@@ -555,12 +741,20 @@ class FNVLoader(BaseLoader):
         if not fnv_list:
             raise FileNotFoundError(f"No .fnv files found in {path}")
         if path.endswith("lidar") or path.endswith("lidartest"):
-            original, mission.nav_track = self.fnv_points_tolinestring(
+            (
+                original,
+                mission.nav_track,
+                mission.track_length,
+            ) = self.fnv_points_tolinestring(
                 fnv_list,
                 interval=timedelta(seconds=5),
             )
         else:
-            original, mission.nav_track = self.fnv_points_tolinestring(fnv_list)
+            (
+                original,
+                mission.nav_track,
+                mission.track_length,
+            ) = self.fnv_points_tolinestring(fnv_list)
         (
             mission.start_date,
             mission.end_date,
@@ -590,7 +784,7 @@ class FNVLoader(BaseLoader):
 
 class MBSystem(BaseLoader):
     SSH_CMD = f"ssh {getpass.getuser()}@mb-system"
-    TIMEOUT = 360  # Max seconds to retreive file from tertiary storage
+    TIMEOUT = 360  # Max seconds to retrieve file from tertiary storage
 
     def sonar_start_data(self, sonar_file: str) -> Tuple[datetime, Point, float]:
         cmd = f"{self.SSH_CMD} mbinfo -I {sonar_file}"
@@ -713,50 +907,6 @@ class MBSystem(BaseLoader):
 
 
 class BootStrapper(BaseLoader):
-    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
-
-    def extent(self, ds, file):
-        if "x" in ds.variables and "y" in ds.variables:
-            X = "x"
-            Y = "y"
-        elif "lon" in ds.variables and "lat" in ds.variables:
-            X = "lon"
-            Y = "lat"
-        else:
-            raise ValueError(f"Did not find x/y nor lon/lat in file {file}")
-
-        grid_bounds = Polygon(
-            (
-                (float(ds[X][0].data), float(ds[Y][0].data)),
-                (float(ds[X][0].data), float(ds[Y][-1].data)),
-                (float(ds[X][-1].data), float(ds[Y][-1].data)),
-                (float(ds[X][-1].data), float(ds[Y][0].data)),
-                (float(ds[X][0].data), float(ds[Y][0].data)),
-            ),
-            srid=4326,
-        )
-        for point in grid_bounds[0]:
-            self.logger.debug("Checking if point is on Earth: %s", point)
-            lon, lat = point
-            if lon < -180 or lon > 360:
-                raise ValueError(
-                    f"Bad longitude bounds ({str(grid_bounds)}) in file {file}"
-                )
-            if lat < -90 or lat > 90:
-                raise ValueError(
-                    f"Bad latitude bounds ({str(grid_bounds)}) in file {file}"
-                )
-            if math.isclose(lon, 0, abs_tol=1e-6):
-                raise ValueError(
-                    f"Near zero longitude bounds ({str(grid_bounds)}) in file {file}"
-                )
-            if math.isclose(lat, 0, abs_tol=1e-6):
-                raise ValueError(
-                    f"Near zero latitude bounds ({str(grid_bounds)}) in file {file}"
-                )
-
-        return grid_bounds
-
     def is_geographic(self, ds):
         if hasattr(ds, "description"):
             # More recent files have this attribute
@@ -771,46 +921,65 @@ class BootStrapper(BaseLoader):
 
         return False
 
+    def valid_notes_filename(self, txt_file):
+        if "junk" in txt_file:
+            self.logger.debug("Directory contains'junk': %s", txt_file)
+            return False
+        if self._exclude_path(txt_file):
+            self.logger.debug("Directory in exclude.list: %s", txt_file)
+            return False
+        try:
+            if os.stat(txt_file).st_size == 0:
+                self.logger.debug("Empty notes file: %s", txt_file)
+                return False
+        except FileNotFoundError:
+            self.logger.debug("Note file not found: %s", txt_file)
+            return False
+        return True
+
     def notes_filename(self, sm_dir):
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
         for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-            if txt_file:
-                self.logger.debug("Potential notes file: %s", txt_file)
-                if "junk" in txt_file:
-                    self.logger.debug(
-                        "Skipping over Notes file found in junk dir: %s", txt_file
-                    )
-                    continue
+            if self.valid_notes_filename(txt_file):
+                self.logger.info("Potential notes file: %s", txt_file)
                 notes_file = txt_file
 
         if not notes_file:
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
-            locate_cmd = f"locate -d {self.LOCATE_DB} -r '{parent_dir}.*Notes.txt$'"
-            for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-                if txt_file:
-                    self.logger.debug("Potential notes file: %s", txt_file)
+            for txt_file in glob(f"{parent_dir}/*Notes.txt"):
+                if self.valid_notes_filename(txt_file):
+                    self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
         if not notes_file:
             # Try grandparent directory
             grandparent_dir = os.path.abspath(os.path.join(sm_dir, "../.."))
-            locate_cmd = (
-                f"locate -d {self.LOCATE_DB} -r '{grandparent_dir}.*Notes.txt$'"
-            )
-            for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-                if txt_file:
-                    self.logger.debug("Potential notes file: %s", txt_file)
+            for txt_file in glob(f"{grandparent_dir}/*Notes.txt"):
+                if self.valid_notes_filename(txt_file):
+                    self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
-
+        if not notes_file:
+            # Try greatgrandparent directory
+            greatgrandparent_dir = os.path.abspath(os.path.join(sm_dir, "../../.."))
+            for txt_file in glob(f"{greatgrandparent_dir}/*Notes.txt"):
+                if self.valid_notes_filename(txt_file):
+                    self.logger.info("Potential notes file: %s", txt_file)
+                    notes_file = txt_file
         return notes_file
 
-    def thumbnail_filename(self, sm_dir):
-        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}/ZTopoSlopeNav.jpg'"
+    def thumbnail_filename(self, sm_dir: str) -> str:
+        locate_base = f"locate -d {self.LOCATE_DB} -r '{sm_dir}"
+        locate_cmd = f"{locate_base}/ZTopoSlopeNav.jpg'"
         thumbnail_file = None
         for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("Potential thumbnail file: %s", jpg_file)
+            self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
             thumbnail_file = jpg_file
+        if not thumbnail_file:
+            locate_cmd = f"{locate_base}/ZTopoSlopeNav.png'"
+            for png_file in subprocess.getoutput(locate_cmd).split("\n"):
+                self.logger.debug("Potential png thumbnail file: %s", png_file)
+                thumbnail_file = png_file
 
         return thumbnail_file
 
@@ -818,20 +987,21 @@ class BootStrapper(BaseLoader):
         if not mission.notes_filename:
             raise FileExistsError(f"No Notes found for {mission}")
         note_text = ""
-        with open(mission.notes_filename) as fh:
-            try:
-                for line_count, line in enumerate(fh.readlines()):
-                    if "password" in line.lower():
-                        # Blank out actual passwords
-                        line = (
-                            line.lower().split("password")[0] + "password: **********"
-                        )
-                    note_text += line
-            except UnicodeDecodeError as e:
-                self.logger.warning(
-                    "Cannot read Notes file: %s", mission.notes_filename
-                )
-                raise FileExistsError(f"No Notes found for {mission}")
+        with open(mission.notes_filename, errors="ignore") as fh:
+            for line_count, line in enumerate(fh.readlines()):
+                # Blank out potentially sensitive information
+                if ma := re.match(r"\s+password:\s*(.*)", line, re.IGNORECASE):
+                    line = line.replace(ma.group(1), "*********")
+                if re.search(r"\d+\.\d+\.\d+\.\d+", line):
+                    # Remove everything after the IP address
+                    line = re.sub(
+                        r"\d+\.\d+\.\d+\.\d+.+",
+                        "***.***.***.***",
+                        line,
+                    )
+                if ma := re.match(r"\s+User:\s*(.*)", line, re.IGNORECASE):
+                    line = line.replace(ma.group(1), "*********")
+                note_text += line
 
         if not note_text:
             raise FileExistsError(f"No Notes found for {mission}")
@@ -839,35 +1009,6 @@ class BootStrapper(BaseLoader):
         mission.notes_text = note_text
         mission.save()
         self.logger.info(f"Saved note text: %d lines", line_count)
-
-    def save_thumbnail(self, mission):
-        if not mission.thumbnail_filename:
-            raise FileExistsError(f"No thumbnail image found for {mission}")
-        scale_factor = 8
-        try:
-            im = Image.open(mission.thumbnail_filename)
-        except (UnidentifiedImageError, FileNotFoundError) as e:
-            self.logger.warning(f"{e}")
-            return
-        width, height = im.size
-        nx = width // scale_factor
-        ny = height // scale_factor
-        new_im = im.resize((nx, ny))
-
-        new_name = "_".join(
-            mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
-        )
-        with tempfile.TemporaryDirectory() as thumbdir:
-            im_path = os.path.join(thumbdir, new_name)
-            new_im.save(im_path, "JPEG")
-            with open(im_path, "rb") as fh:
-                # Original file will not be overwritten, delete first
-                mission.thumbnail_image.delete()
-                mission.thumbnail_image.save(new_name, File(fh))
-                self.logger.debug(
-                    "thumbnail_image.url: %s", mission.thumbnail_image.url
-                )
-                self.logger.info("Saved thumbnail image of size %dx%s", nx, ny)
 
     def flush_database(self):
         """Delete all records without resetting primary keys"""
@@ -885,6 +1026,9 @@ class BootStrapper(BaseLoader):
         self.logger.info("%d Platforms", Platform.objects.all().count())
         for platform in Platform.objects.all():
             platform.delete()
+        self.logger.info("%d Compilations", Compilation.objects.all().count())
+        for compilation in Compilation.objects.all():
+            compilation.delete()
 
         # Here's how to automatically flush the whole database resetting pk's:
         # Also removes superuser - Might want to do this at command line:
@@ -923,12 +1067,16 @@ class BootStrapper(BaseLoader):
         if self.args.skipuntil_regex:
             start_processing = False
         miss_count = 0
+        match_count = 0
+        miss_loaded = 0
         for count, fp in enumerate(
             subprocess.getoutput(locate_cmd).split("\n"),
             start=1,
         ):
             self.logger.debug("%3d. file: %s", count, fp)
             matches = re.search(re.compile(self.args.regex), fp)
+            if matches:
+                match_count += 1
             if self.args.skipuntil_regex and matches:
                 start_processing = True
             if not self.args.skipuntil_regex and not matches:
@@ -977,10 +1125,14 @@ class BootStrapper(BaseLoader):
                 thumbnail_filename=thumbnail_filename,
                 directory=os.path.dirname(fp),
             )
+            miss_loaded += 1
             try:
                 self.save_note_todb(mission)
+            except (FileExistsError, OSError, ValueError) as e:
+                self.logger.warning(str(e))
+            try:
                 self.save_thumbnail(mission)
-            except FileExistsError as e:
+            except (FileExistsError, ValueError) as e:
                 self.logger.warning(str(e))
 
             if created:
@@ -991,6 +1143,244 @@ class BootStrapper(BaseLoader):
                 if miss_count >= self.args.limit:
                     self.logger.info("Stopping after %s records", self.args.limit)
                     return
+        self.logger.info(
+            "Count of ZTopo.grd files found with '%s': %d", locate_cmd, count
+        )
+        self.logger.info(
+            "Missions matching regex '%s': %d", self.args.regex, match_count
+        )
+        self.logger.info("Count of Missions not excluded: %d", miss_count)
+        self.logger.info("Missions loaded: %d", miss_loaded)
+
+
+class Compiler(BaseLoader):
+    def comp_dirs(self) -> Iterator[str]:
+        """Generate potential Compilation directory names, meaning
+        there is no ZTopo.grd, but there is a Figure[s]*.cmd file.
+        """
+        pattern = r"\/Figure[s]*.cmd$"
+        locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
+        start_processing = True
+        if self.args.skipuntil:
+            start_processing = False
+        for fp in subprocess.getoutput(locate_cmd).split("\n"):
+            self.logger.debug("%s", fp)
+            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
+                self.logger.debug("Skipping %s as it is a Mission directory")
+                continue
+            if self.args.skipuntil:
+                if self.args.skipuntil in fp:
+                    start_processing = True
+            if not start_processing:
+                continue
+            if self.args.filter:
+                if self.args.filter not in fp:
+                    continue
+            yield fp
+
+    def mbgrids_from_cmd_to_compilations(
+        self, comp_dir: str, cmd_filename: str
+    ) -> List[Compilation]:
+        """Parse out mbgrid commands from .cmd file"""
+        compilations = []
+        self.logger.debug(cmd_filename)
+        # Find multiple lines like this:
+        # mbgrid -I datalist_MAUV_AxialSeamount_2021p.mb-1 \
+        #       -R-130.1010316/-129.8350251/45.8289526/46.0569144 \
+        #       -A2 -N -F5 -E1/1 -C4 -JU \
+        #       -O AxialSummit_2021_Topo1m_UTM
+        pattern = re.compile(
+            r"""
+            mbgrid            # The mbgrid command
+            [\s\S]*?          # Zero or more spaces including new lines
+            -I\s*(\S+)        # Input file
+            [\s\S]*?          # Zero or more spaces including new lines
+            -O\s*(\S+)        # Output file
+            """,
+            re.VERBOSE | re.MULTILINE,
+        )
+        for ma in pattern.finditer(open(cmd_filename, errors="ignore").read()):
+            grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
+            thumbnail_filename = self._thumbnail_filename(
+                os.path.join(comp_dir, ma.group(2))
+            )
+            datalist_filename = os.path.join(comp_dir, ma.group(1))
+            if pathlib.Path(grd_filename).exists():
+                mod_time = datetime.fromtimestamp(
+                    pathlib.Path(grd_filename).stat().st_mtime
+                )
+                self.logger.info(
+                    "%s was created on %s from %s in %s",
+                    grd_filename,
+                    mod_time,
+                    datalist_filename,
+                    cmd_filename,
+                )
+                try:
+                    grid_bounds = self.extent(
+                        Dataset(grd_filename),
+                        grd_filename,
+                    )
+                except (ValueError, OSError) as e:
+                    self.logger.warning(e)
+                    grid_bounds = None
+                compilation, _ = Compilation.objects.get_or_create(
+                    name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
+                    thumbnail_filename=thumbnail_filename,
+                    creation_date=mod_time,
+                    cmd_filename=cmd_filename,
+                    grd_filename=grd_filename,
+                    proc_datalist_filename=datalist_filename,
+                    grid_bounds=grid_bounds,
+                )
+                compilations.append(compilation)
+            else:
+                self.logger.debug(
+                    "Referenced from %s %s does not exist",
+                    datalist_filename,
+                    grd_filename,
+                )
+        if compilations:
+            self.logger.info(
+                "Collected %d Compilations from %s in %s",
+                len(compilations),
+                datalist_filename,
+                cmd_filename,
+            )
+        return compilations
+
+    def link_compilation_to_missions(self):
+        for count, cmd_filename in enumerate(self.comp_dirs()):
+            comp_dir = os.path.dirname(cmd_filename)
+            self.logger.debug("%4d. %s", count, cmd_filename)
+            for compilation in self.mbgrids_from_cmd_to_compilations(
+                comp_dir, cmd_filename
+            ):
+                datalist = str(compilation.grd_filename).replace(".grd", "")
+                datalist += ".mb-1"
+                mission_names, _ = self.missions_list(comp_dir, datalist)
+                mission_ids = []
+                if mission_names:
+                    self.logger.info(
+                        "From %s/%s, Potential Missions: %s",
+                        datalist,
+                        cmd_filename,
+                        " ".join(mission_names),
+                    )
+                    for mission_name in sorted(mission_names):
+                        try:
+                            mission = Mission.objects.get(name=mission_name)
+                            mission_ids.append(mission.id)
+                        except Mission.DoesNotExist:
+                            self.logger.debug(
+                                "Mission not found in database: %s", mission_name
+                            )
+                if hasattr(compilation, "missions"):
+                    self.logger.info(
+                        "Linking Mission ids %s to %s",
+                        mission_ids,
+                        compilation,
+                    )
+                    for mission_id in mission_ids:
+                        compilation.missions.add(Mission.objects.get(pk=mission_id))
+                    compilation.save()
+                    try:
+                        self.save_thumbnail(compilation, scale_factor=16)
+                    except (FileExistsError, ValueError) as e:
+                        self.logger.warning(str(e))
+
+    def _thumbnail_filename(self, grd_filename: str) -> str:
+        for ext in ("jpg", "jpeg", "png", "tif"):
+            base_name = grd_filename.replace(".grd", "")
+            thumbnail_filenames = glob(f"{base_name}*.{ext}")
+            if thumbnail_filenames == 1:
+                return thumbnail_filenames[0]
+            if len(thumbnail_filenames) > 1:
+                # Find the most recent one
+                last_mod_time = datetime.fromtimestamp(0)
+                for thumb in thumbnail_filenames:
+                    mod_time = datetime.fromtimestamp(
+                        pathlib.Path(thumb).stat().st_mtime
+                    )
+                    if mod_time > last_mod_time:
+                        latest_thumb = thumb
+                    last_mod_time = mod_time
+                return latest_thumb
+
+    def _examine_mb1_line(
+        self, path: str, datalist: str, item: str
+    ) -> Tuple[str, str,]:
+        if item == os.path.basename(datalist) or (
+            datalist.endswith("datalist.mb-1") and item == "datalistp.mb-1"
+        ):
+            raise RecursionError(
+                f"Dangerous recursion detected with '{item}' in {datalist}"
+            )
+        self.logger.debug("Found '%s' in %s", item, datalist)
+        cfile = os.path.abspath(os.path.join(path, item))
+        cpath = os.path.dirname(cfile)
+        self.logger.debug("Returning path %s and file %s", cpath, cfile)
+        return cpath, cfile
+
+    def missions_list(self, path: str, datalist: str) -> Tuple[list, str]:
+        """Starting at a datalist file recursively examine each line
+        until lines specifying sonar files are found. The paths for those
+        files get added to a set that's returned as a list. These are the
+        potential Misisons that comprise the Figure/Project/Compilation
+        that's defined by the datalist file."""
+        missions = set()
+        try:
+            self.logger.debug("Opening %s", datalist)
+            with open(datalist) as fh:
+                for line in fh.readlines():
+                    # MappingAUVOps2014/PortugueseLedge2008/Figures
+                    # contains null characters
+                    line = line.strip("\x00")
+                    if not line.strip():
+                        continue
+                    if line.startswith("#") or line.startswith("$"):
+                        continue
+                    # '/mbari/SeafloorMapping/2019/AxialSeamount/Figures_v2019Oct31/AxialSummit_2006_Topo1mSq.mb-1'
+                    # Remove leading 'P:'
+                    line = line.lstrip("P:")
+                    item = line.split()[0].strip()
+                    item = re.sub(r"^\/Volumes", "/mbari", item)
+                    if item.endswith("mb-1"):
+                        # line is another file, recurse into it
+                        try:
+                            cpath, cfile = self._examine_mb1_line(
+                                path,
+                                datalist,
+                                item,
+                            )
+                        except RecursionError as e:
+                            self.logger.debug(e)
+                            return list(missions), datalist
+                        sub_missions, _ = self.missions_list(cpath, cfile)
+                        missions.update(sub_missions)
+                    elif re.match(r"(^[\.\/]*)(\S+)\s+(\d+)", line):
+                        # line begins with optional relative or absolute path,
+                        # then space and number - add paths to missions set
+                        full_path = os.path.abspath(
+                            os.path.join(
+                                path,
+                                os.path.dirname(item),
+                            )
+                        )
+                        missions.add(full_path.replace(MBARI_DIR, ""))
+                    else:
+                        # line is likely missing the integer number following
+                        # the space or is not a .mb-1 file
+                        self.logger.info(
+                            "Ignoring line: %s from %s",
+                            line.strip(),
+                            datalist,
+                        )
+        except FileNotFoundError:
+            self.logger.debug("File not found: %s", datalist)
+            if not os.path.exists(f"{MBARI_DIR}/MountCheck.cmd"):
+                raise FileNotFoundError(f"{datalist}\nIs {MBARI_DIR} mounted?")
+        return list(missions), datalist
 
 
 def run(*args):
@@ -998,7 +1388,11 @@ def run(*args):
     bl = BaseLoader()
     bl.process_command_line()
     bl.logger.debug("Arguments passed to run(): %s", " ".join(args))
-    if bl.args.bootstrap and bl.args.notes:
+    if bl.args.bootstrap and bl.args.notes and bl.args.fnv:
+        bootstrap_load()
+        notes_load()
+        fnv_load()
+    elif bl.args.bootstrap and bl.args.notes:
         bootstrap_load()
         notes_load()
     elif bl.args.bootstrap:
@@ -1009,10 +1403,13 @@ def run(*args):
         mbinfo_load()
     elif bl.args.fnv:
         fnv_load()
+    elif bl.args.compilation:
+        compilation_load()
     else:
         bootstrap_load()
         notes_load()
         fnv_load()
+        compilation_load()
     bl.save_logger_output()
 
 
@@ -1038,6 +1435,12 @@ def fnv_load():
     fnv = FNVLoader()
     fnv.process_command_line()
     fnv.update_missions("fnv_update_mission_data")
+
+
+def compilation_load():
+    comp = Compiler()
+    comp.process_command_line()
+    comp.link_compilation_to_missions()
 
 
 if __name__ == "__main__":

@@ -1,41 +1,46 @@
-pytz==2021.3  # https://github.com/stub42/pytz
-python-slugify==5.0.2  # https://github.com/un33k/python-slugify
-Pillow==8.4.0  # https://github.com/python-pillow/Pillow
-rcssmin==1.0.6  # https://github.com/ndparker/rcssmin
-argon2-cffi==21.1.0  # https://github.com/hynek/argon2_cffi
-whitenoise==5.3.0  # https://github.com/evansd/whitenoise
-redis==3.5.3  # https://github.com/andymccurdy/redis-py
+pytz==2022.1  # https://github.com/stub42/pytz
+python-slugify==6.1.1  # https://github.com/un33k/python-slugify
+Pillow==9.1.0  # https://github.com/python-pillow/Pillow
+rcssmin==1.1.0  # https://github.com/ndparker/rcssmin
+argon2-cffi==21.3.0  # https://github.com/hynek/argon2_cffi
+whitenoise==6.0.0  # https://github.com/evansd/whitenoise
+redis==4.2.2  # https://github.com/andymccurdy/redis-py
 hiredis==2.0.0  # https://github.com/redis/hiredis-py
-psycopg2==2.9.1  # https://github.com/psycopg/psycopg2
+psycopg2==2.9.3  # https://github.com/psycopg/psycopg2
 
 # Django
 # ------------------------------------------------------------------------------
-django==3.2.8  # pyup: < 3.2  # https://www.djangoproject.com/
-django-bleach==0.9.0  # https://pypi.org/project/django-bleach/
+django==3.2.13  # pyup: < 3.2  # https://www.djangoproject.com/
+django-bleach==2.0.0  # https://pypi.org/project/django-bleach/
 django-environ==0.8.1  # https://github.com/joke2k/django-environ
 django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
-django-allauth==0.45.0  # https://github.com/pennersr/django-allauth
-django-crispy-forms==1.13.0  # https://github.com/django-crispy-forms/django-crispy-forms
-django-compressor==2.4.1  # https://github.com/django-compressor/django-compressor
-django-redis==5.0.0  # https://github.com/jazzband/django-redis
+django-allauth==0.50.0  # https://github.com/pennersr/django-allauth
+django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-crispy-forms
+django-compressor==3.1  # https://github.com/django-compressor/django-compressor
+django-redis==5.2.0  # https://github.com/jazzband/django-redis
 # Django REST Framework
-djangorestframework==3.12.4  # https://github.com/encode/django-rest-framework
-djangorestframework-gis==0.17 # https://youtu.be/9dPQ0DDGVO4?t=737 & https://github.com/openwisp/django-rest-framework-gis
-django-cors-headers==3.10.0 # https://github.com/adamchainz/django-cors-headers
+djangorestframework==3.13.1  # https://github.com/encode/django-rest-framework
+djangorestframework-gis==0.18 # https://youtu.be/9dPQ0DDGVO4?t=737 & https://github.com/openwisp/django-rest-framework-gis
+django-cors-headers==3.11.0 # https://github.com/adamchainz/django-cors-headers
 
 # smdb
 # ------------------------------------------------------------------------------
-django-extensions==3.1.3  # https://github.com/django-extensions/django-extensions
+django-extensions==3.1.5  # https://github.com/django-extensions/django-extensions
 graphene-django==2.15.0 # https://docs.graphene-python.org/projects/django/en/latest/installation/
 graphene-graphiql-explorer==0.0.1 # https://pypi.org/project/graphene-graphiql-explorer/
-graphene-gis==0.0.6 # https://github.com/EverWinter23/graphene-gis
-graphviz==0.17 # https://stackoverflow.com/a/13987392/1281657
+graphene-gis==0.0.7 # https://github.com/EverWinter23/graphene-gis
+graphviz==0.19.2 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
-netCDF4==1.5.7 # https://pypi.org/project/netCDF4/
+ipykernel==6.13.0 # For use in Notebooks
+matplotlib==3.5.1 # For plotting in Notebooks
+netCDF4==1.5.8 # https://pypi.org/project/netCDF4/
+pandas==1.4.2 # For use in Notebooks
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
-pygraphviz==1.7 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
+pygraphviz==1.9 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
 pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest-camel-collect
 pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
 uritemplate==4.1.1 # For python manage.py generateschema
+django-tables2==2.4.1  # https://github.com/jieter/django-tables2
+django-filter==21.1  # https://youtu.be/G-Rct7Na0UQ

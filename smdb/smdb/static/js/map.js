@@ -139,6 +139,7 @@ try {
 
 // Get Map Bounds/Coordinates
 var bounds = L.control({});
+
 bounds.onAdd = function (map) {
   var div = L.DomUtil.create("div");
   var bboxString = getMapBounds();

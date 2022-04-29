@@ -12,6 +12,10 @@ from django.utils.html import mark_safe
 from django.utils.text import slugify
 
 
+# Repeated in scripts/load.py but can't import because of timing
+MBARI_DIR = "/mbari/SeafloorMapping/"
+
+
 class Person(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     first_name = models.CharField(max_length=128, db_index=True, unique=True)
@@ -49,6 +53,9 @@ class Missiontype(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# missiontype.name would be a pick list that includes AUV mapping, LASS mapping, ship-based mapping, iceberg AUV configuration
 
 
 class Sensortype(models.Model):
@@ -98,27 +105,50 @@ class Expedition(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.slug = slugify(self.name)
-
         super(Expedition, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return f"/expeditions/{self.slug}/"
 
 
 class Compilation(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    dir_name = models.CharField(max_length=128, db_index=True)
+    name = models.CharField(max_length=256, db_index=True)
+    slug = models.SlugField(max_length=256)
+    missions = models.ManyToManyField("Mission", related_name="compilations")
+    creation_date = models.DateTimeField(max_length=256, blank=True, null=True)
+    cmd_filename = models.FileField(max_length=256, blank=True, null=True)
+    grd_filename = models.FileField(max_length=256, blank=True, null=True)
     grid_bounds = models.PolygonField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
-    path_name = models.CharField(max_length=128, db_index=True)
-    navadjust_dir_path = models.CharField(max_length=128, db_index=True)
-    figures_dir_path = models.CharField(max_length=128, db_index=True)
-    comment = models.TextField(blank=True, null=True)
-    thumbnail_filename = models.CharField(max_length=128, db_index=True)
-    kml_filename = models.CharField(max_length=128, db_index=True)
-    proc_datalist_filename = models.CharField(max_length=128, db_index=True)
+    path_name = models.CharField(max_length=256, blank=True, null=True)
+    navadjust_dir_path = models.CharField(max_length=256, blank=True, null=True)
+    figures_dir_path = models.CharField(max_length=256, blank=True, null=True)
+    comment = models.TextField(max_length=256, blank=True, null=True)
+    thumbnail_filename = models.CharField(max_length=256, blank=True, null=True)
+    thumbnail_image = models.ImageField(
+        max_length=256, upload_to="thumbnails", blank=True
+    )
+    kml_filename = models.CharField(max_length=256, blank=True, null=True)
+    proc_datalist_filename = models.CharField(max_length=256, blank=True, null=True)
     update_status = models.IntegerField(blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"{self.dir_name}"
+        return f"{self.name}"
+
+    def image_tag(self):
+        return mark_safe('<img src="{}" />'.format(self.thumbnail_image.url))
+
+    image_tag.short_description = "Thumbnail image"
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = slugify(self.name.replace("/", " "))
+        super(Compilation, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return f"/compilations/{self.slug}/"
 
 
 class Mission(models.Model):
@@ -131,12 +161,14 @@ class Mission(models.Model):
     nav_track = models.LineStringField(
         srid=4326, spatial_index=True, blank=True, null=True
     )
+    track_length = models.FloatField(blank=True, null=True)
     expedition = models.ForeignKey(
         Expedition, on_delete=models.CASCADE, blank=True, null=True
     )
     missiontype = models.ForeignKey(
         Missiontype, on_delete=models.CASCADE, blank=True, null=True
     )
+    # missiontype examples: AUV mapping, LASS survey, iceberg_configuration
     platform = models.ForeignKey(
         Platform, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -148,6 +180,12 @@ class Mission(models.Model):
     )
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
+    test_survey = models.BooleanField(blank=True, null=True)
+    failed_survey = models.BooleanField(blank=True, null=True)
+    dont_use_survey = models.BooleanField(blank=True, null=True)
+    use_survey_with_caution = models.BooleanField(blank=True, null=True)
+    patch_test = models.BooleanField(blank=True, null=True)
+    # patch tests sometimes are included in larger mapping surveys, so should be a boolean rather than a missiontype
     comment = models.TextField(blank=True, null=True)
     directory = models.CharField(max_length=256, null=True)
     notes_filename = models.CharField(
@@ -162,9 +200,6 @@ class Mission(models.Model):
     )
     kml_filename = models.CharField(
         max_length=128, db_index=True, blank=True, null=True
-    )
-    compilation = models.ForeignKey(
-        Compilation, on_delete=models.CASCADE, blank=True, null=True
     )
     # update_status: (0=up to date; 1=needs lookup; 2=not found)
     update_status = models.IntegerField(blank=True, null=True)
@@ -224,6 +259,9 @@ class Mission(models.Model):
     def end_ems(self):
         if self.end_date:
             return self.end_date.timestamp() * 1000.0
+
+    def get_absolute_url(self):
+        return f"/missions/{self.slug}/"
 
 
 class DataArchival(models.Model):

@@ -7,6 +7,7 @@ body {
   min-height: 100%;
   margin: 0px;
 }
+
 .alert-debug {
   background-color: #fff;
   border-color: #d6e9c6;
@@ -799,4 +800,25 @@ nav li {
 .wrapper {
   height: 500px;
   margin: 20px;
+}
+
+.center {
+  text-align: center;
+}
+
+path.leaflet-interactive {
+  /* rust */
+  stroke: rgb(139, 64, 0);
+  /* orange */
+  /* stroke: rgb(218, 135, 29); */
+  stroke-opacity: 100;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+path.leaflet-interactive:hover {
+  /*stroke: lightgoldenrodyellow;*/
+  stroke: yellow;
 }

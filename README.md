@@ -31,6 +31,10 @@ using the PostGIS extension. The entire software stack is free and open source.
 
 ### Install a local development system using Docker
 
+This software is placed in the open for the potential benefit of the wider
+MB-System community. The instructions here are tailored for its development and
+operation on internal MBARI servers.
+
 #### First time
 
 Install [Docker](https://docker.io) and change directory to a location where
@@ -47,6 +51,7 @@ cd SeafloorMappingDB
 # Edit smdb/local.yml and replace "mccann" with full paths to your files
 # Make the same edits in debug.yml if you intend to use VS Code
 export SMDB_HOME=$(pwd)
+export DOCKER_USER_ID=$(id -u)
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
 # Mount `smb://titan.shore.mbari.org/SeafloorMapping` on your system
 # Create smdb/.envs per https://docs.mbari.org/internal/smdb-docs/dev/
@@ -66,6 +71,7 @@ account registration. Click on Admin to administer the site.
 ```
 cd ${SMDB_HOME}
 export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
+export DOCKER_USER_ID=$(id -u)
 # Shut down the services
 docker-compose down
 # Bring back up
@@ -93,18 +99,27 @@ Install [VS Code](https://code.visualstudio.com/download) and the
 [Remote-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 extension.
 
-2. From VS Code go to File -> Open and select your SMDB_HOME directory. The `devcontainer.json`
-   file will be detected and you will be prompted to "Reopen in Container". Click the button
-   and wait for the containers to build and run.
-
-3. To monitor the docker container logs in a terminal use the `debug.yml` configuration:
+2. Build the `debug.yml` configuration that VS Code uses and launch with the `code` command
+   in a shell window following setting the environment variables:
 
 ```
 export COMPOSE_FILE=$SMDB_HOME/debug.yml
+export DOCKER_USER_ID=$(id -u)
+docker-compose up -d --build
+code
+```
+
+3. From VS Code go to File -> Open and select your SMDB_HOME directory. The `devcontainer.json`
+   file will be detected and you will be prompted to "Reopen in Container". Click the button
+   and wait for the containers to build and run.
+
+4. Monitor the docker container logs in a terminal:
+
+```
 docker-compose logs -f
 ```
 
-4. The debug.yml "recipe" has the Django development server running at http://localhost:8001/,
+5. The debug.yml "recipe" has the Django development server running at http://localhost:8001/,
    so to load and see some data there open a zsh terminal and execute at the ➜ /app git:(main) prompt:
 
 ```
@@ -112,7 +127,7 @@ cd smdb
 scripts/load.py -v --limit 5
 ```
 
-5. Use the debug launch configurations to Run and Debug the server (at port 8000),
+6. Use the debug launch configurations to Run and Debug the server (at port 8000),
    execute load.py, or run an IPython shell giving access through Django to the database.
    For example, In the Debug panel click the play button next to the "manage.py shell_plus"
    item in the pick list at top. A "In [1]:" prompt should appear in the Terminal pane -
@@ -124,7 +139,7 @@ scripts/load.py -v --limit 5
 
 You may set breakpoints and examine variables in VS Code while the Python code is executing.
 The other advantages of editing in VS Code is syntax highlighting, code completion,
-and automated formatting. Source code control is also a little nicer than usin the
+and automated formatting. Source code control is also a little nicer than using the
 command line for all the `git` commands. One caveat is that if you save a code change
 that crashes the django container (e.g. a syntax error in models.py) then you'll
 have to correct the error in another editor before you can bring back up the container
@@ -143,7 +158,7 @@ cd /opt/SeafloorMappingDB
 export SMDB_HOME=$(pwd)
 ```
 
-2. Acquire certificate files, name them smdb.crt, and smdb.key and place them in `${SMDB_HOME}/compose/production/traefik`
+2. Acquire certificate files, name them smdb.crt, and smdb.key and place them in `${SMDB_HOME}/smdb/compose/production/traefik`
 
 3. Start the app and load some data:
 

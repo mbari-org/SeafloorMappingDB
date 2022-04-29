@@ -1,27 +1,29 @@
 import json
 import logging
+import re
 from os.path import join
 
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
-from django.core.serializers import serialize
 from django.db import connection
 from django.db.models import Max, Min, Q
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from django_filters.views import FilterView
+from django_tables2 import SingleTableView
 from rest_framework_gis.serializers import (
     GeoFeatureModelSerializer,
     GeometrySerializerMethodField,
 )
-from rest_framework.renderers import JSONRenderer
 
-from smdb.models import Expedition, Mission
+from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
+from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
+from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
 
 
 class MissionSerializer(GeoFeatureModelSerializer):
     """Should probably be in smdb.api.base.serializers with a complete
-    list fields, but here we have it just delivering meeting our needs."""
+    list fields, but here we have it just meeting our needs for MissionOverView()."""
 
     class Meta:
         model = Mission
@@ -96,8 +98,22 @@ class MissionOverView(TemplateView):
         return context
 
 
-class MissionListView(ListView):
-    model = Mission
+class CompilationTableView(FilterView, SingleTableView):
+    table_class = CompilationTable
+    queryset = Compilation.objects.all()
+    filterset_class = CompilationFilter
+
+
+class ExpeditionTableView(FilterView, SingleTableView):
+    table_class = ExpeditionTable
+    queryset = Expedition.objects.all()
+    filterset_class = ExpeditionFilter
+
+
+class MissionTableView(FilterView, SingleTableView):
+    table_class = MissionTable
+    queryset = Mission.objects.all()
+    filterset_class = MissionFilter
 
 
 class MissionDetailView(DetailView):
@@ -114,16 +130,21 @@ class MissionDetailView(DetailView):
             context["thumbnail_url"] = join(
                 settings.STATIC_URL, "images", "No_ZTopoSlopeNav_image.jpg"
             )
+        try:
+            site_uri = self.request.build_absolute_uri("/")
+            base_uri = re.match(r"(http[s]*:\/\/[^:\/]*)", site_uri).group(1)
+            img_path = mission.thumbnail_filename.replace(MBARI_DIR, "")
+            context["thumbnail_fullrez_url"] = join(
+                base_uri, "SeafloorMapping", img_path
+            )
+        except (AttributeError, ValueError):
+            # no thumbnail_filename - return something
+            context["thumbnail_fullrez_url"] = base_uri
         return context
 
     def get_object(self):
         obj = super().get_object()
         return obj
-
-
-class ExpeditionListView(ListView):
-    model = Expedition
-    queryset = Expedition.objects.all()
 
 
 class ExpeditionDetailView(DetailView):
@@ -135,6 +156,37 @@ class ExpeditionDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         expedition = super().get_object()
 
+        return context
+
+    def get_object(self):
+        obj = super().get_object()
+        return obj
+
+
+class CompilationDetailView(DetailView):
+    model = Compilation
+    queryset = Compilation.objects.all()
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        compilation = super().get_object()
+        try:
+            context["thumbnail_url"] = compilation.thumbnail_image.url
+        except (AttributeError, ValueError):
+            context["thumbnail_url"] = join(
+                settings.STATIC_URL, "images", "No_ZTopoSlopeNav_image.jpg"
+            )
+        try:
+            site_uri = self.request.build_absolute_uri("/")
+            base_uri = re.match(r"(http[s]*:\/\/[^:\/]*)", site_uri).group(1)
+            img_path = compilation.thumbnail_filename.replace(MBARI_DIR, "")
+            context["thumbnail_fullrez_url"] = join(
+                base_uri, "SeafloorMapping", img_path
+            )
+        except (AttributeError, ValueError):
+            # no thumbnail_filename - return something
+            context["thumbnail_fullrez_url"] = base_uri
         return context
 
     def get_object(self):
