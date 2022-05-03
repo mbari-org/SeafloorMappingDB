@@ -17,8 +17,8 @@ services:
       - mailhog
     volumes:
       # Edit source path to use directories from *your* host
-      - /Users/salamy/docker_smdb_vol:/etc/smdb:z
-      - /Users/salamy/.ssh:/root/.ssh:z
+      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      - /Users/mccann/.ssh:/root/.ssh:z
       # Mount smb://titan.shore.mbari.org/SeafloorMapping on your Mac
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
       - .:/app:z
@@ -56,7 +56,7 @@ services:
     volumes:
       # Edit source path to use directories from *your* host
       # Copy your public key to your ~/.ssh/authorized_keys file
-      - /Users/salamy/.ssh:/root/.ssh:z
+      - /Users/mccann/.ssh:/root/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
     command: /usr/sbin/sshd -D
 
