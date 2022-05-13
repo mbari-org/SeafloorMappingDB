@@ -75,7 +75,7 @@ services:
   nginx:
     image: smdb_debug_nginx
     build:
-      context: ./smdb
+      context: .
       dockerfile: ./compose/debug/nginx/Dockerfile
       args:
         - DOCKER_USER_ID=$DOCKER_USER_ID
