@@ -6,78 +6,116 @@
 <!-- https://docs.djangoproject.com/en/3.2/ref/templates/language/ -->
 
 {% block css %}
-  {{ block.super }}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/map.css' %}">
-  <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" type="text/css">
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'css/map.css' %}">
+<!-- <link rel="stylesheet" type="text/css" href="{% static 'css/sidebar.css' %}"> -->
+
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
+<!-- <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/leaflet.control.layers.tree@1.1.0/L.Control.Layers.Tree.css"> -->
+<link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.css"
+  integrity="sha512-PpKEvRG//V8hN9idekL4WOjknpMTPFH3MnWpVbVBmlzXpoUfbBSr054U/TUmOzUnCOM9PAPiLhRgq0i00B4q3w=="
+  crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css">
+<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.4.0/mapbox-gl.css' rel='stylesheet' />
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-titillium-web@1.1.13/index.min.css">-->
+<link rel="stylesheet" href="https://unpkg.com/css-pro-layout@1.1.0/dist/css/css-pro-layout.css">
 
 {% endblock %}
 
 {% block javascript %}
-  {{ block.super }}
-
+{{ block.super }}
 <!-- Load Leaflet from CDN -->
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-    crossorigin=""></script>
-  
-  <!-- Load Esri Leaflet from CDN -->
-  <script src="https://unpkg.com/esri-leaflet@3.0.3/dist/esri-leaflet.js"
-    integrity="sha512-kuYkbOFCV/SsxrpmaCRMEFmqU08n6vc+TfAVlIKjR1BPVgt75pmtU9nbQll+4M9PN2tmZSAgD1kGUCKL88CscA=="
-    crossorigin=""></script>
-  
-  <!-- Load Esri Leaflet Vector from CDN -->
-  <script src="https://unpkg.com/esri-leaflet-vector@3.1.1/dist/esri-leaflet-vector.js"
-    integrity="sha512-7rLAors9em7cR3/583gZSvu1mxwPBUjWjdFJ000pc4Wpu+fq84lXF1l4dbG4ShiPQ4pSBUTb4e9xaO6xtMZIlA=="
-    crossorigin=""></script>  
+<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
 
-  <!-- Load Vue Leaflet from CDN-->
-  <script src="https://unpkg.com/vue2-leaflet@2.7.1/dist/vue2-leaflet.min.js"></script>
+<!-- Load Esri Leaflet from CDN -->
+<script src="https://unpkg.com/esri-leaflet@3.0.8/dist/esri-leaflet.js"
+  integrity="sha512-E0DKVahIg0p1UHR2Kf9NX7x7TUewJb30mxkxEm2qOYTVJObgsAGpEol9F6iK6oefCbkJiA4/i6fnTHzM6H1kEA=="
+  crossorigin=""></script>
+<!-- <script src="https://unpkg.com/esri-leaflet@3.0.4/dist/esri-leaflet.js"></script> -->
 
-  <!-- Load Google Map Base Layer using LeafletJs 
-  <script src=”http://maps.google.com/maps/api/js?v=3.2&sensor=false”></script>
-  <script src=”http://matchingnotes.com/javascripts/leaflet-google.js”></script>
-  <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
-		<style>-->
+<!-- Load Esri Leaflet Vector from CDN -->
+<script src="https://unpkg.com/esri-leaflet-vector@3.1.2/dist/esri-leaflet-vector.js"
+  integrity="sha512-SnA/TobYvMdLwGPv48bsO+9ROk7kqKu/tI9TelKQsDe+KZL0TUUWml56TZIMGcpHcVctpaU6Mz4bvboUQDuU3w=="
+  crossorigin=""></script>
+<!-- <script src="https://unpkg.com/esri-leaflet-vector@3.1.1/dist/esri-leaflet-vector.js"
+  integrity="sha512-7rLAors9em7cR3/583gZSvu1mxwPBUjWjdFJ000pc4Wpu+fq84lXF1l4dbG4ShiPQ4pSBUTb4e9xaO6xtMZIlA=="
+  crossorigin=""></script> -->
+
+<!-- Load Leaflet Tree Layers Control-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.js"
+  integrity="sha512-2OAO6Vw7QqbRSoHqfdIhur/B7urhzltUGHOufhmGJRScSz8S0ZUyBp1ixI9BB0pLXIKqyQZ/cOwS4PgBTviT6Q=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/leaflet.control.layers.tree@1.1.0/L.Control.Layers.Tree.js"></script>-->
+
+<!-- Load Leaflet Measure from CDN -->
+<script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/leaflet-sidebar@0.2.4/src/L.Control.Sidebar.min.js"></script> -->
 
 
-  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
-  <script src="{% static 'js/SliderControl.js' %}"></script>
+<!-- Leaflet-sidebar v2 -->
+<!-- <script src="{% static 'js/sidebar.js' %}"></script> -->
+
+<!-- Load Google Map Base Layer using LeafletJs -->
+<script src="https://maps.googleapis.com/maps/api/js?" async defer></script>
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+
+<!-- Load Google API Key -->
+<!--   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJrXEKm3toXnLKf2u0PMKQEx9uPx5YxU4&callback=initMap"></script> -->
+
+<!-- Load Mapbox-gl.js -->
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2/dist/mapbox-gl.js"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
+
+<!-- Load Other 3rd party javascript -->
+<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" data-observe-mutations></script>
+<!-- <script src="{% static 'js/sidebar.js' %}"></script> -->
+<script src="{% static 'js/SliderControl.js' %}"></script>
+
 {% endblock %}
-
-
 
 {% block content %}
-<div class="container-fluid">
-  <div class="row" id="filter-row">
-    <div class="col-3">
-      <span id="num-missions">{{ num_missions }}</span> Missions
-      <span id="search-string">{{ search_string|bleach }}</span>
-    </div>
-    <div class="col-6" id="filter-center">
-    </div>
-    <div class="col-3">
-      <div class="float-right">
-        <input type="hidden" name="xmin" value="" id="xmin">
-        <input type="hidden" name="xmax" value="" id="xmax">
-        <input type="hidden" name="ymin" value="" id="ymin">
-        <input type="hidden" name="ymax" value="" id="ymax">
-        <input type="hidden" name="tmin" value="" id="tmin">
-        <input type="hidden" name="tmax" value="" id="tmax">
-        <label for="searchbar"><img src="/static/admin/img/search.svg" alt="Search"></label>
-        <input title="Search for Notes text or Mission name" type="text" size="20" name="q" value="" id="searchbar" onkeypress="if(event.key == 'Enter') {updateMap();}">
-        <a href="javascript: updateMap()">Update</a>
-      </div>
-    </div>
+<!-- Number of Missions and Load Log Output -->
+
+<div class="row">
+  <div class="col-3-sm column" id="filter-left">
+    <font size="3px" border-style="solid" border-thickness="1px"><strong>
+        Viewing <span id="num-missions">{{ num_missions }}</span> Missions</strong></font>
+    <br>
+    <a href="{{ MEDIA_URL }}logs/load.txt" target="_blank">
+      <button type="button" class="btn btn-outline-primary my-2">Load Log Output</button></a>
+  </div>
+  <div class="col-6-sm column" id="filter-center" width="auto"></div>
+  <div class="col-3-sm column" id="filter-right" style="background-color:white">
+    <input type="hidden" name="xmin" value="" id="xmin">
+    <input type="hidden" name="xmax" value="" id="xmax">
+    <input type="hidden" name="ymin" value="" id="ymin">
+    <input type="hidden" name="ymax" value="" id="ymax">
+    <input type="hidden" name="tmin" value="" id="tmin">
+    <input type="hidden" name="tmax" value="" id="tmax">
+    <form class="d-flex" position="fixed" id="searchBarForm">
+      <input class="form-control mr-sm-2" type="search" size="8" textcolor="lightgray" name="q" id="searchBar"
+        placeholder="Search SMDB Mission Info..." title="Search for mission notes or names"
+        onfocus="this.placeholder=''" onblur="this.placeholder='Search SMDB Mission Info'">
+      <button class="btn btn-outline-primary btn-sm my-2" float="right" id="searchbtn" type="submit" onkeypress="if(event.key == 'Enter') {
+            updateMap();}">Search
+      </button>
+    </form>
   </div>
 </div>
-  {{ missions|json_script:"missions-data" }}
-  {{ MEDIA_URL|json_script:"MEDIA-URL" }}
-  <div id="map">
-  </div>
-  <script src="{% static 'js/map.js' %}"></script>
 
+<div id="map" class="" tabindex="0" style="position: relative;">
+</div>
+
+{{ missions|json_script:"missions-data" }}
+{{ MEDIA_URL|json_script:"MEDIA-URL" }}
+<script src="{% static 'js/map.js' %}"></script>
+</nav>
+</body>
+
+</html>
 {% endblock %}
-
