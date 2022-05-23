@@ -151,7 +151,12 @@ let feature = L.geoJSON(missions, {
 
     let missionInfo = tooltipInfo.substring(tooltipInfo.indexOf(" ") + 1);
     missionInfo = missionInfo.replace(/^\m/, "Mission ");
-    tooltipInfo = "Date: " + dateOfMission + "<br> Info: " + missionInfo;
+    tooltipInfo =
+      layer.feature.properties.slug +
+      "<br>Date: " +
+      dateOfMission +
+      "<br>Info: " +
+      missionInfo;
     return tooltipInfo;
   })
   .addTo(map);
@@ -223,6 +228,14 @@ var mapBaseLayerName = fnMapLayerDetect();
 //////////////////////
 
 // Add Measure Control on Map
+// add Leaflet-Geoman controls with some options to the map
+// map.pm
+//   .addControls({
+//     position: "topleft",
+//     drawCircle: false,
+//     drawMarker: false,
+//   })
+//   .addTo(map);
 /* var measure = L.control.measure({
 primaryLengthUnit: 'meters', secondaryLengthUnit: 'feet',
   primaryAreaUnit: 'sqmeters', secondaryAreaUnit: 'sqmiles',
