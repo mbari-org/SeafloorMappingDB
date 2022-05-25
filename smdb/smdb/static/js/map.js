@@ -228,21 +228,17 @@ var mapBaseLayerName = fnMapLayerDetect();
 //////////////////////
 
 // Add Measure Control on Map
-// add Leaflet-Geoman controls with some options to the map
-// map.pm
-//   .addControls({
-//     position: "topleft",
-//     drawCircle: false,
-//     drawMarker: false,
-//   })
-//   .addTo(map);
-/* var measure = L.control.measure({
-primaryLengthUnit: 'meters', secondaryLengthUnit: 'feet',
-  primaryAreaUnit: 'sqmeters', secondaryAreaUnit: 'sqmiles',
-  activeColor: '#ABE67E',
-  completedColor: '#C8F2BE',
-  captureZIndex: 5000
-}).addTo(map); */
+var measure = L.control
+  .measure({
+    primaryLengthUnit: "meters",
+    secondaryLengthUnit: "feet",
+    primaryAreaUnit: "sqmeters",
+    secondaryAreaUnit: "sqmiles",
+    activeColor: "#ABE67E",
+    completedColor: "#C8F2BE",
+    captureZIndex: 5000,
+  })
+  .addTo(map);
 
 // Add scale on map
 var scale = L.control
@@ -250,6 +246,15 @@ var scale = L.control
     imperial: false,
     position: "topright",
     maxWidth: 70,
+  })
+  .addTo(map);
+
+// add Leaflet-Geoman controls with some options to the map
+map.pm
+  .addControls({
+    position: "topleft",
+    drawCircle: false,
+    drawMarker: false,
   })
   .addTo(map);
 
