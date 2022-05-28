@@ -259,33 +259,6 @@ var scale = L.control
   })
   .addTo(map);
 
-// add Leaflet-Geoman controls with some options to the map
-// map.pm
-//   .addControls({
-//     position: "topright",
-//     drawControls: true,
-//     editControls: true,
-//     editMode: false,
-//     optionsControls: true,
-//     customControls: true,
-//     oneBlock: true,
-//     enableGlobalRotateMode: true,
-//   });
-
-// L.easyButton('fa-star', function () {
-//   map.pm
-//     .addControls({
-//       position: "topright",
-//       drawControls: true,
-//       editControls: true,
-//       editMode: false,
-//       optionsControls: true,
-//       customControls: true,
-//       oneBlock: true,
-//       enableGlobalRotateMode: true,
-//     });
-//.addTo(map);
-
 var toggle = L.easyButton({
   position: "topright",
   states: [
