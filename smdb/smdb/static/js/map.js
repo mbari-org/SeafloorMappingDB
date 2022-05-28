@@ -6,6 +6,7 @@
 // /lib/Leaflet.GoogleMutant.js
 // /lib/leaflet-google.js
 // /lib/leaflet-measure.js
+// /lib/easybutton.js
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoic2FsYW15IiwiYSI6ImNrZjRlMGVpczBjNHgzMHZ3bWpmZWtsazcifQ.oR-gObeinElgR2KXLOYeWQ";
@@ -222,6 +223,15 @@ var controlLayers = L.control.groupedLayers(
 );
 map.addControl(controlLayers);
 
+map.on("baselayerchange", function (event) {
+  //The LayerEvent/LayersControlEvent properties are undefined
+  console.log(event.layer);
+  console.log(event.name);
+
+  //The "event object" is in fact the layer being swapped to
+  console.log(event._url);
+});
+
 //Determine the mapBaseLayer being currently used in browser
 var mapBaseLayerName = fnMapLayerDetect();
 //console.log("Map Base Layer: " + mapBaseLayerName);
@@ -250,13 +260,65 @@ var scale = L.control
   .addTo(map);
 
 // add Leaflet-Geoman controls with some options to the map
-map.pm
-  .addControls({
-    position: "topleft",
-    drawCircle: false,
-    drawMarker: false,
-  })
-  .addTo(map);
+// map.pm
+//   .addControls({
+//     position: "topright",
+//     drawControls: true,
+//     editControls: true,
+//     editMode: false,
+//     optionsControls: true,
+//     customControls: true,
+//     oneBlock: true,
+//     enableGlobalRotateMode: true,
+//   });
+
+// L.easyButton('fa-star', function () {
+//   map.pm
+//     .addControls({
+//       position: "topright",
+//       drawControls: true,
+//       editControls: true,
+//       editMode: false,
+//       optionsControls: true,
+//       customControls: true,
+//       oneBlock: true,
+//       enableGlobalRotateMode: true,
+//     });
+//.addTo(map);
+
+var toggle = L.easyButton({
+  position: "topright",
+  states: [
+    {
+      stateName: "add-geoman",
+      icon: "fas fa-draw-polygon fa-xl",
+      title: "Show Geometry Toolbar",
+      onClick: function (control) {
+        map.pm.addControls({
+          position: "topright",
+          drawControls: true,
+          editControls: true,
+          editMode: false,
+          optionsControls: true,
+          customControls: true,
+          oneBlock: true,
+          enableGlobalRotateMode: true,
+        });
+        control.state("remove-geoman");
+      },
+    },
+    {
+      stateName: "remove-geoman",
+      icon: "fa-undo",
+      title: "Hide Geometry Toolbar",
+      onClick: function (control) {
+        map.pm.removeControls();
+        control.state("add-geoman");
+      },
+    },
+  ],
+});
+toggle.addTo(map);
 
 // Get Map Boundaries
 function getMapBounds() {

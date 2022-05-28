@@ -902,6 +902,13 @@ nav li {
   padding-right: 8px;
 }
 
+.fas, .fa-draw-polygon, .fa-xl {
+  color: darkslategray;
+  /* viewBox: 30, 0, 450, 500; */
+  width: 110%;
+  height: 100%;
+}
+
 /* Some media queries for responsiveness */
 @media screen and (max-height: 450px) {
   .sidenav {
