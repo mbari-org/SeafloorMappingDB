@@ -12,6 +12,8 @@
       "program": "${workspaceFolder}/smdb/manage.py",
       "args": [
         "runserver_plus",
+        # https://stackoverflow.com/a/72206748/1281657
+        "--keep-meta-shutdown",
         "0.0.0.0:8000",
         "--settings",
         "config.settings.local"
@@ -36,7 +38,17 @@
       "console": "integratedTerminal",
       //"args": ["-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2011/20110718m1/ZTopo.grd$", "--limit", "2"],
       //"args": [ "-v", "2", "--clobber", "--skipuntil_regex", "--regex", "mbsystem/Data/2012/20120103_MB-System_Tutorial_OFG/ProprietaryOFGSampleData/20101127OFGSample/multibeam_hsx"],
-      "args": [ "-v", "1", "--clobber", "--noinput", "--skipuntil_regex", "--regex", "MappingAUVOps2014/Sentry_Loihi/2014-glazer/dives/sentry265/multibeam/mbari/ZTopo.grd$", "--limit", "1" ],
+      "args": [
+        "-v",
+        "1",
+        "--clobber",
+        "--noinput",
+        "--skipuntil_regex",
+        "--regex",
+        "MappingAUVOps2014/Sentry_Loihi/2014-glazer/dives/sentry265/multibeam/mbari/ZTopo.grd$",
+        "--limit",
+        "1"
+      ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2021/20210812m1/ZTopo.grd$", "--limit", "10" ],
       //"args": [ "-v", "1", "--clobber", "--skipuntil_regex", "--regex", "2022/20220202m1/ZTopo.grd$", "--limit", "12" ],
       //"args": ["-v", "1", "--limit", "5", "--clobber", "--noinput"],
@@ -64,4 +76,4 @@
       "justMyCode": false
     }
   ]
-e
+}
