@@ -137,7 +137,8 @@ class TestMissiontypeViewSet(ViewSetTest, AsUser("tester")):
             }
         )
         initial_missiontype = precondition_fixture(
-            lambda: set(Missiontype.objects.values_list("name", flat=True))
+            lambda: set(Missiontype.objects.values_list("name", flat=True)),
+            async_=False,
         )
 
         def it_creates_new_missiontype(self, initial_missiontype, json):
@@ -209,7 +210,8 @@ class TestMissiontypeViewSet(ViewSetTest, AsUser("tester")):
         initial_missiontype = precondition_fixture(
             lambda missiontype: set(  # ensure our to-be-deleted Missiontype exists in our set
                 Missiontype.objects.values_list("name", flat=True)
-            )
+            ),
+            async_=False,
         )
 
         def it_deletes_missiontype(self, initial_missiontype, missiontype):
@@ -271,7 +273,7 @@ class TestPersonViewSet(ViewSetTest, AsUser("tester")):
             }
         )
         initial_person = precondition_fixture(
-            lambda: set(Person.objects.values_list("uuid", flat=True))
+            lambda: set(Person.objects.values_list("uuid", flat=True)), async_=False
         )
 
         def it_creates_new_person(self, initial_person, json):
@@ -358,7 +360,8 @@ class TestPersonViewSet(ViewSetTest, AsUser("tester")):
         initial_person = precondition_fixture(
             lambda person: set(  # ensure our to-be-deleted Person exists in our set
                 Person.objects.values_list("uuid", flat=True)
-            )
+            ),
+            async_=False,
         )
 
         def it_deletes_person(self, initial_person, person):
@@ -420,7 +423,8 @@ class TestPlatformtypeViewSet(ViewSetTest, AsUser("tester")):
         initial_platformtype = precondition_fixture(
             lambda: set(
                 [pt for pt in Platformtype.objects.values_list("name", flat=True)]
-            )
+            ),
+            async_=False,
         )
 
         def it_creates_new_platformtype(self, initial_platformtype, json):
@@ -497,7 +501,8 @@ class TestPlatformtypeViewSet(ViewSetTest, AsUser("tester")):
         initial_platformtype = precondition_fixture(
             lambda platformtype: set(  # ensure our to-be-deleted Platformtype exists in our set
                 Platformtype.objects.values_list("name", flat=True)
-            )
+            ),
+            async_=False,
         )
 
         def it_deletes_platformtype(self, initial_platformtype, platformtype):
