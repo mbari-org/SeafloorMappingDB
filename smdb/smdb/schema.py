@@ -128,7 +128,6 @@ class MissionNode(DjangoObjectNode):
             "site_detail",
             "thumbnail_filename",
             "kml_filename",
-            "compilation",
             "update_status",
             "sensors",
             "data_archivals",
@@ -761,7 +760,6 @@ class MissionInput(graphene.InputObjectType):
     site_detail = graphene.String()
     thumbnail_filename = graphene.String()
     kml_filename = graphene.String()
-    compilation = graphene.Field(CompilationInput)
     update_status = graphene.Int()
     sensors = graphene.List(SensorInput)
     data_archivals = graphene.List(lambda: DataArchivalInput)
