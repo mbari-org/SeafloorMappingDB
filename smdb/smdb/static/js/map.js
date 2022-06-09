@@ -7,6 +7,8 @@
 // /lib/leaflet-google.js
 // /lib/leaflet-measure.js
 // /lib/easybutton.js
+/* /lib/ActiveLayers.js*/
+// include project.js
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoic2FsYW15IiwiYSI6ImNrZjRlMGVpczBjNHgzMHZ3bWpmZWtsazcifQ.oR-gObeinElgR2KXLOYeWQ";
@@ -28,6 +30,8 @@ var browserName = fnBrowserDetect();
 const esriOceans = L.esri.Vector.vectorBasemapLayer(
   "ArcGIS:Oceans",
   {
+    id: "arcgisOceans",
+    name: "ArcGIS:Oceans",
     apikey:
       "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
   },
@@ -38,13 +42,19 @@ L.esri.basemapLayer("Oceans", options).addTo(map);
 L.esri.basemapLayer("OceansLabels", options).addTo(map); */
 
 // Google_Hybrid_Layer
-const googleHybrid = L.gridLayer.googleMutant({ type: "hybrid" });
+const googleHybrid = L.gridLayer.googleMutant({
+  type: "hybrid",
+  id: "hybrid",
+  name: "hybrid",
+});
 googleHybrid.maxZoom = 16;
 
 // Open_Maps_StreetView_Vector_Layer - was L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 const openMapStreetViewLayer = L.esri.Vector.vectorBasemapLayer(
   "OSM:Standard",
   {
+    id: "osm",
+    name: "osm",
     apikey:
       "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
   },
@@ -55,6 +65,8 @@ const openMapStreetViewLayer = L.esri.Vector.vectorBasemapLayer(
 const arcGISDark = L.esri.Vector.vectorBasemapLayer(
   "ArcGIS:DarkGray",
   {
+    id: "arcgisDarkGray",
+    name: "arcgisDarkGray",
     apikey:
       "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
   },
@@ -65,6 +77,8 @@ const arcGISDark = L.esri.Vector.vectorBasemapLayer(
 const arcGISGray = L.esri.Vector.vectorBasemapLayer(
   "ArcGIS:LightGray",
   {
+    id: "arcgisLightGray",
+    name: "arcgisLightGray",
     apikey:
       "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
   },
@@ -72,7 +86,11 @@ const arcGISGray = L.esri.Vector.vectorBasemapLayer(
 );
 
 // Empty - From DashUI - Perhaps this is something others would like to have an option for
-const emptyLayer = L.tileLayer("", { opacity: 0 });
+const emptyLayer = L.tileLayer("", {
+  id: "empty",
+  name: "empty",
+  opacity: 0,
+});
 
 //////////////////////////////////////////////////////////////////
 // Construct a const map BASE LAYER OBJECT for Selection
@@ -188,7 +206,7 @@ bounds.onAdd = function (map) {
   div.innerHTML =
     '<div id="bounds">' +
     '<div id="div-bounds">' +
-    '<input title="Use map bounds in Update" type="checkbox" style="vertical-align: middle" id="use_bounds">' +
+    '<input title="Use map bounds in Update" type="checkbox" onclick="getBoundsStatus()" style="vertical-align: middle" id="use_bounds">' +
     "</div>" +
     "&nbsp" +
     "&nbsp" +
@@ -199,6 +217,32 @@ bounds.onAdd = function (map) {
   return div;
 };
 bounds.addTo(map);
+
+// Get Map Bounds Status (Checked or Unchecked)
+function getBoundsStatus() {
+  var boundsStatus;
+  if (document.getElementById("use_bounds").checked) {
+    console.log("Bounds checkbox CHECKED!");
+    boundsStatus = true;
+  } else {
+    console.log("Bounds checkbox UNCHECKED!");
+    boundsStatus = false;
+  }
+  return boundsStatus;
+}
+
+// Get Map Bounds Status (Checked or Unchecked)
+function getSliderStatus() {
+  var sliderStatus;
+  if (document.getElementById("use_time").checked) {
+    console.log("SliderControl Time checkbox CHECKED!");
+    sliderStatus = true;
+  } else {
+    console.log("SliderControl Time checkbox UNCHECKED!");
+    sliderStatus = false;
+  }
+  return sliderStatus;
+}
 
 // Determine Mouse Coordinate position
 var mousePosition = L.control({ position: "topright" });
@@ -222,19 +266,19 @@ var controlLayers = L.control.groupedLayers(
   options
 );
 map.addControl(controlLayers);
+//////////////////////
 
-map.on("baselayerchange", function (event) {
-  //The LayerEvent/LayersControlEvent properties are undefined
-  console.log(event.layer);
-  console.log(event.name);
-
-  //The "event object" is in fact the layer being swapped to
-  console.log(event._url);
+map.eachLayer(function (e) {
+  e.on("click", function () {
+    console.log("Entered controlLayers method: " + this._leaflet_id);
+    // alert(this._leaflet_id);
+  });
 });
+// var control = L.control.activeLayers(mapBaseLayers, groupedOverlays);
 
 //Determine the mapBaseLayer being currently used in browser
-var mapBaseLayerName = fnMapLayerDetect();
-//console.log("Map Base Layer: " + mapBaseLayerName);
+var mapBaseLayerName = getOverlays();
+console.log("Map Base Layer: " + mapBaseLayerName);
 //////////////////////
 
 // Add Measure Control on Map
@@ -258,40 +302,6 @@ var scale = L.control
     maxWidth: 70,
   })
   .addTo(map);
-
-var toggle = L.easyButton({
-  position: "topright",
-  states: [
-    {
-      stateName: "add-geoman",
-      icon: "fas fa-draw-polygon fa-xl",
-      title: "Show Geometry Toolbar",
-      onClick: function (control) {
-        map.pm.addControls({
-          position: "topright",
-          drawControls: true,
-          editControls: true,
-          editMode: false,
-          optionsControls: true,
-          customControls: true,
-          oneBlock: true,
-          enableGlobalRotateMode: true,
-        });
-        control.state("remove-geoman");
-      },
-    },
-    {
-      stateName: "remove-geoman",
-      icon: "fa-undo",
-      title: "Hide Geometry Toolbar",
-      onClick: function (control) {
-        map.pm.removeControls();
-        control.state("add-geoman");
-      },
-    },
-  ],
-});
-toggle.addTo(map);
 
 // Get Map Boundaries
 function getMapBounds() {
@@ -338,14 +348,6 @@ map.on(
   50
 );
 
-// Try and get information on ActiveLayer with each map pan
-//map.on("moveend", function (event) {
-/*   var layer = this.layer;
-  console.log('Layer name -> ', event.name);
-  fnMapLayerDetect(); */
-//console.log(map.getCenter().toString());
-//});
-
 // Set up Slider Control
 var sliderControl = L.control.sliderControl({
   isEpoch: true,
@@ -385,38 +387,94 @@ function fnBrowserDetect() {
 }
 
 // Try and determine the active overlay - Currently not working.
-// function getOverlays() {
-// create hash to hold all layers
-/*  var control;
-  const layers = {}; */
-//var obj = this._layers;
-/*   control = this;
-  var layerName;
+function getOverlays() {
+  // create hash to hold all layers
+  var control, layerName, obj;
+  const layers = {};
+  obj = this._layers;
+  control = this;
   var map = this._map;
-  console.log("Testing " + map.itemInfo.itemData.operationalLayers);
- */
-// loop thru all layers in control
-// control._layers?.forEach((obj) => {
-// check if layer is an overlay
-// if (obj.overlay) {
-// get name of overlay
-/*         layerName = obj.name;
-          console.log("LayerName: " + layerName); */
-// store whether it's present on the map or not
-/*         return layers[layerName] = control._map.hasLayer(obj.layer);
-      }
-    });
+
+  fnMapLayerDetect();
+  console.log();
+
+  // console.log("Testing " + map.itemInfo.itemData.operationalLayers);
+  // loop thru all layers in control
+  control._layers?.forEach((obj) => {
+    // check if layer is an overlay
+    if (obj.overlay) {
+      // get name of overlay
+      layerName = obj.name;
+      console.log("LayerName: " + layerName);
+      // store whether it's present on the map or not
+      return (layers[layerName] = control._map.hasLayer(obj.layer));
+    }
+  });
   console.log("Active Layer: " + layers);
   return layers;
-}  */
+}
 
 // Set up a Map Layer Detection Function
 function fnMapLayerDetect() {
-  //add the layer to the overlayMaps with a dynamic layer name (e.g. overlayMaps[layerName] = layer1;)
-  groupedOverlays[" ESRI/ArcGIS Oceans "] = esriOceans;
-  groupedOverlays[" Google Hybrid Layer "] = googleHybrid;
-  groupedOverlays[" OpenStreetMap Layer "] = openMapStreetViewLayer;
-  groupedOverlays[" ArcGIS Lt. Gray Layer "] = arcGISGray;
-  groupedOverlays[" ArcGIS Dark Layer "] = arcGISDark;
-  groupedOverlays[" No Map "] = emptyLayer;
+  map.on("baselayerchange", ({ name }) => {
+    $store.dispatch("options/setBaseLayerName", name);
+    console.log("LAYER HAS BEEN CHANGED TO: " + name);
+  });
+
+  // console.log("Got here!0");
+  // var esriOceansID,
+  //   googleHybridID,
+  //   openMapStreetViewLayerID,
+  //   arcGISGrayID,
+  //   arcGISDarkID,
+  //   emptyLayerID;
+  // console.log("Got here!1");
+  // //add the layer to the overlayMaps with a dynamic layer name (e.g. overlayMaps[layerName] = layer1;)
+  // groupedOverlays[" ESRI/ArcGIS Oceans "] = esriOceans;
+  // groupedOverlays[" Google Hybrid Layer "] = googleHybrid;
+  // groupedOverlays[" OpenStreetMap Layer "] = openMapStreetViewLayer;
+  // groupedOverlays[" ArcGIS Lt. Gray Layer "] = arcGISGray;
+  // groupedOverlays[" ArcGIS Dark Layer "] = arcGISDark;
+  // groupedOverlays[" No Map "] = emptyLayer;
+  // console.log("Got here!2");
+  // esriOceansID = L.stamp(esriOceans);
+  // googleHybridID = L.stamp(googleHybrid);
+  // openMapStreetViewLayerID = L.stamp(openMapStreetViewLayer);
+  // arcGISGrayID = L.stamp(arcGISGray);
+  // arcGISDarkID - L.stamp(arcGISDark);
+  // emptyLayerID = L.stamp(emptyLayer);
+  // console.log("Got here!3");
+  // L.LayerGroup.include({
+  //   customGetLayer: function (id) {
+  //     for (var i in this._layers) {
+  //       if (this._layers[i].id == id) {
+  //         return this._layers[i];
+  //       }
+  //     }
+  //   },
+  // });
+  // console.log("Got here!4");
+  // var layerGroup = L.LayerGroup([
+  //   esriOceansID,
+  //   googleHybridID,
+  //   openMapStreetViewLayerID,
+  //   arcGISGrayID,
+  //   arcGISDarkID,
+  //   emptyLayerID,
+  // ]);
+  // console.log("Got here!5");
+  // layerGroup.eachLayer(function (layer) {
+  //   if (layer instanceof L.esriOceansID) {
+  //     console.log("esriOceans");
+  //   }
+  //   if (layer instanceof L.googleHybridID) {
+  //     console.log("googleHybrid");
+  //   }
+  // });
+  // console.log("Got here!6");
+  // for (i = 0; i < groupedOverlays.getLayers().length; i++) {
+  //   if (groupedOverlays.getLayers()[i].options.id == "esriOceansID") {
+  //     console.log("Testing " + grouped.getLayers()[i]);
+  //   }
+  // }
 }
