@@ -49,7 +49,7 @@ jobs:
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
       - name: Run Pytest Tests
-      - run: |
+        run: |
           export DISPLAY=:99
           chromedriver --url-base=/wd/hub &
           docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
