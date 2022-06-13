@@ -50,9 +50,9 @@ jobs:
 
       - name: Run Pytest Tests
       - run: |
-        export DISPLAY=:99
-        chromedriver --url-base=/wd/hub &
-        docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
+          export DISPLAY=:99
+          chromedriver --url-base=/wd/hub &
+          docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
 
       - name: Tear down the Stack
         run: docker-compose -f smdb/ci.yml down
