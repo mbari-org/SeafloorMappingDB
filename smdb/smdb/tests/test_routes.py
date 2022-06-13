@@ -20,27 +20,6 @@ class RouteTest(TestCase):
 
     @pytest.mark.django_db
     def test_compilations(self):
-        compilation_url = reverse("compilations")
-
-        response = self.client.get(compilation_url)
-
+        response = self.client.get(reverse("about"))
         assert response.status_code == 200
-        assert response.context["request"].path == "/compilation"
-
-    @pytest.mark.django_db
-    def test_homepage(self):
-        homepage_url = reverse("home")
-
-        response = self.client.get(homepage_url)
-
-        assert response.status_code == 200
-        assert response.context["request"].path == "/"
-
-    @pytest.mark.django_db
-    def test_homepage(self):
-        homepage_url = reverse("home")
-
-        response = self.client.get(homepage_url)
-
-        assert response.status_code == 200
-        assert response.context["request"].path == "/"
+        assert response.context["request"].path == "/about/"
