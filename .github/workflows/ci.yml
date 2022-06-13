@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
+
+      - name: Setup Chrome for Selenium Testing
         uses: nanasess/setup-chromedriver@v1
 
       - name: Build the Stack
