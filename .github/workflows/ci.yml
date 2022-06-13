@@ -40,6 +40,7 @@ jobs:
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
+        uses: nanasess/setup-chromedriver@v1
 
       - name: Build the Stack
         run: docker-compose -f smdb/ci.yml build
@@ -47,8 +48,11 @@ jobs:
       - name: Run DB Migrations
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
-      - name: Run Django Tests
-        run: docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
+      - name: Run Pytest Tests
+        - run: 
+          export DISPLAY=:99
+          chromedriver --url-base=/wd/hub &
+          docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
 
       - name: Tear down the Stack
         run: docker-compose -f smdb/ci.yml down
