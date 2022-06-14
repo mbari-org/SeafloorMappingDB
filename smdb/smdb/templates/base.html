@@ -1,122 +1,194 @@
-{% load static i18n compress %}<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>{% block title %}SeafloorMappingDB{% endblock title %}</title>
-  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Seafloor Mapping Database">
-    <meta name="author" content="Mike McCann">
+{% load static i18n compress %}
+<!DOCTYPE html>
 
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>{% block title %}SeafloorMappingDB{% endblock title %}</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Seafloor Mapping Database">
+  <meta name="authors" content="Mike McCann and Karen Salamy, MBARI">
+
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
     <![endif]-->
 
-    <!-- If we come up with an icon for smdb replace the dummy with it here -->
-    <link rel="icon" type="image/png" href="{% static 'images/favicon-192.png' %}">
-    <!--<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo="> -->
+  <!-- If we come up with an icon for smdb replace the dummy with it here -->
+  <link rel="icon" type="image/png" href="{% static 'images/favicons/smdb_favicon_ship.ico' %}">
 
-    {% block css %}
-    <!-- Latest compiled and minified Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  {% block css %}
+  <!-- Latest compiled and minified Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <!-- Add leaflet CSS-->
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css">
 
-    <!-- Add leaflet CSS-->
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+  <!-- Your stuff: Third-party CSS libraries go here -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@2.2.0/fonts/remixicon.css" rel="stylesheet">
+  {% compress css %}
+  <!-- These files store project-specific CSS -->
+  <link href="{% static 'css/project.css' %}" rel="stylesheet">
 
-    <!-- Your stuff: Third-party CSS libraries go here -->{% compress css %}
-    <!-- This file stores project-specific CSS -->
-    <link href="{% static 'css/project.css' %}" rel="stylesheet">{% endcompress %}
-    {% endblock %}
-    <!-- Le javascript
+  {% endcompress %}
+  {% endblock %}
+  <!-- Le javascript
     ================================================== -->
-    {# Placed at the top of the document so pages load faster with defer #}
-    {% block javascript %}
-      <!-- Bootstrap JS and its dependencies-->
-      <script defer src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-      <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-      <script defer src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  {# Placed at the top of the document so pages load faster with defer #}
+  {% block javascript %}
+  <!-- Bootstrap JS and its dependencies-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+    </script>
 
-      <!-- Your stuff: Third-party javascript libraries go here -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
+    integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB"
+    crossorigin="anonymous"></script>
 
-      <!-- place project specific Javascript in this file -->{% compress js %}
-      <script defer src="{% static 'js/project.js' %}"></script>{% endcompress %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
+    integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13"
+    crossorigin="anonymous"></script>
 
-    {% endblock javascript %}
+  <!-- Your stuff: Third-party javascript libraries go here -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
 
-  </head>
+  <!-- place project specific Javascript in this file navbar-light flex-column flex-md-row bd-navbar-->
+  {% compress js %}
+  <script defer src="{% static 'js/project.js' %}"></script>
+  {% endcompress %}
 
-  <body>
+  {% endblock javascript %}
+</head>
 
-    <div class="mb-1 row bg-light">
-      <div class="col-9">
-        <nav class="navbar navbar-expand-md navbar-light">
-          <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
+<body>
+  <!-- NavBar -->
+  <!-- Left Menu Items -->
+  <div class="navbar navbar-expand-md navbar-light navbar-fixed-top navbar-left"
+    style="background-color: #e9e9e9; width: 100%" id="navbar" role="navigation">
+    <a class="navbar-brand" href="{% url 'home' %}" id="smdb_navbrand">
+      <img src="{% static 'images/SMDB_logo.jpg' %}" class="img" id="smdbLogo"
+        aria-label="SeaFloor Mapping Database (SMDB)">
+    </a>
+    <ul class="navbar-nav nav-pills w-100 justify-content-left flex-column flex-md-row" style="padding-left: 50px"
+      width="50%" id="menuLinks">
+      <li class="nav-item active">
+        <a class="nav-link" id="navListActive" href="{% url 'home' %}" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="SMDB Home Page">
+          <font size="4px">Home</font><span class="sr-only"></span>
+        </a>
+      </li>
 
-          <!--<a class="navbar-brand" href="{% url 'home' %}">SeafloorMappingDB</a> -->
-          <a class="navbar-brand" href="{% url 'home' %}"><img src="{% static 'images/SMDB_logo_mask2_test1.png' %}" alt="SMDB">
-          </a>
+      <li class="nav-item mr-auto dropdown">
+        <a class="nav-link dropdown-toggle" id="navData" href="" role="button" aria-haspopup="true"
+          aria-expanded="false" data-bs-toggle="tooltip" data-bs-placement="top" title="View Database Sources">
+          <font size="4px">Data</font>
+        </a>
+        <ul class="dropdown-menu m-0 dropdown-content" aria-labelledby="navbarDropdown">
+          <li><a class="dropdown-item" href="{% url 'missions' %}">Missions</a></li>
+          <li><a class="dropdown-item" href="{% url 'expeditions' %}">Expeditions</a></li>
+          <li><a class="dropdown-item" href="{% url 'compilations' %}">Compilations</a>
+        </ul>
+      </li>
 
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-              <li class="nav-item active">
-                <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'about' %}">About</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
-              </li>
-              {% if request.user.is_authenticated %}
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% trans "My Profile" %}</a>
-                </li>
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
-                </li>
-              {% else %}
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
-                </li>
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
-                </li>
-              {% endif %}
-            </ul>
-          </div>
-        </nav>
-      </div>
-      <div class="col-3">
-        <nav class="navbar-light float-right">
-          <a href="{{ MEDIA_URL }}logs/load.txt" target="_blank">load log output</a>
-        </nav>
-      </div>
-    </div>
+      <li class="nav-item">
+        <a class="nav-link" id="navAbout" href="{% url 'about' %}" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="About SMDB">
+          <font size="4px">About</font>
+        </a>
+      </li>
 
-    <div class="container">
-      {% if messages %}
-          {% for message in messages %}
-              <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
-          {% endfor %}
+      <li class="nav-item">
+        <a class="nav-link" id="navAdmin" href="{% url 'admin:index' %}" data-bs-toggle="tooltip"
+          data-bs-placement="top" title="Admin Access Only">
+          <font size="4px">Admin</font>
+        </a>
+      </li>
+      <!-- <li>
+              <div class="nav-item mr-auto dropdown">
+                <button id="settings" type="button" class="dropbtn fa fa-cog fa-fw" data-bs-toggle="tooltip"
+                  data-bs-placement="top" title="Frontend Settings">
+                </button>
+                <ul class="dropdown-menu m-0 dropdown-content">
+                  <li class="dropdown-header" style="font-size:16px"><u>Settings</u></li>
+                  <li><a href="#"><i class="dropdown"></i> Front End </a></li>
+                </ul>
+              </div>
+            </li> -->
+    </ul>
+    <!-- Right Menu Items -->
+    <ul class="navbar-nav nav-pills mx-auto justify-content-right flex-column flex-md-row pull-right"
+      style="padding-left: 650px" width="50%" id="menuLinksRight">
+      {% if request.user.is_authenticated %}
+      <li class="nav-item mx-auto pull-right" style="padding-right: 15px">
+        {# URL provided by smdbango-allauth/account/urls.py #}
+        <a class="nav-link pull-right float-right" id="navAccount"
+          href="{% url 'users:detail' request.user.username  %}" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="View Your Account Profile Settings">
+          <font size="4px">{% trans "Account" %}</font>
+        </a>
+      </li>
+
+      <li class="nav-item mx-auto pull-right" style="padding-right: 15px">
+        {# URL provided by smdbango-allauth/account/urls.py #}
+        <a class="nav-link" id="sign-out-link" href="{% url 'account_logout' %}" data-bs-toggle="tooltip"
+          data-bs-placement="top" title="Sign Out of Your SMDB Account">
+          <font size="4px">{% trans "Sign Out" %}</font>
+        </a>
+      </li>
+
+      {% else %}
+      <li class="nav-item mx-auto pull-right">
+        {# URL provided by smdbango-allauth/account/urls.py #}
+        <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}" data-bs-toggle="tooltip"
+          data-bs-placement="top" title="Create an SMDB Account">
+          <font size="4px">{% trans "Sign Up" %}</font>
+        </a>
+      </li>
+
+      <li class="nav-item mx-auto pull-right">
+        {# URL provided by smdbango-allauth/account/urls.py #}
+        <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}" data-bs-toggle="tooltip"
+          data-bs-placement="top" title="Sign In to Your SMDB Account">
+          <font size="4px">{% trans "Sign In" %}</font>
+        </a>
+      </li>
       {% endif %}
-    </div> <!-- /container -->
 
-      {% block content %}
-      {% endblock content %}
+      <li>
+        <img src="{% static 'images/smdb_ship_img.png' %}" align="right" class="d-flex ms-auto order-5 pull-right"
+          id="shipLogo">
+      </li>
 
+    </ul>
+  </div>
 
-    {% block modal %}{% endblock modal %}
+  <div class="row" id="separator" style="color:darkgray">
+  </div>
 
-    {% block inline_javascript %}
-    {# Script tags with only code, no src (defer by default) #}
-    {% endblock inline_javascript %}
-  </body>
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+    {{ message }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span></button>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% block content %}
+  {% endblock content %}
+  {% block modal %}
+  {% endblock modal %}
+  {% block inline_javascript %}
+
+  {# Script tags with only code, no src (defer by default) #}
+  {% endblock inline_javascript %}
+</body>
+
 </html>
