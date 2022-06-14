@@ -36,7 +36,7 @@ class BaseTestCase(StaticLiveServerTestCase):
             # Set to CHROME since we are using the Chrome container
             desired_capabilities=DesiredCapabilities.CHROME,
         )
-        cls.selenium.implicitly_wait(5)
+        cls.selenium.implicitly_wait(10)
 
     @classmethod
     def tearDownClass(cls):
