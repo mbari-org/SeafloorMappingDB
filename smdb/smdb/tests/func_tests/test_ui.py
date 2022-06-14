@@ -1,13 +1,10 @@
 import socket
-import sys
 
 import pytest
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase, override_settings, tag
-from django.urls import reverse
+from django.test import override_settings
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
 
 pytestmark = pytest.mark.django_db
 
@@ -34,7 +31,7 @@ class BaseTestCase(StaticLiveServerTestCase):
             #  and runs on port 4444
             command_executor="http://selenium:4444/wd/hub",
             # Set to CHROME since we are using the Chrome container
-            desired_capabilities=DesiredCapabilities.CHROME,
+            options=webdriver.ChromeOptions(),
         )
         cls.selenium.implicitly_wait(10)
 
@@ -55,10 +52,10 @@ class HomePageTest(BaseTestCase):
 
     def test_home_page_mission_load(self):
         self.selenium.get(self.live_server_url)
-        self.assertEquals("5", self.selenium.find_element_by_id("num-missions").text)
+        self.assertEqual("5", self.selenium.find_element(By.ID, "num-missions").text)
 
     def test_spatial_bounds_link(self):
-        self.selenium.find_element_by_id("use_bounds").click()
-        self.selenium.find_element_by_id("update-map").click()
+        self.selenium.find_element(By.ID, "use_bounds").click()
+        self.selenium.find_element(By.ID, "update-map").click()
         # TODO: test for map bounds in url
         self.assertIn("", self.selenium.current_url)
