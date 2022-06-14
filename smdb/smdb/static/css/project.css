@@ -214,6 +214,11 @@ div#borderDiv {
   padding-left: 10px;
 }
 
+#searchbtn {
+  font-size: 14px !important;
+  vertical-align: center;
+}
+
 #split {
   position: relative;
   background-color: white;
@@ -256,8 +261,6 @@ div#borderDiv {
   padding: 0 4px;
 }
 
-/* #searchbtn {
-} */
 #submenu-row {
   position: static;
   top: 87px;
