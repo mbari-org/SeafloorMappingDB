@@ -31,6 +31,8 @@ services:
       # VS Code debug launch uses 8000, command: /start uses 8001
       - "8000:8000"
       - "8001:8001"
+    links:
+      - selenium
     command: /start
 
   postgres:
@@ -73,3 +75,11 @@ services:
       - "3000:3000"
       # Expose browsersync UI: https://www.browsersync.io/docs/options/#option-ui
       - "3001:3001"
+
+  # https://marcgibbons.com/post/selenium-in-docker/
+  selenium:
+    image: selenium/standalone-chrome:102.0
+    container_name: selenium
+    ports:
+      - 4444:4444 # Selenium
+      - 5900:5900 # VNC server
