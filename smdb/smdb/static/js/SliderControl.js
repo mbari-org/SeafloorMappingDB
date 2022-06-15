@@ -35,17 +35,28 @@ L.Control.SliderControl = L.Control.extend({
   },
 
   setSliderMarks: function (layers, minIndx, maxIndx) {
+    var min_ems, max_ems;
     // Add marker tics to range slider
-    var min_ems =
-      layers[minIndx].feature.properties[this.options.startTimeAttribute];
-    var max_ems =
-      layers[maxIndx].feature.properties[this.options.endTimeAttribute];
+    if (layers[minIndx].feature.properties !== undefined) {
+      min_ems =
+        layers[minIndx].feature.properties[this.options.startTimeAttribute];
+    } else {
+      console.error("TypeError Reading properties.");
+    }
+    if (layers[maxIndx].feature !== undefined) {
+      max_ems =
+        layers[maxIndx].feature.properties[this.options.endTimeAttribute];
+    } else {
+      console.error("TypeError Reading properties.");
+    }
     this._layer.eachLayer(function (layer) {
-      s_frac =
-        (layer.feature.properties.start_ems - min_ems) / (max_ems - min_ems);
-      e_frac =
-        (layer.feature.properties.end_ems - min_ems) / (max_ems - min_ems);
-      // TODO: Add marks to the slider
+      if (layer !== undefined) {
+        s_frac =
+          (layer.feature.properties.start_ems - min_ems) / (max_ems - min_ems);
+        e_frac =
+          (layer.feature.properties.end_ems - min_ems) / (max_ems - min_ems);
+        // TODO: Add marks to the slider
+      }
     });
   },
 
@@ -83,7 +94,7 @@ L.Control.SliderControl = L.Control.extend({
         '  <div class="col-8">' +
         '    <div id="slider-current" style="text-align: center;">' +
         '      <span class="start-time"></span> to <span class="end-time"></span>' +
-        '      <input title="Use time bounds in Update" type="checkbox" id="use_time">' +
+        '      <input title="Use time bounds in Update" type="checkbox" id="use_time" onclick="getSliderStatus()">' +
         "    </div>" +
         "  </div>" +
         '  <div class="col-2">' +
