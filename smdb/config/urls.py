@@ -32,19 +32,19 @@ urlpatterns = [
     path("users/", include("smdb.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("missions/", MissionTableView.as_view()),
+    path("missions/", MissionTableView.as_view(), name="missions"),
     path(
         "missions/<str:slug>/",
         MissionDetailView.as_view(),
         name="mission-detail",
     ),
-    path("expeditions/", ExpeditionTableView.as_view()),
+    path("expeditions/", ExpeditionTableView.as_view(), name="expeditions"),
     path(
         "expeditions/<str:slug>/",
         ExpeditionDetailView.as_view(),
         name="expedition-detail",
     ),
-    path("compilations/", CompilationTableView.as_view()),
+    path("compilations/", CompilationTableView.as_view(), name="compilations"),
     path(
         "compilations/<str:slug>/",
         CompilationDetailView.as_view(),

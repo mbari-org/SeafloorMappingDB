@@ -151,11 +151,18 @@
 /mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151121/lidar/SurRidgeCentralCrest/RAA_2m_10m_1m/
 /mbari/SeafloorMapping/OceanImaging2015/20151116WesternFlyer/d20151122/lidar/SurRidgeNorthernCrest/RAA/
 
+/mbari/SeafloorMapping/OceanImaging2016/2015OceanImagingFIgures/20151121SurRidge/multibeam/
+/mbari/SeafloorMapping/OceanImaging2016/2015OceanImagingFIgures/20151122SurRidge/lidar/
+/mbari/SeafloorMapping/OceanImaging2016/2015OceanImagingFIgures/20151122SurRidge/multibeam/
+/mbari/SeafloorMapping/OceanImaging2016/20160509WesternFlyer/Navadjust/
+/mbari/SeafloorMapping/OceanImaging2016/20160509WesternFlyer/Navadjust copy/
+
 /mbari/SeafloorMapping/OceanImaging2018/20180612DOEST/
 /mbari/SeafloorMapping/OceanImaging2018/20180519d1/lidartest/
 /mbari/SeafloorMapping/OceanImaging2018/20180724RachelCarson/MissionPlanning/
 
 /mbari/SeafloorMapping/2019/ExtravertCliff/ForJose/Example1/multibeam/
+/mbari/SeafloorMapping/2019/20190511m2new/
 /mbari/SeafloorMapping/2019/SentryTesting/
 /mbari/SeafloorMapping/2019/sentry539/
 /mbari/SeafloorMapping/2019/sentry540/
@@ -170,3 +177,6 @@
 
 /mbari/SeafloorMapping/2021/SouthernGOCFalkor/
 /mbari/SeafloorMapping/2021/test/
+
+/mbari/SeafloorMapping/2022/SampleMultibeamData/
+/mbari/SeafloorMapping/2022/CameronJordan/20220119Example/

@@ -29,12 +29,13 @@
             (LASS) data collected by MBARI and our collaborators. 
             It is a relational database with geographic capability, 
             a geo-spatially enabled web query interface on Canyon Head, load scripts for mining data from the 
-            SeafloorMapping archive, and user interfaces for testing and manually adding data. It is
-            built in Python with Django and PostgreSQL using the PostGIS extension. The entire 
-            software stack is free and open source.
+            SeafloorMapping archive, and eventually, a user interfaces for testing and manually adding data. 
+            It is built in Python with Django and PostgreSQL using the PostGIS extension. 
+            GitHub is the code repository. The database is in the cloud at Amazon Web Services. 
+            The entire software stack is free and open source.
             </p>      
             
-            <p>The SMDB is currently in the beginning stage of development. 
+            <p>The SMDB is currently in development. 
             If you have suggestions for the SMDB, please contact one of the developers.</p>
        
      <strong>
@@ -46,52 +47,121 @@
                 <a href="https://www.mbari.org/paduan-jennifer" target="_blank">Jennifer Paduan</a>, 
                 <a href="https://www.mbari.org/caress-dave/" target="_blank">David Caress</a>
           </p>
-          <p><a href="https://github.com/mbari-org/SeafloorMappingDB" target="_blank">>> GitHub repository</a><br>
+          <p><a href="https://github.com/mbari-org/SeafloorMappingDB" target="_blank"> GitHub repository</a><br>
             <a href="https://github.com/mbari-org/SeafloorMappingDB/tree/main/smdb/docs/original" target="_blank">>> 
                 Schema and Use Cases on file at GitHub</a> (still evolving)</p>
  
-     <strong>Proposed work
+     <strong>Motivation
             </strong>    
 
-        <p>MBARI has now conducted hundreds of Mapping AUV missions and several dozen low altitude survey ROV dives. 
-        Much of the resulting data have value to others in the MBARI community, but the survey data and data 
-        products are only accessible to those with knowledge of where the data are stored, how they are organized, 
-        and how to run the software used to process the data in maps, images, and GIS objects. 
-        In order to make the Mapping AUV and LASS survey data more accessible, we propose to capture metadata 
-        such as geographic location and server storage paths in a relational database, in a way that doesn't 
-        change the current file-based structure on the SeafloorMapping share or impact the work-flow 
-        for processing the sensor data, and display it with a queryable web interface. 
-        The envisioned system will utilize the same approach and open-source software tools as the MBARI STOQS 
-        database for water-column data. 
-                </p>
+        <p>MBARI has now conducted hundreds of Mapping AUV missions and dozens of ROV dives with the LASS system. 
+        Finalized mapping data sets are being submitted to the 
+        <a href="https://www.marine-geo.org/" target="_blank"> Marine Geoscience Data System</a>, 
+        where they are issued DOIs and are in the public domain.  
+        Our complete archive of survey data and figures is stored on the SeafloorMapping share on Titan and available to those 
+        with internal access at MBARI. However, it requires intimate knowledge of how the files are organized 
+        and how to use the data processing software. 
+        The data have needed to be more accessible to the operators, engineers, and science teams involved with it, 
+        and the mapping products have value to others in the MBARI community as well. 
+        The <a href="https://smdb.shore.mbari.org/" target="_blank">SMDB</a> 
+        is a new relational database queryable from Canyon Head that is 
+        being developed to make these data more accessible within MBARI. </p>
 
-     <strong>
-         Motivation
-        </strong>
+    <strong>Using the database
+        </strong> 
 
-        <p>The quickly growing number of AUV and LASS surveys need to become more discoverable and accessible, 
-        and their interconnectedness and repeat mapping require a new level of documentation and organizational 
-        discipline. As our data volume grows, this need is becoming critical even for experienced users. It will be useful 
-        for users less familiar with the surveys or MB-System to access the current data products without 
-        digging around on the server. It is necessary for making sense of the data archive in perpetuity, 
-        and is advisable in the spirit of FAIR data principles (findable, accessible, interoperable, reusable). </p>
+        <p>The landing page for the <a href="https://smdb.shore.mbari.org/" target="_blank">SMDB</a> 
+        is a zoomable map showing all of the AUV and LASS mission track lines. 
+        Mousing over a track line illuminates the track of an individual survey. 
+        A time slider and a search box at the top of the page
+        allow restriction of tracks that are shown by time, the survey's mission name, or text strings in survey Notes files.
+        Click "Update" again to refresh the map. 
+        </p>
+        <p>By clicking on a track line and then the thumbnail map that appears, a new page opens 
+        showing the server path to the survey data's directory on the SeafloorMapping share on Titan, 
+        a link to list other missions on that expedition, 
+        server paths to compilations (grids made using data from the survey), 
+        and the contents of the Notes file from that mission. 
+        </p>
+        <p>
+        You must be onsite or VPN'd in with split-tunneling off to see thumbnail images and access the SeafloorMapping share. 
+        </p>
+        
+        <p> 
+        For complete, searchable lists of missions, expeditions, and compilations, use these direct links:
+        <br><a href="https://smdb.shore.mbari.org/missions" target="_blank">List of all missions</a> 
+        <br><a href="https://smdb.shore.mbari.org/expeditions" target="_blank">List of all expeditions</a> 
+        <br><a href="https://smdb.shore.mbari.org/compilations" target="_blank">List of all compilations</a>
+        </p>
 
-        <p>The quality of particular survey data influences the prioritization - or even inclusion - for 
-        working with it and to make data products. Currently this is tracked by users in their own spreadsheets 
-        and datalists. It needs to become an assessment that is accessible and clearly presented. 
-        Likewise, whether a survey is repeated over a previously mapped area also needs to be tracked.</p>
+        <p> 
+        In order to not change the current file-based structure on the SeafloorMapping share, and 
+        to minimize impact on the workflow for processing of the sensor data, a load script mines survey data and captures
+        metadata for the database. Some conventions that have evolved with our workflow are being exploited, 
+        and so they need to remain in place as part of our procedures going forward. 
+        They are described briefly below, and more thoroughly in documentation at GitHub.
+        </p>
 
-<strong>Functional requirements
-    </strong>
-<ul>
-    <li>Relational database with geographic capability (we have decided to use PostgreSQL with PostGIS 
-        extension). </li>
-    <li>Web-based query, from a map, appearing like STOQS (campaign list) or the samplesDB (multiple queryable items), from 
-        Canyon Head.</li>
-    <li>Interface for populating the database needs to be useable by knowledgeable AUV data processing 
-        staff on Mac computers, and not expensive. </li>
-    <li>Maintained and backed up by MBARI IS.</li>
-</ul>
+    <strong>Workflow requirements, in brief
+            </strong> 
+
+        <p> 
+           The load script searches for directories where there are ZTopo.grd files and assumes these are mission directories. 
+           The directory name where a ZTopo.grd is found becomes the mission name.
+           <br><em>Workflow note: Make a ZTopo.grd in all survey directories. 
+           Call your grid something other than ZTopo.grd if it's in a non-survey directory, 
+           or supply the path to be added to the Django file smdb/exclude.list.</em>
+        </p>
+        <p> 
+           A long list of directories to be excluded from this search has been manually created (smdb/exclude.list). 
+           Not to be considered as missions,
+           for example, are anything in swathdata/surveys/, mission planning directories, mbsystem test data, and more. 
+           <br><em>Workflow note: this file exclude.list needs to be re-evaluated and extended as needed. </em>
+        </p>
+        <p> 
+           The load script looks for a file named ZTopoSlopeNav.jpg to be used as the thumbnail for the mission.
+           <br><em>Workflow note: Always make a ZTopoSlopeNav.jpg plot in a survey directory. 
+           In the plot's title, include the mission name and location (as these can be useful to see in the thumbnail on the map), 
+           and whether the mission was a "test" or "failed" 
+           (these may be used when the ability to track test or failed missions is implemented).</em>
+        </p>
+        <p> 
+           A file with "Notes.txt" in the filename is sought in the survey directory or 1, 2, or 3 directories above it 
+           (as often needed for LASS and Sentry data). 
+           Computer IP addresses and passwords are blanked out in the presentation; people's names are not.
+           <br><em>Workflow note: include a xxx_Notes.txt file, and not more than one, in the survey directory or just above. </em>
+        </p>
+        <p> 
+           The expedition name is constructed from lines 3 through 6 of the Notes file, 
+           where it has evolved that there is often something unique but not too unique. It truncates at 200 characters.
+           <br><em>Workflow note: Make the contents of those lines unique 
+           enough to distinguish the expedition from other expeditions, but not so unique 
+           that it represents only a subset of missions you ran. For example: in lines 3-6 put the
+           ship name, expedition moniker or general location, and year, but not the day's date.</em>
+        </p>
+        <p> 
+            The first lines until the "-----------" line of the Notes file is being used for populating a comment field
+            (not yet implemented).
+        </p>
+        <p> 
+            A mission's track line displayed on the map is obtained from the processed .fbt files. 
+            Track length is computed from the track line using a Haversine function.
+        </p>
+        <p>For determining compilations (aka figures and projects) using a mission's data, the load script searches SeafloorMapping
+            directories outside the mission directories for all datalist (xxx.mb-1) files 
+            that include the mission name's string.
+            The server path and grid (xxx.grd) names that correspond to those .mb-1 files are listed as Compilations on the 
+            Mission details page. 
+            Click on a linked path to open a Compilation details page, which shows a thumbnail of the grid, 
+            the grid creation date, command file name, and list of missions called in the xxx.mb-1 file. 
+            Thumbnails can be JPG, TIFF, or PNG image 
+            files, and must be named with the grid name's exact string as part of its file name to be found. 
+            <br><em>Workflow note: 
+            Making our geoTiff names match the grid name hasn't been a priority in the past and that doesn't need to change. 
+            However, to be helpful for us trying to make sense of what we've done, or for other MBARIans looking for a map they can use, 
+            make a simple map with a name that matches the grid, which will then appear as a thumbnail for the grid. </em>
+            </p>
+
 
     <strong>Affiliated MBARI projects 
         </strong>
