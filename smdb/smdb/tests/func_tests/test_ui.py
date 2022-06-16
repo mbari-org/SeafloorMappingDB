@@ -33,7 +33,7 @@ class BaseTestCase(StaticLiveServerTestCase):
             # Set to CHROME since we are using the Chrome container
             options=webdriver.ChromeOptions(),
         )
-        cls.selenium.implicitly_wait(10)
+        cls.selenium.implicitly_wait(15)
 
     @classmethod
     def tearDownClass(cls):
@@ -47,12 +47,11 @@ class HomePageTest(BaseTestCase):
     """
 
     def test_home_page_open(self):
+        print(f"Getting {self.live_server_url}")
         self.selenium.get(self.live_server_url)
         self.assertIn("SeafloorMappingDB", self.selenium.title)
-
-    def test_home_page_mission_load(self):
-        self.selenium.get(self.live_server_url)
-        self.assertEqual("5", self.selenium.find_element(By.ID, "num-missions").text)
+        number = self.selenium.find_element(By.ID, "num-missions").text
+        self.assertEqual("5", number)
 
     def test_spatial_bounds_link(self):
         self.selenium.find_element(By.ID, "use_bounds").click()
