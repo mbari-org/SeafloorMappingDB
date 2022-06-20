@@ -31,8 +31,6 @@ services:
       # VS Code debug launch uses 8000, command: /start uses 8001
       - "8000:8000"
       - "8001:8001"
-    links:
-      - selenium
     command: /start
 
   postgres:
