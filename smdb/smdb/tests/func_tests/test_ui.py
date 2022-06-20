@@ -16,45 +16,24 @@ class BaseTestCase(StaticLiveServerTestCase):
     container running Selenium.
     """
 
-    host = "0.0.0.0"  # Bind to 0.0.0.0 to allow external access
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        # Set host to externally accessible web server address
-        cls.host = socket.gethostbyname(socket.gethostname())
-
-        # Instantiate the remote WebDriver
-        cls.selenium = webdriver.Remote(
-            #  Set to: htttp://{selenium-container-name}:port/wd/hub
-            #  In our example, the container is named `selenium`
-            #  and runs on port 4444
-            command_executor="http://selenium:4444/wd/hub",
-            # Set to CHROME since we are using the Chrome container
+    def setUp(self):
+        self.chrome = webdriver.Remote(
+            command_executor="http://selenium-hub:4444/wd/hub",
             options=webdriver.ChromeOptions(),
         )
-        cls.selenium.implicitly_wait(15)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.selenium.quit()
-        super().tearDownClass()
+        self.chrome.implicitly_wait(10)
+        self.server_url = "http://django:8001"
 
 
 class HomePageTest(BaseTestCase):
-    """
-    Tests the home page.
-    """
-
     def test_home_page_open(self):
-        print(f"Getting {self.live_server_url}")
-        self.selenium.get(self.live_server_url)
-        self.assertIn("SeafloorMappingDB", self.selenium.title)
-        number = self.selenium.find_element(By.ID, "num-missions").text
+        self.chrome.get(self.server_url)
+        self.assertIn("SeafloorMappingDB", self.chrome.title)
+        number = self.chrome.find_element(By.ID, "num-missions").text
         self.assertEqual("5", number)
 
     def test_spatial_bounds_link(self):
-        self.selenium.find_element(By.ID, "use_bounds").click()
-        self.selenium.find_element(By.ID, "update-map").click()
+        self.chrome.find_element(By.ID, "use_bounds").click()
+        self.chrome.find_element(By.ID, "update-map").click()
         # TODO: test for map bounds in url
-        self.assertIn("", self.selenium.current_url)
+        self.assertIn("", self.chrome.current_url)
