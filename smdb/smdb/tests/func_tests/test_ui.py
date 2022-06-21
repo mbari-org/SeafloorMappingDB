@@ -1,4 +1,4 @@
-from django.test import TestCase, override_settings
+from django.test import TestCase, tag
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import socket
@@ -13,6 +13,7 @@ class SeleniumTest(TestCase):
         self.chrome.implicitly_wait(10)
         self.server_url = "http://django:8001"
 
+    @tag("selenium")
     def test_visit_site_with_chrome(self):
         ip_addr = socket.gethostbyname("django")
         print(f"ip_addr = {ip_addr}")
