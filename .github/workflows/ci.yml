@@ -38,6 +38,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # https://stackoverflow.com/a/65346817/1281657
+      - name: Create Docker Network
+        run: docker network create data
+
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
