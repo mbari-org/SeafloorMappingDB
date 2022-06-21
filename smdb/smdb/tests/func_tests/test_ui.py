@@ -1,7 +1,7 @@
-from django.test import TestCase, tag
+from django.test import TestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import socket
+import pytest
 
 
 class SeleniumTest(TestCase):
@@ -13,10 +13,9 @@ class SeleniumTest(TestCase):
         self.chrome.implicitly_wait(10)
         self.server_url = "http://django:8001"
 
-    @tag("selenium")
+    @pytest.mark.selenium
     def test_visit_site_with_chrome(self):
-        ip_addr = socket.gethostbyname("django")
-        print(f"ip_addr = {ip_addr}")
+        print(f"Getting for chrome: {self.server_url}")
         self.chrome.get(self.server_url)
         self.assertIn("SeafloorMappingDB", self.chrome.title)
         number = self.chrome.find_element(By.ID, "num-missions").text

@@ -52,7 +52,7 @@ jobs:
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
       - name: Run Django Tests
-        run: docker-compose -f smdb/ci.yml run django pytest -s --cov-report term-missing --cov --exclude-tag=selenium
+        run: docker-compose -f smdb/ci.yml run django pytest -s --cov-report term-missing --cov  -m "not selenium"
 
       - name: Tear down the Stack
         run: docker-compose -f smdb/ci.yml down
