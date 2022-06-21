@@ -27,6 +27,7 @@ services:
       - POSTGRES_USER=ci_user
       - POSTGRES_PASSWORD=ci_password
       - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,django
     ports:
       # VS Code debug launch uses 8000, command: /start uses 8001
       - "8000:8000"
