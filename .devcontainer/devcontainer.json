@@ -32,10 +32,11 @@
   },
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
-    "ms-python.python",
-    "visualstudioexptteam.vscodeintellicode",
-    "esbenp.prettier-vscode"
-  ],
+	"ms-python.python",
+	"visualstudioexptteam.vscodeintellicode",
+	"esbenp.prettier-vscode",
+	"GitHub.copilot"
+],
   // Uncomment the next line if you want start specific services in your Docker Compose config.
   //"runServices": ["postgres", "node"],
   // Uncomment the next line if you want to keep your containers running after VS Code shuts down.
