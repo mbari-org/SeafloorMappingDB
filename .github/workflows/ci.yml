@@ -36,14 +36,13 @@ jobs:
   # With no caching at all the entire ci process takes 4m 30s to complete!
   pytest:
     runs-on: ubuntu-latest
-    container: ubuntu
 
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
       - name: Build the Stack
-        run: docker-compose -f smdb/ci.yml up -d --build && docker ps
+        run: docker-compose -f smdb/ci.yml up -d --build && docker ps && docker network ls
 
       - name: Run DB Migrations
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
