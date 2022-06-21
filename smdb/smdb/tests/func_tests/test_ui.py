@@ -1,6 +1,7 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import socket
 
 
 class SeleniumTest(TestCase):
@@ -13,7 +14,9 @@ class SeleniumTest(TestCase):
         self.server_url = "http://django:8001"
 
     def test_visit_site_with_chrome(self):
-        self.chrome.get("http://django:8001")
+        ip_addr = socket.gethostbyname("django")
+        print(f"ip_addr = {ip_addr}")
+        self.chrome.get(self.server_url)
         self.assertIn("SeafloorMappingDB", self.chrome.title)
         number = self.chrome.find_element(By.ID, "num-missions").text
         self.assertEqual("5", number)
