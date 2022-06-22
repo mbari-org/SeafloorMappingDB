@@ -1,15 +1,21 @@
+import os
+
+import pytest
 from django.test import TestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import pytest
 
 
 class SeleniumTest(TestCase):
     def setUp(self):
         chrome_options = webdriver.ChromeOptions()
-        self.chrome = webdriver.Remote(
-            command_executor="http://selenium:4444/wd/hub", options=chrome_options
-        )
+        if os.environ.get("CI") == "true":
+            self.chrome = webdriver.Chrome(options=chrome_options)
+        else:
+            self.chrome = webdriver.Remote(
+                command_executor="http://selenium-hub:4444/wd/hub",
+                options=chrome_options,
+            )
         self.chrome.implicitly_wait(10)
         self.server_url = "http://django:8001"
 
