@@ -14,6 +14,7 @@ class SeleniumTest(TestCase):
         if os.environ.get("CI") == "true":
             chrome_options.add_argument("--headless")
             print(f"Getting webdriver.Chrome() instance")
+            chrome_options.binary_location = "/usr/bin/google-chrome"
             self.chrome = webdriver.Chrome(
                 service=ChromeService(ChromeDriverManager().install()),
                 options=chrome_options,
