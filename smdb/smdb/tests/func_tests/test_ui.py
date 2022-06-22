@@ -4,6 +4,7 @@ import pytest
 from django.test import TestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 class SeleniumTest(TestCase):
@@ -12,7 +13,9 @@ class SeleniumTest(TestCase):
         if os.environ.get("CI") == "true":
             chrome_options.add_argument("--headless")
             print(f"Getting webdriver.Chrome() instance")
-            self.chrome = webdriver.Chrome(options=chrome_options)
+            self.chrome = webdriver.Chrome(
+                ChromeDriverManager().install(), options=chrome_options
+            )
         else:
             print(f"Getting webdriver.Remote() instance with chrome_options")
             self.chrome = webdriver.Remote(
