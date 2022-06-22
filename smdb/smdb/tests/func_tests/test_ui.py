@@ -8,7 +8,7 @@ class SeleniumTest(TestCase):
     def setUp(self):
         chrome_options = webdriver.ChromeOptions()
         self.chrome = webdriver.Remote(
-            command_executor="http://selenium-hub:4444/wd/hub", options=chrome_options
+            command_executor="http://selenium:4444/wd/hub", options=chrome_options
         )
         self.chrome.implicitly_wait(10)
         self.server_url = "http://django:8001"
