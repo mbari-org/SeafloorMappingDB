@@ -10,8 +10,11 @@ class SeleniumTest(TestCase):
     def setUp(self):
         chrome_options = webdriver.ChromeOptions()
         if os.environ.get("CI") == "true":
+            chrome_options.add_argument("--headless")
+            print(f"Getting webdriver.Chrome() instance")
             self.chrome = webdriver.Chrome(options=chrome_options)
         else:
+            print(f"Getting webdriver.Remote() instance with chrome_options")
             self.chrome = webdriver.Remote(
                 command_executor="http://selenium-hub:4444/wd/hub",
                 options=chrome_options,
@@ -25,7 +28,7 @@ class SeleniumTest(TestCase):
     @pytest.mark.django_db
     @pytest.mark.selenium
     def test_visit_site_with_chrome(self):
-        print(f"Getting for chrome: {self.server_url}")
+        print(f"Lauching chrome browser at: {self.server_url}")
         self.chrome.get(self.server_url)
         self.assertIn("SeafloorMappingDB", self.chrome.title)
         number = self.chrome.find_element(By.ID, "num-missions").text
