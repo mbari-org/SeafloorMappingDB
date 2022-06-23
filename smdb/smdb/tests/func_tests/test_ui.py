@@ -16,7 +16,7 @@ class SeleniumTest(TestCase):
             print(f"Getting webdriver.Chrome() instance")
             chrome_options.binary_location = "/usr/local/bin/chromedriver"
             self.chrome = webdriver.Chrome(
-                service=ChromeService(ChromeDriverManager().install()),
+                executable_path="/usr/local/bin/chromedriver",
                 options=chrome_options,
             )
         else:
