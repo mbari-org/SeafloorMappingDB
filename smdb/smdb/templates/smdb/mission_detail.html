@@ -11,6 +11,7 @@
 {% block title %}Mission details on demand{% endblock %}
 
 {% block content %}
+<tab>
 <h2>{{ mission.name }}</h2>
 <a href="{{ thumbnail_fullrez_url }}"><img src="{{ thumbnail_url }}" /></a>
 <div>
@@ -38,4 +39,5 @@
   <p class="font-weight-bold">Note:</p>
   <pre>{{ mission.notes_text }}</pre>
 </div>
+</tab>
 {% endblock %}

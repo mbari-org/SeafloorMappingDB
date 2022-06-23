@@ -11,6 +11,7 @@
 {% block title %}Compilation details on demand{% endblock %}
 
 {% block content %}
+<tab>
 <h2>{{ compilation.name }}</h2>
 <!-- I think this would work if SeafloorMapping/{{ compilation.name }} were set up as a share
     <div>
@@ -39,4 +40,5 @@
   <br>
   {% endfor %}
 </div>
+</tab>
 {% endblock %}
