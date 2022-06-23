@@ -13,11 +13,11 @@
 {% block content %}
 <tab>
 <h2>{{ compilation.name }}</h2>
-<!-- I think this would work if SeafloorMapping/{{ compilation.name }} were set up as a share
+{# I think this would work if SeafloorMapping/{{ compilation.name }} were set up as a share
     <div>
       <a href="cifs://titan.shore.mbari.org/SeafloorMapping/{{ compilation.name }}">Open this folder on titan</a>
     </div>
-    -->
+     #}
 <a href="{{ thumbnail_fullrez_url }}"><img src="{{ thumbnail_url }}" /></a>
 <div>
   <span class=" font-weight-bold">View full resolution image:</span>
