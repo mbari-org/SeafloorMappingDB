@@ -23,6 +23,9 @@
 <link rel="stylesheet" href="https://unpkg.com/css-pro-layout@1.1.0/dist/css/css-pro-layout.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+  crossorigin=""/>
 
 {% endblock %}
 
@@ -106,7 +109,7 @@
     <input type="hidden" name="tmin" value="" id="tmin">
     <input type="hidden" name="tmax" value="" id="tmax">
     <form class="d-flex" position="fixed" id="searchBarForm">
-      <input class="form-control mr-sm-2" type="search" size="8px" textcolor="lightgray" value="" name="q" id="searchBar" placeholder="Search SMDB Missions..." title="Search for mission notes or names"
+      <input class="form-control mr-sm-2" type="search" size="8px" textcolor="lightgray" value="" name="q" id="searchbar" placeholder="Search SMDB Missions..." title="Search for mission notes or names"
       onfocus="this.placeholder=''" onblur="this.placeholder='Search SMDB Mission Info'">
       {#  Set the Update Map Button to new bounds and time constrained link #}
       <a href="javascript: updateMap()" role="button" type="submit" class="btn btn-outline-primary btn-sm my-2" id="searchbtn" style="font-size: 3px" title="Search Mission Info or Update Map">Update Map</a>
@@ -116,12 +119,11 @@
 
 <div id="map" class="" tabindex="0" style="position: relative;">
 </div>
+  {{ missions|json_script:"missions-data" }}
+  {{ MEDIA_URL|json_script:"MEDIA-URL" }}
+  <div id="map">
+  </div>
+  <script src="{% static 'js/map.js' %}"></script>
 
-{{ missions|json_script:"missions-data" }}
-{{ MEDIA_URL|json_script:"MEDIA-URL" }}
-<script src="{% static 'js/map.js' %}"></script>
-</nav>
-</body>
-
-</html>
 {% endblock %}
+
