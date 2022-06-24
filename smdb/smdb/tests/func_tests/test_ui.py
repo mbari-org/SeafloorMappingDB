@@ -46,10 +46,17 @@ class SeleniumTest(TestCase):
     @pytest.mark.selenium
     def test_spatial_bounds_link(self):
         self.chrome.get(self.server_url)
+        # Example map-bounds text: '-122.0852,36.6395,-121.7275,36.8486'
+        initial_bounds = self.chrome.find_element(By.ID, "map-bounds").text
+        # Transform to: "xmin=-122.0852&xmax=-121.7275&ymin=36.6395&ymax=36.8486"
+        req_str = f"xmin={initial_bounds.split(',')[0]}&"
+        req_str += f"xmax={initial_bounds.split(',')[2]}&"
+        req_str += f"ymin={initial_bounds.split(',')[1]}&"
+        req_str += f"ymax={initial_bounds.split(',')[3]}"
         self.chrome.find_element(By.ID, "use_bounds").click()
         self.chrome.find_element(By.ID, "searchbtn").click()
         self.assertIn(
-            r"xmin=-122.0852&xmax=-121.7275&ymin=36.6395&ymax=36.8486",
+            req_str,
             self.chrome.current_url,
             "Expected bounds to be that of initial 5 mission fixture.",
         )
