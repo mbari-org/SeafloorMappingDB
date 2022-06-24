@@ -27,12 +27,11 @@ a {
 body {
   height: 100%;
   min-height: 100%;
-  overflow-y: hidden;
+  overflow: scroll;
   margin: 0;
   height: 100vh;
   font-family: "Roboto", sans-serif !important;
   color: #212529;
-
 }
 
 #coordinates {
@@ -151,6 +150,17 @@ body {
 }
 
 .div,
+.table {
+  margin-left: 40px;
+}
+
+.div,
+.table-container,
+.table {
+  margin-right: 40px;
+}
+
+.div,
 #filter-right,
 .col-3-sm,
 .column {
@@ -190,7 +200,7 @@ div#borderDiv {
 #searchbar {
   padding-right: 10px;
   /* margin-top: 5px; */
-  text-align: center;
+  text-align: left;
 }
 
 #searchBarForm {
@@ -203,20 +213,22 @@ div#borderDiv {
 
 #searchBar,
 .form-control {
-  margin-left: 130px;
+  margin-left: 5px;
   margin-top: 5px;
   margin-bottom: 5px;
   margin-right: 5px;
   height: 30px;
   padding-bottom: 3px;
-  text-align: center;
+  text-align: left;
   width: 200px;
-  padding-left: 10px;
+  /* padding-left: 15px; */
 }
 
 #searchbtn {
   font-size: 14px !important;
   vertical-align: center;
+  margin-left: 5px;
+  margin-right: 10px;
 }
 
 #split {
@@ -647,6 +659,10 @@ div>#bounds {
   padding-right: 8px;
 }
 
+h2 {
+  margin-left: 40px;
+}
+
 .input,
 #use-bounds {
   vertical-align: middle;
@@ -890,6 +906,20 @@ nav li {
   outline: 0;
   margin: 0;
   padding: 0;
+}
+
+p {
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+tbody,
+td,
+tfoot,
+th,
+thead,
+tr {
+  margin-right: 40px;
 }
 
 
