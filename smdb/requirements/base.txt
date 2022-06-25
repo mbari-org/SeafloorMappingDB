@@ -10,11 +10,11 @@ psycopg2==2.9.3  # https://github.com/psycopg/psycopg2
 
 # Django
 # ------------------------------------------------------------------------------
-django==3.2.13  # pyup: < 3.2  # https://www.djangoproject.com/
+django==4.0.5  # pyup: < 3.2  # https://www.djangoproject.com/
 django-bleach==3.0.0  # https://pypi.org/project/django-bleach/
-django-environ==0.8.1  # https://github.com/joke2k/django-environ
+django-environ==0.9.0  # https://github.com/joke2k/django-environ
 django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
-django-allauth==0.50.0  # https://github.com/pennersr/django-allauth
+django-allauth==0.51.0  # https://github.com/pennersr/django-allauth
 django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-compressor==4.0  # https://github.com/django-compressor/django-compressor
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
@@ -31,10 +31,10 @@ graphene-graphiql-explorer==0.0.1 # https://pypi.org/project/graphene-graphiql-e
 graphene-gis==0.0.7 # https://github.com/EverWinter23/graphene-gis
 graphviz==0.20 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
-ipykernel==6.13.0 # For use in Notebooks
+ipykernel==6.15.0 # For use in Notebooks
 matplotlib==3.5.2 # For plotting in Notebooks
 netCDF4==1.5.8 # https://pypi.org/project/netCDF4/
-pandas==1.4.2 # For use in Notebooks
+pandas==1.4.3 # For use in Notebooks
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
 pygraphviz==1.9 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
@@ -43,4 +43,4 @@ pytest-drf==1.1.2 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
 uritemplate==4.1.1 # For python manage.py generateschema
 django-tables2==2.4.1  # https://github.com/jieter/django-tables2
-django-filter==21.1  # https://youtu.be/G-Rct7Na0UQ
+django-filter==22.1  # https://youtu.be/G-Rct7Na0UQ
