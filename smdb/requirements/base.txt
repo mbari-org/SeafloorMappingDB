@@ -10,7 +10,7 @@ psycopg2==2.9.3  # https://github.com/psycopg/psycopg2
 
 # Django
 # ------------------------------------------------------------------------------
-django==3.2.13  # pyup: < 3.2  # https://www.djangoproject.com/
+django==4.0.5  # pyup: < 3.2  # https://www.djangoproject.com/
 django-bleach==3.0.0  # https://pypi.org/project/django-bleach/
 django-environ==0.9.0  # https://github.com/joke2k/django-environ
 django-model-utils==4.2.0  # https://github.com/jazzband/django-model-utils
@@ -33,7 +33,7 @@ graphviz==0.20 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
 ipykernel==6.15.0 # For use in Notebooks
 matplotlib==3.5.2 # For plotting in Notebooks
-netCDF4==1.5.8 # https://pypi.org/project/netCDF4/
+netCDF4==1.6.0 # https://pypi.org/project/netCDF4/
 pandas==1.4.3 # For use in Notebooks
 pathspec==0.9.0 # https://pypi.org/project/pathspec/
 pygraphviz==1.9 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
