@@ -50,6 +50,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   mlocate \
   # Install here rather than from .devcontainer/devcontainer.json
   git less wget zsh ssh-client \
+  # Required by chromedriver: https://stackoverflow.com/a/65107381/1281657
+  libgconf-2-4 libatk1.0-0 libatk-bridge2.0-0 libgdk-pixbuf2.0-0 libgtk-3-0 libgbm-dev libnss3-dev libxss-dev \
+  # Required for google-chrome-stable - https://askubuntu.com/a/79284
+  libxss1 libappindicator1 libindicator7 \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -63,6 +67,13 @@ RUN ldconfig
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
 	&& rm -rf /wheels/
+  
+# Install ChromeDriver for Selenium
+RUN curl -L -o /usr/local/bin/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip \
+  && unzip /usr/local/bin/chromedriver_linux64.zip -d /usr/local/bin
+
+# Install Google Chrome - https://askubuntu.com/a/79284
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt-get update && apt-get install -y ./google-chrome*.deb
 
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint

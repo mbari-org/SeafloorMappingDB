@@ -38,17 +38,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # https://stackoverflow.com/a/65346817/1281657
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
+      - name: Setup Chrome for Selenium Testing
+        uses: nanasess/setup-chromedriver@master
+
       - name: Build the Stack
-        run: docker-compose -f smdb/ci.yml build
+        run: docker-compose -f smdb/ci.yml up -d --build
 
       - name: Run DB Migrations
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
-      - name: Run Django Tests
-        run: docker-compose -f smdb/ci.yml run django pytest --cov-report term-missing --cov
+      - name: Start XVFB for Selenium Testing
+        run: |
+          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional, disables headless mode
+
+      - name: Run Pytest Tests
+        run: |
+          export DISPLAY=:99
+          docker-compose -f smdb/ci.yml run -e CI=true django pytest -s --cov-report term-missing --cov -m "not selenium"
 
       - name: Tear down the Stack
         run: docker-compose -f smdb/ci.yml down
