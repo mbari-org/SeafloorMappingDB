@@ -322,6 +322,24 @@ div#borderDiv {
   text-align: center;
 }
 
+#footer {
+  font-size: 15px;
+  color: #f00;
+  text-align: center;
+}
+
+@media print {
+  #footer {
+    position: fixed;
+    bottom: 0;
+  }
+
+  .content-block,
+  p {
+    page-break-inside: avoid;
+  }
+}
+
 .header {
   position: fixed;
   margin-top: 28%;
