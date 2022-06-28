@@ -93,6 +93,20 @@ const arcGISGray = L.esri.Vector.vectorBasemapLayer(
   options
 );
 
+const gmrt = L.tileLayer.wms(
+  "https://www.gmrt.org/services/mapserver/wms_merc?",
+  {
+    layers: "GMRT",
+  }
+);
+
+const gmrtMask = L.tileLayer.wms(
+  "https://www.gmrt.org/services/mapserver/wms_merc_mask?",
+  {
+    layers: "GMRTMask",
+  }
+);
+
 // Empty - From DashUI - Perhaps this is something others would like to have an option for
 const emptyLayer = L.tileLayer("", {
   id: "empty",
@@ -108,13 +122,15 @@ const mapBaseLayers = {};
 var groupedOverlays = {
   "Base Maps   &#127758; ": {
     " ESRI/ArcGIS Oceans ": esriOceans.addTo(map),
-    //' ESRI/ArcGIS Imagery ': esriImagery,
+    " GMRT (Hi-Res) ": gmrt,
+    " Masked GMRT (Hi-Res) ": gmrtMask,
     " Google Hybrid Layer ": googleHybrid,
+    //' ESRI/ArcGIS Imagery ': esriImagery,
     //' Google Satellite Layer ': googleSatellite,
-    " OpenStreetMap Layer ": openMapStreetViewLayer,
-    " ArcGIS Gray Layer ": arcGISGray,
-    " ArcGIS Dark Layer ": arcGISDark,
-    " No Map ": emptyLayer,
+    // " OpenStreetMap Layer ": openMapStreetViewLayer,
+    // " ArcGIS Gray Layer ": arcGISGray,
+    // " ArcGIS Dark Layer ": arcGISDark,
+    // " No Map ": emptyLayer,
   },
 };
 
@@ -385,7 +401,7 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  console.log("You are using " + browserName + " browser");
+  // console.log("You are using " + browserName + " browser");
   return browserName;
 }
 
