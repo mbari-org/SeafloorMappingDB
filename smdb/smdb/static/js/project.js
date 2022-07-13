@@ -29,9 +29,17 @@ function updateMap() {
       console.log(err.message);
     }
     // Try and incorporate with updateMap() - Easy Button
-    // if (document.getElementById("toggle").onclick) {
-    //   toggle.Control.onClick();
-    // }
+    if ((toggle = "remove-geoman")) {
+      console.log("This works.");
+    }
+    if ((toggle.stateName = "add-geoman")) {
+      console.log("Geoman is currently closed.");
+      toggle.stateName = "remove-geoman";
+    } else if ((toggle.stateName = "remove-geoman")) {
+      console.log("Geoman is currently open.");
+      toggle.stateName = "add-geoman";
+    }
+
     if (document.getElementById("searchbar") != null) {
       //if (document.getElementById("searchbar").value) {
       searchParams.set("q", document.getElementById("searchbar").value);
@@ -80,47 +88,47 @@ L.Control.Layers.include({
 });
 
 ////////  ADD GEOMAN for LEAFLET  /////////
-// var toggle = L.easyButton({
-//   position: "topright",
-//   // id: "toggle",
-//   states: [
-//     {
-//       stateName: "add-geoman",
-//       icon: "fas fa-draw-polygon fa-xl",
-//       title: "Show Geometry Toolbar",
-//       onClick: function (control) {
-//         map.pm.addControls({
-//           position: "topright",
-//           drawControls: true,
-//           editControls: true,
-//           editMode: false,
-//           optionsControls: true,
-//           customControls: true,
-//           oneBlock: true,
-//           enableGlobalRotateMode: true,
-//         });
-//         control.state("remove-geoman");
-//         // Check Geoman Geometry Tool Status
-//         if (control.state("remove-geoman")) {
-//           console.log("Geoman menu open!");
-//           // toggle.onClick = updateMap();
-//         }
-//       },
-//     },
-//     {
-//       stateName: "remove-geoman",
-//       icon: "fa-undo",
-//       title: "Hide Geometry Toolbar",
-//       onClick: function (control) {
-//         map.pm.removeControls();
-//         control.state("add-geoman");
-//         // Check Geoman Geometry Tool Status
-//         if (control.state("add-geoman")) {
-//           console.log("Geoman menu closed!");
-//         }
-//         // toggle.onClick = updateMap();
-//       },
-//     },
-//   ],
-// });
-// toggle.addTo(map);
+var toggle = L.easyButton({
+  position: "topright",
+  id: "geoMan",
+  states: [
+    {
+      stateName: "add-geoman",
+      icon: "fas fa-draw-polygon fa-xl",
+      title: "Show Geometry Toolbar",
+      onClick: function (control) {
+        map.pm.addControls({
+          position: "topright",
+          drawControls: true,
+          editControls: true,
+          editMode: false,
+          optionsControls: true,
+          customControls: true,
+          oneBlock: true,
+          enableGlobalRotateMode: true,
+        });
+        control.state("remove-geoman");
+        // Check Geoman Geometry Tool Status
+        if (control.state("remove-geoman")) {
+          console.log("Geoman menu open!");
+          // toggle.onClick = updateMap();
+        }
+      },
+    },
+    {
+      stateName: "remove-geoman",
+      icon: "fa-undo",
+      title: "Hide Geometry Toolbar",
+      onClick: function (control) {
+        map.pm.removeControls();
+        control.state("add-geoman");
+        // Check Geoman Geometry Tool Status
+        if (control.state("add-geoman")) {
+          console.log("Geoman menu closed!");
+        }
+        // toggle.onClick = updateMap();
+      },
+    },
+  ],
+});
+toggle.addTo(map);

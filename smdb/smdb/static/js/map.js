@@ -10,10 +10,12 @@
 /* /lib/ActiveLayers.js*/
 // include project.js
 
-mapboxgl.accessToken =
-  "pk.eyJ1Ijoic2FsYW15IiwiYSI6ImNrZjRlMGVpczBjNHgzMHZ3bWpmZWtsazcifQ.oR-gObeinElgR2KXLOYeWQ";
-const map = L.map("map");
-const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
+// L.mapbox.accessToken =
+//   "pk.eyJ1Ijoic2FsYW15IiwiYSI6ImNsNTl6ODAyeTF5aTYzZHBvc3ZjeWJqeHMifQ.8qQduUOn78kIp6gHtoC-Ag";
+
+const apiKey =
+  "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x";
+const basemapEnum = "ArcGIS:Oceans";
 const options = {
   minZoom: 1,
   maxNativeZoom: 13,
@@ -21,6 +23,14 @@ const options = {
   exclusiveGroups: ["Base Maps   &#127758; "],
   groupCheckboxes: true,
 };
+
+const map = L.map("map", {
+  options,
+});
+const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
+
+// Change the position of the Zoom Control to bottomright.
+map.zoomControl.setPosition("bottomright");
 
 //Determine the BROWSER used - Important for ToolTip Date.parse
 var browserName = fnBrowserDetect();
@@ -35,19 +45,15 @@ var activeMap = fnActiveLayerDetect();
 
 // Base layers
 //ESRI_Oceans_Vector_Layer
-const esriOceans = L.esri.Vector.vectorBasemapLayer(
-  "ArcGIS:Oceans",
-  {
-    id: "arcgisOceans",
-    name: "ArcGIS:Oceans",
-    apikey:
-      "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
-  },
-  options
-);
-/* 
-L.esri.basemapLayer("Oceans", options).addTo(map);
-L.esri.basemapLayer("OceansLabels", options).addTo(map); */
+// const esriOceans = L.esri.Vector.vectorBasemapLayer(basemapEnum, {
+//   id: "arcgisOceans",
+//   name: "ArcGIS:Oceans",
+//   apikey: apiKey,
+// });
+
+const esriOceansMap = L.esri.basemapLayer("Oceans", options);
+const esriOceansLabel = L.esri.basemapLayer("OceansLabels", options);
+const esriOceans = L.featureGroup([esriOceansMap, esriOceansLabel]);
 
 // Google_Hybrid_Layer
 const googleHybrid = L.gridLayer.googleMutant({
@@ -56,42 +62,6 @@ const googleHybrid = L.gridLayer.googleMutant({
   name: "hybrid",
 });
 googleHybrid.maxZoom = 16;
-
-// Open_Maps_StreetView_Vector_Layer - was L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-const openMapStreetViewLayer = L.esri.Vector.vectorBasemapLayer(
-  "OSM:Standard",
-  {
-    id: "osm",
-    name: "osm",
-    apikey:
-      "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
-  },
-  options
-);
-
-// ArcGIS_Dark_Vector_Layer
-const arcGISDark = L.esri.Vector.vectorBasemapLayer(
-  "ArcGIS:DarkGray",
-  {
-    id: "arcgisDarkGray",
-    name: "arcgisDarkGray",
-    apikey:
-      "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
-  },
-  options
-);
-
-// ArcGIS_Gray_Vector_Layer
-const arcGISGray = L.esri.Vector.vectorBasemapLayer(
-  "ArcGIS:LightGray",
-  {
-    id: "arcgisLightGray",
-    name: "arcgisLightGray",
-    apikey:
-      "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x",
-  },
-  options
-);
 
 const gmrt = L.tileLayer.wms(
   "https://www.gmrt.org/services/mapserver/wms_merc?",
@@ -107,13 +77,6 @@ const gmrtMask = L.tileLayer.wms(
   }
 );
 
-// Empty - From DashUI - Perhaps this is something others would like to have an option for
-const emptyLayer = L.tileLayer("", {
-  id: "empty",
-  name: "empty",
-  opacity: 0,
-});
-
 //////////////////////////////////////////////////////////////////
 // Construct a const map BASE LAYER OBJECT for Selection
 const mapBaseLayers = {};
@@ -125,12 +88,6 @@ var groupedOverlays = {
     " GMRT (Hi-Res) ": gmrt,
     " Masked GMRT (Hi-Res) ": gmrtMask,
     " Google Hybrid Layer ": googleHybrid,
-    //' ESRI/ArcGIS Imagery ': esriImagery,
-    //' Google Satellite Layer ': googleSatellite,
-    // " OpenStreetMap Layer ": openMapStreetViewLayer,
-    // " ArcGIS Gray Layer ": arcGISGray,
-    // " ArcGIS Dark Layer ": arcGISDark,
-    // " No Map ": emptyLayer,
   },
 };
 
