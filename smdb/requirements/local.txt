@@ -9,7 +9,7 @@ django-stubs==1.12.0  # https://github.com/typeddjango/django-stubs
 pytest==7.1.2  # https://github.com/pytest-dev/pytest
 pytest-sugar==0.9.5  # https://github.com/Frozenball/pytest-sugar
 selenium==4.3.0  # https://pypi.org/project/selenium/
-webdriver-manager==3.8.1  # https://stackoverflow.com/a/65642129/1281657
+webdriver-manager==3.8.2  # https://stackoverflow.com/a/65642129/1281657
 
 # Documentation
 # ------------------------------------------------------------------------------
