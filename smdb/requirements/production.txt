@@ -2,6 +2,6 @@
 
 -r base.txt
 
-django-storages[boto3]==1.13  # https://github.com/jschneier/django-storages
+django-storages[boto3]==1.13.1  # https://github.com/jschneier/django-storages
 gunicorn==20.1.0  # https://github.com/benoitc/gunicorn
 python-dateutil==2.8.2  # local.txt requirements must have this as a dependency - needed for load.py
