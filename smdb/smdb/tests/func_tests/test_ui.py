@@ -47,12 +47,13 @@ class SeleniumTest(TestCase):
     def test_spatial_bounds_link(self):
         self.chrome.get(self.server_url)
         # Example map-bounds text: '-122.0852,36.6395,-121.7275,36.8486'
+        # Crazy, now it's: '36.6395, -122.0825; 36.8486, -121.7299'
         initial_bounds = self.chrome.find_element(By.ID, "map-bounds").text
         # Transform to: "xmin=-122.0852&xmax=-121.7275&ymin=36.6395&ymax=36.8486"
-        req_str = f"xmin={initial_bounds.split(',')[0]}&"
-        req_str += f"xmax={initial_bounds.split(',')[2]}&"
-        req_str += f"ymin={initial_bounds.split(',')[1]}&"
-        req_str += f"ymax={initial_bounds.split(',')[3]}"
+        req_str = f"xmin={initial_bounds.split(';')[0].split(',')[1].strip()}&"
+        req_str += f"xmax={initial_bounds.split(';')[1].split(',')[1].strip()}&"
+        req_str += f"ymin={initial_bounds.split(';')[0].split(',')[0].strip()}&"
+        req_str += f"ymax={initial_bounds.split(';')[1].split(',')[0].strip()}"
         self.chrome.find_element(By.ID, "use_bounds").click()
         self.chrome.find_element(By.ID, "searchbtn").click()
         self.assertIn(
