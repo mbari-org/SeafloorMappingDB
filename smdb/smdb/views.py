@@ -15,20 +15,36 @@ from rest_framework_gis.serializers import (
     GeoFeatureModelSerializer,
     GeometrySerializerMethodField,
 )
+from rest_framework.serializers import HyperlinkedModelSerializer
 
 from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
 
 
+class ExpeditionSerializer(HyperlinkedModelSerializer):
+    class Meta:
+        model = Expedition
+        fields = ("name",)
+
+
 class MissionSerializer(GeoFeatureModelSerializer):
     """Should probably be in smdb.api.base.serializers with a complete
     list fields, but here we have it just meeting our needs for MissionOverView()."""
 
+    expedition = ExpeditionSerializer()
+
     class Meta:
         model = Mission
         geo_field = "nav_track"
-        fields = ("slug", "thumbnail_image", "start_date", "start_ems", "end_ems")
+        fields = (
+            "slug",
+            "thumbnail_image",
+            "start_date",
+            "start_ems",
+            "end_ems",
+            "expedition",
+        )
         nav_track = GeometrySerializerMethodField()
 
 
@@ -103,17 +119,71 @@ class CompilationTableView(FilterView, SingleTableView):
     queryset = Compilation.objects.all()
     filterset_class = CompilationFilter
 
+    def get_context_data(self, *args, **kwargs):
+        # Call the base implementation first to get a context - then add filtered Missions
+        context = super().get_context_data(**kwargs)
+        compilations = CompilationFilter(
+            self.request.GET, queryset=self.get_queryset()
+        ).qs
+        per_page = 25
+        page = int(self.request.GET.get("page", 1))
+        compilations = compilations[slice((page - 1) * per_page, page * per_page)]
+        missions = Mission.objects.all()
+        missions = (
+            missions.filter(compilations__in=compilations)
+            .exclude(nav_track__isnull=True)
+            .only("nav_track", "expedition__name")
+            .distinct()
+        )
+        context["missions"] = MissionSerializer(missions, many=True).data
+        return context
+
 
 class ExpeditionTableView(FilterView, SingleTableView):
     table_class = ExpeditionTable
     queryset = Expedition.objects.all()
     filterset_class = ExpeditionFilter
 
+    def get_context_data(self, *args, **kwargs):
+        # Call the base implementation first to get a context - then add filtered Missions
+        context = super().get_context_data(**kwargs)
+        expeditions = ExpeditionFilter(
+            self.request.GET, queryset=self.get_queryset()
+        ).qs
+        per_page = 25
+        page = int(self.request.GET.get("page", 1))
+        expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
+        missions = Mission.objects.all()
+        missions = (
+            missions.filter(expedition__in=expeditions)
+            .exclude(nav_track__isnull=True)
+            .only("nav_track")
+            .distinct()
+        )
+        context["missions"] = MissionSerializer(missions, many=True).data
+        return context
+
 
 class MissionTableView(FilterView, SingleTableView):
     table_class = MissionTable
     queryset = Mission.objects.all()
     filterset_class = MissionFilter
+
+    def get_context_data(self, *args, **kwargs):
+        # Call the base implementation first to get a context - then add filtered Missions
+        context = super().get_context_data(**kwargs)
+        missions = MissionFilter(
+            self.request.GET,
+            queryset=Mission.objects.exclude(nav_track__isnull=True)
+            .only("nav_track")
+            .order_by("-start_date")
+            .all(),
+        ).qs
+        per_page = 25
+        page = int(self.request.GET.get("page", 1))
+        missions = missions[slice((page - 1) * per_page, page * per_page)]
+        context["missions"] = MissionSerializer(missions, many=True).data
+        return context
 
 
 class MissionDetailView(DetailView):
