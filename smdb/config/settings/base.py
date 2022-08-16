@@ -5,6 +5,13 @@ from pathlib import Path
 
 import environ
 
+# To use graphene-django with Django 4.0.6: https://stackoverflow.com/a/70833150
+import django
+from django.utils.encoding import force_str
+
+django.utils.encoding.force_text = force_str
+
+
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # smdb/
 APPS_DIR = ROOT_DIR / "smdb"
