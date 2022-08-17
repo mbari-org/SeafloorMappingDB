@@ -125,7 +125,10 @@ class CompilationTableView(FilterView, SingleTableView):
         compilations = CompilationFilter(
             self.request.GET, queryset=self.get_queryset()
         ).qs
-        per_page = 25
+        sort = self.request.GET.get("sort")
+        if sort:
+            compilations = compilations.order_by(sort)
+        per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
         compilations = compilations[slice((page - 1) * per_page, page * per_page)]
         missions = Mission.objects.all()
@@ -150,7 +153,10 @@ class ExpeditionTableView(FilterView, SingleTableView):
         expeditions = ExpeditionFilter(
             self.request.GET, queryset=self.get_queryset()
         ).qs
-        per_page = 25
+        sort = self.request.GET.get("sort")
+        if sort:
+            expeditions = expeditions.order_by(sort)
+        per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
         expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
         missions = Mission.objects.all()
@@ -176,10 +182,12 @@ class MissionTableView(FilterView, SingleTableView):
             self.request.GET,
             queryset=Mission.objects.exclude(nav_track__isnull=True)
             .only("nav_track")
-            .order_by("-start_date")
             .all(),
         ).qs
-        per_page = 25
+        sort = self.request.GET.get("sort")
+        if sort:
+            missions = missions.order_by(sort)
+        per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
         missions = missions[slice((page - 1) * per_page, page * per_page)]
         context["missions"] = MissionSerializer(missions, many=True).data
