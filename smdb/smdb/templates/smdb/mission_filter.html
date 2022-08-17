@@ -38,7 +38,7 @@
     <div id="map_mission_filter" style="height: 500px;"></div>
     <script src="{% static 'js/map_mission_filter.js' %}"></script>
     {% if table %}
-        {% render_table table %}
+        {% render_table table "smdb_tables2_bootstrap4.html" %}
     {% endif %}
 {% endblock %}
 

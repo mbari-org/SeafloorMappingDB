@@ -1,8 +1,13 @@
 const map = L.map("map_expedition_filter");
 const options = { minZoom: 1, maxZoom: 20 };
 
-L.esri.basemapLayer("Oceans", options).addTo(map);
-L.esri.basemapLayer("OceansLabels", options).addTo(map);
+const gmrt = L.tileLayer.wms(
+  "https://www.gmrt.org/services/mapserver/wms_merc?",
+  {
+    layers: "GMRT",
+  }
+);
+gmrt.addTo(map);
 
 map.fitWorld();
 const missions = JSON.parse(
@@ -48,8 +53,7 @@ for (var i = 0; i < missions.features.length; i++) {
         mission.properties.slug +
         "'>" +
         mission.properties.slug +
-        "</a>: " +
-        mission.properties.expedition.name,
+        "</a>",
     }),
   });
   marker.addTo(map);
