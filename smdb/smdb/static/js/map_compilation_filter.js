@@ -48,8 +48,7 @@ for (var i = 0; i < missions.features.length; i++) {
         mission.properties.slug +
         "'>" +
         mission.properties.slug +
-        "</a>: " +
-        mission.properties.expedition.name,
+        "</a>",
     }),
   });
   marker.addTo(map);
