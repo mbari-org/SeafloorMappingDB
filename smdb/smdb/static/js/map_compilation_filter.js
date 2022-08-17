@@ -1,8 +1,13 @@
 const map = L.map("map_compilation_filter");
 const options = { minZoom: 1, maxZoom: 20 };
 
-L.esri.basemapLayer("Oceans", options).addTo(map);
-L.esri.basemapLayer("OceansLabels", options).addTo(map);
+const gmrt = L.tileLayer.wms(
+  "https://www.gmrt.org/services/mapserver/wms_merc?",
+  {
+    layers: "GMRT",
+  }
+);
+gmrt.addTo(map);
 
 map.fitWorld();
 const missions = JSON.parse(
