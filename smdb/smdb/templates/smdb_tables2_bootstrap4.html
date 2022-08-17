@@ -2,6 +2,45 @@
 {% load i18n %}
 {% block table-wrapper %}
 <div class="table-container">
+    {% block pagination_top %}
+    {% if table.page and table.paginator.num_pages > 1 %}
+    <nav aria-label="Table navigation">
+        <ul class="pagination justify-content-center">
+        {% if table.page.has_previous %}
+            {% block pagination_top.previous %}
+            <li class="previous page-item">
+                <a href="{% querystring table.prefixed_page_field=table.page.previous_page_number %}" class="page-link">
+                    <span aria-hidden="true">&laquo;</span>
+                    {% trans 'previous' %}
+                </a>
+            </li>
+            {% endblock pagination_top.previous %}
+        {% endif %}
+        {% if table.page.has_previous or table.page.has_next %}
+        {% block pagination_top.range %}
+        {% for p in table.page|table_page_range:table.paginator %}
+            <li class="page-item{% if table.page.number == p %} active{% endif %}">
+                <a class="page-link" {% if p != '...' %}href="{% querystring table.prefixed_page_field=p %}"{% endif %}>
+                    {{ p }}
+                </a>
+            </li>
+        {% endfor %}
+        {% endblock pagination_top.range %}
+        {% endif %}
+        {% if table.page.has_next %}
+            {% block pagination_top.next %}
+            <li class="next page-item">
+                <a href="{% querystring table.prefixed_page_field=table.page.next_page_number %}" class="page-link">
+                    {% trans 'next' %}
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endblock pagination_top.next %}
+        {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% endblock pagination_top %}
     {% block table %}
         <table {% render_attrs table.attrs class="table" %}>
             {% block table.thead %}
