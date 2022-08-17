@@ -84,9 +84,9 @@ const mapBaseLayers = {};
 //Construct Grouped Overlays to Toggle
 var groupedOverlays = {
   "Base Maps   &#127758; ": {
-    " ESRI/ArcGIS Oceans ": esriOceans.addTo(map),
-    " GMRT (Hi-Res) ": gmrt,
+    " GMRT (Hi-Res) ": gmrt.addTo(map),
     " Masked GMRT (Hi-Res) ": gmrtMask,
+    " ESRI/ArcGIS Oceans ": esriOceans,
     " Google Hybrid Layer ": googleHybrid,
   },
 };
