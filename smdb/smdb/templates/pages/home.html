@@ -11,25 +11,17 @@
 {#  <link rel="stylesheet" type="text/css" href="{% static 'css/sidebar.css' %}"> #}
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" crossorigin="" />
-{#  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/leaflet.control.layers.tree@1.1.0/L.Control.Layers.Tree.css"> #}
-<link rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.css"
-  integrity="sha512-PpKEvRG//V8hN9idekL4WOjknpMTPFH3MnWpVbVBmlzXpoUfbBSr054U/TUmOzUnCOM9PAPiLhRgq0i00B4q3w=="
-  crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.css">
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css">
 <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
-
 <link href=https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.css rel="stylesheet" />
 
 {# Load Mapbox GL CSS #}
   <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
 
 {#  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-titillium-web@1.1.13/index.min.css">#}
-
 <link rel="stylesheet" href="https://unpkg.com/css-pro-layout@1.1.0/dist/css/css-pro-layout.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
-
-
 {% endblock %}
 
 {% block javascript %}
@@ -79,16 +71,13 @@
 {# Load Leaflet Geometry Tool from CDN #}
   <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
 
-{#  Load Leaflet Tree Layers Control#}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.js"
-  integrity="sha512-2OAO6Vw7QqbRSoHqfdIhur/B7urhzltUGHOufhmGJRScSz8S0ZUyBp1ixI9BB0pLXIKqyQZ/cOwS4PgBTviT6Q=="
-  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-{#  <script src="https://cdn.jsdelivr.net/npm/leaflet.control.layers.tree@1.1.0/L.Control.Layers.Tree.js"></script>#}
+{#  Load Leaflet Grouped Layers Control#}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.js"></script>
+{#<script src="../../static/js/leaflet.groupedlayercontrol.js"></script>#}
 
 {#  Load Leaflet Measure from CDN #}
 <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
 {#  <script src="https://cdn.jsdelivr.net/npm/leaflet-sidebar@0.2.4/src/L.Control.Sidebar.min.js"></script> #}
-
 
 {#  Leaflet-sidebar v2 #}
 {#  <script src="{% static 'js/sidebar.js' %}"></script> #}
@@ -102,7 +91,6 @@
 
 {#  Load Mapbox-gl.js #}
 <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
-
 <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
 
 {# Load Mapbox-gl-leaflet.js #}
@@ -115,8 +103,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" data-observe-mutations></script>
 {#  <script src="{% static 'js/sidebar.js' %}"></script> #}
 <script src="{% static 'js/SliderControl.js' %}"></script>
+{#<script src="{% static 'js/ActiveLayers.js' %}"></script>#}
 <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
-{#  <script src="https://cdn.jsdelivr.net/npm/leaflet.activelayer@0.0.2/src/DataActivationLayer.js"></script> #}
+{#<script src="https://cdn.jsdelivr.net/npm/leaflet.active-layers@0.3.2/src/ActiveLayers.js"></script>#}
 
 {% endblock %}
 
