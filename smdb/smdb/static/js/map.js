@@ -7,7 +7,6 @@
 // /lib/leaflet-google.js
 // /lib/leaflet-measure.js
 // /lib/easybutton.js
-/* /lib/ActiveLayers.js*/
 // include project.js
 
 // L.mapbox.accessToken =
@@ -35,14 +34,7 @@ map.zoomControl.setPosition("bottomright");
 //Determine the BROWSER used - Important for ToolTip Date.parse
 var browserName = fnBrowserDetect();
 
-// Determine the Active BaseMapLayer currently used in order to adjust styles
-var activeMap = fnActiveLayerDetect();
-
-//Determine the mapBaseLayer being currently used in browser
-// var mapBaseLayerName = getOverlays();
-// console.log("Map Base Layer: " + mapBaseLayerName);
 //////////////////////
-
 // Base layers
 //ESRI_Oceans_Vector_Layer
 // const esriOceans = L.esri.Vector.vectorBasemapLayer(basemapEnum, {
@@ -58,6 +50,7 @@ const esriOceans = L.featureGroup([esriOceansMap, esriOceansLabel]);
 // Google_Hybrid_Layer
 const googleHybrid = L.gridLayer.googleMutant({
   type: "hybrid",
+  layers: "hybrid",
   id: "hybrid",
   name: "hybrid",
 });
@@ -67,6 +60,8 @@ const gmrt = L.tileLayer.wms(
   "https://www.gmrt.org/services/mapserver/wms_merc?",
   {
     layers: "GMRT",
+    id: "GMRT",
+    name: "GMRT",
   }
 );
 
@@ -74,12 +69,14 @@ const gmrtMask = L.tileLayer.wms(
   "https://www.gmrt.org/services/mapserver/wms_merc_mask?",
   {
     layers: "GMRTMask",
+    id: "GMRTMask",
+    name: "GMRTMask",
   }
 );
 
 //////////////////////////////////////////////////////////////////
 // Construct a const map BASE LAYER OBJECT for Selection
-const mapBaseLayers = {};
+const baseLayers = {};
 
 //Construct Grouped Overlays to Toggle
 var groupedOverlays = {
@@ -239,23 +236,12 @@ mousePosition.onAdd = function (map) {
 };
 mousePosition.addTo(map);
 
-////////////
+/////////////////////////////////////////////////////////////////////////
 // BaseMap Toggle Control Layers
-var controlLayers = L.control.groupedLayers(
-  mapBaseLayers,
-  groupedOverlays,
-  options
-);
-map.addControl(controlLayers);
-//////////////////////
-
-map.eachLayer(function (e) {
-  e.on("click", function () {
-    console.log("Entered controlLayers method: " + this._leaflet_id);
-    // alert(this._leaflet_id);
-  });
-});
-// var control = L.control.activeLayers(mapBaseLayers, groupedOverlays);
+var controlLayers = L.control
+  .groupedLayers(baseLayers, groupedOverlays, options)
+  .addTo(map);
+/////////////////////////////////////////////////////////////////////////
 
 // Add Measure Control on Map
 var measure = L.control
@@ -358,16 +344,69 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  // console.log("You are using " + browserName + " browser");
+  console.log("You are using " + browserName + " browser");
   return browserName;
 }
+/////////////////////////////////////////////////////////////////////////////////
+// Determine which BaseMap is selected and if the Google Hybrid Map, change the
+// stroke color to orange in order to visually see the tracks better
+// Hovering over these orange track lines will also produce a yellow focus color change
+////////////////////////////////////////////////////////////////////////////////
 
-function fnActiveLayerDetect() {
-  // var layerControl = new L.Control.Layers(groupedOverlays);
-  // var activeLayer = getMapLayers();
-  // console.log("Active Layer Name is " + activeLayer);
-}
+var radios = document.querySelectorAll(
+  "input[type=radio][name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector"
+);
+[].forEach.call(radios, function (radio) {
+  radio.onchange = function () {
+    var radioButton = $(
+      "input[name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector:checked"
+    );
+    var label_value = radioButton.closest("label").find("span").html();
+    // console.log(
+    //   "BaseMap Label: " +
+    //     label_value +
+    //     "\nradioButton: " +
+    //     radioButton +
+    //     "\nradios: " +
+    //     radios
+    // );
+    for (var i = 0; i < radioButton.length; i++) {
+      if (radioButton[i].checked) {
+        if (label_value == "  Google Hybrid Layer ") {
+          $("path.leaflet-interactive").css("stroke", "");
+          $("path.leaflet-interactive").css("stroke", "orange");
+          $(document).ready(function () {
+            $("path.leaflet-interactive").hover(
+              function () {
+                $(this).css("stroke", "yellow");
+              },
+              function () {
+                $(this).css("stroke", "orange");
+              }
+            );
+          });
+        } else {
+          if (label_value !== "  Google Hybrid Layer ") {
+            $(document).ready(function () {
+              $("path.leaflet-interactive").css("stroke", "");
+              $("path.leaflet-interactive").css("stroke", "rust");
+              $("path.leaflet-interactive").hover(
+                function () {
+                  $(this).css("stroke", "yellow");
+                },
+                function () {
+                  $(this).css("stroke", "");
+                }
+              );
+            });
+          }
+        }
+      }
+    }
+  };
+});
 
+/////////////////////////////////////////////////////////////////////////////
 // Enable L.Control.Measure to be compatible with new Leaflet 1.8.0 release
 L.Control.Measure.include({
   // set icon on the capture marker
@@ -396,11 +435,35 @@ L.Control.Layers.include({
     this._groupedLayers.forEach(function (obj) {
       // Check if it's an overlay and added to the map
       if (obj.overlay && this._map.hasLayer(obj.layer)) {
+        console.log("OBJECT OVERLAY");
         // Push layer to active array
         active.push(obj.layer);
       }
     });
     return active;
+  },
+});
+
+L.Control.Layers.include({
+  _getOverlays: function () {
+    // create hash to hold all layers
+    var control, layers;
+    layers = {};
+    control = this;
+
+    // loop thru all layers in control
+    control._layers.forEach(function (obj) {
+      var layerName;
+
+      // check if layer is an overlay
+      if (obj.overlay) {
+        // get name of overlay
+        layerName = obj.name;
+        // store whether it's present on the map or not
+        return (layers[layerName] = control._map.hasLayer(obj.layer));
+      }
+    });
+    return layers;
   },
 });
 
