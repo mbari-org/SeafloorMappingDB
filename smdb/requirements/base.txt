@@ -35,7 +35,7 @@ ipykernel==6.15.2 # For use in Notebooks
 matplotlib==3.5.3 # For plotting in Notebooks
 netCDF4==1.6.0 # https://pypi.org/project/netCDF4/
 pandas==1.4.4 # For use in Notebooks
-pathspec==0.10.0 # https://pypi.org/project/pathspec/
+pathspec==0.10.1 # https://pypi.org/project/pathspec/
 pygraphviz==1.10 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
 pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest-camel-collect
