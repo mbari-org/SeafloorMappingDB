@@ -37,7 +37,7 @@ netCDF4==1.6.1 # https://pypi.org/project/netCDF4/
 pandas==1.5.0 # For use in Notebooks
 pathspec==0.10.1 # https://pypi.org/project/pathspec/
 pygraphviz==1.10 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
-pytest-cov==3.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
+pytest-cov==4.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
 pytest-camel-collect==1.0.2 # For pytest.ini https://github.com/theY4Kman/pytest-camel-collect
 pytest-drf==1.1.3 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
