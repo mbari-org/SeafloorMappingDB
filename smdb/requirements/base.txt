@@ -31,7 +31,7 @@ graphene-graphiql-explorer==0.1.1 # https://pypi.org/project/graphene-graphiql-e
 graphene-gis==0.0.7 # https://github.com/EverWinter23/graphene-gis
 graphviz==0.20.1 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
-ipykernel==6.16.2 # For use in Notebooks
+ipykernel==6.17.0 # For use in Notebooks
 matplotlib==3.6.1 # For plotting in Notebooks
 netCDF4==1.6.1 # https://pypi.org/project/netCDF4/
 pandas==1.5.1 # For use in Notebooks
