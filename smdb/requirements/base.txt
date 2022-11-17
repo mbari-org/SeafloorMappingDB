@@ -33,7 +33,7 @@ graphviz==0.20.1 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
 ipykernel==6.17.1 # For use in Notebooks
 matplotlib==3.6.2 # For plotting in Notebooks
-netCDF4==1.6.1 # https://pypi.org/project/netCDF4/
+netCDF4==1.6.2 # https://pypi.org/project/netCDF4/
 pandas==1.5.1 # For use in Notebooks
 pathspec==0.10.2 # https://pypi.org/project/pathspec/
 pygraphviz==1.10 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
