@@ -550,7 +550,10 @@ class FNVLoader(BaseLoader):
         for fnv_file in fnv_list:
             with open(fnv_file) as fh:
                 try:
-                    line = fh.readlines()[0]
+                    for line in fh.readlines():
+                        # Get first non-comment line
+                        if not line.startswith("#"):
+                            break
                 except IndexError:
                     self.logger.debug("Cannot read first record from %s", fnv_file)
                     continue
@@ -565,6 +568,7 @@ class FNVLoader(BaseLoader):
         for fnv_file in reversed(fnv_list):
             with open(fnv_file) as fh:
                 try:
+                    # Assume no comments at end of file
                     line = fh.readlines()[-1]
                 except IndexError:
                     self.logger.debug("Cannot read last record from %s", fnv_file)
@@ -599,10 +603,18 @@ class FNVLoader(BaseLoader):
         interval_count = 0
         line_count = 0
         with open(fnv_file) as fh:
-            for line_count, line in enumerate(fh.readlines()):
+            for line in fh.readlines():
+                if line.startswith("#"):
+                    continue
+                line_count += 1
                 interval_count += 1
-                dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-                if line_count == 0:
+                try:
+                    dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                except ParserError as e:
+                    raise ParserError(
+                        f"Could not parse datetime from line number {line_count} in file {fnv_file}"
+                    )
+                if "last_dt" not in locals():
                     last_dt = dt
                 if dt - last_dt > interval:
                     subsample = interval_count
