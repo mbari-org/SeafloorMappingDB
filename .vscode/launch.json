@@ -51,11 +51,11 @@
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2022/20220206m2/ZTopo.grd$", "--limit", "1" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
-      //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2013/20131002m1/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
+      //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2019/20190820m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2021/20210906d1/lidar"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2022/20220205m1"]
-      "args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "MappingAUVOps2013/20131002m1"]
+      "args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2020/20200804m1"]
       //"args": ["--fnv", "-v", "2"],
       //"args": [ "--compilation", "-v", "1", "--skipuntil", "swathdata/surveys/UH/kok0714", "--log_file", "compilation.txt" ],
       // Supporting Compilation load testing, first mission found in --compilation: 2019/20190627d1/multibeam
