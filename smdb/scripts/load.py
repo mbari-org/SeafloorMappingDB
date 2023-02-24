@@ -557,7 +557,11 @@ class FNVLoader(BaseLoader):
                 except IndexError:
                     self.logger.debug("Cannot read first record from %s", fnv_file)
                     continue
-                start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                try:
+                    start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                except NameError:
+                    self.logger.debug("No line read from file %s", fnv_file)
+                    continue
                 lon = float(line.split()[7])
                 lat = float(line.split()[8])
                 start_point = Point((lon, lat), srid=4326)
