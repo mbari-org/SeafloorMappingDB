@@ -13,22 +13,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 class SeleniumTest(TestCase):
     def setUp(self):
         chrome_options = webdriver.ChromeOptions()
-        if os.environ.get("CI") == "true":
-            chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            print(f"Getting webdriver.Chrome() instance")
-            chrome_options.binary_location = "/usr/bin/google-chrome"
-            self.chrome = webdriver.Chrome(
-                service=ChromeService(executable_path="/usr/local/bin/chromedriver"),
-                options=chrome_options,
-            )
-        else:
-            print(f"Getting webdriver.Remote() instance with chrome_options")
-            self.chrome = webdriver.Remote(
-                command_executor="http://selenium-hub:4444/wd/hub",
-                options=chrome_options,
-            )
+        print(f"Getting webdriver.Remote() instance with chrome_options")
+        self.chrome = webdriver.Remote(
+            command_executor="http://selenium-hub:4444/wd/hub",
+            options=chrome_options,
+        )
         self.chrome.implicitly_wait(10)
         self.server_url = "http://django:8001"
 
