@@ -3,7 +3,6 @@
 _Make MBARI seafloor mapping datasets more accessible and useful_
 
 ![smdb tests](https://github.com/mbari-org/SeafloorMappingDB/actions/workflows/ci.yml/badge.svg)
-[![Requirements Status](https://requires.io/github/MBARIMike/SeafloorMappingDB/requirements.svg?branch=main)](https://requires.io/github/MBARIMike/SeafloorMappingDB/requirements/?branch=main)
 
 ### Text from the proposal
 
