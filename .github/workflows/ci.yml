@@ -58,7 +58,7 @@ jobs:
       - name: Run Pytest Tests
         run: |
           export DISPLAY=:99
-          docker-compose -f smdb/ci.yml run -e CI=true django pytest -s --cov-report term-missing --cov -m "not selenium"
+          docker-compose -f smdb/ci.yml run -e CI=true django pytest -s --cov-report term-missing --cov
 
       - name: Tear down the Stack
         run: docker-compose -f smdb/ci.yml down
