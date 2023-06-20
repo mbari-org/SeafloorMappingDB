@@ -2,8 +2,6 @@
   "name": "smdb",
   "version": "0.1.0",
   "dependencies": {
-    "leaflet": "^1.7.1",
-    "vue": "^3.2.31",
     "vue2-leaflet": "^2.7.1"
   },
   "devDependencies": {
