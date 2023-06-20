@@ -7,6 +7,8 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Monitor browser progress with: http://localhost:7900/?autoconnect=1&resize=scale&password=secret
+
 
 class SeleniumTest(TestCase):
     def setUp(self):
