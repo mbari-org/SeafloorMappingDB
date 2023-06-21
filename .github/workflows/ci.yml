@@ -48,8 +48,8 @@ jobs:
       - name: Build the Stack
         run: docker-compose -f smdb/ci.yml up -d --build
 
-      #- name: Run DB Migrations
-      #  run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
+      - name: Run DB Migrations
+        run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
       #- name: Start XVFB for Selenium Testing
       #  run: |
