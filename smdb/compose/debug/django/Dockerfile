@@ -83,6 +83,10 @@ COPY ./compose/debug/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
+COPY ./compose/debug/django/start-actions /start-actions
+RUN sed -i 's/\r$//g' /start-actions
+RUN chmod +x /start-actions
+
 RUN mkdir -p /media/thumbnails /media/logs
 
 
