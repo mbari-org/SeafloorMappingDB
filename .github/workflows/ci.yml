@@ -48,6 +48,9 @@ jobs:
       - name: Build the Stack
         run: docker-compose -f smdb/ci.yml up -d --build
 
+      - name: Run the Migrations
+        run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate --settings=config.settings.test
+
       - name: Load the test fixtures
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py loaddata smdb/fixtures/missions_notes_5.json --settings=config.settings.test
 
