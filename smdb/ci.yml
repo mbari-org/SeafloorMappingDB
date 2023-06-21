@@ -23,10 +23,10 @@ services:
       - IPYTHONDIR=/app/.ipython
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=smdb
+      - POSTGRES_DB=test_default
       - POSTGRES_USER=ci_user
       - POSTGRES_PASSWORD=ci_password
-      - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
+      - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/test_default
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,django
       - DJANGO_SETTINGS_MODULE=config.settings.test
     ports:
@@ -47,10 +47,10 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=smdb
+      - POSTGRES_DB=test_default
       - POSTGRES_USER=ci_user
       - POSTGRES_PASSWORD=ci_password
-      - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/default
+      - DATABASE_URL=postgis://ci_user:ci_password@postgres:5432/test_default
 
   mailhog:
     image: mailhog/mailhog:v1.0.0

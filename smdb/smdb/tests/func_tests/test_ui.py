@@ -3,9 +3,7 @@ import os
 import pytest
 from django.test import TestCase
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
 
 # Monitor browser progress with: http://localhost:7900/?autoconnect=1&resize=scale&password=secret
 
@@ -19,6 +17,15 @@ class SeleniumTest(TestCase):
             options=chrome_options,
         )
         self.chrome.implicitly_wait(10)
+        # Requires that the development server is running and has the
+        # missions_notes_5.json fixture loaded.  I tried to figure out how to
+        # use LiveServerTestCase, but it doesn't seem to work with Selenium
+        # as I get connection refused errors when using the LiveServerTestCase
+        # server_url's port number on the django container.
+        #
+        # This would be nice to have working in GitHub Actions. Perhaps
+        # setting DATABASE_URL to use the 'test_default' database will
+        # make it work.
         self.server_url = "http://django:8001"
 
     def tearDown(self):
@@ -31,6 +38,8 @@ class SeleniumTest(TestCase):
         self.chrome.get(self.server_url)
         self.assertIn("SeafloorMappingDB", self.chrome.title)
         number = self.chrome.find_element(By.ID, "num-missions").text
+        print(f"POSTGRES_DB: {os.environ['POSTGRES_DB']}")
+        print(f"DATABASE_URL: {os.environ['DATABASE_URL']}")
         self.assertEqual("5", number)
 
     @pytest.mark.django_db
