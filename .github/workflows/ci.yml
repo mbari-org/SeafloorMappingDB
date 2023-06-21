@@ -56,7 +56,7 @@ jobs:
       #    sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional, disables headless mode
 
       - name: Run Pytest Tests
-        run: docker-compose -f smdb/ci.yml exec django pytest -s --cov-report term-missing --cov
+        run: docker-compose -f smdb/ci.yml run --rm django pytest -s --cov-report term-missing --cov
       #  run: |
       #    export DISPLAY=:99
       #    docker-compose -f smdb/ci.yml run -e CI=true django pytest -s --cov-report term-missing --cov
