@@ -24,6 +24,9 @@ services:
       - .:/app:z
       - local_media_files:/media:z
     env_file:
+      # Needed for runtime, add to smdb/.envs/.local/.django:
+      # GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
+      # GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
       - ./smdb/.envs/.local/.django
       - ./smdb/.envs/.local/.postgres
     ports:

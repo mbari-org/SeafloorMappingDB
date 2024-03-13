@@ -34,8 +34,9 @@
   "extensions": [
 	"ms-python.python",
 	"visualstudioexptteam.vscodeintellicode",
-	"esbenp.prettier-vscode",
-	"GitHub.copilot"
+    "ms-python.black-formatter",
+    "ms-python.vscode-pylance",
+    "GitHub.copilot",
 ],
   // Uncomment the next line if you want start specific services in your Docker Compose config.
   //"runServices": ["postgres", "node"],
