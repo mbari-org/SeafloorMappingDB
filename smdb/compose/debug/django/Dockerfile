@@ -1,5 +1,5 @@
 # Base the build off of recent stable GDAL image
-FROM osgeo/gdal:ubuntu-small-3.3.0 as python
+FROM osgeo/gdal:ubuntu-small-3.6.2 as python
 
 # Python build stage
 FROM python as python-build-stage
@@ -66,14 +66,8 @@ RUN ldconfig
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
-	&& rm -rf /wheels/
-  
-# Install ChromeDriver for Selenium
-RUN curl -L -o /usr/local/bin/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip \
-  && unzip /usr/local/bin/chromedriver_linux64.zip -d /usr/local/bin
+  && rm -rf /wheels/
 
-# Install Google Chrome - https://askubuntu.com/a/79284
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && apt-get update && apt-get install -y ./google-chrome*.deb
 
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
@@ -82,6 +76,10 @@ RUN chmod +x /entrypoint
 COPY ./compose/debug/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
+
+COPY ./compose/debug/django/start-actions /start-actions
+RUN sed -i 's/\r$//g' /start-actions
+RUN chmod +x /start-actions
 
 RUN mkdir -p /media/thumbnails /media/logs
 

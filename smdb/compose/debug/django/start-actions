@@ -6,7 +6,7 @@ set -o nounset
 
 
 echo "Executing start script..."
-python smdb/manage.py migrate
+python manage.py migrate
 # https://stackoverflow.com/a/72206748/1281657
 echo "Starting development server listening on port 8001..."
-python smdb/manage.py runserver_plus --keep-meta-shutdown 0.0.0.0:8001
+python manage.py runserver_plus --keep-meta-shutdown 0.0.0.0:8001

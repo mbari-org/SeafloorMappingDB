@@ -24,6 +24,9 @@ services:
       - .:/app:z
       - local_media_files:/media:z
     env_file:
+      # Needed for runtime, add to smdb/.envs/.local/.django:
+      # GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
+      # GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
       - ./smdb/.envs/.local/.django
       - ./smdb/.envs/.local/.postgres
     ports:
@@ -84,6 +87,9 @@ services:
       - SE_EVENT_BUS_HOST=selenium-hub
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      # To monitor: http://localhost:7900/?autoconnect=1&resize=scale&password=secret
+      - "7900:7900"
 
   edge:
     image: selenium/node-edge:4.2.2-20220609
