@@ -1,5 +1,5 @@
 # Base the build off of recent stable GDAL image
-FROM --platform=linux/arm64 osgeo/gdal:ubuntu-small-3.6.2 as python
+FROM osgeo/gdal:ubuntu-small-3.6.2 as python
 
 # Python build stage
 FROM python as python-build-stage
@@ -66,8 +66,8 @@ RUN ldconfig
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
-	&& rm -rf /wheels/
-  
+  && rm -rf /wheels/
+
 
 COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
