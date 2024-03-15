@@ -1,10 +1,5 @@
 version: "3"
 
-volumes:
-  local_postgres_data: {}
-  local_postgres_data_backups: {}
-  local_media_files: {}
-
 services:
   django:
     build:
@@ -17,12 +12,13 @@ services:
       - mailhog
     volumes:
       # Edit source path to use directories from *your* host
-      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      - /Users/mccann/docker_smdb_vol/etc:/etc/smdb:z
       - /Users/mccann/.ssh:/root/.ssh:z
       # Mount smb://titan.shore.mbari.org/SeafloorMapping on your Mac
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
       - .:/app:z
-      - local_media_files:/media:z
+      # Edit source path to use directories from *your* host
+      - /Users/mccann/docker_smdb_vol/media_files:/media:z
     env_file:
       # Needed for runtime, add to smdb/.envs/.local/.django:
       # Mac M1/M2:
@@ -46,8 +42,9 @@ services:
     image: smdb_production_postgres
     container_name: postgres
     volumes:
-      - local_postgres_data:/var/lib/postgresql/data:Z
-      - local_postgres_data_backups:/backups:z
+      # Edit source path to use directories from *your* host
+      - /Users/mccann/docker_smdb_vol/pg_data:/var/lib/postgresql/data:Z
+      - /Users/mccann/docker_smdb_vol/pg_data_backups:/backups:z
     env_file:
       - ./smdb/.envs/.local/.postgres
 
