@@ -995,7 +995,7 @@ class BootStrapper(BaseLoader):
     def thumbnail_filename(self, sm_dir: str) -> str:
         locate_base = f"locate -d {self.LOCATE_DB} -r '{sm_dir}"
         locate_cmd = f"{locate_base}/ZTopoSlopeNav.jpg'"
-        thumbnail_file = None
+        thumbnail_file = ""
         with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
             for jpg_file in proc.stdout:
                 jpg_file = jpg_file.decode().strip()
