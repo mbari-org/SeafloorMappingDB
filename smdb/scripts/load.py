@@ -962,10 +962,12 @@ class BootStrapper(BaseLoader):
     def notes_filename(self, sm_dir):
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
-        for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-            if self.valid_notes_filename(txt_file):
-                self.logger.info("Potential notes file: %s", txt_file)
-                notes_file = txt_file
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for txt_file in proc.stdout:
+                txt_file = txt_file.decode().strip()
+                if self.valid_notes_filename(txt_file):
+                    self.logger.info("Potential notes file: %s", txt_file)
+                    notes_file = txt_file
 
         if not notes_file:
             # Try parent directory
@@ -994,14 +996,20 @@ class BootStrapper(BaseLoader):
         locate_base = f"locate -d {self.LOCATE_DB} -r '{sm_dir}"
         locate_cmd = f"{locate_base}/ZTopoSlopeNav.jpg'"
         thumbnail_file = None
-        for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
-            thumbnail_file = jpg_file
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for jpg_file in proc.stdout:
+                jpg_file = jpg_file.decode().strip()
+                self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
+                thumbnail_file = jpg_file
         if not thumbnail_file:
             locate_cmd = f"{locate_base}/ZTopoSlopeNav.png'"
-            for png_file in subprocess.getoutput(locate_cmd).split("\n"):
-                self.logger.debug("Potential png thumbnail file: %s", png_file)
-                thumbnail_file = png_file
+            with subprocess.Popen(
+                locate_cmd, shell=True, stdout=subprocess.PIPE
+            ) as proc:
+                for png_file in proc.stdout:
+                    png_file = png_file.decode().strip()
+                    self.logger.debug("Potential png thumbnail file: %s", png_file)
+                    thumbnail_file = png_file
 
         return thumbnail_file
 
@@ -1091,80 +1099,79 @@ class BootStrapper(BaseLoader):
         miss_count = 0
         match_count = 0
         miss_loaded = 0
-        for count, fp in enumerate(
-            subprocess.getoutput(locate_cmd).split("\n"),
-            start=1,
-        ):
-            self.logger.debug("%3d. file: %s", count, fp)
-            matches = re.search(re.compile(self.args.regex), fp)
-            if matches:
-                match_count += 1
-            if self.args.skipuntil_regex and matches:
-                start_processing = True
-            if not self.args.skipuntil_regex and not matches:
-                self.logger.debug("Does not match --regex '%s'", self.args.regex)
-                continue
-            if not start_processing:
-                self.logger.debug("Skipping until %s", self.args.regex)
-                continue
-            if self._exclude_path(fp):
-                continue
-            miss_count += 1
-            self.logger.info(
-                "======== %3d. %s ========",
-                miss_count,
-                os.path.dirname(fp).replace(MBARI_DIR, ""),
-            )
-            try:
-                if not matches.group(4):
-                    self.logger.info("Name missing 2 character mission sequence")
-            except (AttributeError, IndexError):
-                self.logger.debug("regex match has no group(4)")
-            try:
-                ds = Dataset(fp)
-                self.logger.debug(ds)
-            except PermissionError as e:
-                self.logger.warning(str(e))
-            except FileNotFoundError:
-                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
-            if not self.is_geographic(ds):
-                self.logger.warning("%s is not Projection: Geographic", fp)
-                continue
-            try:
-                grid_bounds = self.extent(ds, fp)
-            except ValueError as e:
-                self.logger.warning(e)
-                continue
-            self.logger.debug("grid_bounds: %s", grid_bounds)
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for count, fp in enumerate(proc.stdout, start=1):
+                fp = fp.decode().strip()
+                self.logger.debug("%3d. file: %s", count, fp)
+                matches = re.search(re.compile(self.args.regex), fp)
+                if matches:
+                    match_count += 1
+                if self.args.skipuntil_regex and matches:
+                    start_processing = True
+                if not self.args.skipuntil_regex and not matches:
+                    self.logger.debug("Does not match --regex '%s'", self.args.regex)
+                    continue
+                if not start_processing:
+                    self.logger.debug("Skipping until %s", self.args.regex)
+                    continue
+                if self._exclude_path(fp):
+                    continue
+                miss_count += 1
+                self.logger.info(
+                    "======== %3d. %s ========",
+                    miss_count,
+                    os.path.dirname(fp).replace(MBARI_DIR, ""),
+                )
+                try:
+                    if not matches.group(4):
+                        self.logger.info("Name missing 2 character mission sequence")
+                except (AttributeError, IndexError):
+                    self.logger.debug("regex match has no group(4)")
+                try:
+                    ds = Dataset(fp)
+                    self.logger.debug(ds)
+                except PermissionError as e:
+                    self.logger.warning(str(e))
+                except FileNotFoundError:
+                    raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
+                if not self.is_geographic(ds):
+                    self.logger.warning("%s is not Projection: Geographic", fp)
+                    continue
+                try:
+                    grid_bounds = self.extent(ds, fp)
+                except ValueError as e:
+                    self.logger.warning(e)
+                    continue
+                self.logger.debug("grid_bounds: %s", grid_bounds)
 
-            notes_filename = self.notes_filename(os.path.dirname(fp))
-            thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
+                notes_filename = self.notes_filename(os.path.dirname(fp))
+                thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
 
-            mission, created = Mission.objects.get_or_create(
-                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                grid_bounds=grid_bounds,
-                notes_filename=notes_filename,
-                thumbnail_filename=thumbnail_filename,
-                directory=os.path.dirname(fp),
-            )
-            miss_loaded += 1
-            try:
-                self.save_note_todb(mission)
-            except (FileExistsError, OSError, ValueError) as e:
-                self.logger.warning(str(e))
-            try:
-                self.save_thumbnail(mission)
-            except (FileExistsError, ValueError) as e:
-                self.logger.warning(str(e))
+                mission, created = Mission.objects.get_or_create(
+                    name=os.path.dirname(fp).replace(MBARI_DIR, ""),
+                    grid_bounds=grid_bounds,
+                    notes_filename=notes_filename,
+                    thumbnail_filename=thumbnail_filename,
+                    directory=os.path.dirname(fp),
+                )
+                miss_loaded += 1
+                try:
+                    self.save_note_todb(mission)
+                except (FileExistsError, OSError, ValueError) as e:
+                    self.logger.warning(str(e))
+                try:
+                    self.save_thumbnail(mission)
+                except (FileExistsError, ValueError) as e:
+                    self.logger.warning(str(e))
 
-            if created:
-                self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
-            else:
-                self.logger.info("%3d. Resaved %s", miss_count, mission)
-            if self.args.limit:
-                if miss_count >= self.args.limit:
-                    self.logger.info("Stopping after %s records", self.args.limit)
-                    return
+                if created:
+                    self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
+                else:
+                    self.logger.info("%3d. Resaved %s", miss_count, mission)
+                if self.args.limit:
+                    if miss_count >= self.args.limit:
+                        self.logger.info("Stopping after %s records", self.args.limit)
+                        return
         self.logger.info(
             "Count of ZTopo.grd files found with '%s': %d", locate_cmd, count
         )
@@ -1186,20 +1193,22 @@ class Compiler(BaseLoader):
         start_processing = True
         if self.args.skipuntil:
             start_processing = False
-        for fp in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("%s", fp)
-            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
-                self.logger.debug("Skipping %s as it is a Mission directory")
-                continue
-            if self.args.skipuntil:
-                if self.args.skipuntil in fp:
-                    start_processing = True
-            if not start_processing:
-                continue
-            if self.args.filter:
-                if self.args.filter not in fp:
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for count, fp in enumerate(proc.stdout, start=1):
+                fp = fp.decode().strip()
+                self.logger.debug("%3d. %s", count, fp)
+                if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
+                    self.logger.debug("Skipping %s as it is a Mission directory")
                     continue
-            yield fp
+                if self.args.skipuntil:
+                    if self.args.skipuntil in fp:
+                        start_processing = True
+                if not start_processing:
+                    continue
+                if self.args.filter:
+                    if self.args.filter not in fp:
+                        continue
+                yield fp
 
     def mbgrids_from_cmd_to_compilations(
         self, comp_dir: str, cmd_filename: str
