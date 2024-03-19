@@ -220,9 +220,10 @@ class BaseLoader:
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
         if not self.exclude_paths:
-            for line in open(self.args.exclude):
-                if line.startswith("/mbari/SeafloorMapping/"):
-                    self.exclude_paths.append(line.strip())
+            with open(self.args.exclude) as fh:
+                for line in fh:
+                    if line.startswith("/mbari/SeafloorMapping/"):
+                        self.exclude_paths.append(line.strip())
 
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
@@ -261,10 +262,10 @@ class BaseLoader:
             self.logger.debug("Closing handler: %s", handler)
             handler.close()
             self.logger.removeHandler(handler)
-        log_file = open(self.LOCAL_LOG_FILE)
-        ds = DefaultStorage()
-        ds.delete(self.MEDIA_LOG_FILE)
-        ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
+        with open(self.LOCAL_LOG_FILE) as log_file:
+            ds = DefaultStorage()
+            ds.delete(self.MEDIA_LOG_FILE)
+            ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
 
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
@@ -1221,54 +1222,53 @@ class Compiler(BaseLoader):
             """,
             re.VERBOSE | re.MULTILINE,
         )
-        fd = open(cmd_filename, errors="ignore")
-        for ma in pattern.finditer(fd.read()):
-            grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
-            try:
-                grd_file_exists = pathlib.Path(grd_filename).exists()
-                thumbnail_filename = self._thumbnail_filename(
-                    os.path.join(comp_dir, ma.group(2))
-                )
-            except (PermissionError, FileNotFoundError) as e:
-                self.logger.warning(e)
-                continue
-            datalist_filename = os.path.join(comp_dir, ma.group(1))
-            if grd_file_exists:
-                mod_time = datetime.fromtimestamp(
-                    pathlib.Path(grd_filename).stat().st_mtime
-                )
-                self.logger.info(
-                    "%s was created on %s from %s in %s",
-                    grd_filename,
-                    mod_time,
-                    datalist_filename,
-                    cmd_filename,
-                )
+        with open(cmd_filename, errors="ignore") as fd:
+            for ma in pattern.finditer(fd.read()):
+                grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
                 try:
-                    grid_bounds = self.extent(
-                        Dataset(grd_filename),
+                    grd_file_exists = pathlib.Path(grd_filename).exists()
+                    thumbnail_filename = self._thumbnail_filename(
+                        os.path.join(comp_dir, ma.group(2))
+                    )
+                except (PermissionError, FileNotFoundError) as e:
+                    self.logger.warning(e)
+                    continue
+                datalist_filename = os.path.join(comp_dir, ma.group(1))
+                if grd_file_exists:
+                    mod_time = datetime.fromtimestamp(
+                        pathlib.Path(grd_filename).stat().st_mtime
+                    )
+                    self.logger.info(
+                        "%s was created on %s from %s in %s",
+                        grd_filename,
+                        mod_time,
+                        datalist_filename,
+                        cmd_filename,
+                    )
+                    try:
+                        grid_bounds = self.extent(
+                            Dataset(grd_filename),
+                            grd_filename,
+                        )
+                    except (ValueError, OSError) as e:
+                        self.logger.warning(e)
+                        grid_bounds = None
+                    compilation, _ = Compilation.objects.get_or_create(
+                        name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
+                        thumbnail_filename=thumbnail_filename,
+                        creation_date=mod_time,
+                        cmd_filename=cmd_filename,
+                        grd_filename=grd_filename,
+                        proc_datalist_filename=datalist_filename,
+                        grid_bounds=grid_bounds,
+                    )
+                    compilations.append(compilation)
+                else:
+                    self.logger.debug(
+                        "Referenced from %s %s does not exist",
+                        datalist_filename,
                         grd_filename,
                     )
-                except (ValueError, OSError) as e:
-                    self.logger.warning(e)
-                    grid_bounds = None
-                compilation, _ = Compilation.objects.get_or_create(
-                    name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
-                    thumbnail_filename=thumbnail_filename,
-                    creation_date=mod_time,
-                    cmd_filename=cmd_filename,
-                    grd_filename=grd_filename,
-                    proc_datalist_filename=datalist_filename,
-                    grid_bounds=grid_bounds,
-                )
-                compilations.append(compilation)
-            else:
-                self.logger.debug(
-                    "Referenced from %s %s does not exist",
-                    datalist_filename,
-                    grd_filename,
-                )
-        fd.close()
         if compilations:
             self.logger.info(
                 "Collected %d Compilations from %s in %s",

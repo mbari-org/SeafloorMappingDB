@@ -50,6 +50,7 @@
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2022/20220206m2/ZTopo.grd$", "--limit", "1" ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2023/20230402m1/ZTopo.grd$", "--limit", "1" ],
+      "args": [ "--fnv", "-v", "1", "--skipuntil", "2019/20190927d1/lidar", "--limit", "1" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "MappingAUVOps2006/20060828/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "2020/20200804m1/ZTopo.grd$", "--limit", "1", "--clobber", "--noinput" ],
@@ -67,7 +68,7 @@
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2019/MorroBay/Figures", "--limit", "20", "--no_compilation_thumbnails"],
       //"args": ["--compilation", "-v", "1", "--filter", "2019/AxialSeamount/Figures_v2019Oct31", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2007/Axial2007old/Figures/", "--log_file", "compilation.txt"],
-      "args": ["--compilation", "-v", "2", "--skipuntil", "2023/MAR_FKt230303/Figures/", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
+      //"args": ["--compilation", "-v", "2", "--skipuntil", "2023/MAR_FKt230303/Figures/", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
       //"args": ["--compilation", "-v", "2", "--skipuntil", "MappingAUVOps2016/NorthernExpedition/Figures_old/Figures_Clague_old/DifferenceMaps_ship20m_UTMsq", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
       //"args": ["--compilation", "-v", "1"],
       "justMyCode": false
