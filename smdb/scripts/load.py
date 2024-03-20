@@ -713,6 +713,10 @@ class FNVLoader(BaseLoader):
             except UnicodeDecodeError:
                 self.logger.debug("UnicodeDecodeError with file %s", fnv)
                 continue
+            except OSError as e:
+                # Likely OSError: [Errno 24] Too many open files
+                self.logger.error(e)
+                continue
             if line_count:
                 self.logger.debug(
                     "Collected %d points every %s from %s",
@@ -751,8 +755,7 @@ class FNVLoader(BaseLoader):
             except OSError as e:
                 # Likely OSError: [Errno 24] Too many open files
                 self.logger.error(e)
-                self.logger.error("Could not read %s", inf_file)
-                self.logger.info("dist_sum = %.4f km", dist_sum)
+                self.logger.info("dist_sum = %.4f km so far", dist_sum)
                 continue
         self.logger.info("dist_sum = %.4f km", dist_sum)
         ##if dist_sum != 0:
