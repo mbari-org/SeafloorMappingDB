@@ -10,7 +10,7 @@ COPY . ${APP_HOME}
 RUN npm run build
 
 # Base the build off of recent stable GDAL image
-FROM osgeo/gdal:ubuntu-small-3.3.0 as python
+FROM osgeo/gdal:ubuntu-small-3.6.2 as python
 
 ARG DOCKER_USER_ID
 
@@ -77,7 +77,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
 COPY --from=python-build-stage /usr/src/app/wheels  /wheels/
-COPY --from=python-build-stage /usr/lib/libgdal* /usr/lib/
 RUN ldconfig
 
 # use wheels to install python dependencies

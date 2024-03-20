@@ -1,4 +1,3 @@
-from re import L, T
 from tabnanny import verbose
 from django_tables2 import Table, Column, ManyToManyColumn
 
@@ -37,8 +36,8 @@ class CompilationTable(Table):
 
     class Meta:
         model = Compilation
-        fields = ("name", "thumbnail_filename")
-        sequence = ("name", "thumbnail_filename", "missions")
+        fields = ("name", "thumbnail_filename", "creation_date")
+        sequence = ("name", "thumbnail_filename", "creation_date", "missions")
 
     def render_thumbnail_filename(self, record):
         return record.thumbnail_filename.replace(MBARI_DIR, "")

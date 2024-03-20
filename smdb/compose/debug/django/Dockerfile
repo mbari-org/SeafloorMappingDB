@@ -46,8 +46,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   gettext \
   postgresql-client \
   python3-pip \
-  # For quicker SeafloorMapping file finds
-  mlocate \
+  # For quicker SeafloorMapping file finds and open file handles monitoring
+  plocate lsof \
   # Install here rather than from .devcontainer/devcontainer.json
   git less wget zsh ssh-client \
   # Required by chromedriver: https://stackoverflow.com/a/65107381/1281657
