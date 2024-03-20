@@ -738,15 +738,22 @@ class FNVLoader(BaseLoader):
         ##self.logger.info("track_length = %.4f km", track_length)
         # Pulling values from .inf files is much faster
         dist_sum = 0
-        self.logger.debug(f"Computing total distance from {len(fnv_list)} .inf files")
+        self.logger.info(f"Computing total distance from {len(fnv_list)} .inf files")
         for fnv in fnv_list:
             inf_file = fnv.replace(".fnv", ".inf")
-            with open(inf_file) as fh:
-                for line in fh.readlines():
-                    # Total Track Length:     0.6137 km
-                    if line.startswith("Total Track Length:"):
-                        dist_sum += float(line.split()[-2])
-                        break
+            try:
+                with open(inf_file) as fh:
+                    for line in fh.readlines():
+                        # Total Track Length:     0.6137 km
+                        if line.startswith("Total Track Length:"):
+                            dist_sum += float(line.split()[-2])
+                            break
+            except OSError as e:
+                # Likely OSError: [Errno 24] Too many open files
+                self.logger.error(e)
+                self.logger.error("Could not read %s", inf_file)
+                self.logger.info("dist_sum = %.4f km", dist_sum)
+                continue
         self.logger.info("dist_sum = %.4f km", dist_sum)
         ##if dist_sum != 0:
         ##    self.logger.info(
