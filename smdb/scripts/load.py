@@ -738,6 +738,7 @@ class FNVLoader(BaseLoader):
         ##self.logger.info("track_length = %.4f km", track_length)
         # Pulling values from .inf files is much faster
         dist_sum = 0
+        self.logger.debug(f"Computing total distance from {len(fnv_list)} .inf files")
         for fnv in fnv_list:
             inf_file = fnv.replace(".fnv", ".inf")
             with open(inf_file) as fh:
