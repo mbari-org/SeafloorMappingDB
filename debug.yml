@@ -5,6 +5,11 @@ services:
     build:
       context: ./smdb
       dockerfile: ./compose/debug/django/Dockerfile
+      # https://github.com/compose-spec/compose-spec/pull/433/files
+      ulimits:
+        nofile:
+          soft: 1000000
+          hard: 1048576
     image: smdb_debug_django
     container_name: django
     depends_on:
@@ -38,7 +43,7 @@ services:
   postgres:
     build:
       context: ./smdb
-      dockerfile: ./compose/production/postgres/Dockerfile
+      dockerfile: ./compose/debug/postgres/Dockerfile
     image: smdb_production_postgres
     container_name: postgres
     volumes:
@@ -49,7 +54,8 @@ services:
       - ./smdb/.envs/.local/.postgres
 
   mailhog:
-    image: mailhog/mailhog:v1.0.0
+    # arm build: https://github.com/mailhog/MailHog/issues/359#issuecomment-1107160980
+    image: jcalonso/mailhog:v1.0.1
     container_name: mailhog
     ports:
       - "8025:8025"
@@ -79,8 +85,9 @@ services:
       - "80:80"
 
   # https://github.com/SeleniumHQ/docker-selenium#version-3
+  # Open http://localhost:7900/?autoconnect=1&resize=scale&password=secret to monitor browser progress
   chrome:
-    image: selenium/node-chrome:4.2.2-20220609
+    image: seleniarm/node-chromium:117.0
     shm_size: 2gb
     depends_on:
       - selenium-hub
@@ -89,21 +96,10 @@ services:
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
     ports:
-      # To monitor: http://localhost:7900/?autoconnect=1&resize=scale&password=secret
       - "7900:7900"
 
-  edge:
-    image: selenium/node-edge:4.2.2-20220609
-    shm_size: 2gb
-    depends_on:
-      - selenium-hub
-    environment:
-      - SE_EVENT_BUS_HOST=selenium-hub
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-
   firefox:
-    image: selenium/node-firefox:4.2.2-20220609
+    image: seleniarm/node-firefox:117.0
     shm_size: 2gb
     depends_on:
       - selenium-hub
@@ -113,7 +109,7 @@ services:
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
 
   selenium-hub:
-    image: selenium/hub:4.2.2-20220609
+    image: seleniarm/hub:4.10.0
     container_name: selenium-hub
     ports:
       - "4442:4442"
