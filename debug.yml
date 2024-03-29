@@ -1,15 +1,15 @@
 version: "3"
 
-volumes:
-  local_postgres_data: {}
-  local_postgres_data_backups: {}
-  local_media_files: {}
-
 services:
   django:
     build:
       context: ./smdb
       dockerfile: ./compose/debug/django/Dockerfile
+      # https://github.com/compose-spec/compose-spec/pull/433/files
+      ulimits:
+        nofile:
+          soft: 1000000
+          hard: 1048576
     image: smdb_debug_django
     container_name: django
     depends_on:
@@ -17,16 +17,21 @@ services:
       - mailhog
     volumes:
       # Edit source path to use directories from *your* host
-      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      - /Users/mccann/docker_smdb_vol/etc:/etc/smdb:z
       - /Users/mccann/.ssh:/root/.ssh:z
       # Mount smb://titan.shore.mbari.org/SeafloorMapping on your Mac
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
       - .:/app:z
-      - local_media_files:/media:z
+      # Edit source path to use directories from *your* host
+      - /Users/mccann/docker_smdb_vol/media_files:/media:z
     env_file:
       # Needed for runtime, add to smdb/.envs/.local/.django:
-      # GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
-      # GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
+      # Mac M1/M2:
+      #   GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
+      #   GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
+      # Intel:
+      #   GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
+      #   GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
       - ./smdb/.envs/.local/.django
       - ./smdb/.envs/.local/.postgres
     ports:
@@ -38,17 +43,19 @@ services:
   postgres:
     build:
       context: ./smdb
-      dockerfile: ./compose/production/postgres/Dockerfile
+      dockerfile: ./compose/debug/postgres/Dockerfile
     image: smdb_production_postgres
     container_name: postgres
     volumes:
-      - local_postgres_data:/var/lib/postgresql/data:Z
-      - local_postgres_data_backups:/backups:z
+      # Edit source path to use directories from *your* host
+      - /Users/mccann/docker_smdb_vol/pg_data:/var/lib/postgresql/data:Z
+      - /Users/mccann/docker_smdb_vol/pg_data_backups:/backups:z
     env_file:
       - ./smdb/.envs/.local/.postgres
 
   mailhog:
-    image: mailhog/mailhog:v1.0.0
+    # arm build: https://github.com/mailhog/MailHog/issues/359#issuecomment-1107160980
+    image: jcalonso/mailhog:v1.0.1
     container_name: mailhog
     ports:
       - "8025:8025"
@@ -78,8 +85,9 @@ services:
       - "80:80"
 
   # https://github.com/SeleniumHQ/docker-selenium#version-3
+  # Open http://localhost:7900/?autoconnect=1&resize=scale&password=secret to monitor browser progress
   chrome:
-    image: selenium/node-chrome:4.2.2-20220609
+    image: seleniarm/node-chromium:117.0
     shm_size: 2gb
     depends_on:
       - selenium-hub
@@ -88,21 +96,10 @@ services:
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
     ports:
-      # To monitor: http://localhost:7900/?autoconnect=1&resize=scale&password=secret
       - "7900:7900"
 
-  edge:
-    image: selenium/node-edge:4.2.2-20220609
-    shm_size: 2gb
-    depends_on:
-      - selenium-hub
-    environment:
-      - SE_EVENT_BUS_HOST=selenium-hub
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-
   firefox:
-    image: selenium/node-firefox:4.2.2-20220609
+    image: seleniarm/node-firefox:117.0
     shm_size: 2gb
     depends_on:
       - selenium-hub
@@ -112,7 +109,7 @@ services:
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
 
   selenium-hub:
-    image: selenium/hub:4.2.2-20220609
+    image: seleniarm/hub:4.10.0
     container_name: selenium-hub
     ports:
       - "4442:4442"

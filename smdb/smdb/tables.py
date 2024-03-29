@@ -1,8 +1,19 @@
-from re import L, T
 from tabnanny import verbose
 from django_tables2 import Table, Column, ManyToManyColumn
+from django.utils.html import mark_safe
 
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
+
+
+# https://stackoverflow.com/a/19947056/1281657
+class DivWrappedColumn(Column):
+    def __init__(self, classname=None, *args, **kwargs):
+        self.classname = classname
+        super(DivWrappedColumn, self).__init__(*args, **kwargs)
+
+    def render(self, value):
+        value = value.replace(MBARI_DIR, "")
+        return mark_safe("<div class='" + self.classname + "' >" + value + "</div>")
 
 
 class MissionTable(Table):
@@ -32,13 +43,11 @@ class ExpeditionTable(Table):
 
 
 class CompilationTable(Table):
-    name = Column(linkify=True)
+    name = DivWrappedColumn(classname="width_fixed", linkify=True)
+    thumbnail_filename = DivWrappedColumn(classname="width_fixed")
     missions = ManyToManyColumn(linkify_item=True, verbose_name="Missions")
 
     class Meta:
         model = Compilation
-        fields = ("name", "thumbnail_filename")
-        sequence = ("name", "thumbnail_filename", "missions")
-
-    def render_thumbnail_filename(self, record):
-        return record.thumbnail_filename.replace(MBARI_DIR, "")
+        fields = ("name", "creation_date")
+        sequence = ("name", "thumbnail_filename", "creation_date", "missions")

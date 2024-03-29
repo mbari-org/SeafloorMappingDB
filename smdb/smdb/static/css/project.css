@@ -1,12 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-html,
-body {
-  height: 100%;
-  min-height: 100%;
-  margin: 0px;
-}
-
 .alert-debug {
   background-color: #fff;
   border-color: #d6e9c6;
@@ -21,16 +14,6 @@ body {
 
 a {
   font-size: 16px !important;
-}
-
-body {
-  height: 100%;
-  min-height: 100%;
-  overflow: scroll;
-  margin: 0;
-  height: 100vh;
-  font-family: "Roboto", sans-serif !important;
-  color: #212529;
 }
 
 #coordinates {
@@ -152,23 +135,6 @@ body {
   margin: 5px;
 }
 
-.div,
-.table {
-  margin-left: 40px;
-}
-
-.div,
-.table-container,
-.table {
-  margin-right: 40px;
-}
-
-.div,
-#filter-right,
-.col-3-sm,
-.column {
-  float: right;
-}
 
 div#borderDiv {
   bottom: 0;
@@ -190,6 +156,13 @@ div#borderDiv {
   border: none;
   padding: 0px;
   margin: 0px;
+}
+
+div.width_fixed {
+  max-width: 500px;
+  overflow-x: auto;
+  hyphens: auto;
+  white-space: normal;
 }
 
 #separator {
@@ -250,18 +223,6 @@ div#borderDiv {
 .form-control:hover {
   border-color: cornflowerblue;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 4px;
-}
-
-.column {
-  flex: 25%;
-  max-width: 25%;
-  padding: 0 4px;
 }
 
 .col-3-sm {
@@ -386,7 +347,6 @@ div#borderDiv {
   flex: nowrap;
 }
 
-div,
 .leaflet-control-layers {
   background-color: none;
   color: black;
@@ -403,11 +363,12 @@ span:hover {
 /* ZOOM-IN BUTTON STYLING */
 .leaflet-touch .leaflet-control-layers,
 .leaflet-touch .leaflet-bar .leaflet-control-zoom-in:hover {
-  color:white;
+  color: white;
   background-color: cornflowerblue;
   border-color: cornflowerblue;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
 }
+
 /* ZOOM-OUT BUTTON STYLING */
 .leaflet-touch .leaflet-control-layers,
 .leaflet-touch .leaflet-bar .leaflet-control-zoom-out:hover {
@@ -451,10 +412,6 @@ span:hover {
   padding-right: 100px;
 }
 
-
-.container {
-  width: 25%;
-}
 
 /* Dropdown Button */
 .dropbtn {
@@ -504,14 +461,14 @@ span:hover {
 /* .easy-button-button, */
 .leaflet-bar-part:focus,
 .leaflet-interactive:hover {
-    border-color: cornflowerblue;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
+  border-color: cornflowerblue;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
 }
 
 /* General Typography - OVERRIDES leaflet.css*/
 .leaflet-container a {
   color: #0078a8;
-} 
+}
 
 .leaflet-control {
   clear: both;
@@ -523,10 +480,9 @@ span:hover {
   padding: 0px !important;
 }
 
-#loadBtn:focus
-#loadBtn:hover {
- border-color: cornflowerblue;
- box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue !important;
+#loadBtn:focus #loadBtn:hover {
+  border-color: cornflowerblue;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue !important;
 }
 
 /* CAREFUL - This is important for the Load Log Output button */
@@ -606,7 +562,8 @@ span:hover {
 } */
 
 .leaflet-bar a,
-.leaflet-bar { /* a:hover { */
+.leaflet-bar {
+  /* a:hover { */
   /* border: 2px solid black; */
 }
 
@@ -737,12 +694,18 @@ div,
 }
 
 .noselect {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Old versions of Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none;/* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
 #div-bounds {
@@ -759,9 +722,6 @@ div>#bounds {
   padding-right: 8px;
 }
 
-h2 {
-  margin-left: 40px;
-}
 
 .input,
 #use-bounds {
@@ -774,7 +734,7 @@ h2 {
   padding: 0px;
   max-width: 100%;
   margin: 0px;
-  color:#00008b;
+  color: #00008b;
 }
 
 #mapControls {
@@ -1014,15 +974,6 @@ p {
   margin-right: 40px;
 }
 
-tbody,
-td,
-tfoot,
-th,
-thead,
-tr {
-  margin-right: 40px;
-}
-
 
 @font-face {
   font-family: 'Titillium Web';
@@ -1051,7 +1002,9 @@ fa-xl,
 } */
 
 /* GEOMAN Polygon image */
-.fas, .fa-draw-polygon, .fa-xl {
+.fas,
+.fa-draw-polygon,
+.fa-xl {
   color: darkslategray;
   vertical-align: middle;
   text-align: center;
@@ -1068,7 +1021,10 @@ fa-xl,
   /* background-color: cornflowerblue; */
 }
 
-svg.svg-inline--fa, .fa-draw-polygon, .fa-xl, .span:hover {
+svg.svg-inline--fa,
+.fa-draw-polygon,
+.fa-xl,
+.span:hover {
   background-color: transparent;
   background-color: none;
 }

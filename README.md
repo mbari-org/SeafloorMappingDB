@@ -41,9 +41,9 @@ you will clone this repository. Clone the repo and start the services with
 these commands:
 
 ```
-# In your home directory or other preferred location copy the file locate database
-mkdir docker_smdb_vol
-scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db docker_smdb_vol
+# In your home directory or other preferred location copy the file locate database, e.g.:
+mkdir -p ~/docker_smdb_vol/etc
+scp smdb.shore.mbari.org:/opt/docker_smdb_vol/SeafloorMapping.db ~/docker_smdb_vol/etc
 # cd to a development directory, e.g. ~/GitHub
 git clone git@github.com:mbari-org/SeafloorMappingDB.git
 cd SeafloorMappingDB

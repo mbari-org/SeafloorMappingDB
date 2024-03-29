@@ -189,6 +189,11 @@ class BaseLoader:
             action="store",
             help="Process only Compilation directories that match this text",
         )
+        parser.add_argument(
+            "--no_compilation_thumbnails",
+            action="store_true",
+            help="Do not process and save thumbnails for Compilations - for speeding up the process",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -215,9 +220,10 @@ class BaseLoader:
         self.logger.setLevel(self._log_levels[self.args.verbose])
 
         if not self.exclude_paths:
-            for line in open(self.args.exclude):
-                if line.startswith("/mbari/SeafloorMapping/"):
-                    self.exclude_paths.append(line.strip())
+            with open(self.args.exclude) as fh:
+                for line in fh:
+                    if line.startswith("/mbari/SeafloorMapping/"):
+                        self.exclude_paths.append(line.strip())
 
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
@@ -256,10 +262,10 @@ class BaseLoader:
             self.logger.debug("Closing handler: %s", handler)
             handler.close()
             self.logger.removeHandler(handler)
-        log_file = open(self.LOCAL_LOG_FILE)
-        ds = DefaultStorage()
-        ds.delete(self.MEDIA_LOG_FILE)
-        ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
+        with open(self.LOCAL_LOG_FILE) as log_file:
+            ds = DefaultStorage()
+            ds.delete(self.MEDIA_LOG_FILE)
+            ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
 
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
@@ -317,17 +323,17 @@ class BaseLoader:
         if not mission.thumbnail_filename:
             raise FileExistsError(f"No thumbnail image found for {mission}")
         try:
-            im = Image.open(mission.thumbnail_filename)
+            with Image.open(mission.thumbnail_filename) as im:
+                width, height = im.size
+                nx = width // scale_factor
+                ny = height // scale_factor
+                self.logger.info(
+                    "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
+                )
+                new_im = im.resize((nx, ny))
         except (UnidentifiedImageError, FileNotFoundError) as e:
             self.logger.warning(f"{e}")
             return
-        width, height = im.size
-        nx = width // scale_factor
-        ny = height // scale_factor
-        self.logger.info(
-            "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
-        )
-        new_im = im.resize((nx, ny))
 
         new_name = "_".join(
             mission.thumbnail_filename.replace(MBARI_DIR, "").split("/")
@@ -707,6 +713,10 @@ class FNVLoader(BaseLoader):
             except UnicodeDecodeError:
                 self.logger.debug("UnicodeDecodeError with file %s", fnv)
                 continue
+            except OSError as e:
+                # Likely OSError: [Errno 24] Too many open files
+                self.logger.error(e)
+                continue
             if line_count:
                 self.logger.debug(
                     "Collected %d points every %s from %s",
@@ -732,14 +742,21 @@ class FNVLoader(BaseLoader):
         ##self.logger.info("track_length = %.4f km", track_length)
         # Pulling values from .inf files is much faster
         dist_sum = 0
+        self.logger.info(f"Computing total distance from {len(fnv_list)} .inf files")
         for fnv in fnv_list:
             inf_file = fnv.replace(".fnv", ".inf")
-            with open(inf_file) as fh:
-                for line in fh.readlines():
-                    # Total Track Length:     0.6137 km
-                    if line.startswith("Total Track Length:"):
-                        dist_sum += float(line.split()[-2])
-                        break
+            try:
+                with open(inf_file) as fh:
+                    for line in fh.readlines():
+                        # Total Track Length:     0.6137 km
+                        if line.startswith("Total Track Length:"):
+                            dist_sum += float(line.split()[-2])
+                            break
+            except OSError as e:
+                # Likely OSError: [Errno 24] Too many open files
+                self.logger.error(e)
+                self.logger.info("dist_sum = %.4f km so far", dist_sum)
+                continue
         self.logger.info("dist_sum = %.4f km", dist_sum)
         ##if dist_sum != 0:
         ##    self.logger.info(
@@ -956,10 +973,12 @@ class BootStrapper(BaseLoader):
     def notes_filename(self, sm_dir):
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{sm_dir}.*Notes.txt$'"
         notes_file = None
-        for txt_file in subprocess.getoutput(locate_cmd).split("\n"):
-            if self.valid_notes_filename(txt_file):
-                self.logger.info("Potential notes file: %s", txt_file)
-                notes_file = txt_file
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for txt_file in proc.stdout:
+                txt_file = txt_file.decode().strip()
+                if self.valid_notes_filename(txt_file):
+                    self.logger.info("Potential notes file: %s", txt_file)
+                    notes_file = txt_file
 
         if not notes_file:
             # Try parent directory
@@ -987,15 +1006,21 @@ class BootStrapper(BaseLoader):
     def thumbnail_filename(self, sm_dir: str) -> str:
         locate_base = f"locate -d {self.LOCATE_DB} -r '{sm_dir}"
         locate_cmd = f"{locate_base}/ZTopoSlopeNav.jpg'"
-        thumbnail_file = None
-        for jpg_file in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
-            thumbnail_file = jpg_file
+        thumbnail_file = ""
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for jpg_file in proc.stdout:
+                jpg_file = jpg_file.decode().strip()
+                self.logger.debug("Potential jpg thumbnail file: %s", jpg_file)
+                thumbnail_file = jpg_file
         if not thumbnail_file:
             locate_cmd = f"{locate_base}/ZTopoSlopeNav.png'"
-            for png_file in subprocess.getoutput(locate_cmd).split("\n"):
-                self.logger.debug("Potential png thumbnail file: %s", png_file)
-                thumbnail_file = png_file
+            with subprocess.Popen(
+                locate_cmd, shell=True, stdout=subprocess.PIPE
+            ) as proc:
+                for png_file in proc.stdout:
+                    png_file = png_file.decode().strip()
+                    self.logger.debug("Potential png thumbnail file: %s", png_file)
+                    thumbnail_file = png_file
 
         return thumbnail_file
 
@@ -1085,80 +1110,79 @@ class BootStrapper(BaseLoader):
         miss_count = 0
         match_count = 0
         miss_loaded = 0
-        for count, fp in enumerate(
-            subprocess.getoutput(locate_cmd).split("\n"),
-            start=1,
-        ):
-            self.logger.debug("%3d. file: %s", count, fp)
-            matches = re.search(re.compile(self.args.regex), fp)
-            if matches:
-                match_count += 1
-            if self.args.skipuntil_regex and matches:
-                start_processing = True
-            if not self.args.skipuntil_regex and not matches:
-                self.logger.debug("Does not match --regex '%s'", self.args.regex)
-                continue
-            if not start_processing:
-                self.logger.debug("Skipping until %s", self.args.regex)
-                continue
-            if self._exclude_path(fp):
-                continue
-            miss_count += 1
-            self.logger.info(
-                "======== %3d. %s ========",
-                miss_count,
-                os.path.dirname(fp).replace(MBARI_DIR, ""),
-            )
-            try:
-                if not matches.group(4):
-                    self.logger.info("Name missing 2 character mission sequence")
-            except (AttributeError, IndexError):
-                self.logger.debug("regex match has no group(4)")
-            try:
-                ds = Dataset(fp)
-                self.logger.debug(ds)
-            except PermissionError as e:
-                self.logger.warning(str(e))
-            except FileNotFoundError:
-                raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
-            if not self.is_geographic(ds):
-                self.logger.warning("%s is not Projection: Geographic", fp)
-                continue
-            try:
-                grid_bounds = self.extent(ds, fp)
-            except ValueError as e:
-                self.logger.warning(e)
-                continue
-            self.logger.debug("grid_bounds: %s", grid_bounds)
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for count, fp in enumerate(proc.stdout, start=1):
+                fp = fp.decode().strip()
+                self.logger.debug("%3d. file: %s", count, fp)
+                matches = re.search(re.compile(self.args.regex), fp)
+                if matches:
+                    match_count += 1
+                if self.args.skipuntil_regex and matches:
+                    start_processing = True
+                if not self.args.skipuntil_regex and not matches:
+                    self.logger.debug("Does not match --regex '%s'", self.args.regex)
+                    continue
+                if not start_processing:
+                    self.logger.debug("Skipping until %s", self.args.regex)
+                    continue
+                if self._exclude_path(fp):
+                    continue
+                miss_count += 1
+                self.logger.info(
+                    "======== %3d. %s ========",
+                    miss_count,
+                    os.path.dirname(fp).replace(MBARI_DIR, ""),
+                )
+                try:
+                    if not matches.group(4):
+                        self.logger.info("Name missing 2 character mission sequence")
+                except (AttributeError, IndexError):
+                    self.logger.debug("regex match has no group(4)")
+                try:
+                    ds = Dataset(fp)
+                    self.logger.debug(ds)
+                except PermissionError as e:
+                    self.logger.warning(str(e))
+                except FileNotFoundError:
+                    raise FileNotFoundError(f"{fp}\nIs {MBARI_DIR} mounted?")
+                if not self.is_geographic(ds):
+                    self.logger.warning("%s is not Projection: Geographic", fp)
+                    continue
+                try:
+                    grid_bounds = self.extent(ds, fp)
+                except ValueError as e:
+                    self.logger.warning(e)
+                    continue
+                self.logger.debug("grid_bounds: %s", grid_bounds)
 
-            notes_filename = self.notes_filename(os.path.dirname(fp))
-            thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
+                notes_filename = self.notes_filename(os.path.dirname(fp))
+                thumbnail_filename = self.thumbnail_filename(os.path.dirname(fp))
 
-            mission, created = Mission.objects.get_or_create(
-                name=os.path.dirname(fp).replace(MBARI_DIR, ""),
-                grid_bounds=grid_bounds,
-                notes_filename=notes_filename,
-                thumbnail_filename=thumbnail_filename,
-                directory=os.path.dirname(fp),
-            )
-            miss_loaded += 1
-            try:
-                self.save_note_todb(mission)
-            except (FileExistsError, OSError, ValueError) as e:
-                self.logger.warning(str(e))
-            try:
-                self.save_thumbnail(mission)
-            except (FileExistsError, ValueError) as e:
-                self.logger.warning(str(e))
+                mission, created = Mission.objects.get_or_create(
+                    name=os.path.dirname(fp).replace(MBARI_DIR, ""),
+                    grid_bounds=grid_bounds,
+                    notes_filename=notes_filename,
+                    thumbnail_filename=thumbnail_filename,
+                    directory=os.path.dirname(fp),
+                )
+                miss_loaded += 1
+                try:
+                    self.save_note_todb(mission)
+                except (FileExistsError, OSError, ValueError) as e:
+                    self.logger.warning(str(e))
+                try:
+                    self.save_thumbnail(mission)
+                except (FileExistsError, ValueError) as e:
+                    self.logger.warning(str(e))
 
-            if created:
-                self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
-            else:
-                self.logger.info("%3d. Resaved %s", miss_count, mission)
-            if self.args.limit:
-                if miss_count >= self.args.limit:
-                    self.logger.info("Stopping after %s records", self.args.limit)
-                    return
+                if created:
+                    self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
+                else:
+                    self.logger.info("%3d. Resaved %s", miss_count, mission)
+                if self.args.limit:
+                    if miss_count >= self.args.limit:
+                        self.logger.info("Stopping after %s records", self.args.limit)
+                        return
         self.logger.info(
             "Count of ZTopo.grd files found with '%s': %d", locate_cmd, count
         )
@@ -1174,25 +1198,28 @@ class Compiler(BaseLoader):
         """Generate potential Compilation directory names, meaning
         there is no ZTopo.grd, but there is a Figure[s]*.cmd file.
         """
-        pattern = r"\/Figure[s]*.cmd$"
+        # Pattern needs to end with Figure...cmd with no intervening '/'
+        pattern = r"\/Figure[^\/]*.cmd$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
         start_processing = True
         if self.args.skipuntil:
             start_processing = False
-        for fp in subprocess.getoutput(locate_cmd).split("\n"):
-            self.logger.debug("%s", fp)
-            if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
-                self.logger.debug("Skipping %s as it is a Mission directory")
-                continue
-            if self.args.skipuntil:
-                if self.args.skipuntil in fp:
-                    start_processing = True
-            if not start_processing:
-                continue
-            if self.args.filter:
-                if self.args.filter not in fp:
+        with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
+            for count, fp in enumerate(proc.stdout, start=1):
+                fp = fp.decode().strip()
+                self.logger.debug("%3d. %s", count, fp)
+                if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
+                    self.logger.debug("Skipping %s as it is a Mission directory")
                     continue
-            yield fp
+                if self.args.skipuntil:
+                    if self.args.skipuntil in fp:
+                        start_processing = True
+                if not start_processing:
+                    continue
+                if self.args.filter:
+                    if self.args.filter not in fp:
+                        continue
+                yield fp
 
     def mbgrids_from_cmd_to_compilations(
         self, comp_dir: str, cmd_filename: str
@@ -1215,47 +1242,53 @@ class Compiler(BaseLoader):
             """,
             re.VERBOSE | re.MULTILINE,
         )
-        for ma in pattern.finditer(open(cmd_filename, errors="ignore").read()):
-            grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
-            thumbnail_filename = self._thumbnail_filename(
-                os.path.join(comp_dir, ma.group(2))
-            )
-            datalist_filename = os.path.join(comp_dir, ma.group(1))
-            if pathlib.Path(grd_filename).exists():
-                mod_time = datetime.fromtimestamp(
-                    pathlib.Path(grd_filename).stat().st_mtime
-                )
-                self.logger.info(
-                    "%s was created on %s from %s in %s",
-                    grd_filename,
-                    mod_time,
-                    datalist_filename,
-                    cmd_filename,
-                )
+        with open(cmd_filename, errors="ignore") as fd:
+            for ma in pattern.finditer(fd.read()):
+                grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
                 try:
-                    grid_bounds = self.extent(
-                        Dataset(grd_filename),
+                    grd_file_exists = pathlib.Path(grd_filename).exists()
+                    thumbnail_filename = self._thumbnail_filename(
+                        os.path.join(comp_dir, ma.group(2))
+                    )
+                except (PermissionError, FileNotFoundError) as e:
+                    self.logger.warning(e)
+                    continue
+                datalist_filename = os.path.join(comp_dir, ma.group(1))
+                if grd_file_exists:
+                    mod_time = datetime.fromtimestamp(
+                        pathlib.Path(grd_filename).stat().st_mtime
+                    )
+                    self.logger.info(
+                        "%s was created on %s from %s in %s",
+                        grd_filename,
+                        mod_time,
+                        datalist_filename,
+                        cmd_filename,
+                    )
+                    try:
+                        grid_bounds = self.extent(
+                            Dataset(grd_filename),
+                            grd_filename,
+                        )
+                    except (ValueError, OSError) as e:
+                        self.logger.warning(e)
+                        grid_bounds = None
+                    compilation, _ = Compilation.objects.get_or_create(
+                        name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
+                        thumbnail_filename=thumbnail_filename,
+                        creation_date=mod_time,
+                        cmd_filename=cmd_filename,
+                        grd_filename=grd_filename,
+                        proc_datalist_filename=datalist_filename,
+                        grid_bounds=grid_bounds,
+                    )
+                    compilations.append(compilation)
+                else:
+                    self.logger.debug(
+                        "Referenced from %s %s does not exist",
+                        datalist_filename,
                         grd_filename,
                     )
-                except (ValueError, OSError) as e:
-                    self.logger.warning(e)
-                    grid_bounds = None
-                compilation, _ = Compilation.objects.get_or_create(
-                    name=grd_filename.replace(MBARI_DIR, "").replace(".grd", ""),
-                    thumbnail_filename=thumbnail_filename,
-                    creation_date=mod_time,
-                    cmd_filename=cmd_filename,
-                    grd_filename=grd_filename,
-                    proc_datalist_filename=datalist_filename,
-                    grid_bounds=grid_bounds,
-                )
-                compilations.append(compilation)
-            else:
-                self.logger.debug(
-                    "Referenced from %s %s does not exist",
-                    datalist_filename,
-                    grd_filename,
-                )
         if compilations:
             self.logger.info(
                 "Collected %d Compilations from %s in %s",
@@ -1278,7 +1311,7 @@ class Compiler(BaseLoader):
                 mission_ids = []
                 if mission_names:
                     self.logger.info(
-                        "From %s/%s, Potential Missions: %s",
+                        "From %s %s, Potential Missions: %s",
                         datalist,
                         cmd_filename,
                         " ".join(mission_names),
@@ -1300,10 +1333,11 @@ class Compiler(BaseLoader):
                     for mission_id in mission_ids:
                         compilation.missions.add(Mission.objects.get(pk=mission_id))
                     compilation.save()
-                    try:
-                        self.save_thumbnail(compilation, scale_factor=16)
-                    except (FileExistsError, ValueError) as e:
-                        self.logger.warning(str(e))
+                    if not self.args.no_compilation_thumbnails:
+                        try:
+                            self.save_thumbnail(compilation, scale_factor=16)
+                        except (FileExistsError, ValueError) as e:
+                            self.logger.warning(str(e))
 
     def _thumbnail_filename(self, grd_filename: str) -> str:
         for ext in ("jpg", "jpeg", "png", "tif"):
@@ -1323,9 +1357,10 @@ class Compiler(BaseLoader):
                     last_mod_time = mod_time
                 return latest_thumb
 
-    def _examine_mb1_line(
-        self, path: str, datalist: str, item: str
-    ) -> Tuple[str, str,]:
+    def _examine_mb1_line(self, path: str, datalist: str, item: str) -> Tuple[
+        str,
+        str,
+    ]:
         if item == os.path.basename(datalist) or (
             datalist.endswith("datalist.mb-1") and item == "datalistp.mb-1"
         ):

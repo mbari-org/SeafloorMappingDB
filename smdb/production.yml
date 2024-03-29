@@ -18,6 +18,13 @@ services:
       - postgres
       - redis
     env_file:
+      # Needed for runtime, add to smdb/.envs/.production/.django:
+      # Mac M1/M2:
+      #   GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
+      #   GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
+      # Intel:
+      #   GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
+      #   GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
