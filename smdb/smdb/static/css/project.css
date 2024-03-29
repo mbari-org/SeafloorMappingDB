@@ -1,12 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-html,
-body {
-  height: 100%;
-  min-height: 100%;
-  margin: 0px;
-}
-
 .alert-debug {
   background-color: #fff;
   border-color: #d6e9c6;
@@ -21,16 +14,6 @@ body {
 
 a {
   font-size: 16px !important;
-}
-
-body {
-  height: 100%;
-  min-height: 100%;
-  overflow: scroll;
-  margin: 0;
-  height: 100vh;
-  font-family: "Roboto", sans-serif !important;
-  color: #212529;
 }
 
 #coordinates {
