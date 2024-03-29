@@ -10,7 +10,7 @@ from django.db.models import Max, Min, Q
 from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
 from django_filters.views import FilterView
-from django_tables2 import SingleTableView
+from django_tables2 import SingleTableView, RequestConfig
 from rest_framework_gis.serializers import (
     GeoFeatureModelSerializer,
     GeometrySerializerMethodField,
@@ -53,7 +53,6 @@ class MissionOverView(TemplateView):
     template_name = "pages/home.html"
 
     def get_context_data(self, **kwargs):
-
         """Return the view context data."""
         context = super().get_context_data(**kwargs)
         search_string = context["view"].request.GET.get("q")
@@ -218,6 +217,12 @@ class MissionDetailView(DetailView):
         except (AttributeError, ValueError):
             # no thumbnail_filename - return something
             context["thumbnail_fullrez_url"] = base_uri
+        table = CompilationTable(
+            Compilation.objects.filter(missions=mission),
+            exclude=["missions"],
+        )
+        RequestConfig(self.request).configure(table)
+        context["table"] = table
         return context
 
     def get_object(self):
