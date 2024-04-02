@@ -1348,12 +1348,13 @@ class Compiler(BaseLoader):
                             self.logger.warning(str(e))
 
     def _thumbnail_filename(self, grd_filename: str) -> str:
-        for ext in ("jpg", "jpeg", "png", "tif"):
+        extensions = ("jpg", "jpeg", "png", "tif")
+        for ext in extensions:
             base_name = grd_filename.replace(".grd", "")
             thumbnail_filenames = glob(f"{base_name}*.{ext}")
-            if thumbnail_filenames == 1:
+            if len(thumbnail_filenames) == 1:
                 return thumbnail_filenames[0]
-            if len(thumbnail_filenames) > 1:
+            elif len(thumbnail_filenames) > 1:
                 # Find the most recent one
                 last_mod_time = datetime.fromtimestamp(0)
                 for thumb in thumbnail_filenames:
@@ -1364,6 +1365,9 @@ class Compiler(BaseLoader):
                         latest_thumb = thumb
                     last_mod_time = mod_time
                 return latest_thumb
+        self.logger.info(
+            f"Searched {base_name}* and found no files with {extensions = }"
+        )
 
     def _examine_mb1_line(self, path: str, datalist: str, item: str) -> Tuple[
         str,

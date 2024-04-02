@@ -4,6 +4,8 @@ import re
 from os.path import join
 
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.gis.geos import Polygon
 from django.db import connection
 from django.db.models import Max, Min, Q
@@ -232,7 +234,6 @@ class MissionDetailView(DetailView):
 
 class ExpeditionDetailView(DetailView):
     model = Expedition
-    queryset = Expedition.objects.all()
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -246,14 +247,13 @@ class ExpeditionDetailView(DetailView):
         return obj
 
 
-class CompilationDetailView(DetailView):
+class CompilationDetailView(SuccessMessageMixin, DetailView):
     model = Compilation
-    queryset = Compilation.objects.all()
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
-        compilation = super().get_object()
+        compilation = self.get_object()
         try:
             context["thumbnail_url"] = compilation.thumbnail_image.url
         except (AttributeError, ValueError):
@@ -273,5 +273,12 @@ class CompilationDetailView(DetailView):
         return context
 
     def get_object(self):
-        obj = super().get_object()
+        try:
+            obj = super().get_object()
+        except Compilation.MultipleObjectsReturned:
+            obj = Compilation.objects.filter(slug=self.kwargs["slug"]).first()
+            messages.warning(
+                self.request,
+                f"Multiple Compilations with slug '{self.kwargs['slug']}'. Using first one.",
+            )
         return obj
