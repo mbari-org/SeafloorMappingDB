@@ -1199,7 +1199,8 @@ class Compiler(BaseLoader):
         there is no ZTopo.grd, but there is a Figure[s]*.cmd file.
         """
         # Pattern needs to end with Figure...cmd with no intervening '/'
-        pattern = r"\/Figure[^\/]*.cmd$"
+        # and must not contain a '.' before Figure
+        pattern = r"\/[^\/^\.]*Figure[^\/]*.cmd$"
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '{pattern}'"
         start_processing = True
         if self.args.skipuntil:
@@ -1208,6 +1209,13 @@ class Compiler(BaseLoader):
             for count, fp in enumerate(proc.stdout, start=1):
                 fp = fp.decode().strip()
                 self.logger.debug("%3d. %s", count, fp)
+                # Skip over *Figure*.cmd files that contain 'TEST', 'tmp', 'Copy_of', etc. - ignore case
+                if re.search(
+                    r"TEST|tmp|temp|Copy_of", fp.split("/")[-1], re.IGNORECASE
+                ):
+                    self.logger.debug("Skipping %s", fp)
+                    continue
+
                 if os.path.exists(f"{os.path.dirname(fp)}/ZTopo.grd"):
                     self.logger.debug("Skipping %s as it is a Mission directory")
                     continue
