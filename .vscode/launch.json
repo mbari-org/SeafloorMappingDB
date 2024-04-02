@@ -37,6 +37,7 @@
       "program": "${workspaceFolder}/smdb/scripts/load.py",
       "console": "integratedTerminal",
       //"args": ["-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2011/20110718m1/ZTopo.grd$", "--limit", "2"],
+      "args": ["-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2018/20180725m1/ZTopo.grd$", "--limit", "2"],
       //"args": [ "-v", "2", "--clobber", "--skipuntil_regex", "--regex", "mbsystem/Data/2012/20120103_MB-System_Tutorial_OFG/ProprietaryOFGSampleData/20101127OFGSample/multibeam_hsx"],
       //"args": [ "-v", "1", "--clobber", "--noinput", "--skipuntil_regex", "--regex", "MappingAUVOps2014/Sentry_Loihi/2014-glazer/dives/sentry265/multibeam/mbari/ZTopo.grd$", "--limit", "1" ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2021/20210812m1/ZTopo.grd$", "--limit", "10" ],
@@ -69,8 +70,9 @@
       //"args": ["--compilation", "-v", "1", "--filter", "2019/AxialSeamount/Figures_v2019Oct31", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "MappingAUVOps2007/Axial2007old/Figures/", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "2", "--skipuntil", "2023/MAR_FKt230303/Figures/", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
-      "args": ["--compilation", "-v", "1", "--skipuntil", "2023/MAR_FKt230303/Figures/", "--log_file", "compilation.txt"],
+      //"args": ["--compilation", "-v", "1", "--skipuntil", "2023/MAR_FKt230303/Figures/", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "2", "--skipuntil", "MappingAUVOps2016/NorthernExpedition/Figures_old/Figures_Clague_old/DifferenceMaps_ship20m_UTMsq", "--limit", "1", "--log_file", "compilation.txt", "--no_compilation_thumbnails"],
+      //"args": ["--compilation", "-v", "1", "--skipuntil", "2024/OceanSci24/Figures", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
       "justMyCode": false
     }
