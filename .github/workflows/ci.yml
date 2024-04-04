@@ -35,7 +35,7 @@ jobs:
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
 
     steps:
       # https://stackoverflow.com/a/65346817/1281657

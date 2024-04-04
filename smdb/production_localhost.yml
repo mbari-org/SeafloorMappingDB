@@ -18,6 +18,9 @@ services:
       - postgres
       - redis
     env_file:
+      # In smdb/.envs/.production/.djang add the following for Mac M1/M2 Arm:
+      # GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
+      # GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
@@ -25,7 +28,7 @@ services:
     volumes:
       - /Users/mccann/.ssh:/home/docker_user/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
-      - /Users/mccann/docker_smdb_vol:/etc/smdb:z
+      - /Users/mccann/docker_smdb_vol/etc:/etc/smdb:z
       - local_media_files:/media:z
 
   postgres:
@@ -73,6 +76,7 @@ services:
     volumes:
       # User with $DOCKER_USER_ID needs read permissions on this share
       - /Volumes/SeafloorMapping:/srv/SeafloorMapping:ro
+      - local_media_files:/media
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
