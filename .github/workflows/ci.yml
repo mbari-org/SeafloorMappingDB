@@ -42,9 +42,6 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
-      - name: Setup Chrome for Selenium Testing
-        uses: nanasess/setup-chromedriver@master
-
       - name: Build the Stack
         run: docker-compose -f smdb/ci.yml up -d --build
 
