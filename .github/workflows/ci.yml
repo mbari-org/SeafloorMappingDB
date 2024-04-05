@@ -42,6 +42,12 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
+      - name: Install Compose
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          version: v2.1.0 # defaults to 'latest'
+          legacy: true    # will also install in PATH as `docker-compose`
+
       - name: Build the Stack
         run: docker-compose -f smdb/ci.yml up -d --build
 
