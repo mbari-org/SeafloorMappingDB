@@ -270,6 +270,13 @@ class CompilationDetailView(SuccessMessageMixin, DetailView):
         except (AttributeError, ValueError):
             # no thumbnail_filename - return something
             context["thumbnail_fullrez_url"] = base_uri
+
+        table = MissionTable(
+            Mission.objects.filter(compilations=compilation),
+            exclude=["track_length", "start_depth"],
+        )
+        RequestConfig(self.request).configure(table)
+        context["table"] = table
         return context
 
     def get_object(self):
