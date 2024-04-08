@@ -43,8 +43,8 @@ class ExpeditionTable(Table):
 
 
 class CompilationTable(Table):
-    name = DivWrappedColumn(linkify=True)
-    thumbnail_filename = DivWrappedColumn()
+    name = DivWrappedColumn(linkify=True, classname="")
+    thumbnail_filename = DivWrappedColumn(classname="")
     missions = ManyToManyColumn(linkify_item=True, verbose_name="Missions")
 
     class Meta:

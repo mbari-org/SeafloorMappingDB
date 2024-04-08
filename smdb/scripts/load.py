@@ -331,7 +331,7 @@ class BaseLoader:
                     "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
                 )
                 new_im = im.resize((nx, ny))
-        except (UnidentifiedImageError, FileNotFoundError) as e:
+        except (UnidentifiedImageError, FileNotFoundError, OSError, Image.DecompressionBombError) as e:
             self.logger.warning(f"{e}")
             return
 
@@ -1344,7 +1344,7 @@ class Compiler(BaseLoader):
                     if not self.args.no_compilation_thumbnails:
                         try:
                             self.save_thumbnail(compilation, scale_factor=16)
-                        except (FileExistsError, ValueError) as e:
+                        except (FileExistsError, ValueError, OSError) as e:
                             self.logger.warning(str(e))
 
     def _thumbnail_filename(self, grd_filename: str) -> str:

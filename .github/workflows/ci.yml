@@ -1,3 +1,5 @@
+# Can test locally with: act -P macos-14=-self-hosted
+
 name: CI
 
 # Enable Buildkit and let compose use it to speed up image building
@@ -42,8 +44,24 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
-      - name: Setup Chrome for Selenium Testing
-        uses: nanasess/setup-chromedriver@master
+      # Attempts to get Github runner configured - seems to be missing important tools
+      # https://github.com/actions/runner/issues/1456#issuecomment-1819392344
+      # - name: Install and start Colima
+      #   run: |
+      #    brew install docker
+      #    brew install colima
+      #    colima version
+      #    colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
+
+      # https://github.com/actions/runner/issues/1456#issuecomment-1676495453
+      # - name: Setup docker and docker-compose (missing on macos-14 in Github Actions)
+      #   if: runner.os == 'macos'
+      #   run: |
+      #     brew install docker docker-compose
+      #     # Link the Docker Compose v2 plugin so it's understood by the docker CLI
+      #     mkdir -p ~/.docker/cli-plugins
+      #     ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+      #     colima start
 
       - name: Build the Stack
         run: docker-compose -f smdb/ci.yml up -d --build
@@ -51,11 +69,11 @@ jobs:
       - name: Run the Migrations
         run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
 
-      - name: Load the test fixtures
-        run: docker-compose -f smdb/ci.yml run --rm django python manage.py loaddata smdb/fixtures/missions_notes_5.json --settings=config.settings.test
-
       - name: Run Pytest Tests
         run: docker-compose -f smdb/ci.yml run --rm django pytest -s --cov-report term-missing --cov
 
       - name: Tear down the Stack
-        run: docker-compose -f smdb/ci.yml down
+        if: always()
+        run: |
+         docker-compose -f smdb/ci.yml down
+
