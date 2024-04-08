@@ -240,6 +240,12 @@ class ExpeditionDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         expedition = super().get_object()
 
+        table = MissionTable(
+            Mission.objects.filter(expedition=expedition),
+        )
+        RequestConfig(self.request).configure(table)
+        context["table"] = table
+
         return context
 
     def get_object(self):
