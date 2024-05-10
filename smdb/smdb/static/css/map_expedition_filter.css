@@ -1,3 +1,7 @@
+/* body {
+    margin-left: 20px;
+    margin-right: 20px;
+} */
 html,
 #map_expedition_filter {
   width: 100%;
@@ -6,6 +10,10 @@ html,
 th,
 td {
   padding: 0 15px;
+}
+.tab div {
+  margin-left: 3rem;
+  margin-right: 3rem;
 }
 .label-mission-name {
   font-size: 1.3em;

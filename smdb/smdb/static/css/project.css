@@ -12,8 +12,55 @@
   color: #b94a48;
 }
 
+#separator.row {
+  margin-left: 0;
+}
+
+#number-missions {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+div.row {
+  margin-left: 2rem;
+  margin-right: 1rem;
+}
+div.row
+div.col {
+  text-align: center;
+}
+#comp_detail {
+  margin-left: 2rem;
+  margin-right: 1rem;
+  text-align: left;
+}
+
+div.table-container {
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
 a {
   font-size: 16px !important;
+}
+
+h2 {
+    margin-left: 3rem;
+    margin-bottom: 1rem;
+}
+
+form {
+    margin-left: 3rem;
+    margin-right: 3rem;
+}
+form.d-flex {
+      margin-left: 1rem;
+    margin-right: 1rem;
+}
+p {
+    margin-left: 3rem;
+    margin-right: 3rem;
+    margin-bottom: 1rem;
 }
 
 #coordinates {
@@ -89,6 +136,11 @@ a {
   box-shadow: inset 0 0 0 2em var(--hover);
 }
 
+#filters {
+    margin-left: 0;
+    margin-right: 0;
+}
+
 #filter-left {
   background-color: white;
   float: left;
@@ -103,6 +155,7 @@ a {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   left: 0;
+  margin-left: 0
 }
 
 #filter-center {
@@ -133,6 +186,10 @@ a {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   margin: 5px;
+}
+
+div#navBar {
+  padding-top: 4px;
 }
 
 
@@ -171,6 +228,7 @@ div.width_fixed {
   height: 1px;
   right: 0;
   left: 0;
+  margin-right: 0rem;
 }
 
 #searchbar {
@@ -203,8 +261,8 @@ div.width_fixed {
 #searchbtn {
   font-size: 14px !important;
   vertical-align: center;
-  margin-left: 5px;
-  margin-right: 20px;
+  margin-left: 0px;
+  margin-right: 0px;
 }
 
 #split {
@@ -350,6 +408,11 @@ div.width_fixed {
 .leaflet-control-layers {
   background-color: none;
   color: black;
+}
+
+.leaflet-control-layers-selector,
+span {
+  color:black
 }
 
 .leaflet-control-layers-selector,
@@ -561,11 +624,11 @@ span:hover {
   border: 3px solid black;
 } */
 
-.leaflet-bar a,
-.leaflet-bar {
+/* .leaflet-bar a,
+.leaflet-bar { */
   /* a:hover { */
   /* border: 2px solid black; */
-}
+/* } */
 
 .leaflet-control,
 .leaflet-popup-pane {
@@ -726,6 +789,26 @@ div>#bounds {
 .input,
 #use-bounds {
   vertical-align: middle;
+}
+
+#id_name:hover {
+  border-color: cornflowerblue;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
+}
+
+#id_expedition__name:hover {
+  border-color: cornflowerblue;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
+}
+
+#id_has_thumbnail:hover {
+  border-color: cornflowerblue;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
+}
+
+#id_has_missions:hover {
+  border-color: cornflowerblue;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
 }
 
 /* #map {
