@@ -77,6 +77,14 @@
       "args": ["--compilation", "-v", "1", "--skipuntil", "2022/AxialSeamount/FiguresCaress", "--limit", "10", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
       "justMyCode": false
+    },
+    {
+      "name": "survey_tally",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/smdb/scripts/survey_tally.py",
+      "console": "integratedTerminal",
+      "args": ["-v", "2", "--YYYY", "2023", "--read_xlsx"],
     }
   ]
 }

@@ -45,3 +45,4 @@ uritemplate==4.1.1 # For python manage.py generateschema
 django-tables2==2.4.1  # https://github.com/jieter/django-tables2
 django-filter==22.1  # https://youtu.be/G-Rct7Na0UQ
 tzdata==2023.4  # https://stackoverflow.com/a/71064180
+openpyxl==3.1.2  # https://openpyxl.readthedocs.io/en/stable/
