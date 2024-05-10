@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-Load a data from SeafloorMapping share into a postgis database
+Load data from SeafloorMapping share into a postgis database
 """
 
 from distutils import cmd
@@ -331,7 +331,12 @@ class BaseLoader:
                     "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
                 )
                 new_im = im.resize((nx, ny))
-        except (UnidentifiedImageError, FileNotFoundError, OSError, Image.DecompressionBombError) as e:
+        except (
+            UnidentifiedImageError,
+            FileNotFoundError,
+            OSError,
+            Image.DecompressionBombError,
+        ) as e:
             self.logger.warning(f"{e}")
             return
 
