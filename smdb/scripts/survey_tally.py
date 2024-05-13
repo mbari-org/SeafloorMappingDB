@@ -74,26 +74,24 @@ class SurveyTally:
         )
         # Specify year and whether reading .xlsx or writing .csv
         parser.add_argument(
-            "--YYYY",
+            "--parent_dir",
             action="store",
-            required=True,
-            help="Read or write a .xlsx or .csv file for the year YYYY",
+            help=f"Read or write a .xlsx or .csv file for the direct sub-directory of {MBARI_DIR}",
         )
         parser.add_argument(
             "--read_xlsx",
             action="store_true",
-            help="Read an .xlsx file from year YYYY and update the database",
+            help="Read an .xlsx file for the Missions in parent_dir and update the database",
         )
         parser.add_argument(
             "--write_csv",
             action="store_true",
-            help="Write a .csv file with database values for the year YYYY",
+            help="Write a .csv file with database values for the Missions in parent_dir",
         )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
 
-        # Override Django's logging so that we can setLevel() with --verbose
         logging.getLogger().handlers.clear()
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
@@ -111,12 +109,12 @@ class SurveyTally:
     def read_xlsx_into_df(self) -> pd.DataFrame:
         xlsx_file = os.path.join(
             MBARI_DIR,
-            self.args.YYYY,
+            self.args.parent_dir,
             "SMDB",
-            f"SMDB_{self.args.YYYY}_survey_tally.xlsx",
+            f"SMDB_{self.args.parent_dir}_survey_tally.xlsx",
         )
         self.logger.info(f"Reading {xlsx_file}")
-        df = pd.read_excel(xlsx_file, index_col=0, engine="openpyxl")
+        df = pd.read_excel(xlsx_file, engine="openpyxl")
 
         # The df (from sheet index_col=0) looks like (from print(df.head(2).to_csv())):
         # Mission,Route,Location,Vehicle,Comment,AUV,LASS,Status*,Patch_test**,km of trackline,MGDS_compilation
@@ -133,12 +131,72 @@ class SurveyTally:
         df = self.read_xlsx_into_df()
         self.update_db_from_df(df)
 
+    def get_parent_dirs(self) -> List[str]:
+        if self.args.parent_dir:
+            if os.path.isdir(os.path.join(MBARI_DIR, self.args.parent_dir)):
+                return [self.args.parent_dir]
+            else:
+                print(f"Directory {self.args.parent_dir} not found in {MBARI_DIR}")
+                sys.exit(1)
+        else:
+            return [
+                f
+                for f in os.listdir(MBARI_DIR)
+                if os.path.isdir(os.path.join(MBARI_DIR, f))
+            ]
+        return os.path.join(MBARI_DIR, self.args.parent_dir)
+
+    def read_from_db_into_rows(self, parent_dir: str) -> pd.DataFrame:
+        # cols must match field names in the Mission table - to be cols in the .csv file
+        cols = [
+            "name",  # Saved without the parent_dir suffix
+            "route_file",
+            "location",  # Location is a foreign key to Location table
+            "vehicle",
+            "quality_comment",
+            "auv",
+            "lass",
+            "status",
+            "patch_test",
+            "km_of_trackline",
+            "mgds_compilation",
+        ]
+        rows = []
+
+        # Add rows for each mission
+        for mission in Mission.objects.filter(name__startswith=parent_dir):
+            self.logger.debug(mission)
+            row = []
+            for col in cols:
+                if col == "name":
+                    item = getattr(mission, col).replace(f"{parent_dir}/", "")
+                else:
+                    item = getattr(mission, col, "")
+                row.append(str(item))
+            rows.append(row)
+        return cols, rows
+
+    def process_csv(self):
+        for parent_dir in self.get_parent_dirs():
+            cols, rows = self.read_from_db_into_rows(parent_dir)
+            csv_file = os.path.join(
+                MBARI_DIR,
+                parent_dir,
+                "SMDB",
+                f"SMDB_{parent_dir}_survey_tally.csv",
+            )
+            self.logger.info(f"Writing {csv_file}")
+            with open(csv_file, "w") as f:
+                f.write(",".join(cols) + "\n")
+                for row in rows:
+                    f.write(",".join(row) + "\n")
+
 
 if __name__ == "__main__":
-    survey_tally = SurveyTally()
-    survey_tally.process_command_line()
-    if survey_tally.args.read_xlsx:
-        survey_tally.process_xlsx()
-    if survey_tally.args.write_csv:
-        survey_tally.write_csv()
+    st = SurveyTally()
+    st.process_command_line()
+    if st.args.read_xlsx:
+        st.process_xlsx()
+    if st.args.write_csv:
+        st.process_csv()
     sys.exit(0)
