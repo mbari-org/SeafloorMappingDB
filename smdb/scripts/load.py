@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-Load a data from SeafloorMapping share into a postgis database
+Load data from SeafloorMapping share into a postgis database
 """
 
 from distutils import cmd
@@ -331,7 +331,12 @@ class BaseLoader:
                     "Resizing image %s to %dx%d", mission.thumbnail_filename, nx, ny
                 )
                 new_im = im.resize((nx, ny))
-        except (UnidentifiedImageError, FileNotFoundError, OSError, Image.DecompressionBombError) as e:
+        except (
+            UnidentifiedImageError,
+            FileNotFoundError,
+            OSError,
+            Image.DecompressionBombError,
+        ) as e:
             self.logger.warning(f"{e}")
             return
 
@@ -468,6 +473,16 @@ class NoteParser(BaseLoader):
         )
         return platform
 
+    def route_file_from_text(self, mission: Mission) -> str:
+        # Return .rte file name from notes_text that looks like:
+        # Mission Summary:
+        #     Route File:               MC_2150_m1_v2.rte
+        if not mission.notes_text:
+            return None
+        for line in mission.notes_text.split("\n"):
+            if "Route File:" in line:
+                return line.split(":")[1].strip()
+
     def parse_notes(self):
         for note_count, mission in enumerate(Mission.objects.all(), start=1):
             self.logger.info("======== %d. %s ========", note_count, mission.name)
@@ -510,6 +525,7 @@ class NoteParser(BaseLoader):
                 )
             mission.expedition = expedition
             mission.platform = self.platform_from_comment(mission)
+            mission.route_file = self.route_file_from_text(mission)
             mission.save()
             self.logger.info(
                 "%3d. Saved Mission with <Platform: %s>",

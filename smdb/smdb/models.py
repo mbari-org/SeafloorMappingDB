@@ -206,6 +206,7 @@ class Mission(models.Model):
     sensors = models.ManyToManyField(Sensor, blank=True)
     data_archivals = models.ManyToManyField("DataArchival", blank=True)
     citations = models.ManyToManyField("Citation", blank=True)
+    route_file = models.CharField(max_length=256, blank=True, null=True)
 
     def __str__(self):
         return self.name
