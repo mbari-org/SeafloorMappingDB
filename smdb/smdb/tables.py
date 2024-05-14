@@ -19,6 +19,7 @@ class DivWrappedColumn(Column):
 class MissionTable(Table):
     name = Column(linkify=True)
     expedition = Column(linkify=True)
+    compilation_set = ManyToManyColumn(linkify_item=True, verbose_name="Compilations")
 
     class Meta:
         model = Mission
@@ -26,6 +27,13 @@ class MissionTable(Table):
             "name",
             "track_length",
             "start_depth",
+        )
+        sequence = (
+            "name",
+            "track_length",
+            "start_depth",
+            "expedition",
+            "compilation_set",
         )
 
 

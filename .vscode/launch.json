@@ -86,7 +86,8 @@
       "program": "${workspaceFolder}/smdb/scripts/survey_tally.py",
       "console": "integratedTerminal",
       //"args": ["-v", "2", "--parent_dir", "2023", "--read_xlsx"],
-      "args": ["-v", "2", "--parent_dir", "2023", "--write_csv"],
+      //"args": ["-v", "2", "--parent_dir", "2023", "--write_csv"],
+      "args": ["-v", "1", "--write_csv"],
     }
   ]
 }

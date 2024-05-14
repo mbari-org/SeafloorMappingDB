@@ -242,6 +242,7 @@ class ExpeditionDetailView(DetailView):
 
         table = MissionTable(
             Mission.objects.filter(expedition=expedition),
+            exclude=["expedition"],
         )
         RequestConfig(self.request).configure(table)
         context["table"] = table
