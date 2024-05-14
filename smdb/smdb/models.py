@@ -162,7 +162,7 @@ class Mission(models.Model):
         srid=4326, spatial_index=True, blank=True, null=True
     )
     track_length = models.DecimalField(
-        max_digits=8, decimal_places=2, blank=True, null=True
+        max_digits=8, decimal_places=3, blank=True, null=True
     )
     expedition = models.ForeignKey(
         Expedition, on_delete=models.CASCADE, blank=True, null=True
@@ -178,7 +178,7 @@ class Mission(models.Model):
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     start_depth = models.DecimalField(
-        max_digits=8, decimal_places=2, blank=True, null=True
+        max_digits=8, decimal_places=3, blank=True, null=True
     )
     start_point = models.PointField(
         srid=4326, spatial_index=True, dim=2, blank=True, null=True
