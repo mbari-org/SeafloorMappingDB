@@ -132,26 +132,41 @@ class SurveyTally:
         self.update_db_from_df(df)
 
     def get_parent_dirs(self) -> List[str]:
+        """Return a list of parent directories to process. Check if they are in the database.
+        If a parent_dir is specified, only return that one. Omit the '/mbari/SeafloorMapping/' prefix.
+        """
+        parent_dirs_in_db = {
+            m.split("/")[0]
+            for m in Mission.objects.values_list("name", flat=True).distinct()
+        }
+        parent_dirs = []
         if self.args.parent_dir:
             if os.path.isdir(os.path.join(MBARI_DIR, self.args.parent_dir)):
-                return [self.args.parent_dir]
+                if self.args.parent_dir in parent_dirs_in_db:
+                    parent_dirs.append(self.args.parent_dir)
+                else:
+                    self.logger.warning(
+                        f"Directory {self.args.parent_dir} not found in database {os.environ['DATABASE_URL']}"
+                    )
             else:
-                print(f"Directory {self.args.parent_dir} not found in {MBARI_DIR}")
-                sys.exit(1)
+                self.logger.warning(
+                    f"Directory {self.args.parent_dir} not found in {MBARI_DIR}"
+                )
         else:
-            return [
-                f
-                for f in os.listdir(MBARI_DIR)
-                if os.path.isdir(os.path.join(MBARI_DIR, f))
-            ]
-        return os.path.join(MBARI_DIR, self.args.parent_dir)
+            for f in os.listdir(MBARI_DIR):
+                if os.path.isdir(os.path.join(MBARI_DIR, f)):
+                    if f in parent_dirs_in_db:
+                        parent_dirs.append(f)
+                    else:
+                        self.logger.debug(f"Directory {f} not found in database")
+        return parent_dirs
 
     def read_from_db_into_rows(self, parent_dir: str) -> pd.DataFrame:
         # cols must match field names in the Mission table - to be cols in the .csv file
         cols = [
             "name",  # Saved without the parent_dir suffix
             "route_file",
-            "location",  # Location is a foreign key to Location table
+            "location",
             "vehicle",
             "quality_comment",
             "auv",
@@ -171,7 +186,11 @@ class SurveyTally:
                 if col == "name":
                     item = getattr(mission, col).replace(f"{parent_dir}/", "")
                 else:
-                    item = getattr(mission, col, "")
+                    if hasattr(mission, col):
+                        item = getattr(mission, col, "") or ""
+                    else:
+                        self.logger.warning(f"Mission model missing field: {col}")
+                        item = ""
                 row.append(str(item))
             rows.append(row)
         return cols, rows
@@ -179,12 +198,11 @@ class SurveyTally:
     def process_csv(self):
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
-            csv_file = os.path.join(
-                MBARI_DIR,
-                parent_dir,
-                "SMDB",
-                f"SMDB_{parent_dir}_survey_tally.csv",
-            )
+            # csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
+            csv_dir = os.path.join("/tmp/SeafloorMapping", parent_dir, "SMDB")
+            if not os.path.exists(csv_dir):
+                os.makedirs(csv_dir)
+            csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
             self.logger.info(f"Writing {csv_file}")
             with open(csv_file, "w") as f:
                 f.write(",".join(cols) + "\n")

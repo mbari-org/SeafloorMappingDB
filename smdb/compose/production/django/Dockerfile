@@ -4,10 +4,7 @@ ARG DOCKER_USER_ID
 ARG APP_HOME=/app
 WORKDIR ${APP_HOME}
 
-COPY ./package.json ${APP_HOME}
-RUN npm install && npm cache clean --force
 COPY . ${APP_HOME}
-RUN npm run build
 
 # Base the build off of recent stable GDAL image
 FROM osgeo/gdal:ubuntu-small-3.6.2 as python
