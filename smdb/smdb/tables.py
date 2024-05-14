@@ -19,21 +19,25 @@ class DivWrappedColumn(Column):
 class MissionTable(Table):
     name = Column(linkify=True)
     expedition = Column(linkify=True)
-    compilation_set = ManyToManyColumn(linkify_item=True, verbose_name="Compilations")
 
     class Meta:
         model = Mission
         fields = (
             "name",
+            "start_date",
+            "reqion_name",
             "track_length",
             "start_depth",
+            "status",
         )
         sequence = (
             "name",
+            "start_date",
+            "reqion_name",
             "track_length",
             "start_depth",
+            "status",
             "expedition",
-            "compilation_set",
         )
 
 
