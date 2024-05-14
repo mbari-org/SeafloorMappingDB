@@ -106,12 +106,12 @@ class SurveyTally:
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
         )
 
-    def read_xlsx_into_df(self) -> pd.DataFrame:
+    def read_xlsx_into_df(self, parent_dir: str) -> pd.DataFrame:
         xlsx_file = os.path.join(
             MBARI_DIR,
             self.args.parent_dir,
             "SMDB",
-            f"SMDB_{self.args.parent_dir}_survey_tally.xlsx",
+            f"SMDB_{parent_dir}_survey_tally.xlsx",
         )
         self.logger.info(f"Reading {xlsx_file}")
         df = pd.read_excel(xlsx_file, engine="openpyxl")
@@ -122,14 +122,34 @@ class SurveyTally:
         # 20230310m2,PuyDesFolles_2v7,MAR PdF,MAUV2,pressure-depth problem with code,x,,production_survey,,79.6,FKt230303_MBARI_AUV
         return df
 
-    def update_db_from_df(self, df: pd.DataFrame) -> None:
+    def update_db_from_df(self, df: pd.DataFrame, parent_dir: str) -> None:
         # Loop through rows in data frame and update the appropriate database fields
         for index, row in df.iterrows():
-            self.logger.debug(row)
+            self.logger.debug(f"\n{row}")  # Printed in columns
+            try:
+                # Get the Mission object for this row
+                mission = Mission.objects.get(name=f"{parent_dir}/{row['Mission']}")
+                # Update the fields, mapping the column names to the Mission field names
+                mission.route_file = row["Route"]
+                mission.region_name = row["Location"]
+                mission.vehicle_name = row["Vehicle"]
+                mission.quality_comment = row["Comment"]
+                mission.auv = str(row["AUV"]) == "x"
+                mission.lass = str(row["LASS"]) == "x"
+                mission.status = row["Status*"] or ""
+                mission.patch_test = str(row["Patch_test**"]) == "patch_test"
+                mission.track_length = row["km of trackline"]
+                mission.mgds_compilation = row["MGDS_compilation"]
+                mission.save()
+                self.logger.info(f"Updated {mission}")
+            except Mission.DoesNotExist:
+                self.logger.warning(f"Mission {row['Mission']} not found in database")
 
     def process_xlsx(self) -> None:
-        df = self.read_xlsx_into_df()
-        self.update_db_from_df(df)
+        for parent_dir in self.get_parent_dirs():
+            self.logger.info(f"Processing {parent_dir}")
+            df = self.read_xlsx_into_df(parent_dir)
+            self.update_db_from_df(df, parent_dir)
 
     def get_parent_dirs(self) -> List[str]:
         """Return a list of parent directories to process. Check if they are in the database.
@@ -165,20 +185,24 @@ class SurveyTally:
         # cols must match field names in the Mission table - to be cols in the .csv file
         cols = [
             "name",  # Saved without the parent_dir suffix
-            "route_file",
-            "location",
-            "vehicle",
-            "quality_comment",
-            "auv",
-            "lass",
-            "status",
-            "patch_test",
-            "km_of_trackline",
-            "mgds_compilation",
+            "route_file",  # Originally "route"
+            "region_name",  # Originally "location"
+            "vehicle_name",  # Originally "vehicle"
+            "quality_comment",  # Originally "comment"
+            "auv",  # Boolean
+            "lass",  # Boolean
+            "status",  # Controlled vocabulary: "production_survey", "test_survey", "failed_survey", "use_with_caution"
+            "patch_test",  # String: "patch_test" or ""
+            "track_length",  # Originally "km of trackline"
+            "mgds_compilation",  # Srting: e.g. "FKt230303_MBARI_AUV"
         ]
-        rows = []
+        # Check that the Mission model has all the fields in cols
+        for col in cols:
+            if not hasattr(Mission, col):
+                self.logger.warning(f"Mission model missing field: {col}")
 
         # Add rows for each mission
+        rows = []
         for mission in Mission.objects.filter(name__startswith=parent_dir):
             self.logger.debug(mission)
             row = []
@@ -189,7 +213,6 @@ class SurveyTally:
                     if hasattr(mission, col):
                         item = getattr(mission, col, "") or ""
                     else:
-                        self.logger.warning(f"Mission model missing field: {col}")
                         item = ""
                 row.append(str(item))
             rows.append(row)
@@ -198,8 +221,8 @@ class SurveyTally:
     def process_csv(self):
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
-            # csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
-            csv_dir = os.path.join("/tmp/SeafloorMapping", parent_dir, "SMDB")
+            csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
+            csv_dir = os.path.join("/tmp", parent_dir, "SMDB")
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
