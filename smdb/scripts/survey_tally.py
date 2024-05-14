@@ -165,20 +165,24 @@ class SurveyTally:
         # cols must match field names in the Mission table - to be cols in the .csv file
         cols = [
             "name",  # Saved without the parent_dir suffix
-            "route_file",
-            "location",
-            "vehicle",
-            "quality_comment",
-            "auv",
-            "lass",
-            "status",
-            "patch_test",
-            "km_of_trackline",
-            "mgds_compilation",
+            "route_file",  # Originally "route"
+            "region_name",  # Originally "location"
+            "vehicle_name",  # Originally "vehicle"
+            "quality_comment",  # Originally "comment"
+            "auv",  # Boolean
+            "lass",  # Boolean
+            "status",  # Controlled vocabulary: "production_survey", "test_survey", "failed_survey", "use_with_caution"
+            "patch_test",  # String: "patch_test" or ""
+            "track_length",  # Originally "km_of_trackline"
+            "mgds_compilation",  # Srting: e.g. "FKt230303_MBARI_AUV"
         ]
-        rows = []
+        # Check that the Mission model has all the fields in cols
+        for col in cols:
+            if not hasattr(Mission, col):
+                self.logger.warning(f"Mission model missing field: {col}")
 
         # Add rows for each mission
+        rows = []
         for mission in Mission.objects.filter(name__startswith=parent_dir):
             self.logger.debug(mission)
             row = []
@@ -189,7 +193,6 @@ class SurveyTally:
                     if hasattr(mission, col):
                         item = getattr(mission, col, "") or ""
                     else:
-                        self.logger.warning(f"Mission model missing field: {col}")
                         item = ""
                 row.append(str(item))
             rows.append(row)
@@ -198,8 +201,8 @@ class SurveyTally:
     def process_csv(self):
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
-            # csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
-            csv_dir = os.path.join("/tmp/SeafloorMapping", parent_dir, "SMDB")
+            csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
+            csv_dir = os.path.join("/tmp", parent_dir, "SMDB")
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")

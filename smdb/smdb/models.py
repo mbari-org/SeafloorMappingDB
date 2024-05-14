@@ -172,12 +172,17 @@ class Mission(models.Model):
     platform = models.ForeignKey(
         Platform, on_delete=models.CASCADE, blank=True, null=True
     )
+    vehicle_name = models.CharField(max_length=128, blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     start_depth = models.FloatField(blank=True, null=True)
     start_point = models.PointField(
         srid=4326, spatial_index=True, dim=2, blank=True, null=True
     )
+    auv = models.BooleanField(blank=True, null=True)
+    lass = models.BooleanField(blank=True, null=True)
+    status = models.CharField(max_length=128, blank=True, null=True)
+    mgds_compilation = models.CharField(max_length=128, blank=True, null=True)
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
     test_survey = models.BooleanField(blank=True, null=True)
