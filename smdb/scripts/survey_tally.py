@@ -219,6 +219,19 @@ class SurveyTally:
         return cols, rows
 
     def process_csv(self):
+        col_lookup = {
+            "name": "Mission",
+            "route_file": "Route",
+            "region_name": "Location",
+            "vehicle_name": "Vehicle",
+            "quality_comment": "Comment",
+            "auv": "AUV",
+            "lass": "LASS",
+            "status": "Status*",
+            "patch_test": "Patch_test**",
+            "track_length": "km of trackline",
+            "mgds_compilation": "MGDS_compilation",
+        }
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
             csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
@@ -226,8 +239,9 @@ class SurveyTally:
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
             self.logger.info(f"Writing {csv_file}")
+            # Write the .csv file using the col_lookup dictionary so that they match the .xlsx file
             with open(csv_file, "w") as f:
-                f.write(",".join(cols) + "\n")
+                f.write(",".join([col_lookup[c] for c in cols]) + "\n")
                 for row in rows:
                     f.write(",".join(row) + "\n")
 
