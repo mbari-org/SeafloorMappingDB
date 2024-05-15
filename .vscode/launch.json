@@ -6,7 +6,7 @@
   "configurations": [
     {
       "name": "runserver_plus",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "cwd": "${workspaceFolder}/smdb",
       "program": "${workspaceFolder}/smdb/manage.py",
@@ -23,7 +23,7 @@
     },
     {
       "name": "shell_plus",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/smdb/manage.py",
       "console": "integratedTerminal",
@@ -32,7 +32,7 @@
     },
     {
       "name": "load.py",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/smdb/scripts/load.py",
       "console": "integratedTerminal",
@@ -51,9 +51,9 @@
       //"args": ["--notes", "-v", "1"],
       //"args": ["--mbinfo", "-v", "2", "--skipuntil", "2021/20210326m1"],
       //"args": ["--mbinfo", "-v", "1", "--limit", "1", "--skipuntil", "2019/20190628d1/lidar"],
-      // The next two lines for nice OctopusGarden compilation testing
+      // The next two lines for nice OctopusGarden compilation and spreadsheets testing
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2022/20220206m2/ZTopo.grd$", "--limit", "3", "--clobber" ],
-      "args": ["--compilation", "-v", "1", "--filter", "2022/OctopusGarden/Figures/", "--no_compilation_thumbnails", "--log_file", "compilation.txt"],
+      //"args": ["--compilation", "-v", "1", "--filter", "2022/OctopusGarden/Figures/", "--no_compilation_thumbnails", "--log_file", "compilation.txt"],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2023/20230402m1/ZTopo.grd$", "--limit", "1" ],
       //"args": [ "--fnv", "-v", "1", "--skipuntil", "2019/20190927d1/lidar", "--limit", "1" ],
       //"args": ["--fnv", "-v", "1", "--limit", "2", "--skipuntil", "MappingAUVOps2011/20110718m1"],
@@ -79,6 +79,7 @@
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2024/OceanSci24/Figures", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2022/AxialSeamount/FiguresCaress", "--limit", "10", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
+      "args": ["--spreadsheets", "-v", "1"],
       "justMyCode": false
     },
     {
@@ -87,8 +88,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/smdb/scripts/survey_tally.py",
       "console": "integratedTerminal",
-      "args": ["-v", "2", "--parent_dir", "2023", "--read_xlsx"],
-      //"args": ["-v", "2", "--parent_dir", "2023", "--write_csv"],
+      "args": ["-v", "2", "--parent_dir", "2022", "--read_xlsx"],
+      //"args": ["-v", "2", "--parent_dir", "2022", "--write_csv"],
       //"args": ["-v", "1", "--write_csv"],
     }
   ]

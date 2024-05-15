@@ -39,6 +39,19 @@ from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
 MBARI_DIR = "/mbari/SeafloorMapping/"
+col_lookup = {
+    "name": "Mission",
+    "route_file": "Route",
+    "region_name": "Location",
+    "vehicle_name": "Vehicle",
+    "quality_comment": "Comment",
+    "auv": "AUV",
+    "lass": "LASS",
+    "status": "Status*",
+    "patch_test": "Patch_test**",
+    "track_length": "km of trackline",
+    "mgds_compilation": "MGDS_compilation",
+}
 
 instructions = f"""
 Satisfying https://github.com/mbari-org/SeafloorMappingDB/issues/206 requires
@@ -89,9 +102,10 @@ class SurveyTally:
             help="Write a .csv file with database values for the Missions in parent_dir",
         )
 
-        self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
+        self.args = parser.parse_args()  # noqa
 
+    def setup_logging(self):
         logging.getLogger().handlers.clear()
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
@@ -109,12 +123,13 @@ class SurveyTally:
     def read_xlsx_into_df(self, parent_dir: str) -> pd.DataFrame:
         xlsx_file = os.path.join(
             MBARI_DIR,
-            self.args.parent_dir,
+            parent_dir,
             "SMDB",
             f"SMDB_{parent_dir}_survey_tally.xlsx",
         )
         self.logger.info(f"Reading {xlsx_file}")
         df = pd.read_excel(xlsx_file, engine="openpyxl")
+        df = df.fillna("")  # Replace NaN with empty string
 
         # The df (from sheet index_col=0) looks like (from print(df.head(2).to_csv())):
         # Mission,Route,Location,Vehicle,Comment,AUV,LASS,Status*,Patch_test**,km of trackline,MGDS_compilation
@@ -138,7 +153,7 @@ class SurveyTally:
                 mission.lass = str(row["LASS"]) == "x"
                 mission.status = row["Status*"] or ""
                 mission.patch_test = str(row["Patch_test**"]) == "patch_test"
-                mission.track_length = row["km of trackline"]
+                # mission.track_length = row["km of trackline"]
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
                 self.logger.info(f"Updated {mission}")
@@ -193,7 +208,7 @@ class SurveyTally:
             "lass",  # Boolean
             "status",  # Controlled vocabulary: "production_survey", "test_survey", "failed_survey", "use_with_caution"
             "patch_test",  # String: "patch_test" or ""
-            "track_length",  # Originally "km of trackline"
+            "track_length",  # Originally "km of trackline" - should use values computed from --fnv
             "mgds_compilation",  # Srting: e.g. "FKt230303_MBARI_AUV"
         ]
         # Check that the Mission model has all the fields in cols
@@ -222,13 +237,13 @@ class SurveyTally:
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
             csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
-            csv_dir = os.path.join("/tmp", parent_dir, "SMDB")
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
             self.logger.info(f"Writing {csv_file}")
+            # Write the .csv file using the col_lookup dictionary so that they match the .xlsx file
             with open(csv_file, "w") as f:
-                f.write(",".join(cols) + "\n")
+                f.write(",".join([col_lookup[c] for c in cols]) + "\n")
                 for row in rows:
                     f.write(",".join(row) + "\n")
 
@@ -236,8 +251,11 @@ class SurveyTally:
 if __name__ == "__main__":
     st = SurveyTally()
     st.process_command_line()
+    st.setup_logging()
     if st.args.read_xlsx:
         st.process_xlsx()
-    if st.args.write_csv:
+    elif st.args.write_csv:
         st.process_csv()
+    else:
+        st.logger.error("No action specified. Use --read_xlsx or --write_csv")
     sys.exit(0)

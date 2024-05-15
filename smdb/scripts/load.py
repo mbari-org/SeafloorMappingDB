@@ -23,7 +23,6 @@ import pathlib  # noqa F402
 import re  # noqa F402
 import subprocess  # noqa F402
 import tempfile  # noqa F402
-import timing  # noqa F402 - needed for nice elapsed time reporting
 from netCDF4 import Dataset  # noqa F402
 from datetime import date, datetime, timedelta  # noqa F402
 from dateutil.parser import ParserError, parse  # noqa F402
@@ -41,6 +40,7 @@ from smdb.models import (
     Platform,
     Platformtype,
 )  # noqa F402
+from survey_tally import SurveyTally  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
@@ -54,6 +54,7 @@ some steps requiring access to the SeafloorMapping share on titan. They are:
 2. --notes
 3. --fnv                Requires SeafloorMapping access
 4. --compilation        Requires SeafloorMapping access
+5. --spreadsheets       Requires SeafloorMapping access
 
 With none of these options specified all are executed. Specify one or more
 of these options to debug portions of code or to pick up where a previous
@@ -193,6 +194,11 @@ class BaseLoader:
             "--no_compilation_thumbnails",
             action="store_true",
             help="Do not process and save thumbnails for Compilations - for speeding up the process",
+        )
+        parser.add_argument(
+            "--spreadsheets",
+            action="store_true",
+            help="Load data from .xlss spreadsheets and write out parallel .csv files",
         )
 
         self.args = parser.parse_args()  # noqa
@@ -1484,11 +1490,14 @@ def run(*args):
         fnv_load()
     elif bl.args.compilation:
         compilation_load()
+    elif bl.args.spreadsheets:
+        spreadsheets_load()
     else:
         bootstrap_load()
         notes_load()
         fnv_load()
         compilation_load()
+        spreadsheets_load()
     bl.save_logger_output()
 
 
@@ -1520,6 +1529,16 @@ def compilation_load():
     comp = Compiler()
     comp.process_command_line()
     comp.link_compilation_to_missions()
+
+
+def spreadsheets_load():
+    st = SurveyTally()
+    st.args = argparse.Namespace()
+    st.args.parent_dir = ""
+    st.args.verbose = 1
+    st.setup_logging()
+    st.process_xlsx()
+    st.process_csv()
 
 
 if __name__ == "__main__":

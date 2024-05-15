@@ -25,7 +25,7 @@ class MissionTable(Table):
         fields = (
             "name",
             "start_date",
-            "reqion_name",
+            "region_name",
             "track_length",
             "start_depth",
             "status",
@@ -33,7 +33,7 @@ class MissionTable(Table):
         sequence = (
             "name",
             "start_date",
-            "reqion_name",
+            "region_name",
             "track_length",
             "start_depth",
             "status",
