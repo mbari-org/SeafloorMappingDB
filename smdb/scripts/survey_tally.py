@@ -138,7 +138,7 @@ class SurveyTally:
                 mission.lass = str(row["LASS"]) == "x"
                 mission.status = row["Status*"] or ""
                 mission.patch_test = str(row["Patch_test**"]) == "patch_test"
-                mission.track_length = row["km of trackline"]
+                # mission.track_length = row["km of trackline"]
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
                 self.logger.info(f"Updated {mission}")
@@ -193,7 +193,7 @@ class SurveyTally:
             "lass",  # Boolean
             "status",  # Controlled vocabulary: "production_survey", "test_survey", "failed_survey", "use_with_caution"
             "patch_test",  # String: "patch_test" or ""
-            "track_length",  # Originally "km of trackline"
+            "track_length",  # Originally "km of trackline" - should use values computed from --fnv
             "mgds_compilation",  # Srting: e.g. "FKt230303_MBARI_AUV"
         ]
         # Check that the Mission model has all the fields in cols
@@ -222,7 +222,6 @@ class SurveyTally:
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
             csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
-            csv_dir = os.path.join("/tmp", parent_dir, "SMDB")
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
@@ -238,6 +237,8 @@ if __name__ == "__main__":
     st.process_command_line()
     if st.args.read_xlsx:
         st.process_xlsx()
-    if st.args.write_csv:
+    elif st.args.write_csv:
         st.process_csv()
+    else:
+        st.logger.error("No action specified. Use --read_xlsx or --write_csv")
     sys.exit(0)
