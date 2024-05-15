@@ -89,9 +89,10 @@ class SurveyTally:
             help="Write a .csv file with database values for the Missions in parent_dir",
         )
 
-        self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
+        self.args = parser.parse_args()  # noqa
 
+    def setup_logging(self):
         logging.getLogger().handlers.clear()
         _formatter = logging.Formatter(
             "%(levelname)s %(asctime)s %(filename)s "
@@ -109,7 +110,7 @@ class SurveyTally:
     def read_xlsx_into_df(self, parent_dir: str) -> pd.DataFrame:
         xlsx_file = os.path.join(
             MBARI_DIR,
-            self.args.parent_dir,
+            parent_dir,
             "SMDB",
             f"SMDB_{parent_dir}_survey_tally.xlsx",
         )
@@ -249,6 +250,7 @@ class SurveyTally:
 if __name__ == "__main__":
     st = SurveyTally()
     st.process_command_line()
+    st.setup_logging()
     if st.args.read_xlsx:
         st.process_xlsx()
     elif st.args.write_csv:
