@@ -39,6 +39,19 @@ from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
 MBARI_DIR = "/mbari/SeafloorMapping/"
+col_lookup = {
+    "name": "Mission",
+    "route_file": "Route",
+    "region_name": "Location",
+    "vehicle_name": "Vehicle",
+    "quality_comment": "Comment",
+    "auv": "AUV",
+    "lass": "LASS",
+    "status": "Status*",
+    "patch_test": "Patch_test**",
+    "track_length": "km of trackline",
+    "mgds_compilation": "MGDS_compilation",
+}
 
 instructions = f"""
 Satisfying https://github.com/mbari-org/SeafloorMappingDB/issues/206 requires
@@ -116,6 +129,7 @@ class SurveyTally:
         )
         self.logger.info(f"Reading {xlsx_file}")
         df = pd.read_excel(xlsx_file, engine="openpyxl")
+        df = df.fillna("")  # Replace NaN with empty string
 
         # The df (from sheet index_col=0) looks like (from print(df.head(2).to_csv())):
         # Mission,Route,Location,Vehicle,Comment,AUV,LASS,Status*,Patch_test**,km of trackline,MGDS_compilation
@@ -220,19 +234,6 @@ class SurveyTally:
         return cols, rows
 
     def process_csv(self):
-        col_lookup = {
-            "name": "Mission",
-            "route_file": "Route",
-            "region_name": "Location",
-            "vehicle_name": "Vehicle",
-            "quality_comment": "Comment",
-            "auv": "AUV",
-            "lass": "LASS",
-            "status": "Status*",
-            "patch_test": "Patch_test**",
-            "track_length": "km of trackline",
-            "mgds_compilation": "MGDS_compilation",
-        }
         for parent_dir in self.get_parent_dirs():
             cols, rows = self.read_from_db_into_rows(parent_dir)
             csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
