@@ -101,6 +101,11 @@ class SurveyTally:
             action="store_true",
             help="Write a .csv file with database values for the Missions in parent_dir",
         )
+        parser.add_argument(
+            "--last_n_days",
+            type=float,
+            help="Read the last n days of Missions",
+        )
 
         self.commandline = " ".join(sys.argv)
         self.args = parser.parse_args()  # noqa
@@ -127,6 +132,12 @@ class SurveyTally:
             "SMDB",
             f"SMDB_{parent_dir}_survey_tally.xlsx",
         )
+        if self.args.last_n_days:
+            if os.path.getmtime(xlsx_file) < time() - self.args.last_n_days * 86400:
+                self.logger.debug(
+                    f"Skipping file {xlsx_file} older than {self.args.last_n_days = }"
+                )
+                return pd.DataFrame()
         self.logger.info(f"Reading {xlsx_file}")
         try:
             df = pd.read_excel(xlsx_file, engine="openpyxl")
