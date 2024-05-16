@@ -81,8 +81,9 @@
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2022/AxialSeamount/FiguresCaress", "--limit", "10", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
       //"args": ["--spreadsheets", "-v", "1"],
-      //"args": ["-v", "2", "--last_n_days", "60"],
-      "args": ["-v", "1", "--compilation", "--last_n_days", "30"],
+      "args": ["-v", "1", "--last_n_days", "0.5"],
+      //"args": ["-v", "1", "--spreadsheets", "--last_n_days", "0.5"],
+      //"args": ["-v", "1", "--compilation", "--last_n_days", "30"],
       "justMyCode": false
     },
     {
@@ -94,7 +95,8 @@
       //"args": ["-v", "2", "--parent_dir", "2022", "--read_xlsx"],
       //"args": ["-v", "2", "--parent_dir", "2022", "--write_csv"],
       //"args": ["-v", "1", "--write_csv"],
-      "args": ["-v", "1", "--parent_dir", "2022", "--read_xlsx", "--last_n_days", ".5"],
+      //"args": ["-v", "1", "--parent_dir", "2022", "--read_xlsx", "--last_n_days", ".5"],
+      "args": ["-v", "1", "--last_n_days", "0.5"],
     }
   ]
 }

@@ -132,18 +132,17 @@ class SurveyTally:
             "SMDB",
             f"SMDB_{parent_dir}_survey_tally.xlsx",
         )
+        if not os.path.exists(xlsx_file):
+            self.logger.debug(f"File {xlsx_file} not found")
+            return pd.DataFrame(), xlsx_file
         if self.args.last_n_days:
             if os.path.getmtime(xlsx_file) < time() - self.args.last_n_days * 86400:
                 self.logger.debug(
                     f"Skipping file {xlsx_file} older than {self.args.last_n_days = }"
                 )
-                return pd.DataFrame()
+                return pd.DataFrame(), xlsx_file
         self.logger.info(f"Reading {xlsx_file}")
-        try:
-            df = pd.read_excel(xlsx_file, engine="openpyxl")
-        except FileNotFoundError:
-            self.logger.warning(f"File {xlsx_file} not found")
-            return pd.DataFrame()
+        df = pd.read_excel(xlsx_file, engine="openpyxl")
         df = pd.read_excel(xlsx_file, engine="openpyxl")
         df = df.fillna("")  # Replace NaN with empty string
 
@@ -151,7 +150,7 @@ class SurveyTally:
         # Mission,Route,Location,Vehicle,Comment,AUV,LASS,Status*,Patch_test**,km of trackline,MGDS_compilation
         # 20230310m1,PuyDesFolles_1v7,MAR PdF,MAUV1,pressure-depth problem with code,x,,production_survey,,78.4,FKt230303_MBARI_AUV
         # 20230310m2,PuyDesFolles_2v7,MAR PdF,MAUV2,pressure-depth problem with code,x,,production_survey,,79.6,FKt230303_MBARI_AUV
-        return df
+        return df, xlsx_file
 
     def update_db_from_df(self, df: pd.DataFrame, parent_dir: str) -> None:
         # Loop through rows in data frame and update the appropriate database fields
@@ -172,15 +171,19 @@ class SurveyTally:
                 # mission.track_length = row["km of trackline"]
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
-                self.logger.info(f"Updated {mission}")
+                self.logger.info(f"Updated {mission = }")
             except Mission.DoesNotExist:
                 self.logger.warning(f"Mission {row['Mission']} not found in database")
 
     def process_xlsx(self) -> None:
+        xlsx_files_processed = []
         for parent_dir in self.get_parent_dirs():
-            self.logger.info(f"Processing {parent_dir}")
-            df = self.read_xlsx_into_df(parent_dir)
-            self.update_db_from_df(df, parent_dir)
+            self.logger.debug(f"Processing {parent_dir}")
+            df, xlsx_file = self.read_xlsx_into_df(parent_dir)
+            if not df.empty:
+                self.update_db_from_df(df, parent_dir)
+                xlsx_files_processed.append(xlsx_file)
+        return xlsx_files_processed
 
     def get_parent_dirs(self) -> List[str]:
         """Return a list of parent directories to process. Check if they are in the database.
@@ -249,10 +252,18 @@ class SurveyTally:
             rows.append(row)
         return cols, rows
 
-    def process_csv(self):
+    def process_csv(self, xlsx_files_processed: List[str]):
         for parent_dir in self.get_parent_dirs():
-            cols, rows = self.read_from_db_into_rows(parent_dir)
             csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
+            if (
+                os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.xlsx")
+                not in xlsx_files_processed
+            ):
+                self.logger.debug(
+                    f"No .xlsx file processed for {parent_dir}. Skipping .csv file creation."
+                )
+                continue
+            cols, rows = self.read_from_db_into_rows(parent_dir)
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
@@ -268,10 +279,12 @@ if __name__ == "__main__":
     st = SurveyTally()
     st.process_command_line()
     st.setup_logging()
+    xlsx_files_processed = []
     if st.args.read_xlsx:
-        st.process_xlsx()
+        xlsx_files_processed = st.process_xlsx()
     elif st.args.write_csv:
-        st.process_csv()
+        st.process_csv(xlsx_files_processed)
     else:
-        st.logger.error("No action specified. Use --read_xlsx or --write_csv")
+        xlsx_files_processed = st.process_xlsx()
+        st.process_csv(xlsx_files_processed)
     sys.exit(0)
