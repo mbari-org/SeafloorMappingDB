@@ -91,9 +91,10 @@
       "request": "launch",
       "program": "${workspaceFolder}/smdb/scripts/survey_tally.py",
       "console": "integratedTerminal",
-      "args": ["-v", "2", "--parent_dir", "2022", "--read_xlsx"],
+      //"args": ["-v", "2", "--parent_dir", "2022", "--read_xlsx"],
       //"args": ["-v", "2", "--parent_dir", "2022", "--write_csv"],
       //"args": ["-v", "1", "--write_csv"],
+      "args": ["-v", "1", "--parent_dir", "2022", "--read_xlsx", "--last_n_days", ".5"],
     }
   ]
 }
