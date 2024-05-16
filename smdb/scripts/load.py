@@ -1367,6 +1367,7 @@ class Compiler(BaseLoader):
         return compilations
 
     def link_compilation_to_missions(self):
+        self.logger.info("Linking Compilations to Missions")
         for count, cmd_filename in enumerate(self.comp_dirs()):
             comp_dir = os.path.dirname(cmd_filename)
             self.logger.debug("%4d. %s", count, cmd_filename)
@@ -1529,13 +1530,13 @@ def run(*args):
     elif bl.args.compilation:
         compilation_load()
     elif bl.args.spreadsheets:
-        spreadsheets_load()
+        spreadsheets_load(bl.args)
     else:
         missions_saved = bootstrap_load()
         notes_load(missions_saved)
         fnv_load(missions_saved)
         compilation_load()
-        spreadsheets_load()
+        spreadsheets_load(bl.args)
     bl.save_logger_output()
 
 
@@ -1570,14 +1571,15 @@ def compilation_load():
     comp.link_compilation_to_missions()
 
 
-def spreadsheets_load():
+def spreadsheets_load(args: argparse.Namespace):
     st = SurveyTally()
     st.args = argparse.Namespace()
     st.args.parent_dir = ""
     st.args.verbose = 1
+    st.args.last_n_days = args.last_n_days
     st.setup_logging()
-    st.process_xlsx()
-    st.process_csv()
+    xlsx_files_processed = st.process_xlsx()
+    st.process_csv(xlsx_files_processed)
 
 
 if __name__ == "__main__":
