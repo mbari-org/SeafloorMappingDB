@@ -2,8 +2,6 @@
 
 _Make MBARI seafloor mapping datasets more accessible and useful_
 
-![smdb tests](https://github.com/mbari-org/SeafloorMappingDB/actions/workflows/ci.yml/badge.svg)
-
 ### Text from the proposal
 
 MBARI has now conducted hundreds of Mapping AUV missions and several dozen

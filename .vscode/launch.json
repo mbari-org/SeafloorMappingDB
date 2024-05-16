@@ -44,6 +44,7 @@
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2023/20230511d1/photogrammetry/ZTopo.grd$", "--limit", "1" ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2019/20190820m1/ZTopo.grd$", "--limit", "100" ],
       ////"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2023/20230310m1/ZTopo.grd$", "--limit", "10" ],
+      //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "MappingAUVOps2008/20080320/ZTopo.grd$", "--limit", "3" ],
       //"args": ["-v", "1", "--limit", "5", "--clobber", "--noinput"],
       //"args": ["--bootstrap", "-v 1", "--clobber", "--limit", "5", "--noinput"],
       //"args": ["--bootstrap", "-v 2", "--limit", "10" "--clobber", "--noinput"],
@@ -79,7 +80,9 @@
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2024/OceanSci24/Figures", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1", "--skipuntil", "2022/AxialSeamount/FiguresCaress", "--limit", "10", "--log_file", "compilation.txt"],
       //"args": ["--compilation", "-v", "1"],
-      "args": ["--spreadsheets", "-v", "1"],
+      //"args": ["--spreadsheets", "-v", "1"],
+      //"args": ["-v", "2", "--last_n_days", "60"],
+      "args": ["-v", "1", "--compilation", "--last_n_days", "30"],
       "justMyCode": false
     },
     {

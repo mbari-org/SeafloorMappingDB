@@ -200,6 +200,12 @@ class BaseLoader:
             action="store_true",
             help="Load data from .xlss spreadsheets and write out parallel .csv files",
         )
+        parser.add_argument(
+            "--last_n_days",
+            action="store",
+            type=float,
+            help="For each locate(1) command look back this number of days for files (may be fractional)",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -235,7 +241,7 @@ class BaseLoader:
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
         )
 
-    def update_missions(self, method_to_run: str) -> None:
+    def update_missions(self, method_to_run: str, missions_saved: list) -> None:
         start_processing = True
         if self.args.skipuntil:
             start_processing = False
@@ -247,6 +253,10 @@ class BaseLoader:
                     start_processing = True
             if not start_processing:
                 continue
+            if self.args.last_n_days:
+                if mission not in missions_saved:
+                    self.logger.debug("Skipping %s", mission.name)
+                    continue
             try:
                 self.logger.info("======= %d. %s ========", miss_count, mission)
                 # The passed method_to_run can be anything that updates
@@ -489,8 +499,15 @@ class NoteParser(BaseLoader):
             if "Route File:" in line:
                 return line.split(":")[1].strip()
 
-    def parse_notes(self):
+    def parse_notes(self, missions_saved: list) -> None:
         for note_count, mission in enumerate(Mission.objects.all(), start=1):
+            if self.args.last_n_days:
+                if mission not in missions_saved:
+                    self.logger.debug(
+                        "Skipping %s as it's not in the missions_saved list",
+                        mission.name,
+                    )
+                    continue
             self.logger.info("======== %d. %s ========", note_count, mission.name)
             mission.comment = self.comment_from_text(mission)
             if len(mission.comment) > 512:
@@ -962,6 +979,8 @@ class MBSystem(BaseLoader):
 
 
 class BootStrapper(BaseLoader):
+    missions_saved = []
+
     def is_geographic(self, ds):
         if hasattr(ds, "description"):
             # More recent files have this attribute
@@ -1006,6 +1025,12 @@ class BootStrapper(BaseLoader):
             # Try parent directory
             parent_dir = os.path.abspath(os.path.join(sm_dir, ".."))
             for txt_file in glob(f"{parent_dir}/*Notes.txt"):
+                if self.args.last_n_days:
+                    if os.path.getmtime(txt_file) < self.args.last_n_days:
+                        self.logger.debug(
+                            f"Skipping notes file older than {self.args.last_n_days = }: {txt_file}"
+                        )
+                        continue
                 if self.valid_notes_filename(txt_file):
                     self.logger.info("Potential notes file: %s", txt_file)
                     notes_file = txt_file
@@ -1149,6 +1174,12 @@ class BootStrapper(BaseLoader):
                     continue
                 if self._exclude_path(fp):
                     continue
+                if self.args.last_n_days:
+                    if os.path.getmtime(fp) < time() - self.args.last_n_days * 86400:
+                        self.logger.debug(
+                            f"Skipping file {fp} older than {self.args.last_n_days = }"
+                        )
+                        continue
                 miss_count += 1
                 self.logger.info(
                     "======== %3d. %s ========",
@@ -1199,6 +1230,7 @@ class BootStrapper(BaseLoader):
 
                 if created:
                     self.logger.info("%3d. Saved <Mission: %s>", miss_count, mission)
+                    self.missions_saved.append(mission)
                 else:
                     self.logger.info("%3d. Resaved %s", miss_count, mission)
                 if self.args.limit:
@@ -1248,6 +1280,12 @@ class Compiler(BaseLoader):
                     continue
                 if self.args.filter:
                     if self.args.filter not in fp:
+                        continue
+                if self.args.last_n_days:
+                    if os.path.getmtime(fp) < time() - self.args.last_n_days * 86400:
+                        self.logger.debug(
+                            f"Skipping file {fp} older than {self.args.last_n_days = }"
+                        )
                         continue
                 yield fp
 
@@ -1474,43 +1512,44 @@ def run(*args):
     bl.process_command_line()
     bl.logger.debug("Arguments passed to run(): %s", " ".join(args))
     if bl.args.bootstrap and bl.args.notes and bl.args.fnv:
-        bootstrap_load()
-        notes_load()
-        fnv_load()
+        missions_saved = bootstrap_load()
+        notes_load(missions_saved)
+        fnv_load(missions_saved)
     elif bl.args.bootstrap and bl.args.notes:
-        bootstrap_load()
-        notes_load()
+        missions_saved = bootstrap_load()
+        notes_load(missions_saved)
     elif bl.args.bootstrap:
-        bootstrap_load()
+        missions_saved = bootstrap_load()
     elif bl.args.notes:
-        notes_load()
+        notes_load(missions_saved)
     elif bl.args.mbinfo:
         mbinfo_load()
     elif bl.args.fnv:
-        fnv_load()
+        fnv_load(missions_saved)
     elif bl.args.compilation:
         compilation_load()
     elif bl.args.spreadsheets:
         spreadsheets_load()
     else:
-        bootstrap_load()
-        notes_load()
-        fnv_load()
+        missions_saved = bootstrap_load()
+        notes_load(missions_saved)
+        fnv_load(missions_saved)
         compilation_load()
         spreadsheets_load()
     bl.save_logger_output()
 
 
-def bootstrap_load():
+def bootstrap_load() -> list:
     bs = BootStrapper()
     bs.process_command_line()
     bs.load_from_grds()
+    return bs.missions_saved
 
 
-def notes_load():
+def notes_load(missions_saved: list):
     np = NoteParser()
     np.process_command_line()
-    np.parse_notes()
+    np.parse_notes(missions_saved)
 
 
 def mbinfo_load():
@@ -1519,10 +1558,10 @@ def mbinfo_load():
     mbs.update_missions("mbinfo_update_mission_data")
 
 
-def fnv_load():
+def fnv_load(missions_saved: list):
     fnv = FNVLoader()
     fnv.process_command_line()
-    fnv.update_missions("fnv_update_mission_data")
+    fnv.update_missions("fnv_update_mission_data", missions_saved)
 
 
 def compilation_load():
