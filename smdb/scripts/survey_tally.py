@@ -128,6 +128,11 @@ class SurveyTally:
             f"SMDB_{parent_dir}_survey_tally.xlsx",
         )
         self.logger.info(f"Reading {xlsx_file}")
+        try:
+            df = pd.read_excel(xlsx_file, engine="openpyxl")
+        except FileNotFoundError:
+            self.logger.warning(f"File {xlsx_file} not found")
+            return pd.DataFrame()
         df = pd.read_excel(xlsx_file, engine="openpyxl")
         df = df.fillna("")  # Replace NaN with empty string
 
