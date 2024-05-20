@@ -15,7 +15,8 @@ django-bleach==3.0.1  # https://pypi.org/project/django-bleach/
 django-environ==0.9.0  # https://github.com/joke2k/django-environ
 django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
 django-allauth==0.51.0  # https://github.com/pennersr/django-allauth
-django-crispy-forms==1.14.0  # https://github.com/django-crispy-forms/django-crispy-forms
+django-crispy-forms==2.1  # https://github.com/django-crispy-forms/django-crispy-forms
+crispy-bootstrap4==2024.1  # https://pypi.org/project/crispy-bootstrap4/
 django-compressor==4.4  # https://github.com/django-compressor/django-compressor
 django-redis==5.2.0  # https://github.com/jazzband/django-redis
 # Django REST Framework
@@ -43,6 +44,6 @@ pytest-drf==1.1.3 # https://pypi.org/project/pytest-drf/
 snapshottest==0.6.0 # https://docs.graphene-python.org/en/latest/testing/
 uritemplate==4.1.1 # For python manage.py generateschema
 django-tables2==2.4.1  # https://github.com/jieter/django-tables2
-django-filter==22.1  # https://youtu.be/G-Rct7Na0UQ
+django-filter==24.2  # https://youtu.be/G-Rct7Na0UQ
 tzdata==2023.4  # https://stackoverflow.com/a/71064180
 openpyxl==3.1.2  # https://openpyxl.readthedocs.io/en/stable/

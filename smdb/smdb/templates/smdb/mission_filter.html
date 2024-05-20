@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load django_tables2 %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block css %}
   {{ block.super }}
@@ -29,10 +30,7 @@
 {% block content %}
     <h2>Missions</h2>
     {% if filter %}
-    <form method="get">
-        {{ filter.form.as_table }}
-        <input type="submit" />
-    </form><br>
+    {% crispy filter.form filter.form.helper %}
     {% endif %}
     {{ missions|json_script:"missions-data" }}
     <div id="map_mission_filter" style="height: 500px;"></div>
