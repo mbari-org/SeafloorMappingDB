@@ -1,17 +1,40 @@
 from django import forms
-from django_filters import FilterSet, CharFilter, BooleanFilter, ChoiceFilter
+from django_filters import (
+    FilterSet,
+    CharFilter,
+    BooleanFilter,
+    ChoiceFilter,
+    ModelChoiceFilter,
+)
 from smdb.models import Mission, Expedition, Compilation
+
+from django.forms.widgets import TextInput
 
 
 class MissionFilter(FilterSet):
-    name = CharFilter(field_name="name", lookup_expr="icontains")
+    name = CharFilter(
+        field_name="name",
+        lookup_expr="icontains",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Name contains..."}),
+    )
     expedition__name = CharFilter(
-        field_name="expedition__name", lookup_expr="icontains"
+        field_name="expedition__name",
+        lookup_expr="icontains",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Expedition name contains..."}),
+    )
+    status = ChoiceFilter(
+        field_name="status",
+        choices=Mission.STATUS_CHOICES,
+        label="",
+        empty_label="--- status ---",
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     class Meta:
         model = Mission
-        fields = ["name", "expedition__name"]
+        fields = ["name", "expedition__name", "status"]
 
 
 class ExpeditionFilter(FilterSet):
