@@ -7,6 +7,10 @@ th,
 td {
   padding: 0 15px;
 }
+.tab div {
+  margin-left: 3rem;
+  margin-right: 3rem;
+}
 .label-mission-name {
   font-size: 1.3em;
   text-align: left;

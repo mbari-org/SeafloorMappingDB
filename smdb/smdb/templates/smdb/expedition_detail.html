@@ -14,10 +14,14 @@
 
 {% block content %}
   <tab>
-    <h2>{{ expedition.name }}</h2>
-    <h2>Missions:</h2>
-    <div>
-      {% render_table table %}
-    </div>>
+    <div class="row">
+      <div class="col">
+        <h2>{{ expedition.name }}</h2>
+          <h2>Missions:</h2>
+        <div>
+        {% render_table table %}
+        </div>
+      </div>
+    </div>
   </tab>
 {% endblock %}
