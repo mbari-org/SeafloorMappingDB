@@ -15,9 +15,8 @@
 {% block content %}
 
 <!-- A Bootstrap two column presentation-->
-  <div id="mission-detail">
   <div class="row">
-    <div class="col" id="mission-left-col">
+    <div class="col">
       <h2>Mission {{ mission.name }}</h2>
       <a href="{{ thumbnail_fullrez_url }}"><img src="{{ thumbnail_url }}" /></a>
       <div>
@@ -49,6 +48,5 @@
   <div class="row">
     <h3>Notes:</h3>
     <pre>{{ mission.notes_text }}</pre>
-  </div>
   </div>
 {% endblock %}
