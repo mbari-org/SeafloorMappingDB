@@ -1,5 +1,8 @@
 const map = L.map("map_mission_filter");
-const options = { minZoom: 1, maxZoom: 20 };
+map.options.minZoom = 1.5;
+map.options.maxZoom = 20;
+// const options = { minZoom: 2.49, maxZoom: 16 };
+// const options = { minZoom: 1, maxZoom: 20 };
 
 const gmrt = L.tileLayer.wms(
   "https://www.gmrt.org/services/mapserver/wms_merc?",
