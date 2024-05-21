@@ -27,7 +27,6 @@
 {% endblock %}
 
 {% block content %}
-<div id="expedition-filter">
     <h2>Expeditions</h2>
     {% if filter %}
     <form method="get">
@@ -36,9 +35,9 @@
     </form><br>
     {% endif %}
     {{ missions|json_script:"missions-data" }}
-    <div id="map_expedition_filter" style="height: 600px;"></div>
+    <div id="map_expedition_filter" style="height: 500px;"></div>
     <script src="{% static 'js/map_expedition_filter.js' %}"></script>
     {% if table %}
         {% render_table table "smdb_tables2_bootstrap4.html" %}
-    {% endif %}</div>
+    {% endif %}
 {% endblock %}

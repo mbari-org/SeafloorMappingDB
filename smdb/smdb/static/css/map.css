@@ -2,7 +2,7 @@ html,
 body {
   height: 100%;
   min-height: 100%;
-  overflow: hidden;
+  overflow: scroll;
   margin: 0;
   height: 100vh;
   font-family: "Roboto", sans-serif !important;
@@ -11,10 +11,8 @@ body {
 
 #map {
   width: 100%;
-  /* The following line is important for fitting map onto map-pane and zooming out*/
-  height: 85% !important;
-  top: 165px;
-  position: relative;
+  height: 85%;
+  padding-top: 10%;
   /*margin-left: 250px; - Testing with new proSidebar*/
 }
 
