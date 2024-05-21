@@ -143,7 +143,6 @@ class SurveyTally:
                 return pd.DataFrame(), xlsx_file
         self.logger.info(f"Reading {xlsx_file}")
         df = pd.read_excel(xlsx_file, engine="openpyxl")
-        df = pd.read_excel(xlsx_file, engine="openpyxl")
         df = df.fillna("")  # Replace NaN with empty string
 
         # The df (from sheet index_col=0) looks like (from print(df.head(2).to_csv())):
