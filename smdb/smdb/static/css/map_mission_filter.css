@@ -18,11 +18,14 @@ td {
   padding-left:20px;
 }
 .label-mission-name a:link {
-  color: #000000;
+  color: black;
 }
-.label-mission-name a:visited {
-  color: #000000;
+.label-mission-name a:hover {
+  color: yellow;
 }
+/* .label-mission-name a:visited {
+  color: #0078a8;;
+} */
 .align-items-center {
   -ms-flex-align: center!important;
   align-items: center!important;
