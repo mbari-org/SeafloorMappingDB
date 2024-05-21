@@ -1,5 +1,8 @@
 const map = L.map("map_compilation_filter");
-const options = { minZoom: 1, maxZoom: 20 };
+map.options.minZoom = 1.5;
+map.options.maxZoom = 20;
+// const options = { minZoom: 5, maxZoom: 16 };
+// const options = { minZoom: 1, maxZoom: 20 };
 
 const gmrt = L.tileLayer.wms(
   "https://www.gmrt.org/services/mapserver/wms_merc?",
@@ -9,7 +12,8 @@ const gmrt = L.tileLayer.wms(
 );
 gmrt.addTo(map);
 
-map.fitWorld();
+map.fitWorld({minZoom: 5});
+
 const missions = JSON.parse(
   document.getElementById("missions-data").textContent
 );
