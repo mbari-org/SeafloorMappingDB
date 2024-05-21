@@ -1157,6 +1157,10 @@ class BootStrapper(BaseLoader):
         miss_count = 0
         match_count = 0
         miss_loaded = 0
+        if self.args.last_n_days:
+            self.logger.info(
+                "Loading Missions newer than %d days", self.args.last_n_days
+            )
         with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
             for count, fp in enumerate(proc.stdout, start=1):
                 fp = fp.decode().strip()

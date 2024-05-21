@@ -159,12 +159,12 @@ class Mission(models.Model):
     # DNU: if data should not be used in gridding for other reasons
     # UWC: if data can be used in gridding but at lower priority
     STATUS_CHOICES = (
-        ("PS", "production_survey"),
-        ("FS", "failed_survey"),
-        ("TS", "test_survey"),
-        ("RS", "repeat_survey"),
-        ("DNU", "do_not_use_survey"),
-        ("UWC", "use_with_caution"),
+        ("production_survey", "production_survey"),
+        ("failed_survey", "failed_survey"),
+        ("test_survey", "test_survey"),
+        ("repeat_survey", "repeat_survey"),
+        ("do_not_use_survey", "do_not_use_survey"),
+        ("use_with_caution", "use_with_caution"),
     )
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=256, db_index=True)
