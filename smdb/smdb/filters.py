@@ -31,10 +31,15 @@ class MissionFilter(FilterSet):
         empty_label="--- status ---",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
+    patch_test = BooleanFilter(
+        field_name="patch_test",
+        label="Patch Test",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
 
     class Meta:
         model = Mission
-        fields = ["name", "expedition__name", "status"]
+        fields = ["name", "expedition__name", "status", "patch_test"]
 
 
 class ExpeditionFilter(FilterSet):

@@ -29,6 +29,7 @@ class MissionTable(Table):
             "track_length",
             "start_depth",
             "status",
+            "patch_test",
         )
         sequence = (
             "name",
@@ -37,6 +38,7 @@ class MissionTable(Table):
             "track_length",
             "start_depth",
             "status",
+            "patch_test",
             "expedition",
         )
 
