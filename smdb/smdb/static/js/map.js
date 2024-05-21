@@ -16,7 +16,6 @@ const apiKey =
   "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x";
 const basemapEnum = "ArcGIS:Oceans";
 const options = {
-  minZoom: 1,
   maxNativeZoom: 13,
   maxZoom: 16,
   exclusiveGroups: ["Base Maps   &#127758; "],
@@ -30,6 +29,8 @@ const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
 
 // Change the position of the Zoom Control to bottomright.
 map.zoomControl.setPosition("bottomright");
+map.options.minZoom = 2.495;
+map.attributionControl.setPosition("bottomleft")
 
 //Determine the BROWSER used - Important for ToolTip Date.parse
 var browserName = fnBrowserDetect();

@@ -14,6 +14,8 @@
 
 #separator.row {
   margin-left: 0;
+  width: 100%;
+  z-index: 801;
 }
 
 #number-missions {
@@ -21,14 +23,39 @@
   margin-right: 0;
 }
 
+#mission-filter,
+#expedition-filter,
+#compilation-filter {
+  display:block;
+  margin-left: 0;
+  margin-right: 0;
+  position:relative;
+  top: 100px;
+  height: 80px;
+  width: 100%;
+  z-index: 850;
+}
+
+#mission-detail {
+  display: block;
+  align-content: left;
+  position:relative;
+  top: 100px;
+}
+#mission-left-col {
+  text-align: left;
+}
+
 div.row {
   margin-left: 2rem;
   margin-right: 1rem;
 }
+
 div.row
 div.col {
-  text-align: center;
+  text-align: left !important;
 }
+
 #comp_detail {
   margin-left: 2rem;
   margin-right: 1rem;
@@ -54,13 +81,47 @@ form {
     margin-right: 3rem;
 }
 form.d-flex {
-      margin-left: 1rem;
+    margin-left: 1rem;
     margin-right: 1rem;
 }
 p {
     margin-left: 3rem;
     margin-right: 3rem;
     margin-bottom: 1rem;
+}
+/* General Typography - OVERRIDES leaflet.css*/
+.leaflet-container a {
+  color: black !important;
+  /* position: absolute; DO NOT USE!!!!!*/
+}
+.leaflet-container a:link {
+  color: black !important;
+  top: 0;
+  /* position: absolute; DO NOT USE!!!!!*/
+}
+.leaflet-container a:hover {
+  /* color: yellow !important; */
+  top: 0;
+  /* position: absolute; DO NOT USE!!!!!*/
+}
+.leaflet-container,
+.leaflet-interactive a:hover {
+  color: darkblue;
+}
+
+.leaflet-control-measure a.start,.leaflet-control-measure a.start:hover {
+  color: darkblue;
+  background-color: white;
+}
+
+.leaflet-control-measure a.cancel,.leaflet-control-measure a.cancel:hover {
+  color: darkblue;
+  background-color: white;
+}
+
+.leaflet-control-measure a.finish,.leaflet-control-measure a.finish:hover {
+  color: darkblue;
+  background-color: white;
 }
 
 #coordinates {
@@ -137,8 +198,14 @@ p {
 }
 
 #filters {
-    margin-left: 0;
-    margin-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+  position: absolute;
+  top: 88px;   
+  left:0;
+  height: 80px;
+  width: 100%;
+  z-index: 800;
 }
 
 #filter-left {
@@ -165,7 +232,7 @@ p {
   /* margin: auto; */
   margin: 0px;
   background-color: white;
-  float: center;
+  align-content: center;
   width: auto;
   height: auto;
   overflow: hidden;
@@ -185,11 +252,14 @@ p {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
-  margin: 5px;
 }
 
-div#navBar {
-  padding-top: 4px;
+div#navBar, .nav {
+  background-color: #e9e9e9;
+  top: 0;
+  left: 0;
+  position: fixed;
+  z-index: 9;
 }
 
 
@@ -223,17 +293,33 @@ div.width_fixed {
 }
 
 #separator {
+  position: absolute;
   background-color: darkgray;
   padding: 2px;
-  height: 1px;
+  height: 4px;
   right: 0;
   left: 0;
   margin-right: 0rem;
+  z-index: 800;
+  top: 86px;
+  width: 100%;
+}
+
+#separator2 {
+  position: absolute;
+  background-color: darkgray;
+  padding: 0, 0;
+  height: 4px;
+  right: 0;
+  left: 0;
+  margin-right: 0rem;
+  margin-left: 0rem;
+  z-index: 800;
+  width: 100%;
 }
 
 #searchbar {
   padding-right: 10px;
-  /* margin-top: 5px; */
   text-align: left;
 }
 
@@ -242,9 +328,19 @@ div.width_fixed {
   float: right;
   justify-content: right;
   width: -webkit-fill-available;
-  /* width: fit-content; */
 }
 
+#searchBar,
+.form-control {
+  margin-left: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: 5px;
+  height: 30px;
+  padding-bottom: 3px;
+  text-align: left;
+  width: 200px;
+}
 
 #searchbtn {
   font-size: 14px !important;
@@ -262,7 +358,7 @@ div.width_fixed {
 ::placeholder {
   overflow: visible;
   font-size: small;
-  text-align: left;
+  text-align: center;
 }
 
 .form-control:focus,
@@ -284,7 +380,6 @@ div.width_fixed {
 }
 
 #submenu-row {
-  position: static;
   top: 87px;
   flex-grow: 1%;
   height: 80px;
@@ -333,9 +428,14 @@ div.width_fixed {
 }
 
 #footer {
+  position: absolute;
+  height:auto;
+  width: 100%;
   font-size: 15px;
   color: #f00;
   text-align: center;
+  vertical-align: middle;
+  bottom: 0;
 }
 
 @media print {
@@ -367,15 +467,11 @@ div.width_fixed {
   height: 60px;
 }
 
-#navbar,
-.nav {
-  background-color: #e9e9e9;
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
 .navbar {
-  display: inline-flex;
+  position: absolute;
+  align-items:center;
+  width: 100%;
+  /* display: flex; */
 }
 
 .js-start,
@@ -385,6 +481,8 @@ div.width_fixed {
 
 .leaflet-pane,
 .leaflet-popup-pane {
+  max-width: fit-content;
+  max-height:max-content;
   z-index: 1320;
 }
 
@@ -505,7 +603,7 @@ span:hover {
 }
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
-/* ß */
+/*  */
 
 
 /* Easy-Button Control */
@@ -516,9 +614,8 @@ span:hover {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
 }
 
-/* General Typography - OVERRIDES leaflet.css*/
-.leaflet-container a {
-  color: #0078a8;
+.leaflet-container {
+  position: relative;
 }
 
 .leaflet-control {
@@ -555,9 +652,6 @@ span:hover {
 .leaflet-control {
   color: #00008b;
   font-family: 'Roboto', sans-serif !important;
-  /*font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;*/
-  /*font-family: Arial, monospace !important;
-  font-family: monospace, serif !important;*/
   font-size: small !important;
   background-color: hsla(0, 0%, 100%, 0.75) !important;
   padding: 0 4px 0 4px;
@@ -575,14 +669,32 @@ span:hover {
   color: #00008b;
 }
 
+.leaflet-control-measure a.cancel {
+  padding-left: 18px !important;
+}
+
+.leaflet-control-measure a.finish {
+  padding-left: 18px !important;
+}
+
+/* .leaflet-measure-resultpopup a.zoomto,.leaflet-measure-resultpopup a.zoomto:hover {
+    background-color: orange;
+}  */
+
 .leaflet-top,
 .leaflet-control {
-  margin-top: 10px;
+  margin-top: auto;
 }
 
 .leaflet-top,
 .leaflet-right {
   padding-right: 15px;
+  position: relative;
+}
+
+.leaflet-bottom,
+.leaflet-left {
+  float: left;
 }
 
 #dwnld {
@@ -606,17 +718,14 @@ span:hover {
   background: #fff;
 }
 
-/* .leaflet-bar {
-  box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
-  border-radius: 4px;
-  border: 3px solid black;
-} */
-
-/* .leaflet-bar a,
-.leaflet-bar { */
-  /* a:hover { */
-  /* border: 2px solid black; */
-/* } */
+.leaflet-control-measure,
+a.start:hover {
+  color:black !important;
+}
+.leaflet-control-measure,
+a.finish:hover {
+  color:darkblue !important;
+}
 
 .leaflet-control,
 .leaflet-popup-pane {
@@ -634,16 +743,6 @@ span:hover {
   margin-right: 2px;
   margin-bottom: 2px;
 }
-
-/* .leaflet-tile-container,
-.leaflet-zoom-animated {
-  transform: unset;
-}
-div,
-.leaflet-pane,
-.leaflet-map-pane {
-  transform: unset;
-} */
 
 /* Basemap image toggle - small   */
 .leaflet-retina .leaflet-control-layers-toggle {
@@ -700,6 +799,11 @@ div,
 
 .leaflet-interactive:hover {
   stroke: yellow;
+}
+/* Highlights links on hover to darkblue */
+.leaflet-interactive,
+a:hover {
+  color: darkblue;
 }
 
 .leaflet-control-measure {
@@ -799,11 +903,10 @@ div>#bounds {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
 }
 
-/* #map {
-} */
 #map-bounds {
   padding: 0px;
   max-width: 100%;
+  max-height: 100vh;
   margin: 0px;
   color: #00008b;
 }
@@ -848,8 +951,6 @@ div>#bounds {
   background-color: cornflowerblue;
 }
 
-/* #navData {
-} */
 #navData:hover {
   color: white;
   background-color: cornflowerblue;
@@ -909,7 +1010,8 @@ div>#bounds {
 #shipLogo {
   border: 2px hidden white;
   padding: 0px;
-  margin-right: 40px;
+  margin-right: 30px;
+  /* margin-right: 40px; */
   margin-top: 0px;
   width: 100px;
   height: 70px;
@@ -1052,20 +1154,6 @@ nav li {
   padding-right: 8px;
 }
 
-/* #geoMan:hover {
-  background-color: transparent;
-  fill: none;
-} 
-
-svg,
-svg-inline--fa,
-fa-draw-polygon,
-fa-xl,
-#geoMan:hover {
-    background-color: transparent;
-      fill: none;
-} */
-
 /* GEOMAN Polygon image */
 .fas,
 .fa-draw-polygon,
@@ -1078,13 +1166,13 @@ fa-xl,
   height: 100%;
 }
 
-.fas:hover,
+/* .fas:hover,
 .fa-draw-polygon:hover,
 .fa-xl:hover {
-  /* color:cornflowerblue; */
+  color:cornflowerblue;
   /* box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue; */
-  /* background-color: cornflowerblue; */
-}
+  /* background-color: cornflowerblue;
+} */
 
 svg.svg-inline--fa,
 .fa-draw-polygon,
