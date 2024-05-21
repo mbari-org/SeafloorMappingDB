@@ -12,6 +12,11 @@
   color: #b94a48;
 }
 
+div#about-view {
+  position: relative;
+  top: 100px;
+}
+
 #separator.row {
   margin-left: 0;
   width: 100%;
