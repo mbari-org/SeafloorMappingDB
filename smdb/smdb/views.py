@@ -48,6 +48,7 @@ class MissionSerializer(GeoFeatureModelSerializer):
             "start_ems",
             "end_ems",
             "expedition",
+            "route_file",
         )
         nav_track = GeometrySerializerMethodField()
 
