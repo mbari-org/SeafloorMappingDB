@@ -8,7 +8,7 @@ from django_filters import (
 )
 from smdb.models import Mission, Expedition, Compilation
 
-from django.forms.widgets import TextInput, 
+from django.forms.widgets import TextInput
 
 
 class MissionFilter(FilterSet):
