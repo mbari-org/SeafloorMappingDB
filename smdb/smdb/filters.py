@@ -35,11 +35,11 @@ class MissionFilter(FilterSet):
         empty_label="-- status --",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
-    patch_test = BooleanFilter(
-        field_name="patch_test",
-        label="Patch Test",
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-    )
+    # patch_test = BooleanFilter(
+    #    field_name="patch_test",
+    #    label="Patch Test",
+    #    widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    # )
     mgds_compilation = ChoiceFilter(
         field_name="mgds_compilation",
         choices=[
@@ -65,7 +65,7 @@ class MissionFilter(FilterSet):
             "name",
             "region_name",
             "status",
-            "patch_test",
+            # "patch_test",
             "mgds_compilation",
             "expedition__name",
         ]

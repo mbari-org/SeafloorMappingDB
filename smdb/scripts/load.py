@@ -206,6 +206,16 @@ class BaseLoader:
             type=float,
             help="For each locate(1) command look back this number of days for files (may be fractional)",
         )
+        parser.add_argument(
+            "--parent_dir",
+            action="store",
+            help=f"Read or write a .xlsx or .csv file for the direct sub-directory of {MBARI_DIR}",
+        )
+        parser.add_argument(
+            "--append_to_log_file",
+            action="store_true",
+            help="Append to existing log file",
+        )
 
         self.args = parser.parse_args()  # noqa
         self.commandline = " ".join(sys.argv)
@@ -222,7 +232,7 @@ class BaseLoader:
         if not self.logger.handlers:
             # Don't add handlers when sub class runs
             stream_handler = logging.StreamHandler()
-            if os.path.exists(self.LOCAL_LOG_FILE):
+            if os.path.exists(self.LOCAL_LOG_FILE) and not self.args.append_to_log_file:
                 os.remove(self.LOCAL_LOG_FILE)
             file_handler = logging.FileHandler(self.LOCAL_LOG_FILE)
             stream_handler.setFormatter(_formatter)
@@ -237,6 +247,10 @@ class BaseLoader:
                     if line.startswith("/mbari/SeafloorMapping/"):
                         self.exclude_paths.append(line.strip())
 
+        if self.args.append_to_log_file:
+            self.logger.info("Appending to local log file: %s", self.LOCAL_LOG_FILE)
+        else:
+            self.logger.info("Saving to new local log file: %s", self.LOCAL_LOG_FILE)
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
         )
@@ -271,8 +285,6 @@ class BaseLoader:
                     return
 
     def save_logger_output(self) -> None:
-        self.logger.info("Saving to local log file: %s", self.LOCAL_LOG_FILE)
-        self.logger.info("Saving to media log file: %s", self.MEDIA_LOG_FILE)
         self.logger.info("Elapsed time: %s", datetime.now() - self.start_proc)
         for handler in self.logger.handlers[:]:
             self.logger.debug("Closing handler: %s", handler)
@@ -281,6 +293,9 @@ class BaseLoader:
         with open(self.LOCAL_LOG_FILE) as log_file:
             ds = DefaultStorage()
             ds.delete(self.MEDIA_LOG_FILE)
+            self.logger.info(
+                "Copying local log file to media log file: %s", self.MEDIA_LOG_FILE
+            )
             ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
 
     def extent(self, ds, file):
