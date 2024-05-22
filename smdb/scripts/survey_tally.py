@@ -34,6 +34,7 @@ from smdb.models import (
     Mission,
     Platform,
     Platformtype,
+    Status,
 )  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
@@ -165,12 +166,21 @@ class SurveyTally:
                 mission.quality_comment = row["Comment"]
                 mission.auv = str(row["AUV"]) == "x"
                 mission.lass = str(row["LASS"]) == "x"
-                mission.status = row["Status*"] or ""
                 mission.patch_test = str(row["Patch_test**"]) == "patch_test"
                 # mission.track_length = row["km of trackline"]
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
                 self.logger.info(f"Updated {mission = }")
+                for st in row["Status*"].split(" "):
+                    if st:
+                        try:
+                            status, _ = Status.objects.get_or_create(name=st)
+                            mission.status.add(status)
+                        except ValueError:
+                            self.logger.warning(
+                                f"Status {status} not in {[st[0] for st in Status.STATUS_CHOICES]}"
+                            )
+                        self.logger.info(f"Added {status = }")
             except Mission.DoesNotExist:
                 self.logger.warning(f"Mission {row['Mission']} not found in database")
 
@@ -242,6 +252,8 @@ class SurveyTally:
             for col in cols:
                 if col == "name":
                     item = getattr(mission, col).replace(f"{parent_dir}/", "")
+                if col == "status":
+                    item = " ".join([s.name for s in mission.status.all()])
                 else:
                     if hasattr(mission, col):
                         item = getattr(mission, col, "") or ""
@@ -251,17 +263,19 @@ class SurveyTally:
             rows.append(row)
         return cols, rows
 
-    def process_csv(self, xlsx_files_processed: List[str]):
+    def process_csv(self, xlsx_files_processed: List[str] = None):
         for parent_dir in self.get_parent_dirs():
             csv_dir = os.path.join(MBARI_DIR, parent_dir, "SMDB")
-            if (
-                os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.xlsx")
-                not in xlsx_files_processed
-            ):
-                self.logger.debug(
-                    f"No .xlsx file processed for {parent_dir}. Skipping .csv file creation."
-                )
-                continue
+            if xlsx_files_processed != None:
+                self.logger.debug(f"{xlsx_files_processed = }")
+                if (
+                    os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.xlsx")
+                    not in xlsx_files_processed
+                ):
+                    self.logger.debug(
+                        f"No .xlsx file processed for {parent_dir}. Skipping .csv file creation."
+                    )
+                    continue
             cols, rows = self.read_from_db_into_rows(parent_dir)
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
@@ -282,7 +296,7 @@ if __name__ == "__main__":
     if st.args.read_xlsx:
         xlsx_files_processed = st.process_xlsx()
     elif st.args.write_csv:
-        st.process_csv(xlsx_files_processed)
+        st.process_csv()
     else:
         xlsx_files_processed = st.process_xlsx()
         st.process_csv(xlsx_files_processed)

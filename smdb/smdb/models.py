@@ -151,13 +151,13 @@ class Compilation(models.Model):
         return f"/compilations/{self.slug}/"
 
 
-class Mission(models.Model):
-    # PS:  if all went well and data should be used in gridding
-    # FS:  if it was a failure; any data should not be used in gridding
-    # TS:  if it was a test survey; data should not be used in gridding
-    # RS:  if all went well and this repeats other surveys for gridding purposes
-    # DNU: if data should not be used in gridding for other reasons
-    # UWC: if data can be used in gridding but at lower priority
+class Status(models.Model):
+    # production_survey: if all went well and data should be used in gridding
+    # failed_survey:     if it was a failure; any data should not be used in gridding
+    # test_survey:       if it was a test survey; data should not be used in gridding
+    # repeat_survey:     if all went well and this repeats other surveys for gridding purposes
+    # do_not_use_survey: if data should not be used in gridding for other reasons
+    # use_with_caution:  if data can be used in gridding but at lower priority
     STATUS_CHOICES = (
         ("production_survey", "production_survey"),
         ("failed_survey", "failed_survey"),
@@ -166,6 +166,17 @@ class Mission(models.Model):
         ("do_not_use_survey", "do_not_use_survey"),
         ("use_with_caution", "use_with_caution"),
     )
+    uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
+    name = models.CharField(
+        max_length=128, blank=True, null=True, choices=STATUS_CHOICES
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class Mission(models.Model):
+
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     name = models.CharField(max_length=256, db_index=True)
     slug = models.SlugField(max_length=256)
@@ -199,9 +210,7 @@ class Mission(models.Model):
     )
     auv = models.BooleanField(blank=True, null=True)
     lass = models.BooleanField(blank=True, null=True)
-    status = models.CharField(
-        max_length=128, blank=True, null=True, choices=STATUS_CHOICES
-    )
+    status = models.ManyToManyField(Status, blank=True)
     mgds_compilation = models.CharField(max_length=128, blank=True, null=True)
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)

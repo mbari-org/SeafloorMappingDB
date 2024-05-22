@@ -6,7 +6,7 @@ from django_filters import (
     ChoiceFilter,
     ModelChoiceFilter,
 )
-from smdb.models import Mission, Expedition, Compilation
+from smdb.models import Mission, Expedition, Compilation, Status
 
 from django.forms.widgets import TextInput
 
@@ -30,7 +30,7 @@ class MissionFilter(FilterSet):
     )
     status = ChoiceFilter(
         field_name="status",
-        choices=Mission.STATUS_CHOICES,
+        choices=Status.STATUS_CHOICES,
         label="",
         empty_label="-- status --",
         widget=forms.Select(attrs={"class": "form-control"}),
