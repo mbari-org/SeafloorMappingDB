@@ -25,20 +25,32 @@ class MissionFilter(FilterSet):
             for m in Mission.objects.values_list("region_name", flat=True).distinct()
         ],
         label="",
-        empty_label="--- region ---",
+        empty_label="-- region --",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     status = ChoiceFilter(
         field_name="status",
         choices=Mission.STATUS_CHOICES,
         label="",
-        empty_label="--- status ---",
+        empty_label="-- status --",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     patch_test = BooleanFilter(
         field_name="patch_test",
         label="Patch Test",
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
+    mgds_compilation = ChoiceFilter(
+        field_name="mgds_compilation",
+        choices=[
+            (m, m)
+            for m in Mission.objects.values_list(
+                "mgds_compilation", flat=True
+            ).distinct()
+        ],
+        label="",
+        empty_label="-- MGDS_compilation --",
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
     expedition__name = CharFilter(
         field_name="expedition__name",
@@ -49,7 +61,14 @@ class MissionFilter(FilterSet):
 
     class Meta:
         model = Mission
-        fields = ["name", "region_name", "status", "patch_test", "expedition__name"]
+        fields = [
+            "name",
+            "region_name",
+            "status",
+            "patch_test",
+            "mgds_compilation",
+            "expedition__name",
+        ]
 
 
 class ExpeditionFilter(FilterSet):

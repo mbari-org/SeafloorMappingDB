@@ -30,6 +30,7 @@ class MissionTable(Table):
             "start_depth",
             "status",
             "patch_test",
+            "mgds_compilation",
         )
         sequence = (
             "name",
@@ -39,6 +40,7 @@ class MissionTable(Table):
             "start_depth",
             "status",
             "patch_test",
+            "mgds_compilation",
             "expedition",
         )
 
