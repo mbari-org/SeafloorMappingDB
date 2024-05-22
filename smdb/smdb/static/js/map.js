@@ -96,8 +96,8 @@ const missions = JSON.parse(
 
 // Add SMDB Missions to Base Map
 let feature = L.geoJSON(missions, {
-  style: function () {},
-  hover: function () {},
+  style: function () { },
+  hover: function () { },
 })
   // Popup Thumbnail Images of Missions
   .bindPopup(
@@ -152,8 +152,8 @@ let feature = L.geoJSON(missions, {
       layer.feature.properties.slug +
       "<br>Date: " +
       dateOfMission +
-      "<br>Info: " +
-      missionInfo;
+      "<br>Route: " +
+      layer.feature.properties.route_file;
     return tooltipInfo;
   })
   .addTo(map);
