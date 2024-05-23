@@ -142,8 +142,14 @@ class SurveyTally:
                     f"Skipping file {xlsx_file} older than {self.args.last_n_days = }"
                 )
                 return pd.DataFrame(), xlsx_file
-        self.logger.info(f"Reading {xlsx_file}")
-        df = pd.read_excel(xlsx_file, engine="openpyxl")
+        try:
+            # Read the .xlsx file into a data frame
+            df = pd.read_excel(xlsx_file, engine="openpyxl")
+            df = df.fillna("")  # Replace NaN with empty string
+        except Exception as e:
+            # An OSError will be raised if the file opened by someone in Excel
+            self.logger.error(f"Error reading {xlsx_file}: {e}")
+            return pd.DataFrame(), xlsx_file
         df = df.fillna("")  # Replace NaN with empty string
 
         # The df (from sheet index_col=0) looks like (from print(df.head(2).to_csv())):
@@ -164,8 +170,14 @@ class SurveyTally:
                 mission.region_name = row["Location"]
                 mission.vehicle_name = row["Vehicle"]
                 mission.quality_comment = row["Comment"]
-                mission.auv = str(row["AUV"]) == "x"
-                mission.lass = str(row["LASS"]) == "x"
+                try:
+                    mission.auv = row["AUV"] == "x"
+                except KeyError:
+                    pass
+                try:
+                    mission.lass = row["LASS"] == "x"
+                except KeyError:
+                    pass
                 mission.patch_test = str(row["Patch_test**"]) == "patch_test"
                 # mission.track_length = row["km of trackline"]
                 mission.mgds_compilation = row["MGDS_compilation"]
