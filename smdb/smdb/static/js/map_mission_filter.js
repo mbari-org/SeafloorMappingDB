@@ -22,7 +22,9 @@ let feature = L.geoJSON(missions)
       "'>" +
       layer.feature.properties.slug +
       "</a>: " +
-      layer.feature.properties.expedition.name
+      layer.feature.properties.expedition.name +
+      "<br>Route: " +
+      layer.feature.properties.route_file
     );
   })
   .addTo(map);
