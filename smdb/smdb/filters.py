@@ -4,9 +4,9 @@ from django_filters import (
     CharFilter,
     BooleanFilter,
     ChoiceFilter,
-    ModelChoiceFilter,
+    ModelMultipleChoiceFilter,
 )
-from smdb.models import Mission, Expedition, Compilation, Status
+from smdb.models import Mission, Expedition, Compilation, Quality_Category
 
 from django.forms.widgets import TextInput
 
@@ -25,21 +25,38 @@ class MissionFilter(FilterSet):
             for m in Mission.objects.values_list("region_name", flat=True).distinct()
         ],
         label="",
-        empty_label="-- region --",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        empty_label="- region -",
+        widget=forms.Select(
+            attrs={"class": "form-control", "style": "font-weight: 300;"}
+        ),
     )
-    status = ChoiceFilter(
-        field_name="status",
-        choices=Status.STATUS_CHOICES,
+    quality_categories = ModelMultipleChoiceFilter(
+        field_name="quality_categories__name",
+        queryset=Quality_Category.objects.all(),
+        to_field_name="name",
         label="",
-        empty_label="-- status --",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.SelectMultiple(
+            attrs={"class": "form-control", "size": 2, "style": "font-size: x-small;"}
+        ),
     )
-    # patch_test = BooleanFilter(
-    #    field_name="patch_test",
-    #    label="Patch Test",
-    #    widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-    # )
+    patch_test = ChoiceFilter(
+        field_name="patch_test",
+        choices=[(None, "-"), (True, "Yes"), (False, "No")],
+        label="",
+        empty_label="- Patch Test -",
+        widget=forms.Select(
+            attrs={"class": "form-control", "style": "font-weight: 300;"}
+        ),
+    )
+    repeat_survey = ChoiceFilter(
+        field_name="repeat_survey",
+        choices=[(None, "-"), (True, "Yes"), (False, "No")],
+        label="",
+        empty_label="- Repeat Survey -",
+        widget=forms.Select(
+            attrs={"class": "form-control", "style": "font-weight: 300;"}
+        ),
+    )
     mgds_compilation = ChoiceFilter(
         field_name="mgds_compilation",
         choices=[
@@ -49,8 +66,10 @@ class MissionFilter(FilterSet):
             ).distinct()
         ],
         label="",
-        empty_label="-- MGDS_compilation --",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        empty_label="- MGDS_compilation -",
+        widget=forms.Select(
+            attrs={"class": "form-control", "style": "font-weight: 300;"}
+        ),
     )
     expedition__name = CharFilter(
         field_name="expedition__name",
@@ -64,8 +83,9 @@ class MissionFilter(FilterSet):
         fields = [
             "name",
             "region_name",
-            "status",
-            # "patch_test",
+            "quality_categories",
+            "patch_test",
+            "repeat_survey",
             "mgds_compilation",
             "expedition__name",
         ]
