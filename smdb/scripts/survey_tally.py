@@ -34,23 +34,25 @@ from smdb.models import (
     Mission,
     Platform,
     Platformtype,
-    Status,
+    Quality_Category,
 )  # noqa F402
 from subprocess import check_output, TimeoutExpired  # noqa F402
 from time import time  # noqa F402
 
 MBARI_DIR = "/mbari/SeafloorMapping/"
+# The columns in the .xlsx file are (as of 23 May 2024):
+# Mission	Route	Location	Vehicle	Quality_category*	Patch_test	Repeat_survey	Quality_comment	Trackline_km	MGDS_compilation
+# Dictionary below: key is field name in Mission model, value is column name in .xlsx file
 col_lookup = {
     "name": "Mission",
     "route_file": "Route",
     "region_name": "Location",
     "vehicle_name": "Vehicle",
-    "quality_comment": "Comment",
-    "auv": "AUV",
-    "lass": "LASS",
-    "status": "Status*",
-    "patch_test": "Patch_test**",
-    "track_length": "km of trackline",
+    "quality_categories": "Quality_category*",
+    "patch_test": "Patch_test",
+    "repeat_survey": "Patch_test",
+    "quality_comment": "Quality_comment",
+    "track_length": "Trackline_km",
     "mgds_compilation": "MGDS_compilation",
 }
 
@@ -152,16 +154,21 @@ class SurveyTally:
             return pd.DataFrame(), xlsx_file
         df = df.fillna("")  # Replace NaN with empty string
 
-        # The df (from sheet index_col=0) looks like (from print(df.head(2).to_csv())):
-        # Mission,Route,Location,Vehicle,Comment,AUV,LASS,Status*,Patch_test**,km of trackline,MGDS_compilation
-        # 20230310m1,PuyDesFolles_1v7,MAR PdF,MAUV1,pressure-depth problem with code,x,,production_survey,,78.4,FKt230303_MBARI_AUV
-        # 20230310m2,PuyDesFolles_2v7,MAR PdF,MAUV2,pressure-depth problem with code,x,,production_survey,,79.6,FKt230303_MBARI_AUV
+        # The df looks like (from print(df.head(2).to_csv(index=False))):
+        # Mission,Route,Location,Vehicle,Quality_category*,Patch_test,Repeat_survey,Quality_comment,Trackline_km,MGDS_compilation
+        # 20240510m1,20230814_1850Bend_SpindownPatchTest_1v2.rte,"1850m Bend, MBay",MAUV2,do_not_use_survey,x,,patch test; time stamp jumps back a day or calibrated snippets records likely crashed the multibeam processing; Edgetech data look strange.,,
+        # 20240510m2,20230814_1850Bend_SpindownPatchTest_1v1.rte,"1850m Bend, MBay",MAUV1,never_run,,,Didn't have time,,
         return df, xlsx_file
 
     def update_db_from_df(self, df: pd.DataFrame, parent_dir: str) -> None:
         # Loop through rows in data frame and update the appropriate database fields
         for index, row in df.iterrows():
             self.logger.debug(f"\n{row}")  # Printed in columns
+            # Skip rows with no Mission name and with footnotes
+            if not row["Mission"] or row["Mission"].startswith(
+                "*Vocabulary for survey"
+            ):
+                continue
             try:
                 # Get the Mission object for this row
                 mission = Mission.objects.get(name=f"{parent_dir}/{row['Mission']}")
@@ -169,7 +176,7 @@ class SurveyTally:
                 mission.route_file = row["Route"]
                 mission.region_name = row["Location"]
                 mission.vehicle_name = row["Vehicle"]
-                mission.quality_comment = row["Comment"]
+                mission.quality_comment = row["Quality_comment"]
                 try:
                     mission.auv = row["AUV"] == "x"
                 except KeyError:
@@ -178,21 +185,24 @@ class SurveyTally:
                     mission.lass = row["LASS"] == "x"
                 except KeyError:
                     pass
-                mission.patch_test = str(row["Patch_test**"]) == "patch_test"
-                # mission.track_length = row["km of trackline"]
+                mission.patch_test = row["Patch_test"] == "x"
+                mission.repeat_survey = row["Repeat_survey"] == "x"
+                # mission.track_length = row["Trackline_km"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
-                self.logger.info(f"Updated {mission = }")
-                for st in row["Status*"].split(" "):
+                self.logger.info(f"Updated {mission.name = }")
+                for st in row["Quality_category*"].split(" "):
                     if st:
                         try:
-                            status, _ = Status.objects.get_or_create(name=st)
-                            mission.status.add(status)
+                            quality_category, _ = (
+                                Quality_Category.objects.get_or_create(name=st)
+                            )
+                            mission.quality_categories.add(quality_category)
                         except ValueError:
                             self.logger.warning(
-                                f"Status {status} not in {[st[0] for st in Status.STATUS_CHOICES]}"
+                                f"Quality_category* {quality_category} not in {[st[0] for st in Quality_Category.CHOICES]}"
                             )
-                        self.logger.info(f"Added {status = }")
+                        self.logger.info(f"Added {quality_category.name = }")
             except Mission.DoesNotExist:
                 self.logger.warning(f"Mission {row['Mission']} not found in database")
 
@@ -237,22 +247,9 @@ class SurveyTally:
         return parent_dirs
 
     def read_from_db_into_rows(self, parent_dir: str) -> pd.DataFrame:
-        # cols must match field names in the Mission table - to be cols in the .csv file
-        cols = [
-            "name",  # Saved without the parent_dir suffix
-            "route_file",  # Originally "route"
-            "region_name",  # Originally "location"
-            "vehicle_name",  # Originally "vehicle"
-            "quality_comment",  # Originally "comment"
-            "auv",  # Boolean
-            "lass",  # Boolean
-            "status",  # Controlled vocabulary: "production_survey", "test_survey", "failed_survey", "use_with_caution"
-            "patch_test",  # String: "patch_test" or ""
-            "track_length",  # Originally "km of trackline" - should use values computed from --fnv
-            "mgds_compilation",  # Srting: e.g. "FKt230303_MBARI_AUV"
-        ]
         # Check that the Mission model has all the fields in cols
-        for col in cols:
+        for col in col_lookup.keys():
+            # col must match field names in the Mission table - to be cols in the .csv file
             if not hasattr(Mission, col):
                 self.logger.warning(f"Mission model missing field: {col}")
 
@@ -261,7 +258,7 @@ class SurveyTally:
         for mission in Mission.objects.filter(name__startswith=parent_dir):
             self.logger.debug(mission)
             row = []
-            for col in cols:
+            for col in col_lookup.keys():
                 if col == "name":
                     item = getattr(mission, col).replace(f"{parent_dir}/", "")
                 if col == "status":
@@ -273,7 +270,7 @@ class SurveyTally:
                         item = ""
                 row.append(str(item))
             rows.append(row)
-        return cols, rows
+        return col_lookup.keys(), rows
 
     def process_csv(self, xlsx_files_processed: List[str] = None):
         for parent_dir in self.get_parent_dirs():
