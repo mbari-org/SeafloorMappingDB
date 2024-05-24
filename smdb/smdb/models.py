@@ -151,25 +151,23 @@ class Compilation(models.Model):
         return f"/compilations/{self.slug}/"
 
 
-class Status(models.Model):
-    # production_survey: if all went well and data should be used in gridding
-    # failed_survey:     if it was a failure; any data should not be used in gridding
-    # test_survey:       if it was a test survey; data should not be used in gridding
-    # repeat_survey:     if all went well and this repeats other surveys for gridding purposes
+class Quality_Category(models.Model):
+    # production_survey: if successful and data should be used in gridding
+    # use_with_caution:  if what data are there can be used in gridding but at lower priority
+    # failed_survey:     if it was a failure (if a portion is useable, indicate how it should be used in gridding, e.g., use_with_caution)
     # do_not_use_survey: if data should not be used in gridding for other reasons
-    # use_with_caution:  if data can be used in gridding but at lower priority
-    STATUS_CHOICES = (
+    # never_run:         mission planning exists but survey was never run
+    # test_survey:       if it was a test survey (also indicate how it should be used in gridding)
+    CHOICES = (
         ("production_survey", "production_survey"),
-        ("failed_survey", "failed_survey"),
-        ("test_survey", "test_survey"),
-        ("repeat_survey", "repeat_survey"),
-        ("do_not_use_survey", "do_not_use_survey"),
         ("use_with_caution", "use_with_caution"),
+        ("failed_survey", "failed_survey"),
+        ("do_not_use_survey", "do_not_use_survey"),
+        ("never_run", "never_run"),
+        ("test_survey", "test_survey"),
     )
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
-    name = models.CharField(
-        max_length=128, blank=True, null=True, choices=STATUS_CHOICES
-    )
+    name = models.CharField(max_length=128, blank=True, null=True, choices=CHOICES)
 
     def __str__(self):
         return self.name
@@ -210,7 +208,7 @@ class Mission(models.Model):
     )
     auv = models.BooleanField(blank=True, null=True)
     lass = models.BooleanField(blank=True, null=True)
-    status = models.ManyToManyField(Status, blank=True)
+    quality_categories = models.ManyToManyField(Quality_Category, blank=True)
     mgds_compilation = models.CharField(max_length=128, blank=True, null=True)
     quality_comment = models.TextField(blank=True, null=True)
     repeat_survey = models.BooleanField(blank=True, null=True)
