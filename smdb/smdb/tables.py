@@ -46,6 +46,13 @@ class MissionTable(Table):
             "expedition",
         )
 
+    def render_mgds_compilation(self, value):
+        if value:
+            url = "https://www.marine-geo.org/tools/search/entry.php?id=" + value
+            return mark_safe(f"<a href='{url}' target='_blank'>{value}</a>")
+        else:
+            return "-"
+
 
 class ExpeditionTable(Table):
     name = Column(linkify=True)
