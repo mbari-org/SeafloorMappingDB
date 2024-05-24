@@ -1555,6 +1555,7 @@ def run(*args):
         notes_load(missions_saved)
         fnv_load(missions_saved)
         compilation_load()
+        bl.logger.info(f"Executing spreadsheets_load() with {bl.args = }")
         spreadsheets_load(bl.args)
     bl.save_logger_output()
 
