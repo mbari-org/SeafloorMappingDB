@@ -23,7 +23,11 @@ from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
 
-from smdb.forms import MissionFilterFormHelper
+from smdb.forms import (
+    MissionFilterFormHelper,
+    ExpeditionFilterFormHelper,
+    CompilationFilterFormHelper,
+)
 
 
 class ExpeditionSerializer(HyperlinkedModelSerializer):
@@ -122,6 +126,13 @@ class CompilationTableView(FilterView, SingleTableView):
     table_class = CompilationTable
     queryset = Compilation.objects.all()
     filterset_class = CompilationFilter
+    formhelper_class = CompilationFilterFormHelper
+
+    def get_filterset(self, filterset_class):
+        kwargs = self.get_filterset_kwargs(filterset_class)
+        filterset = filterset_class(**kwargs)
+        filterset.form.helper = self.formhelper_class()
+        return filterset
 
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
@@ -150,6 +161,13 @@ class ExpeditionTableView(FilterView, SingleTableView):
     table_class = ExpeditionTable
     queryset = Expedition.objects.all()
     filterset_class = ExpeditionFilter
+    filterhelper_class = ExpeditionFilterFormHelper
+
+    def get_filterset(self, filterset_class):
+        kwargs = self.get_filterset_kwargs(filterset_class)
+        filterset = filterset_class(**kwargs)
+        filterset.form.helper = ExpeditionFilterFormHelper()
+        return filterset
 
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions

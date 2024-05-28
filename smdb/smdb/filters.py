@@ -2,7 +2,6 @@ from django import forms
 from django_filters import (
     FilterSet,
     CharFilter,
-    BooleanFilter,
     ChoiceFilter,
     ModelMultipleChoiceFilter,
 )
@@ -92,7 +91,12 @@ class MissionFilter(FilterSet):
 
 
 class ExpeditionFilter(FilterSet):
-    name = CharFilter(field_name="name", lookup_expr="icontains")
+    name = CharFilter(
+        field_name="name",
+        lookup_expr="icontains",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Name contains..."}),
+    )
 
     class Meta:
         model = Expedition
@@ -102,17 +106,15 @@ class ExpeditionFilter(FilterSet):
 
 
 class CompilationFilter(FilterSet):
-    name = CharFilter(field_name="name", lookup_expr="icontains")
-    has_thumbnail = BooleanFilter(
-        field_name="thumbnail_filename",
-        lookup_expr="isnull",
-        exclude=True,
-        label="Has Thumbnail Image",
-    )
-    has_missions = BooleanFilter(
-        field_name="missions", lookup_expr="isnull", exclude=True, label="Has Missions"
+    name = CharFilter(
+        field_name="name",
+        lookup_expr="icontains",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Name contains..."}),
     )
 
     class Meta:
         model = Compilation
-        fields = ["name"]
+        fields = [
+            "name",
+        ]
