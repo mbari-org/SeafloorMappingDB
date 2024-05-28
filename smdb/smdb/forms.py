@@ -25,3 +25,41 @@ class MissionFilterFormHelper(FormHelper):
             ),
         ),
     )
+
+
+class ExpeditionFilterFormHelper(FormHelper):
+    form_method = "GET"
+    layout = Layout(
+        Row(
+            Column("name", css_class="form-group col-md mb-0"),
+            Column(Submit("submit", "Filter", css_class="col-md mb-0 btn-primary")),
+            Column(
+                Reset(
+                    "clear",
+                    "Clear",
+                    css_class="col-md mb-0 btn-secondary",
+                    onclick="this.form.reset()",
+                    type="button",
+                )
+            ),
+        ),
+    )
+
+
+class CompilationFilterFormHelper(FormHelper):
+    form_method = "GET"
+    layout = Layout(
+        Row(
+            Column("name", css_class="form-group col-md mb-0"),
+            Column(Submit("submit", "Filter", css_class="col-md mb-0 btn-primary")),
+            Column(
+                Reset(
+                    "clear",
+                    "Clear",
+                    css_class="col-md mb-0 btn-secondary",
+                    onclick="this.form.reset()",
+                    type="button",
+                )
+            ),
+        ),
+    )

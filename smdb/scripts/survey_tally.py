@@ -261,8 +261,8 @@ class SurveyTally:
             for col in col_lookup.keys():
                 if col == "name":
                     item = getattr(mission, col).replace(f"{parent_dir}/", "")
-                if col == "status":
-                    item = " ".join([s.name for s in mission.status.all()])
+                if col == "quality_categories":
+                    item = " ".join([s.name for s in mission.quality_categories.all()])
                 else:
                     if hasattr(mission, col):
                         item = getattr(mission, col, "") or ""

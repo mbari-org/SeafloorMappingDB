@@ -1144,7 +1144,7 @@ class BootStrapper(BaseLoader):
     def _exclude_path(self, fp):
         for e_path in self.exclude_paths:
             if fp.startswith(e_path):
-                self.logger.debug("Excluding file: %s", fp)
+                self.logger.info("Excluding file: %s", fp)
                 return True
         return False
 
@@ -1594,7 +1594,7 @@ def compilation_load():
 def spreadsheets_load(args: argparse.Namespace):
     st = SurveyTally()
     st.args = argparse.Namespace()
-    st.args.parent_dir = ""
+    st.args.parent_dir = args.parent_dir
     st.args.verbose = 1
     st.args.last_n_days = args.last_n_days
     st.setup_logging()
