@@ -249,7 +249,7 @@ class BaseLoader:
                         self.exclude_paths.append(line.strip())
 
         if self.args.append_to_log_file:
-            self.logger.info("Appending to local log file: %s", self.LOCAL_LOG_FILE)
+            self.logger.debug("Appending to local log file: %s", self.LOCAL_LOG_FILE)
         else:
             self.logger.info("Saving to new local log file: %s", self.LOCAL_LOG_FILE)
         self.logger.debug(
@@ -1568,6 +1568,7 @@ class SurveyTally(BaseLoader):
                 return pd.DataFrame(), xlsx_file
         try:
             # Read the .xlsx file into a data frame
+            self.logger.debug(f"Reading {xlsx_file}")
             df = pd.read_excel(xlsx_file, engine="openpyxl")
             df = df.fillna("")  # Replace NaN with empty string
         except Exception as e:
@@ -1580,6 +1581,7 @@ class SurveyTally(BaseLoader):
         # Mission,Route,Location,Vehicle,Quality_category*,Patch_test,Repeat_survey,Quality_comment,Trackline_km,MGDS_compilation
         # 20240510m1,20230814_1850Bend_SpindownPatchTest_1v2.rte,"1850m Bend, MBay",MAUV2,do_not_use_survey,x,,patch test; time stamp jumps back a day or calibrated snippets records likely crashed the multibeam processing; Edgetech data look strange.,,
         # 20240510m2,20230814_1850Bend_SpindownPatchTest_1v1.rte,"1850m Bend, MBay",MAUV1,never_run,,,Didn't have time,,
+        self.logger.info(f"Read {len(df)} rows from {xlsx_file}")
         return df, xlsx_file
 
     def update_db_from_df(self, df: pd.DataFrame, parent_dir: str) -> None:
@@ -1612,7 +1614,7 @@ class SurveyTally(BaseLoader):
                 # mission.track_length = row["Trackline_km"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
-                self.logger.info(f"Updated {mission.name = }")
+                self.logger.info(f"Updated fields for {mission.name = }")
                 for st in row["Quality_category*"].split(" "):
                     if st:
                         try:
@@ -1624,9 +1626,11 @@ class SurveyTally(BaseLoader):
                             self.logger.warning(
                                 f"Quality_category* {quality_category} not in {[st[0] for st in Quality_Category.CHOICES]}"
                             )
-                        self.logger.info(f"Added {quality_category.name = }")
+                        self.logger.debug(f"Added {quality_category.name = }")
             except Mission.DoesNotExist:
-                self.logger.warning(f"Mission {row['Mission']} not found in database")
+                self.logger.warning(
+                    f"Not found in database: {parent_dir}/{row['Mission']}"
+                )
 
     def process_xlsx(self) -> None:
         xlsx_files_processed = []
@@ -1711,12 +1715,19 @@ class SurveyTally(BaseLoader):
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
-            self.logger.info(f"Writing {csv_file}")
-            # Write the .csv file using the col_lookup dictionary so that they match the .xlsx file
-            with open(csv_file, "w") as f:
-                f.write(",".join([col_lookup[c] for c in cols]) + "\n")
-                for row in rows:
-                    f.write(",".join(row) + "\n")
+            self.logger.debug(f"Writing {csv_file}")
+            try:
+                # Write the .csv file using the col_lookup dictionary so that they match the .xlsx file
+                with open(csv_file, "w") as f:
+                    f.write(",".join([col_lookup[c] for c in cols]) + "\n")
+                    for row in rows:
+                        # Remove any commas in the fields
+                        row = [r.replace(",", "") for r in row]
+                        f.write(",".join(row) + "\n")
+            except BlockingIOError as e:
+                self.logger.error(e)
+                self.logger.error(f"File {csv_file} might be opened in Excel")
+            self.logger.info(f"Wrote {len(rows)} rows to {csv_file}")
 
 
 def run(*args):
