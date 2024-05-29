@@ -1612,8 +1612,13 @@ class SurveyTally(BaseLoader):
                     mission.lass = row["LASS"] == "x"
                 except KeyError:
                     pass
-                mission.patch_test = row["Patch_test"] == "x"
-                mission.repeat_survey = row["Repeat_survey"] == "x"
+                mission.patch_test = (
+                    row["Patch_test"].lower() == "x" or row["Patch_test"].lower == "yes"
+                )
+                mission.repeat_survey = (
+                    row["Repeat_survey"].lower() == "x"
+                    or row["Repeat_survey"].lower == "yes"
+                )
                 # mission.track_length = row["Trackline_km"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
@@ -1635,6 +1640,9 @@ class SurveyTally(BaseLoader):
                 self.logger.warning(
                     f"Not found in database: {parent_dir}/{row['Mission']}"
                 )
+            except KeyError as e:
+                self.logger.warning(f"KeyError: {e}")
+
         self.logger.info(
             f"Read {count} potential Missions to be updated from .xlsx file"
         )
@@ -1724,11 +1732,11 @@ class SurveyTally(BaseLoader):
                 os.makedirs(csv_dir)
             csv_file = os.path.join(csv_dir, f"SMDB_{parent_dir}_survey_tally.csv")
             self.logger.debug(f"Writing {csv_file}")
+            count = 0
             try:
                 # Write the .csv file using the col_lookup dictionary so that they match the .xlsx file
                 with open(csv_file, "w") as f:
                     f.write(",".join([col_lookup[c] for c in cols]) + "\n")
-                    count = 0
                     for row in rows:
                         count += 1
                         # Remove any commas in the fields
