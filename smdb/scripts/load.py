@@ -1568,7 +1568,7 @@ class SurveyTally(BaseLoader):
                 return pd.DataFrame(), xlsx_file
         try:
             # Read the .xlsx file into a data frame
-            self.logger.debug(f"Reading {xlsx_file}")
+            self.logger.info(f"Reading {xlsx_file}")
             df = pd.read_excel(xlsx_file, engine="openpyxl")
             df = df.fillna("")  # Replace NaN with empty string
         except Exception as e:
@@ -1581,12 +1581,14 @@ class SurveyTally(BaseLoader):
         # Mission,Route,Location,Vehicle,Quality_category*,Patch_test,Repeat_survey,Quality_comment,Trackline_km,MGDS_compilation
         # 20240510m1,20230814_1850Bend_SpindownPatchTest_1v2.rte,"1850m Bend, MBay",MAUV2,do_not_use_survey,x,,patch test; time stamp jumps back a day or calibrated snippets records likely crashed the multibeam processing; Edgetech data look strange.,,
         # 20240510m2,20230814_1850Bend_SpindownPatchTest_1v1.rte,"1850m Bend, MBay",MAUV1,never_run,,,Didn't have time,,
-        self.logger.info(f"Read {len(df)} rows from {xlsx_file}")
+        self.logger.debug(f"Read {len(df)} rows from {xlsx_file}")
         return df, xlsx_file
 
     def update_db_from_df(self, df: pd.DataFrame, parent_dir: str) -> None:
         # Loop through rows in data frame and update the appropriate database fields
-        for index, row in df.iterrows():
+        count = 0
+        saved_count = 0
+        for _, row in df.iterrows():
             self.logger.debug(f"\n{row}")  # Printed in columns
             # Skip rows with no Mission name and with footnotes
             if not row["Mission"] or row["Mission"].startswith(
@@ -1594,6 +1596,7 @@ class SurveyTally(BaseLoader):
             ):
                 continue
             try:
+                count += 1
                 # Get the Mission object for this row
                 mission = Mission.objects.get(name=f"{parent_dir}/{row['Mission']}")
                 # Update the fields, mapping the column names to the Mission field names
@@ -1614,6 +1617,7 @@ class SurveyTally(BaseLoader):
                 # mission.track_length = row["Trackline_km"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
+                saved_count += 1
                 self.logger.info(f"Updated fields for {mission.name = }")
                 for st in row["Quality_category*"].split(" "):
                     if st:
@@ -1631,6 +1635,10 @@ class SurveyTally(BaseLoader):
                 self.logger.warning(
                     f"Not found in database: {parent_dir}/{row['Mission']}"
                 )
+        self.logger.info(
+            f"Read {count} potential Missions to be updated from .xlsx file"
+        )
+        self.logger.info(f"Updated {saved_count} Missions in database")
 
     def process_xlsx(self) -> None:
         xlsx_files_processed = []
@@ -1720,14 +1728,16 @@ class SurveyTally(BaseLoader):
                 # Write the .csv file using the col_lookup dictionary so that they match the .xlsx file
                 with open(csv_file, "w") as f:
                     f.write(",".join([col_lookup[c] for c in cols]) + "\n")
+                    count = 0
                     for row in rows:
+                        count += 1
                         # Remove any commas in the fields
                         row = [r.replace(",", "") for r in row]
                         f.write(",".join(row) + "\n")
             except BlockingIOError as e:
                 self.logger.error(e)
                 self.logger.error(f"File {csv_file} might be opened in Excel")
-            self.logger.info(f"Wrote {len(rows)} rows to {csv_file}")
+            self.logger.info(f"Wrote {count} Missions to {csv_file}")
 
 
 def run(*args):
