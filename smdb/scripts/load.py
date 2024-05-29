@@ -1744,7 +1744,7 @@ class SurveyTally(BaseLoader):
                         f.write(",".join(row) + "\n")
             except BlockingIOError as e:
                 self.logger.error(e)
-                self.logger.error(f"File {csv_file} might be opened in Excel")
+                self.logger.error(f"File {csv_file} might be opened in Excel ?")
             self.logger.info(f"Wrote {count} Missions to {csv_file}")
 
 
@@ -1817,7 +1817,11 @@ def spreadsheets_load():
     st = SurveyTally()
     st.process_command_line()
     xlsx_files_processed = st.process_xlsx()
-    st.process_csv(xlsx_files_processed)
+    if st.args.parent_dir:
+        # Only process the .csv file for the specified parent_dir
+        st.process_csv(xlsx_files_processed)
+    else:
+        st.process_csv()
 
 
 if __name__ == "__main__":
