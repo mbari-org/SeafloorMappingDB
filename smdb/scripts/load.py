@@ -1537,7 +1537,7 @@ col_lookup = {
     "vehicle_name": "Vehicle",
     "quality_categories": "Quality_category*",
     "patch_test": "Patch_test",
-    "repeat_survey": "Patch_test",
+    "repeat_survey": "Repeat_survey",
     "quality_comment": "Quality_comment",
     "track_length": "Trackline_km",
     "mgds_compilation": "MGDS_compilation",
@@ -1748,8 +1748,8 @@ def run(*args):
         notes_load(missions_saved)
         fnv_load(missions_saved)
         compilation_load()
-        bl.logger.info(f"Executing spreadsheets_load() with {bl.args = }")
-        spreadsheets_load(bl.args)
+        bl.logger.info(f"Executing spreadsheets_load()")
+        spreadsheets_load()
     bl.save_logger_output()
 
 
