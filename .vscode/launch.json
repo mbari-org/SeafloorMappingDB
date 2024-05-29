@@ -84,7 +84,8 @@
       //"args": ["--compilation", "-v", "1"],
       //"args": ["--spreadsheets", "-v", "1"],
       //"args": ["-v", "1", "--last_n_days", "0.5"],
-      "args": ["-v", "1", "--spreadsheets", "--parent_dir", "2024", "--append_to_log_file"],
+      //"args": ["-v", "1", "--spreadsheets", "--parent_dir", "2024", "--append_to_log_file"],
+      "args": ["-v", "1", "--spreadsheets"],
       //"args": ["-v", "1", "--compilation", "--last_n_days", "30"],
       "justMyCode": false
     }
