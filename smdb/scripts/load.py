@@ -1145,7 +1145,7 @@ class BootStrapper(BaseLoader):
     def _exclude_path(self, fp):
         for e_path in self.exclude_paths:
             if fp.startswith(e_path):
-                self.logger.info("Excluding file: %s", fp)
+                self.logger.debug("Excluding file: %s", fp)
                 return True
         return False
 
@@ -1173,6 +1173,7 @@ class BootStrapper(BaseLoader):
         miss_count = 0
         match_count = 0
         miss_loaded = 0
+        exclude_count = 0
         if self.args.last_n_days:
             self.logger.info(
                 "Loading Missions newer than %d days", self.args.last_n_days
@@ -1193,6 +1194,7 @@ class BootStrapper(BaseLoader):
                     self.logger.debug("Skipping until %s", self.args.regex)
                     continue
                 if self._exclude_path(fp):
+                    exclude_count += 1
                     continue
                 if self.args.last_n_days:
                     if os.path.getmtime(fp) < time() - self.args.last_n_days * 86400:
@@ -1264,6 +1266,9 @@ class BootStrapper(BaseLoader):
             "Missions matching regex '%s': %d", self.args.regex, match_count
         )
         self.logger.info("Count of Missions not excluded: %d", miss_count)
+        self.logger.info(
+            "Count of Missions excluded found in exclude.list file: %d", exclude_count
+        )
         self.logger.info("Missions loaded: %d", miss_loaded)
 
 
@@ -1598,7 +1603,10 @@ class SurveyTally(BaseLoader):
             try:
                 count += 1
                 # Get the Mission object for this row
-                mission = Mission.objects.get(name=f"{parent_dir}/{row['Mission']}")
+                if row["Mission"].startswith(f"{parent_dir}/"):
+                    mission = Mission.objects.get(name=row["Mission"])
+                else:
+                    mission = Mission.objects.get(name=f"{parent_dir}/{row['Mission']}")
                 # Update the fields, mapping the column names to the Mission field names
                 mission.route_file = row["Route"]
                 mission.region_name = row["Location"]
