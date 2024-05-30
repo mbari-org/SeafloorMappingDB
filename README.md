@@ -49,7 +49,7 @@ cd SeafloorMappingDB
 # Make the same edits in debug.yml if you intend to use VS Code
 export SMDB_HOME=$(pwd)
 export DOCKER_USER_ID=$(id -u)
-export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
+export COMPOSE_FILE=$SMDB_HOME/debug.yml
 # Mount `smb://titan.shore.mbari.org/SeafloorMapping` on your system
 # Create smdb/.envs per https://docs.mbari.org/internal/smdb-docs/dev/
 docker-compose up -d
