@@ -33,7 +33,29 @@
       </div>
       <div>
         <span class="font-weight-bold">Track length:</span>
-        {{ mission.track_length }} km
+        {{ mission.track_length|default_if_none:"" }} km
+      </div>
+      <div>
+        <span class="font-weight-bold">Route file:</span>
+        {{ mission.route_file|default_if_none:"" }}
+      </div>
+      <div>
+        <span class="font-weight-bold">Region name:</span>
+        {{ mission.region_name|default_if_none:"" }}
+      </div>
+      <div>
+        <span class="font-weight-bold">Quality categories:</span>
+        {% for qc in mission.quality_categories.all %}
+          {{ qc.name }},
+        {% endfor %}  
+      </div>
+      <div>
+        <span class="font-weight-bold">Patch test:</span>
+        {{ mission.patch_test|default_if_none:"" }}
+      </div>
+      <div>
+        <span class="font-weight-bold">Repeat survey:</span>
+        {{ mission.repeat_survey|default_if_none:"" }}
       </div>
     </div>
 
