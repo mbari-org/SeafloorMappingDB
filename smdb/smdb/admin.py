@@ -82,6 +82,7 @@ class MissionAdmin(GeoModelAdmin):
         "start_depth",
         "comment",
         "quality_comment",
+        "patch_test",
         "repeat_survey",
         "directory",
         "notes_filename",
@@ -91,8 +92,7 @@ class MissionAdmin(GeoModelAdmin):
         "thumbnail_filename",
         "thumbnail_image",
         "kml_filename",
-        "compilation",
-        "update_status",
+        "quality_categories",
     ]
     readonly_fields = ["image_tag"]
     prepopulated_fields = {"slug": ("name",)}

@@ -26,7 +26,10 @@ class MissionFilter(FilterSet):
         label="",
         empty_label="- region -",
         widget=forms.Select(
-            attrs={"class": "form-control", "style": "font-weight: 300;"}
+            attrs={
+                "class": "form-control",
+                "style": "font-weight: 300; font-size: smaller;",
+            }
         ),
     )
     quality_categories = ModelMultipleChoiceFilter(
@@ -40,20 +43,26 @@ class MissionFilter(FilterSet):
     )
     patch_test = ChoiceFilter(
         field_name="patch_test",
-        choices=[(None, "-"), (True, "Yes"), (False, "No")],
+        choices=[(None, "-"), (True, "✔")],
         label="",
         empty_label="- Patch Test -",
         widget=forms.Select(
-            attrs={"class": "form-control", "style": "font-weight: 300;"}
+            attrs={
+                "class": "form-control",
+                "style": "font-weight: 300; font-size: smaller;",
+            }
         ),
     )
     repeat_survey = ChoiceFilter(
         field_name="repeat_survey",
-        choices=[(None, "-"), (True, "Yes"), (False, "No")],
+        choices=[(None, "-"), (True, "✔")],
         label="",
         empty_label="- Repeat Survey -",
         widget=forms.Select(
-            attrs={"class": "form-control", "style": "font-weight: 300;"}
+            attrs={
+                "class": "form-control",
+                "style": "font-weight: 300; font-size: smaller;",
+            }
         ),
     )
     mgds_compilation = ChoiceFilter(
@@ -67,7 +76,10 @@ class MissionFilter(FilterSet):
         label="",
         empty_label="- MGDS_compilation -",
         widget=forms.Select(
-            attrs={"class": "form-control", "style": "font-weight: 300;"}
+            attrs={
+                "class": "form-control",
+                "style": "font-weight: 300; font-size: smaller;",
+            }
         ),
     )
     expedition__name = CharFilter(
