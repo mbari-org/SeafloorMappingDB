@@ -213,9 +213,9 @@ class BaseLoader:
             help=f"Read or write a .xlsx or .csv file for the direct sub-directory of {MBARI_DIR}",
         )
         parser.add_argument(
-            "--append_to_log_file",
+            "--clobber_log_file",
             action="store_true",
-            help="Append to existing log file",
+            help="Remove existing log file and start a new one",
         )
 
         self.args = parser.parse_args()  # noqa
@@ -233,7 +233,7 @@ class BaseLoader:
         if not self.logger.handlers:
             # Don't add handlers when sub class runs
             stream_handler = logging.StreamHandler()
-            if os.path.exists(self.LOCAL_LOG_FILE) and not self.args.append_to_log_file:
+            if os.path.exists(self.LOCAL_LOG_FILE) and self.args.clobber_log_file:
                 os.remove(self.LOCAL_LOG_FILE)
             file_handler = logging.FileHandler(self.LOCAL_LOG_FILE)
             stream_handler.setFormatter(_formatter)
@@ -248,10 +248,10 @@ class BaseLoader:
                     if line.startswith("/mbari/SeafloorMapping/"):
                         self.exclude_paths.append(line.strip())
 
-        if self.args.append_to_log_file:
-            self.logger.debug("Appending to local log file: %s", self.LOCAL_LOG_FILE)
-        else:
+        if self.args.clobber_log_file:
             self.logger.info("Saving to new local log file: %s", self.LOCAL_LOG_FILE)
+        else:
+            self.logger.debug("Appending to local log file: %s", self.LOCAL_LOG_FILE)
         self.logger.debug(
             "Using database at DATABASE_URL = %s", os.environ["DATABASE_URL"]
         )
