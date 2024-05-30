@@ -250,6 +250,7 @@ class MissionDetailView(DetailView):
         table = CompilationTable(
             Compilation.objects.filter(missions=mission),
             exclude=["missions"],
+            order_by="-creation_date",
         )
         RequestConfig(self.request).configure(table)
         context["table"] = table
@@ -309,6 +310,7 @@ class CompilationDetailView(SuccessMessageMixin, DetailView):
         table = MissionTable(
             Mission.objects.filter(compilations=compilation),
             exclude=["track_length", "start_depth"],
+            order_by="-start_date",
         )
         RequestConfig(self.request).configure(table)
         context["table"] = table
