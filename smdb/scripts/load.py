@@ -1612,13 +1612,11 @@ class SurveyTally(BaseLoader):
                     mission.lass = row["LASS"] == "x"
                 except KeyError:
                     pass
-                mission.patch_test = (
-                    row["Patch_test"].lower() == "x" or row["Patch_test"].lower == "yes"
-                )
-                mission.repeat_survey = (
-                    row["Repeat_survey"].lower() == "x"
-                    or row["Repeat_survey"].lower == "yes"
-                )
+                # If anything is in the Patch_test or Repeat_survey columns, set the field to True
+                if row["Patch_test"]:
+                    mission.patch_test = True
+                if row["Repeat_survey"]:
+                    mission.repeat_survey = True
                 # mission.track_length = row["Trackline_km"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
