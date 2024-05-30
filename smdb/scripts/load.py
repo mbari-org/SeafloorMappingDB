@@ -1703,7 +1703,9 @@ class SurveyTally(BaseLoader):
 
         # Add rows for each mission
         rows = []
-        for mission in Mission.objects.filter(name__startswith=parent_dir):
+        for mission in Mission.objects.filter(name__startswith=parent_dir).order_by(
+            "name"
+        ):
             self.logger.debug(mission)
             row = []
             for col in col_lookup.keys():
