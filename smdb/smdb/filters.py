@@ -5,6 +5,7 @@ from django_filters import (
     ChoiceFilter,
     ModelMultipleChoiceFilter,
 )
+from django.db.utils import ProgrammingError
 from smdb.models import Mission, Expedition, Compilation, Quality_Category
 
 from django.forms.widgets import TextInput
@@ -17,21 +18,25 @@ class MissionFilter(FilterSet):
         label="",
         widget=TextInput(attrs={"placeholder": "Name contains..."}),
     )
-    region_name = ChoiceFilter(
-        field_name="region_name",
-        choices=[
-            (m, m)
-            for m in Mission.objects.values_list("region_name", flat=True).distinct()
-        ],
-        label="",
-        empty_label="- region -",
-        widget=forms.Select(
-            attrs={
-                "class": "form-control",
-                "style": "font-weight: 300; font-size: smaller;",
-            }
-        ),
-    )
+    try:
+        region_name = ChoiceFilter(
+            field_name="region_name",
+            choices=[
+                (m, m)
+                for m in Mission.objects.values_list("region_name", flat=True).distinct()
+            ],
+            label="",
+            empty_label="- region -",
+            widget=forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "style": "font-weight: 300; font-size: smaller;",
+                }
+            ),
+        )
+    except ProgrammingError as e:
+        # Likely error on initial migrate done with start command creating the smdb database
+        pass
     quality_categories = ModelMultipleChoiceFilter(
         field_name="quality_categories__name",
         queryset=Quality_Category.objects.all(),
@@ -65,23 +70,27 @@ class MissionFilter(FilterSet):
             }
         ),
     )
-    mgds_compilation = ChoiceFilter(
-        field_name="mgds_compilation",
-        choices=[
-            (m, m)
-            for m in Mission.objects.values_list(
-                "mgds_compilation", flat=True
-            ).distinct()
-        ],
-        label="",
-        empty_label="- MGDS_compilation -",
-        widget=forms.Select(
-            attrs={
-                "class": "form-control",
-                "style": "font-weight: 300; font-size: smaller;",
-            }
-        ),
-    )
+    try:
+        mgds_compilation = ChoiceFilter(
+            field_name="mgds_compilation",
+            choices=[
+                (m, m)
+                for m in Mission.objects.values_list(
+                    "mgds_compilation", flat=True
+                ).distinct()
+            ],
+            label="",
+            empty_label="- MGDS_compilation -",
+            widget=forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "style": "font-weight: 300; font-size: smaller;",
+                }
+            ),
+        )
+    except ProgrammingError as e:
+        # Likely error on initial migrate done with start command creating the smdb database
+        pass
     expedition__name = CharFilter(
         field_name="expedition__name",
         lookup_expr="icontains",
