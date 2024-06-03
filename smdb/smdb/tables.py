@@ -28,9 +28,11 @@ class MissionTable(Table):
             "region_name",
             "track_length",
             "start_depth",
+            "vehicle_name",
             "quality_categories",
             "patch_test",
             "repeat_survey",
+            "quality_comment",
             "mgds_compilation",
         )
         sequence = (
@@ -39,9 +41,11 @@ class MissionTable(Table):
             "region_name",
             "track_length",
             "start_depth",
+            "vehicle_name",
             "quality_categories",
             "patch_test",
             "repeat_survey",
+            "quality_comment",
             "mgds_compilation",
             "expedition",
         )
