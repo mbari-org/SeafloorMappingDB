@@ -124,7 +124,7 @@ class MissionOverView(TemplateView):
 
 class CompilationTableView(FilterView, SingleTableView):
     table_class = CompilationTable
-    queryset = Compilation.objects.all()
+    queryset = Compilation.objects.all().order_by("name")
     filterset_class = CompilationFilter
     formhelper_class = CompilationFilterFormHelper
 
@@ -159,7 +159,7 @@ class CompilationTableView(FilterView, SingleTableView):
 
 class ExpeditionTableView(FilterView, SingleTableView):
     table_class = ExpeditionTable
-    queryset = Expedition.objects.all()
+    queryset = Expedition.objects.all().order_by("name")
     filterset_class = ExpeditionFilter
     filterhelper_class = ExpeditionFilterFormHelper
 
@@ -194,7 +194,7 @@ class ExpeditionTableView(FilterView, SingleTableView):
 
 class MissionTableView(FilterView, SingleTableView):
     table_class = MissionTable
-    queryset = Mission.objects.all()
+    queryset = Mission.objects.all().order_by("name")
     filterset_class = MissionFilter
     formhelper_class = MissionFilterFormHelper
 
