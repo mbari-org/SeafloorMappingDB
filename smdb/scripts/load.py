@@ -1817,7 +1817,7 @@ class ExcludeFile(BaseLoader):
             self.logger.info(f"Wrote {len(paths)} paths to {csv_file}")
 
     def write_consolidated_exclude_list(self) -> None:
-        """Write the consolidated exclude_paths to <parent_dir>/SMDB/exlude_list.csv file"""
+        """Write the consolidated exclude paths to exclude_list.txt next to the load log file"""
         ds = DefaultStorage()
         ds.delete(self.MEDIA_EXCLUDE_LIST_FILE)
         with ds.open(self.MEDIA_EXCLUDE_LIST_FILE, "w") as fh:
