@@ -97,7 +97,7 @@ class BaseLoader:
         self._log_levels = (logging.WARN, logging.INFO, logging.DEBUG)
         self._log_strings = ("WARN", "INFO", "DEBUG")
         self.commandline = None
-        self.exclude_paths = []
+        self.exclude_paths = set()
         self.start_proc = datetime.now()
 
     def process_command_line(self):
@@ -241,12 +241,6 @@ class BaseLoader:
             self.logger.addHandler(stream_handler)
             self.logger.addHandler(file_handler)
         self.logger.setLevel(self._log_levels[self.args.verbose])
-
-        if not self.exclude_paths:
-            with open(self.args.exclude) as fh:
-                for line in fh:
-                    if line.startswith("/mbari/SeafloorMapping/"):
-                        self.exclude_paths.append(line.strip())
 
         if self.args.clobber_log_file:
             self.logger.info("Saving to new local log file: %s", self.LOCAL_LOG_FILE)
@@ -1176,7 +1170,7 @@ class BootStrapper(BaseLoader):
         exclude_count = 0
         if self.args.last_n_days:
             self.logger.info(
-                "Loading Missions newer than %d days", self.args.last_n_days
+                "Loading Missions newer than %f days", self.args.last_n_days
             )
         with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
             for count, fp in enumerate(proc.stdout, start=1):
@@ -1756,19 +1750,80 @@ class SurveyTally(BaseLoader):
             self.logger.info(f"Wrote {count} Missions to {csv_file}")
 
 
+class ExcludeFile(BaseLoader):
+    def read_config_exclude_list(self) -> None:
+        if not self.exclude_paths:
+            with open(self.args.exclude) as fh:
+                for line in fh:
+                    if line.startswith("/mbari/SeafloorMapping/"):
+                        self.exclude_paths.add(line.strip())
+            self.logger.info(
+                f"Read {len(self.exclude_paths)} paths to exclude from {self.args.exclude}"
+            )
+
+    def read_exclude_path_xlsxs(self) -> None:
+        """Walk the <parent_dir>/SMDB folders for files named <parent_dir>_exlude_list.xlsx'
+        and load the rows into the exclude_paths set.  This is used to skip over directories
+        that we don't want to process.
+        """
+        count = 0
+        for parent_dir in os.listdir(MBARI_DIR):
+            try:
+                xlsx_file = os.path.join(
+                    MBARI_DIR, parent_dir, "SMDB", f"{parent_dir}_exclude_list.xlsx"
+                )
+                if not os.path.exists(xlsx_file):
+                    continue
+                df = pd.read_excel(xlsx_file, engine="openpyxl")
+                for path in df["path"]:
+                    count += 1
+                    self.exclude_paths.add(path)
+            except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
+                self.logger.debug(f"Could not open {xlsx_file} for reading: {e}")
+            self.logger.info(f"Read {count} paths to exclude from {xlsx_file}")
+
+    def write_exclude_path_csvs(self) -> None:
+        """Write the exclude_paths to <parent_dir>/SMDB/exlude_list_<parent_dir>.csv files"""
+        # This method may only need to be run once to create the <parent_dir> exclude files from
+        # the original exclude.list file maintained in the git repo in smdb/config/exclude.list
+
+        # Build hash of paths keyed by parent_dir
+        pd_hash = {}
+        for path in sorted(self.exclude_paths):
+            parent_dir = path.split(MBARI_DIR)[1].split("/")[0]
+            if parent_dir not in pd_hash:
+                pd_hash[parent_dir] = []
+            pd_hash[parent_dir].append(path)
+        # Write out the exclude files
+        for parent_dir, paths in pd_hash.items():
+            if not os.path.isdir(os.path.join(MBARI_DIR, parent_dir)):
+                self.logger.warning("No directory found for %s", parent_dir)
+            csv_file = os.path.join(
+                MBARI_DIR, parent_dir, "SMDB", f"{parent_dir}_exclude_list.csv"
+            )
+            with open(csv_file, "w") as fh:
+                fh.write("path\n")
+                for path in paths:
+                    fh.write(f"{path}\n")
+            self.logger.info(f"Wrote {len(paths)} paths to {csv_file}")
+
+
 def run(*args):
     # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
     bl = BaseLoader()
     bl.process_command_line()
     bl.logger.debug("Arguments passed to run(): %s", " ".join(args))
     if bl.args.bootstrap and bl.args.notes and bl.args.fnv:
+        exclude_file_load()
         missions_saved = bootstrap_load()
         notes_load(missions_saved)
         fnv_load(missions_saved)
     elif bl.args.bootstrap and bl.args.notes:
+        exclude_file_load()
         missions_saved = bootstrap_load()
         notes_load(missions_saved)
     elif bl.args.bootstrap:
+        exclude_file_load()
         missions_saved = bootstrap_load()
     elif bl.args.notes:
         notes_load(missions_saved)
@@ -1781,6 +1836,7 @@ def run(*args):
     elif bl.args.spreadsheets:
         spreadsheets_load()
     else:
+        exclude_file_load()
         missions_saved = bootstrap_load()
         notes_load(missions_saved)
         fnv_load(missions_saved)
@@ -1788,6 +1844,14 @@ def run(*args):
         bl.logger.info(f"Executing spreadsheets_load()")
         spreadsheets_load()
     bl.save_logger_output()
+
+
+def exclude_file_load():
+    ef = ExcludeFile()
+    ef.process_command_line()
+    ef.read_config_exclude_list()
+    ef.read_exclude_path_xlsxs()
+    ef.write_exclude_path_csvs()
 
 
 def bootstrap_load() -> list:
