@@ -89,7 +89,7 @@ L.Control.SliderControl = L.Control.extend({
         "</div>" +
         '<div class="row">' +
         '  <div class="col-2">' +
-        '    <div id="slider-min" style="color: lightgrey;"></div>' +
+        '    <div id="slider-min" style="color: darkblue;"></div>' +
         "  </div>" +
         '  <div class="col-8">' +
         '    <div id="slider-current" style="text-align: center;">' +
@@ -98,7 +98,7 @@ L.Control.SliderControl = L.Control.extend({
         "    </div>" +
         "  </div>" +
         '  <div class="col-2">' +
-        '    <div id="slider-max" style="text-align: right; color: lightgrey;"></div>' +
+        '    <div id="slider-max" style="text-align: right; color: darkblue;"></div>' +
         "  </div>" +
         "</div>"
     );

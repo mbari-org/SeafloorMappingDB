@@ -3,9 +3,9 @@
     margin-right: 20px;
 } */
 html,
-#map_expedition_filter {
+div#map_expedition_filter {
   width: 100%;
-  height: 85%;
+  top: 200px;
 }
 th,
 td {
