@@ -90,6 +90,7 @@ class BaseLoader:
     LOG_FILE = "load.txt"
     LOCAL_LOG_FILE = f"/etc/smdb/{LOG_FILE}"
     MEDIA_LOG_FILE = f"logs/{LOG_FILE}"
+    MEDIA_EXCLUDE_LIST_FILE = "logs/exclude_list.txt"
     LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def __init__(self):
@@ -1191,10 +1192,18 @@ class BootStrapper(BaseLoader):
                     exclude_count += 1
                     continue
                 if self.args.last_n_days:
-                    if os.path.getmtime(fp) < time() - self.args.last_n_days * 86400:
-                        self.logger.debug(
-                            f"Skipping file {fp} older than {self.args.last_n_days = }"
-                        )
+                    try:
+                        if (
+                            os.path.getmtime(fp)
+                            < time() - self.args.last_n_days * 86400
+                        ):
+                            self.logger.debug(
+                                f"Skipping file {fp} older than {self.args.last_n_days = }"
+                            )
+                            continue
+                    except FileNotFoundError:
+                        # Error seen with smb mount on MacOS but not on Linux
+                        self.logger.warning(f"File not found: {fp}")
                         continue
                 miss_count += 1
                 self.logger.info(
@@ -1807,6 +1816,17 @@ class ExcludeFile(BaseLoader):
                     fh.write(f"{path}\n")
             self.logger.info(f"Wrote {len(paths)} paths to {csv_file}")
 
+    def write_consolidated_exclude_list(self) -> None:
+        """Write the consolidated exclude paths to exclude_list.txt next to the load log file"""
+        ds = DefaultStorage()
+        ds.delete(self.MEDIA_EXCLUDE_LIST_FILE)
+        with ds.open(self.MEDIA_EXCLUDE_LIST_FILE, "w") as fh:
+            for path in sorted(self.exclude_paths):
+                fh.write(f"{path}\n")
+        self.logger.info(
+            f"Wrote {len(self.exclude_paths)} paths to {self.MEDIA_EXCLUDE_LIST_FILE}"
+        )
+
 
 def run(*args):
     # Possible use: https://django-extensions.readthedocs.io/en/latest/runscript.html
@@ -1852,6 +1872,7 @@ def exclude_file_load():
     ef.read_config_exclude_list()
     ef.read_exclude_path_xlsxs()
     ef.write_exclude_path_csvs()
+    ef.write_consolidated_exclude_list()
 
 
 def bootstrap_load() -> list:
