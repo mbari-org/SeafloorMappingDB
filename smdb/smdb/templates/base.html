@@ -34,6 +34,9 @@
   {% compress css %}
   {#  These files store project-specific CSS  #}
   <link href="{% static 'css/project.css' %}" rel="stylesheet">
+  <link href="{% static 'css/map.css' %}" rel="stylesheet">
+  <link href="{% static 'css/navbar-nav.css' %}" rel="stylesheet">
+   <link href="{% static 'css/filters.css' %}" rel="stylesheet">
 
   {% endcompress %}
   {% endblock %}
@@ -85,7 +88,7 @@
         </a>
       </li>
 
-      <li class="nav-item mr-auto dropdown">
+      <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" id="navData" href="" role="button" aria-haspopup="true"
           aria-expanded="false" data-bs-toggle="tooltip" data-bs-placement="top" title="View Database Sources">
           <font size="4px">Data</font>
@@ -123,7 +126,7 @@
     </ul>
     {#  Right Menu Items  #}
     <ul class="navbar-nav nav-pills mx-auto justify-content-right flex-column flex-md-row pull-right"
-      style="padding-left: 650px" width="50%" id="menuLinksRight">
+     width="50%" id="menuLinksRight">
       {% if request.user.is_authenticated %}
       <li class="nav-item mx-auto pull-right" style="padding-right: 15px">
         {# URL provided by smdbango-allauth/account/urls.py #}

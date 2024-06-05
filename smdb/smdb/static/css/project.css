@@ -12,23 +12,10 @@
   color: #b94a48;
 }
 
-div#about-view {
-  position: relative;
-  top: 100px;
-}
-
-#separator.row {
-  margin-left: 0;
-}
-
-#number-missions {
-  margin-left: 0;
-  margin-right: 0;
-}
-
 div.row {
   margin-left: 2rem;
-  margin-right: 1rem;
+  margin-right: 2rem;
+  /* width: 100%; */
 }
 
 #comp_detail {
@@ -51,24 +38,14 @@ h2 {
     margin-bottom: 1rem;
 }
 
-form {
-    margin-left: 3rem;
-    margin-right: 3rem;
-}
-form.d-flex {
-      margin-left: 1rem;
-    margin-right: 1rem;
-}
 p {
     margin-left: 3rem;
     margin-right: 3rem;
     margin-bottom: 1rem;
 }
 
-#coordinates {
-  margin-top: 10px;
-}
 
+/* Sidebar */
 #SettingsMenu {
   -webkit-transform: rotate(0deg);
   -moz-transform: rotate(0deg);
@@ -138,63 +115,21 @@ p {
   box-shadow: inset 0 0 0 2em var(--hover);
 }
 
-#filters {
-    margin-left: 0;
-    margin-right: 0;
+div#form {
+    position: absolute;
+    top: 140px !important;
+    align-content: center;
+    vertical-align: middle;
+    padding-top: 10px;
+    padding-bottom: 45px;
+    z-index: 800;
+    width: 100%;
+    height: 55px;
+    background-color: white;
+        /* style="position: absolute, width: 100%, height: 55px, top: 140px,left: 0px" */
 }
 
-#filter-left {
-  background-color: white;
-  float: left;
-  width: 450px;
-  padding-top: 5px;
-  padding-right: 5px;
-  padding-bottom: 5px;
-  padding-left: 25px;
-  white-space: nowrap;
-  border-style: hidden;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  left: 0;
-  margin-left: 0
-}
-
-#filter-center {
-  left: 0;
-  right: 0;
-  width: 50%;
-  /* margin: auto; */
-  margin: 0px;
-  background-color: white;
-  float: center;
-  width: auto;
-  height: auto;
-  overflow: hidden;
-  padding: 10px;
-  border-style: hidden;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-}
-
-#filter-right {
-  width: 450px;
-  display: flex;
-  align-items: center;
-  padding-bottom: 10px;
-  border-style: hidden;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  margin: 5px;
-}
-
-div#navBar {
-  padding-top: 4px;
-}
-
-
+/* SideBar */
 div#borderDiv {
   bottom: 0;
   left: 0;
@@ -222,37 +157,6 @@ div.width_fixed {
   overflow-x: auto;
   hyphens: auto;
   white-space: normal;
-}
-
-#separator {
-  background-color: darkgray;
-  padding: 2px;
-  height: 1px;
-  right: 0;
-  left: 0;
-  margin-right: 0rem;
-}
-
-#searchbar {
-  padding-right: 10px;
-  /* margin-top: 5px; */
-  text-align: left;
-}
-
-#searchBarForm {
-  padding-left: 5%;
-  float: right;
-  justify-content: right;
-  width: -webkit-fill-available;
-  /* width: fit-content; */
-}
-
-
-#searchbtn {
-  font-size: 14px !important;
-  vertical-align: center;
-  margin-left: 0px;
-  margin-right: 0px;
 }
 
 #split {
@@ -292,48 +196,6 @@ div.width_fixed {
   height: 80px;
 }
 
-#menuLinksRight {
-  width: fit-content;
-  display: right;
-  white-space: nowrap;
-  align-items: center;
-  /*   -webkit-column-count: 3 300px;
-  -moz-column-count: 3 300px;
-  column-count: 3 300px; */
-}
-
-#mapNav {
-  padding: 0px;
-  margin: 0px;
-  height: 80px;
-  max-height: 80px;
-  min-height: 80px;
-}
-
-.div#filter-left {
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-}
-
-.div#filter-center {
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  width: auto;
-}
-
-.div#filter-right {
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  width: fit-content;
-}
-
-.center {
-  text-align: center;
-}
-
 #footer {
   font-size: 15px;
   color: #f00;
@@ -369,17 +231,6 @@ div.width_fixed {
   height: 60px;
 }
 
-#navbar,
-.nav {
-  background-color: #e9e9e9;
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-.navbar {
-  display: inline-flex;
-}
-
 .js-start,
 .start {
   font-family: 12px/1.5 "Helvetica Neue", Arial, monospace, sans-serif;
@@ -395,14 +246,39 @@ div.width_fixed {
   flex: nowrap;
 }
 
-.leaflet-control-layers {
+.leaflet-control-layers,
+.leaflet-control,
+.leaflet-control-layers-expanded {
   background-color: none;
   color: black;
+  position: relative;
+  width:max-content;
+  margin-right: 0px;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 16px !important;
 }
 
+/* .leaflet-control-layers
+label {
+  display:block;
+} */
+
+.leaflet-control-layers-list {
+    /* position: relative; */
+    margin-top: 5px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 2px;
+}
+
+/* .leaflet-control-layers-selector {
+  color:black;
+} */
+
+/* This controls the current slider value color */
 .leaflet-control-layers-selector,
 span {
-  color:black
+  color:black;
 }
 
 .leaflet-control-layers-selector,
@@ -412,6 +288,11 @@ span:hover {
   border-color: cornflowerblue;
   /* box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue; */
 }
+
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position:fixed;
+	}
 
 /* ZOOM-IN BUTTON STYLING */
 .leaflet-touch .leaflet-control-layers,
@@ -430,41 +311,6 @@ span:hover {
   border-color: cornflowerblue;
   /* box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue; */
 }
-
-.li,
-.nav-item {
-  padding: 10px;
-}
-
-.li,
-.nav-item,
-.mx-auto,
-.pull-right {
-  margin-left: 0px;
-  margin-right: 0px;
-  /* padding: 0px; */
-}
-
-.nav-item,
-.active {
-  color: black;
-}
-
-.a,
-.nav-link:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-.nav-link:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#navDropdown {
-  padding-right: 100px;
-}
-
 
 /* Dropdown Button */
 .dropbtn {
@@ -626,11 +472,12 @@ span:hover {
 }
 
 .leaflet-control-layers-selector {
-  position: relative;
+  position: absolute;
   top: 2px;
 }
 
 .leaflet-control-layers-list {
+  /* position: relative; */
   margin-top: 5px;
   margin-left: 2px;
   margin-right: 2px;
@@ -775,7 +622,6 @@ div>#bounds {
   padding-right: 8px;
 }
 
-
 .input,
 #use-bounds {
   vertical-align: middle;
@@ -799,202 +645,6 @@ div>#bounds {
 #id_has_missions:hover {
   border-color: cornflowerblue;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
-}
-
-/* #map {
-} */
-#map-bounds {
-  padding: 0px;
-  max-width: 100%;
-  margin: 0px;
-  color: #00008b;
-}
-
-#mapControls {
-  height: 80px;
-  min-height: 80px;
-  padding: 0px;
-  margin: 0px;
-  border: 2px solid darkgray;
-}
-
-#mapControlRow {
-  width: 100%;
-  height: 40px;
-  padding: 0px;
-}
-
-#mapControlHeader {
-  height: 100%;
-  min-height: 100%;
-  margin: 0px;
-  padding-right: 0px;
-  padding-left: 0px;
-}
-
-/* #menuLinks {
-}
-.nav-pills, 
-.li,
-.a:hover {
-/*   color: white;
-  background-color: cornflowerblue; ß
-} */
-#navListActive,
-.nav-link {
-  color: black;
-}
-
-#navListActive:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-/* #navData {
-} */
-#navData:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#navAbout:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#navAdmin:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#sign-up-link:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#sign-out-link:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#log-in-link:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#navAccount:hover {
-  color: white;
-  background-color: cornflowerblue;
-}
-
-#smdb_navbrand {
-  width: 180px;
-  height: 65px;
-  border: 0px solid white;
-  padding-right: 40px;
-  margin-bottom: auto;
-  box-shadow: 10px 10px 5px #ccc;
-  -moz-box-shadow: 10px 10px 5px #ccc;
-  -webkit-box-shadow: 10px 10px 5px #ccc;
-  -khtml-box-shadow: 10px 10px 5px #ccc;
-}
-
-#smdbLogo {
-  /*border: 2px hidden white;*/
-  margin-left: 10px;
-  margin-top: 0px;
-  /* padding: 0px, 30px, 0px, 0px; */
-  width: 180px;
-  height: 65px;
-}
-
-#shipLogo {
-  border: 2px hidden white;
-  padding: 0px;
-  margin-right: 40px;
-  margin-top: 0px;
-  width: 100px;
-  height: 70px;
-  /*width: 160px;
-  height: 120px;*/
-}
-
-.slider,
-.leaflet-control {
-  margin: 0%;
-  padding: 0px;
-}
-
-.nav-pills>li>a {
-  font-size: 15px;
-  color: #37404e;
-  border-radius: 5px 5px 0 0;
-  padding: 5px;
-}
-
-.dropdown-content {
-  z-index: 1301;
-}
-
-/* --- dropdown-header --- */
-.dropdown-header {
-  margin-top: 0px;
-  min-width: 8rem;
-}
-
-.dropdown-header>li {
-  font-size: 4px;
-}
-
-.dropdown-header>li>a {
-  transition: .3s;
-  -webkit-transition: .3s;
-  -moz-transition: .3s;
-  padding: 10px;
-}
-
-.dropdown-header>li>a:hover {
-  background-color: cornflowerblue;
-  color: #fff;
-  padding: 10px;
-}
-
-/* --- dropdown-menu --- */
-.dropdown-menu {
-  margin-top: -5px;
-  min-width: 8rem;
-  padding-top: 0px;
-  padding-bottom: 0px;
-}
-
-.dropdown-menu>li {
-  font-size: 4px;
-}
-
-.dropdown-menu>li>a {
-  transition: .3s;
-  -webkit-transition: .3s;
-  -moz-transition: .3s;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-.dropdown-menu>li>a:hover {
-  /*background-color: #ff6347;*/
-  background-color: cornflowerblue;
-  color: #fff;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-.navbar-nav li:hover .dropdown-menu {
-  display: block;
-}
-
-/* rotate caret on hover */
-.dropdown-menu>li>a:hover:after {
-  text-decoration: underline;
-  transform: rotate(-90deg);
 }
 
 /* Responsive layout - makes a two column-layout instead of four columns */
@@ -1025,21 +675,6 @@ div>#bounds {
 a:hover,
 a:focus {
   text-decoration: none;
-}
-
-nav {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-}
-
-nav ul,
-nav li {
-  outline: 0;
-  margin: 0;
-  padding: 0;
 }
 
 @font-face {
@@ -1110,21 +745,4 @@ svg.svg-inline--fa,
 
 .center {
   text-align: center;
-}
-
-path.leaflet-interactive {
-  /* rust */
-  stroke: rgb(139, 64, 0);
-  /* orange */
-  /* stroke: rgb(218, 135, 29); */
-  stroke-opacity: 100;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
-path.leaflet-interactive:hover {
-  /*stroke: lightgoldenrodyellow;*/
-  stroke: yellow;
 }
