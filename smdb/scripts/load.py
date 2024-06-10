@@ -1856,8 +1856,8 @@ def run(*args):
     elif bl.args.spreadsheets:
         spreadsheets_load()
     else:
-        exclude_file_load()
-        missions_saved = bootstrap_load()
+        exclude_paths = exclude_file_load()
+        missions_saved = bootstrap_load(exclude_paths)
         notes_load(missions_saved)
         fnv_load(missions_saved)
         compilation_load()
@@ -1873,10 +1873,12 @@ def exclude_file_load():
     ef.read_exclude_path_xlsxs()
     ef.write_exclude_path_csvs()
     ef.write_consolidated_exclude_list()
+    return ef.exclude_paths
 
 
-def bootstrap_load() -> list:
+def bootstrap_load(exclude_paths) -> list:
     bs = BootStrapper()
+    bs.exclude_paths = exclude_paths
     bs.process_command_line()
     bs.load_from_grds()
     return bs.missions_saved
