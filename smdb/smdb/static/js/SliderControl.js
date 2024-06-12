@@ -87,18 +87,18 @@ L.Control.SliderControl = L.Control.extend({
         '    <div id="leaflet-slider" style="inline-block; margin: 0 5px 0 5px;"></div>' +
         "  </div>" +
         "</div>" +
-        '<div class="row">' +
-        '  <div class="col-2">' +
-        '    <div id="slider-min" style="color: lightgrey;"></div>' +
+        '<div class="row" id="slider-row">' +
+        '  <div class="col-2" id="slider-min-row">' +
+        '    <div id="slider-min" style="color: darkblue;"></div>' +
         "  </div>" +
-        '  <div class="col-8">' +
+        '  <div class="col-8" id="slider-current-row">' +
         '    <div id="slider-current" style="text-align: center;">' +
         '      <span class="start-time"></span> to <span class="end-time"></span>' +
         '      <input title="Use time bounds in Update" type="checkbox" id="use_time" onclick="getSliderStatus()">' +
         "    </div>" +
         "  </div>" +
-        '  <div class="col-2">' +
-        '    <div id="slider-max" style="text-align: right; color: lightgrey;"></div>' +
+        '  <div class="col-2" id="slider-max-row">' +
+        '    <div id="slider-max" style="text-align: right; color: darkblue;"></div>' +
         "  </div>" +
         "</div>"
     );

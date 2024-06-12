@@ -5,7 +5,7 @@
 
 {% block css %}
   {{ block.super }}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/map_mission_filter.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/map_compilation_filter.css' %}">
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
 {% endblock %}
 
@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block content %}
-    <h2>Compilations</h2>
+    <h2 id="compilation_h2">Compilations</h2>
     {% if filter %}
     {% crispy filter.form filter.form.helper %}
     {% endif %}

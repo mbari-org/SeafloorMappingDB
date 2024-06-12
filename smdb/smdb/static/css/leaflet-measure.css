@@ -1,0 +1,21 @@
+path.leaflet-interactive {
+  /* rust */
+  stroke: rgb(139, 64, 0); 
+  /* orange */
+  /* stroke: rgb(218, 135, 29); */
+  /* standard green */
+  /*stroke: #ABE67E; */
+  stroke-opacity: 100;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+path.leaflet-interactive:hover {
+  /*stroke: lightgoldenrodyellow;*/
+  stroke: yellow;
+}
+
+/*     activeColor: '#ABE67E', // base color for map features while actively measuring
+    completedColor: '#C8F2BE', // base color for permenant features generated from completed measure */

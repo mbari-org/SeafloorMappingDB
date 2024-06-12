@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block content %}
-    <h2>Missions</h2>
+    <h2 id="mission_h2">Missions</h2>
     {% if filter %}
     {% crispy filter.form filter.form.helper %}
     {% endif %}
