@@ -1850,7 +1850,7 @@ def run(*args):
     elif bl.args.mbinfo:
         mbinfo_load()
     elif bl.args.fnv:
-        fnv_load(missions_saved)
+        fnv_load()
     elif bl.args.compilation:
         compilation_load()
     elif bl.args.spreadsheets:
@@ -1896,7 +1896,7 @@ def mbinfo_load():
     mbs.update_missions("mbinfo_update_mission_data")
 
 
-def fnv_load(missions_saved: list):
+def fnv_load(missions_saved: list = None):
     fnv = FNVLoader()
     fnv.process_command_line()
     fnv.update_missions("fnv_update_mission_data", missions_saved)
