@@ -102,6 +102,14 @@ div.col-md {
     margin-top: 10px;
 }
 
+/* Buttons */
+div.form-group.col-md-2,
+div.col-md-2 {
+  width: 30%;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
 form.leaflet-control-layers-list {
     top: 0px;
     margin-right: 0px;
@@ -114,9 +122,9 @@ div.row {
     height: 55px;
 }
 
-#div_id_name {
+/* #div_id_name {
     align-content: center;
-}
+} */
 
 #submit_id_submit, .btn, .btn-primary {
     border: 1.75px solid;
@@ -142,6 +150,13 @@ div#tableContainers4.table-container {
   width: 95%;
 }
 
+div#div_id_name.mb-3 {
+  width: 100%;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+
 #slider-row {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
@@ -161,6 +176,57 @@ div#tableContainers4.table-container {
 #slider-current {
     flex-direction: row;
     width: 80%
+}
+
+.mb-0 
+#missionFilterSubmit {
+  margin-bottom: 0.5rem !important;
+  margin-top: 0.5rem !important;
+}
+
+#mission_detail_row {
+  position: relative;
+  padding-top: 100px;
+  padding-bottom: 25px;
+}
+
+#mission_detail_notes_row, h3 {
+  position: relative;
+  padding-right: 25px;
+  top: 10px;
+}
+
+.mb-0 
+#expeditionFilterSubmit {
+  margin-bottom: 0.5rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.col-md
+#expeditionFilterSubmit {
+  width: 30%
+}
+
+#expedition_detail_row {
+  width: 30%;
+}
+
+#expedition_detail_row {
+  position: relative;
+  padding-top: 100px;
+  padding-bottom: 25px;
+}
+
+.mb-0 
+#compilationFilterSubmit {
+  margin-bottom: 0.5rem !important;
+  margin-top: 0.5rem !important;
+}
+
+#compilation_detail_row {
+  position: relative;
+  padding-top: 100px;
+  padding-bottom: 25px;
 }
 
 form#searchBarForm {
