@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit, Row, Column, Reset
+from crispy_forms.layout import Layout, Submit, Div, Row, Column, Reset
 
 
 class MissionFilterFormHelper(FormHelper):
@@ -13,11 +13,12 @@ class MissionFilterFormHelper(FormHelper):
             Column("repeat_survey", css_class="form-group col-md mb-0"),
             Column("mgds_compilation", css_class="form-group col-md mb-0"),
             Column("expedition__name", css_class="form-group col-md mb-0"),
-            Column(Submit("submit", "Filter", css_class="col-md mb-0 btn-primary")),
+            Column(Submit("submit", "Filter", css_id="missionFilterSubmit", css_class="col-md mb-0 btn-primary")),
             Column(
                 Reset(
                     "clear",
                     "Clear",
+                    css_id="missionFilterCancel",
                     css_class="col-md mb-0 btn-secondary",
                     onclick="this.form.reset()",
                     type="button",
@@ -31,13 +32,14 @@ class ExpeditionFilterFormHelper(FormHelper):
     form_method = "GET"
     layout = Layout(
         Row(
-            Column("name", css_class="form-group col-md mb-0"),
-            Column(Submit("submit", "Filter", css_class="col-md mb-0 btn-primary")),
+            Column("name", css_id="expeditionFilterName", css_class="form-group col-md-3 mb-0"),
+            Column(Submit("submit", "Filter", css_id="expeditionFilterSubmit", css_class="col-sm-2 mb-0 btn-primary")),
             Column(
                 Reset(
                     "clear",
                     "Clear",
-                    css_class="col-md mb-0 btn-secondary",
+                    css_id="expeditionFilterCancel",
+                    css_class="col-sm-2 mb-0 btn-secondary",
                     onclick="this.form.reset()",
                     type="button",
                 )
@@ -50,13 +52,14 @@ class CompilationFilterFormHelper(FormHelper):
     form_method = "GET"
     layout = Layout(
         Row(
-            Column("name", css_class="form-group col-md mb-0"),
-            Column(Submit("submit", "Filter", css_class="col-md mb-0 btn-primary")),
+            Column("name", css_id="compilationFilterName", css_class="form-group col-md-3 mb-0"),
+            Column(Submit("submit", "Filter", css_id="compilationFilterSubmit", css_class="col-md-2 mb-0 btn-primary")),
             Column(
                 Reset(
                     "clear",
                     "Clear",
-                    css_class="col-md mb-0 btn-secondary",
+                    css_id="compilationFilterCancel",
+                    css_class="col-md-2 mb-0 btn-secondary",
                     onclick="this.form.reset()",
                     type="button",
                 )

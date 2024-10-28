@@ -28,17 +28,6 @@ function updateMap() {
       // Catch degenerate case when checkboxes aren't on the page and continue
       console.log(err.message);
     }
-    // Try and incorporate with updateMap() - Easy Button
-    if ((toggle = "remove-geoman")) {
-      console.log("This works.");
-    }
-    if ((toggle.stateName = "add-geoman")) {
-      console.log("Geoman is currently closed.");
-      toggle.stateName = "remove-geoman";
-    } else if ((toggle.stateName = "remove-geoman")) {
-      console.log("Geoman is currently open.");
-      toggle.stateName = "add-geoman";
-    }
 
     if (document.getElementById("searchbar") != null) {
       //if (document.getElementById("searchbar").value) {
