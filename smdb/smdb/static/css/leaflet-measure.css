@@ -17,5 +17,23 @@ path.leaflet-interactive:hover {
   stroke: yellow;
 }
 
+/* .leaflet-control-measure a.finish {
+  text-align: center;
+} */
+ .leaflet-control-measure .leaflet-control-measure-interaction {
+  padding: 10px 12px;
+  width: 330px;
+}
+.leaflet-control-measure .tasks, .leaflet-measure-resultpopup .tasks {
+    margin: 12px 0 0;
+    padding: 10px 0 0;
+    border-top: 1px solid #ddd;
+    text-align: left;
+    /* list-style: none;
+    list-style-image: none; */
+}
+
+
+
 /*     activeColor: '#ABE67E', // base color for map features while actively measuring
     completedColor: '#C8F2BE', // base color for permenant features generated from completed measure */
