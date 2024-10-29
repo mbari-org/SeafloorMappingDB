@@ -33,16 +33,20 @@ class ExpeditionFilterFormHelper(FormHelper):
     layout = Layout(
         Row(
             Column("name", css_id="expeditionFilterName", css_class="form-group col-md-3 mb-0"),
-            Column(Submit("submit", "Filter", css_id="expeditionFilterSubmit", css_class="col-sm-2 mb-0 btn-primary")),
-            Column(
-                Reset(
-                    "clear",
-                    "Clear",
-                    css_id="expeditionFilterCancel",
-                    css_class="col-sm-2 mb-0 btn-secondary",
-                    onclick="this.form.reset()",
-                    type="button",
-                )
+            Div(
+            Column(Submit("submit", "Filter", css_id="expeditionFilterSubmit", css_class="col-md mb-0 btn-primary")),
+            ),
+            Div(
+                Column(
+                    Reset(
+                       "clear",
+                       "Clear",
+                      css_id="expeditionFilterCancel",
+                      css_class="col-md mb-0 btn-secondary",
+                      onclick="this.form.reset()",
+                     type="button",
+                 )
+                ),
             ),
         ),
     )
@@ -53,16 +57,20 @@ class CompilationFilterFormHelper(FormHelper):
     layout = Layout(
         Row(
             Column("name", css_id="compilationFilterName", css_class="form-group col-md-3 mb-0"),
-            Column(Submit("submit", "Filter", css_id="compilationFilterSubmit", css_class="col-md-2 mb-0 btn-primary")),
-            Column(
-                Reset(
-                    "clear",
-                    "Clear",
-                    css_id="compilationFilterCancel",
-                    css_class="col-md-2 mb-0 btn-secondary",
-                    onclick="this.form.reset()",
-                    type="button",
-                )
+            Div(
+                Column(Submit("submit", "Filter", css_id="compilationFilterSubmit", css_class="col-md mb-0 btn-primary")),
+            ),
+            Div(
+                Column(
+                    Reset(
+                     "clear",
+                     "Clear",
+                        css_id="compilationFilterCancel",
+                        css_class="col-md mb-0 btn-secondary",
+                        onclick="this.form.reset()",
+                        type="button",
+                    )
+                ),
             ),
         ),
     )
