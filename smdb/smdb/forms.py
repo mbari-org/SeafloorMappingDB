@@ -20,11 +20,12 @@ class MissionFilterFormHelper(FormHelper):
                     "Clear",
                     css_id="missionFilterCancel",
                     css_class="col-md mb-0 btn-secondary",
-                    onclick="this.form.reset()",
+                    onclick='window.location.href="{}"'.format('/missions'),
                     type="button",
                 )
             ),
-        ),
+        css_id="missionRow",
+        css_class="missionRow"),
     )
 
 
@@ -39,13 +40,13 @@ class ExpeditionFilterFormHelper(FormHelper):
             Div(
                 Column(
                     Reset(
-                       "clear",
-                       "Clear",
-                      css_id="expeditionFilterCancel",
-                      css_class="col-md mb-0 btn-secondary",
-                      onclick="this.form.reset()",
-                     type="button",
-                 )
+                        "clear",
+                        "Clear",
+                        css_id="expeditionFilterCancel",
+                        css_class="col-md mb-0 btn-secondary",
+                        onclick='window.location.href="{}"'.format('/expeditions'),
+                        type="button",
+                    )
                 ),
             ),
         ),
@@ -67,7 +68,7 @@ class CompilationFilterFormHelper(FormHelper):
                      "Clear",
                         css_id="compilationFilterCancel",
                         css_class="col-md mb-0 btn-secondary",
-                        onclick="this.form.reset()",
+                        onclick='window.location.href="{}"'.format('/compilations'),
                         type="button",
                     )
                 ),
