@@ -1764,8 +1764,8 @@ class ExcludeFile(BaseLoader):
         if not self.exclude_paths:
             with open(self.args.exclude) as fh:
                 for line in fh:
-                    if line.startswith("/mbari/SeafloorMapping/"):
-                        self.exclude_paths.add(line.strip())
+                    if line and line.startswith(MBARI_DIR):
+                        self.exclude_paths.add(str(line.strip()))
             self.logger.info(
                 f"Read {len(self.exclude_paths)} paths to exclude from {self.args.exclude}"
             )
@@ -1783,10 +1783,13 @@ class ExcludeFile(BaseLoader):
                 )
                 if not os.path.exists(xlsx_file):
                     continue
+                self.logger.debug("Reading %s", xlsx_file)
                 df = pd.read_excel(xlsx_file, engine="openpyxl")
                 for path in df["path"]:
-                    count += 1
-                    self.exclude_paths.add(path)
+                    if str(path).startswith(MBARI_DIR):
+                        count += 1
+                        # self.logger.debug("Adding path = %s", path)
+                        self.exclude_paths.add(str(path))
             except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
                 self.logger.debug(f"Could not open {xlsx_file} for reading: {e}")
             self.logger.info(f"Read {count} paths to exclude from {xlsx_file}")
@@ -1799,7 +1802,7 @@ class ExcludeFile(BaseLoader):
         # Build hash of paths keyed by parent_dir
         pd_hash = {}
         for path in sorted(self.exclude_paths):
-            parent_dir = path.split(MBARI_DIR)[1].split("/")[0]
+            parent_dir = str(path).split(MBARI_DIR)[1].split("/")[0]
             if parent_dir not in pd_hash:
                 pd_hash[parent_dir] = []
             pd_hash[parent_dir].append(path)
