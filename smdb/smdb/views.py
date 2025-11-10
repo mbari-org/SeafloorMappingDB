@@ -44,7 +44,7 @@ class MissionSerializer(GeoFeatureModelSerializer):
 
     class Meta:
         model = Mission
-        geo_field = "nav_track"
+        geo_field = "grid_bounds"  # Changed from nav_track to grid_bounds since all missions have grid_bounds
         fields = (
             "slug",
             "thumbnail_image",
