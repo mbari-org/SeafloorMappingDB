@@ -1,7 +1,9 @@
 import json
 import logging
 import re
+import csv
 from os.path import join
+from io import BytesIO
 
 from django.conf import settings
 from django.contrib import messages
@@ -9,6 +11,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.gis.geos import Polygon
 from django.db import connection
 from django.db.models import Max, Min, Q
+from django.http import HttpResponse, JsonResponse
+from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
 from django_filters.views import FilterView
@@ -20,14 +24,13 @@ from rest_framework_gis.serializers import (
 from rest_framework.serializers import HyperlinkedModelSerializer
 
 from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
+from smdb.forms import (
+    CompilationFilterFormHelper,
+    ExpeditionFilterFormHelper,
+    MissionFilterFormHelper,
+)
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
-
-from smdb.forms import (
-    MissionFilterFormHelper,
-    ExpeditionFilterFormHelper,
-    CompilationFilterFormHelper,
-)
 
 
 class ExpeditionSerializer(HyperlinkedModelSerializer):
@@ -64,6 +67,26 @@ class MissionOverView(TemplateView):
     def get_context_data(self, **kwargs):
         """Return the view context data."""
         context = super().get_context_data(**kwargs)
+        
+        # Add all filter forms to context for sidebar (Missions, Expeditions, Compilations)
+        missions_queryset = Mission.objects.all()
+        mission_filter = MissionFilter(self.request.GET, queryset=missions_queryset)
+        mission_filter.form.helper = MissionFilterFormHelper()
+        context["mission_filter"] = mission_filter
+        
+        expeditions_queryset = Expedition.objects.all()
+        expedition_filter = ExpeditionFilter(self.request.GET, queryset=expeditions_queryset)
+        expedition_filter.form.helper = ExpeditionFilterFormHelper()
+        context["expedition_filter"] = expedition_filter
+        
+        compilations_queryset = Compilation.objects.all()
+        compilation_filter = CompilationFilter(self.request.GET, queryset=compilations_queryset)
+        compilation_filter.form.helper = CompilationFilterFormHelper()
+        context["compilation_filter"] = compilation_filter
+        
+        # Default to mission filter for backward compatibility
+        context["filter"] = mission_filter
+        
         search_string = context["view"].request.GET.get("q")
         search_geom = None
         if context["view"].request.GET.get("xmin"):
@@ -81,7 +104,45 @@ class MissionOverView(TemplateView):
                 ),
                 srid=4326,
             )
+        # Check which filter type is active based on filter_type parameter or field presence
+        filter_type = self.request.GET.get('filter_type', '')
+        
+        # Check if any filter parameters are present in the request
+        has_mission_filter_params = any(
+            key in self.request.GET and self.request.GET.get(key)
+            for key in ['region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+        ) or (filter_type == 'mission' and 'name' in self.request.GET and self.request.GET.get('name'))
+        
+        has_expedition_filter_params = filter_type == 'expedition' or (
+            'name' in self.request.GET and self.request.GET.get('name') 
+            and not has_mission_filter_params and filter_type != 'compilation'
+        )
+        
+        has_compilation_filter_params = filter_type == 'compilation' or (
+            'name' in self.request.GET and self.request.GET.get('name') 
+            and not has_mission_filter_params and filter_type != 'expedition'
+        )
+        
+        # Start with base queryset
         missions = Mission.objects.order_by("start_date").all()
+        
+        # Apply mission filter if mission filter parameters are present
+        if has_mission_filter_params:
+            missions = mission_filter.qs.order_by("start_date")
+        
+        # Apply expedition filter if expedition filter parameters are present
+        elif has_expedition_filter_params:
+            filtered_expeditions = expedition_filter.qs
+            if filtered_expeditions.exists():
+                missions = missions.filter(expedition__in=filtered_expeditions).order_by("start_date")
+        
+        # Apply compilation filter if compilation filter parameters are present
+        elif has_compilation_filter_params:
+            filtered_compilations = compilation_filter.qs
+            if filtered_compilations.exists():
+                missions = missions.filter(compilations__in=filtered_compilations).distinct().order_by("start_date")
+        
+        # Apply additional filters (search string, geometry, time)
         if search_string:
             self.logger.info("search_string = %s", search_string)
             missions = missions.filter(
@@ -97,6 +158,10 @@ class MissionOverView(TemplateView):
                 start_date__gte=min_date,
                 end_date__lte=max_date,
             )
+
+        # Ensure nav_track and expedition are selected for serialization
+        # Filter to only missions with nav_track at the database level for efficiency
+        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True).select_related("expedition")
 
         self.logger.info(
             "Serializing %s missions to geojson...",
@@ -137,6 +202,23 @@ class CompilationTableView(FilterView, SingleTableView):
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
         context = super().get_context_data(**kwargs)
+        
+        # Add all filter forms to context for sidebar (Missions, Expeditions, Compilations)
+        missions_queryset = Mission.objects.all()
+        mission_filter = MissionFilter(self.request.GET, queryset=missions_queryset)
+        mission_filter.form.helper = MissionFilterFormHelper()
+        context["mission_filter"] = mission_filter
+        
+        expeditions_queryset = Expedition.objects.all()
+        expedition_filter = ExpeditionFilter(self.request.GET, queryset=expeditions_queryset)
+        expedition_filter.form.helper = ExpeditionFilterFormHelper()
+        context["expedition_filter"] = expedition_filter
+        
+        compilations_queryset = Compilation.objects.all()
+        compilation_filter = CompilationFilter(self.request.GET, queryset=compilations_queryset)
+        compilation_filter.form.helper = CompilationFilterFormHelper()
+        context["compilation_filter"] = compilation_filter
+        
         compilations = CompilationFilter(
             self.request.GET, queryset=self.get_queryset()
         ).qs
@@ -149,8 +231,7 @@ class CompilationTableView(FilterView, SingleTableView):
         missions = Mission.objects.all()
         missions = (
             missions.filter(compilations__in=compilations)
-            .exclude(nav_track__isnull=True)
-            .only("nav_track", "expedition__name")
+            .select_related("expedition")
             .distinct()
         )
         context["missions"] = MissionSerializer(missions, many=True).data
@@ -172,6 +253,23 @@ class ExpeditionTableView(FilterView, SingleTableView):
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
         context = super().get_context_data(**kwargs)
+        
+        # Add all filter forms to context for sidebar (Missions, Expeditions, Compilations)
+        missions_queryset = Mission.objects.all()
+        mission_filter = MissionFilter(self.request.GET, queryset=missions_queryset)
+        mission_filter.form.helper = MissionFilterFormHelper()
+        context["mission_filter"] = mission_filter
+        
+        expeditions_queryset = Expedition.objects.all()
+        expedition_filter = ExpeditionFilter(self.request.GET, queryset=expeditions_queryset)
+        expedition_filter.form.helper = ExpeditionFilterFormHelper()
+        context["expedition_filter"] = expedition_filter
+        
+        compilations_queryset = Compilation.objects.all()
+        compilation_filter = CompilationFilter(self.request.GET, queryset=compilations_queryset)
+        compilation_filter.form.helper = CompilationFilterFormHelper()
+        context["compilation_filter"] = compilation_filter
+        
         expeditions = ExpeditionFilter(
             self.request.GET, queryset=self.get_queryset()
         ).qs
@@ -184,8 +282,7 @@ class ExpeditionTableView(FilterView, SingleTableView):
         missions = Mission.objects.all()
         missions = (
             missions.filter(expedition__in=expeditions)
-            .exclude(nav_track__isnull=True)
-            .only("nav_track")
+            .select_related("expedition")
             .distinct()
         )
         context["missions"] = MissionSerializer(missions, many=True).data
@@ -209,9 +306,7 @@ class MissionTableView(FilterView, SingleTableView):
         context = super().get_context_data(**kwargs)
         missions = MissionFilter(
             self.request.GET,
-            queryset=Mission.objects.exclude(nav_track__isnull=True)
-            .only("nav_track")
-            .all(),
+            queryset=Mission.objects.select_related("expedition").all(),
         ).qs
         sort = self.request.GET.get("sort")
         if sort:
@@ -326,3 +421,278 @@ class CompilationDetailView(SuccessMessageMixin, DetailView):
                 f"Multiple Compilations with slug '{self.kwargs['slug']}'. Using first one.",
             )
         return obj
+
+
+class MissionSelectAPIView(View):
+    """
+    API endpoint to get missions filtered by spatial bounds and other filters.
+    Returns JSON with mission data for display in results panel.
+    """
+    
+    def get(self, request):
+        try:
+            # Get filter parameters
+            filter_params = request.GET.copy()
+            
+            # Get spatial bounds
+            xmin = filter_params.get('xmin')
+            xmax = filter_params.get('xmax')
+            ymin = filter_params.get('ymin')
+            ymax = filter_params.get('ymax')
+            
+            if not all([xmin, xmax, ymin, ymax]):
+                return JsonResponse({'error': 'Missing spatial bounds'}, status=400)
+            
+            # Create polygon from bounds
+            search_geom = Polygon(
+                (
+                    (float(xmin), float(ymin)),
+                    (float(xmin), float(ymax)),
+                    (float(xmax), float(ymax)),
+                    (float(xmax), float(ymin)),
+                    (float(xmin), float(ymin)),
+                ),
+                srid=4326,
+            )
+            
+            # Start with base queryset
+            missions = Mission.objects.all()
+            
+            # Apply spatial filter (missions that intersect with the rectangle)
+            # Check both grid_bounds and nav_track
+            missions = missions.filter(
+                Q(grid_bounds__intersects=search_geom) | Q(nav_track__intersects=search_geom)
+            ).distinct()
+            
+            # Apply other filters if present
+            filter_type = filter_params.get('filter_type', 'mission')
+            
+            # Apply mission filter
+            if filter_type == 'mission' or (filter_type == '' and any(key in filter_params for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name'])):
+                mission_filter = MissionFilter(filter_params, queryset=missions)
+                missions = mission_filter.qs
+            
+            # Apply expedition filter
+            elif filter_type == 'expedition' and filter_params.get('name'):
+                expedition_filter = ExpeditionFilter(filter_params, queryset=Expedition.objects.all())
+                filtered_expeditions = expedition_filter.qs
+                if filtered_expeditions.exists():
+                    missions = missions.filter(expedition__in=filtered_expeditions)
+            
+            # Apply compilation filter
+            elif filter_type == 'compilation' and filter_params.get('name'):
+                compilation_filter = CompilationFilter(filter_params, queryset=Compilation.objects.all())
+                filtered_compilations = compilation_filter.qs
+                if filtered_compilations.exists():
+                    missions = missions.filter(compilations__in=filtered_compilations).distinct()
+            
+            # Apply text search
+            if filter_params.get('q'):
+                search_string = filter_params.get('q')
+                missions = missions.filter(
+                    Q(name__icontains=search_string) | Q(notes_text__icontains=search_string)
+                )
+            
+            # Apply time filter
+            if filter_params.get('tmin') and filter_params.get('tmax'):
+                missions = missions.filter(
+                    start_date__gte=filter_params.get('tmin'),
+                    end_date__lte=filter_params.get('tmax'),
+                )
+            
+            # Select related to avoid N+1 queries
+            missions = missions.select_related('expedition').order_by('start_date')
+            
+            # Serialize mission data
+            mission_data = []
+            for mission in missions:
+                mission_data.append({
+                    'slug': mission.slug,
+                    'name': mission.name,
+                    'start_date': mission.start_date.strftime('%Y-%m-%d') if mission.start_date else None,
+                    'region_name': mission.region_name or None,
+                    'track_length': str(mission.track_length) if mission.track_length else None,
+                    'start_depth': str(mission.start_depth) if mission.start_depth else None,
+                    'vehicle_name': mission.vehicle_name or None,
+                    'expedition_name': mission.expedition.name if mission.expedition else None,
+                })
+            
+            return JsonResponse({'missions': mission_data})
+            
+        except Exception as e:
+            logging.error(f"Error in MissionSelectAPIView: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+class MissionExportAPIView(View):
+    """
+    API endpoint to export missions as CSV or Excel.
+    Accepts same filter parameters as MissionSelectAPIView.
+    """
+    
+    def get(self, request):
+        try:
+            # Get filter parameters (same as MissionSelectAPIView)
+            filter_params = request.GET.copy()
+            export_format = filter_params.get('format', 'csv').lower()
+            
+            # Get spatial bounds
+            xmin = filter_params.get('xmin')
+            xmax = filter_params.get('xmax')
+            ymin = filter_params.get('ymin')
+            ymax = filter_params.get('ymax')
+            
+            if not all([xmin, xmax, ymin, ymax]):
+                return HttpResponse('Missing spatial bounds', status=400)
+            
+            # Create polygon from bounds
+            search_geom = Polygon(
+                (
+                    (float(xmin), float(ymin)),
+                    (float(xmin), float(ymax)),
+                    (float(xmax), float(ymax)),
+                    (float(xmax), float(ymin)),
+                    (float(xmin), float(ymin)),
+                ),
+                srid=4326,
+            )
+            
+            # Start with base queryset
+            missions = Mission.objects.all()
+            
+            # Apply spatial filter
+            missions = missions.filter(
+                Q(grid_bounds__intersects=search_geom) | Q(nav_track__intersects=search_geom)
+            ).distinct()
+            
+            # Apply other filters (same logic as MissionSelectAPIView)
+            filter_type = filter_params.get('filter_type', 'mission')
+            
+            if filter_type == 'mission' or (filter_type == '' and any(key in filter_params for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name'])):
+                mission_filter = MissionFilter(filter_params, queryset=missions)
+                missions = mission_filter.qs
+            elif filter_type == 'expedition' and filter_params.get('name'):
+                expedition_filter = ExpeditionFilter(filter_params, queryset=Expedition.objects.all())
+                filtered_expeditions = expedition_filter.qs
+                if filtered_expeditions.exists():
+                    missions = missions.filter(expedition__in=filtered_expeditions)
+            elif filter_type == 'compilation' and filter_params.get('name'):
+                compilation_filter = CompilationFilter(filter_params, queryset=Compilation.objects.all())
+                filtered_compilations = compilation_filter.qs
+                if filtered_compilations.exists():
+                    missions = missions.filter(compilations__in=filtered_compilations).distinct()
+            
+            if filter_params.get('q'):
+                search_string = filter_params.get('q')
+                missions = missions.filter(
+                    Q(name__icontains=search_string) | Q(notes_text__icontains=search_string)
+                )
+            
+            if filter_params.get('tmin') and filter_params.get('tmax'):
+                missions = missions.filter(
+                    start_date__gte=filter_params.get('tmin'),
+                    end_date__lte=filter_params.get('tmax'),
+                )
+            
+            missions = missions.select_related('expedition').order_by('start_date')
+            
+            if export_format == 'csv':
+                return self.export_csv(missions)
+            elif export_format == 'excel':
+                return self.export_excel(missions)
+            else:
+                return HttpResponse('Invalid format. Use csv or excel.', status=400)
+                
+        except Exception as e:
+            logging.error(f"Error in MissionExportAPIView: {str(e)}")
+            return HttpResponse(f'Error: {str(e)}', status=500)
+    
+    def export_csv(self, missions):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="missions_export.csv"'
+        
+        writer = csv.writer(response)
+        # Write header
+        writer.writerow([
+            'Name', 'Start Date', 'Region', 'Track Length (km)', 'Start Depth (m)',
+            'Vehicle', 'Expedition', 'Quality Categories', 'Patch Test', 'Repeat Survey',
+            'MGDS Compilation', 'Quality Comment'
+        ])
+        
+        # Write data
+        for mission in missions:
+            quality_categories = ', '.join([qc.name for qc in mission.quality_categories.all()]) if mission.quality_categories.exists() else ''
+            writer.writerow([
+                mission.name or '',
+                mission.start_date.strftime('%Y-%m-%d') if mission.start_date else '',
+                mission.region_name or '',
+                str(mission.track_length) if mission.track_length else '',
+                str(mission.start_depth) if mission.start_depth else '',
+                mission.vehicle_name or '',
+                mission.expedition.name if mission.expedition else '',
+                quality_categories,
+                'Yes' if mission.patch_test else 'No',
+                'Yes' if mission.repeat_survey else 'No',
+                mission.mgds_compilation or '',
+                mission.quality_comment or '',
+            ])
+        
+        return response
+    
+    def export_excel(self, missions):
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, Alignment
+        except ImportError:
+            # Fallback to CSV if openpyxl is not available
+            return self.export_csv(missions)
+        
+        # Create workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Missions"
+        
+        # Write header
+        headers = [
+            'Name', 'Start Date', 'Region', 'Track Length (km)', 'Start Depth (m)',
+            'Vehicle', 'Expedition', 'Quality Categories', 'Patch Test', 'Repeat Survey',
+            'MGDS Compilation', 'Quality Comment'
+        ]
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center')
+        
+        # Write data
+        for row, mission in enumerate(missions, 2):
+            quality_categories = ', '.join([qc.name for qc in mission.quality_categories.all()]) if mission.quality_categories.exists() else ''
+            ws.cell(row=row, column=1, value=mission.name or '')
+            ws.cell(row=row, column=2, value=mission.start_date.strftime('%Y-%m-%d') if mission.start_date else '')
+            ws.cell(row=row, column=3, value=mission.region_name or '')
+            ws.cell(row=row, column=4, value=mission.track_length if mission.track_length else '')
+            ws.cell(row=row, column=5, value=mission.start_depth if mission.start_depth else '')
+            ws.cell(row=row, column=6, value=mission.vehicle_name or '')
+            ws.cell(row=row, column=7, value=mission.expedition.name if mission.expedition else '')
+            ws.cell(row=row, column=8, value=quality_categories)
+            ws.cell(row=row, column=9, value='Yes' if mission.patch_test else 'No')
+            ws.cell(row=row, column=10, value='Yes' if mission.repeat_survey else 'No')
+            ws.cell(row=row, column=11, value=mission.mgds_compilation or '')
+            ws.cell(row=row, column=12, value=mission.quality_comment or '')
+        
+        # Auto-adjust column widths
+        for col in range(1, len(headers) + 1):
+            column_letter = openpyxl.utils.get_column_letter(col)
+            ws.column_dimensions[column_letter].width = 15
+        
+        # Save to BytesIO
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="missions_export.xlsx"'
+        
+        return response

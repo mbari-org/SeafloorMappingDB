@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" crossorigin="" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.css">
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
 <link href=https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.css rel="stylesheet" />
 
@@ -74,6 +75,8 @@
 
 {#  Load Leaflet Measure from CDN #}
 <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+{#  Load Leaflet Draw from CDN #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 {#  <script src="https://cdn.jsdelivr.net/npm/leaflet-sidebar@0.2.4/src/L.Control.Sidebar.min.js"></script> #}
 
 {#  Leaflet-sidebar v2 #}
@@ -135,6 +138,26 @@
 </div>
 
 <div id="map" class="" tabindex="0" style="position: relative;">
+</div>
+
+{# Hidden filter form containers for sidebar to copy #}
+{% load crispy_forms_tags %}
+<div id="filter-form-container" style="display: none;">
+  {% if mission_filter %}
+    <form id="filter-form-mission" class="filter-form" data-filter-type="mission" method="get" style="display: none;">
+      {% crispy mission_filter.form mission_filter.form.helper %}
+    </form>
+  {% endif %}
+  {% if expedition_filter %}
+    <form id="filter-form-expedition" class="filter-form" data-filter-type="expedition" method="get" style="display: none;">
+      {% crispy expedition_filter.form expedition_filter.form.helper %}
+    </form>
+  {% endif %}
+  {% if compilation_filter %}
+    <form id="filter-form-compilation" class="filter-form" data-filter-type="compilation" method="get" style="display: none;">
+      {% crispy compilation_filter.form compilation_filter.form.helper %}
+    </form>
+  {% endif %}
 </div>
 
 {{ missions|json_script:"missions-data" }}

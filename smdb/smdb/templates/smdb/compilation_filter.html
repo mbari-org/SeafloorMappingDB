@@ -29,11 +29,28 @@
 
 {% block content %}
     <h2 id="compilation_h2">Compilations</h2>
-    {% if filter %}
-    {% crispy filter.form filter.form.helper %}
-    {% endif %}
     {{ missions|json_script:"missions-data" }}
     <div id="map_compilation_filter" style="height: 500px"></div>
+    
+    {# Hidden filter form containers for sidebar to copy #}
+    <div id="filter-form-container" style="display: none;">
+      {% if mission_filter %}
+        <form id="filter-form-mission" class="filter-form" data-filter-type="mission" method="get" style="display: none;">
+          {% crispy mission_filter.form mission_filter.form.helper %}
+        </form>
+      {% endif %}
+      {% if expedition_filter %}
+        <form id="filter-form-expedition" class="filter-form" data-filter-type="expedition" method="get" style="display: none;">
+          {% crispy expedition_filter.form expedition_filter.form.helper %}
+        </form>
+      {% endif %}
+      {% if compilation_filter %}
+        <form id="filter-form-compilation" class="filter-form" data-filter-type="compilation" method="get" style="display: none;">
+          {% crispy compilation_filter.form compilation_filter.form.helper %}
+        </form>
+      {% endif %}
+    </div>
+    
     <script src="{% static 'js/map_compilation_filter.js' %}"></script>
     {% if table %}
         {% render_table table "smdb_tables2_bootstrap4.html" %}

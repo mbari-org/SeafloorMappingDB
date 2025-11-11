@@ -15,6 +15,8 @@ from smdb.views import (
     ExpeditionDetailView,
     ExpeditionTableView,
     MissionDetailView,
+    MissionExportAPIView,
+    MissionSelectAPIView,
     MissionTableView,
     MissionOverView,
 )
@@ -50,6 +52,9 @@ urlpatterns = [
         CompilationDetailView.as_view(),
         name="compilation-detail",
     ),
+    # API endpoints for mission selection and export
+    path("api/v1/missions/select", MissionSelectAPIView.as_view(), name="mission-select-api"),
+    path("api/v1/missions/export", MissionExportAPIView.as_view(), name="mission-export-api"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # API URLS

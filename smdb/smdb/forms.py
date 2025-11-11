@@ -33,21 +33,19 @@ class ExpeditionFilterFormHelper(FormHelper):
     form_method = "GET"
     layout = Layout(
         Row(
-            Column("name", css_id="expeditionFilterName", css_class="form-group col-md-3 mb-0"),
-            Div(
+            Column("name", css_id="expeditionFilterName", css_class="form-group col-md-12 mb-0"),
+        ),
+        Row(
             Column(Submit("submit", "Filter", css_id="expeditionFilterSubmit", css_class="col-md mb-0 btn-primary")),
-            ),
-            Div(
-                Column(
-                    Reset(
-                        "clear",
-                        "Clear",
-                        css_id="expeditionFilterCancel",
-                        css_class="col-md mb-0 btn-secondary",
-                        onclick='window.location.href="{}"'.format('/expeditions'),
-                        type="button",
-                    )
-                ),
+            Column(
+                Reset(
+                    "clear",
+                    "Clear",
+                    css_id="expeditionFilterCancel",
+                    css_class="col-md mb-0 btn-secondary",
+                    onclick='window.location.href="{}"'.format('/expeditions'),
+                    type="button",
+                )
             ),
         ),
     )
@@ -57,21 +55,19 @@ class CompilationFilterFormHelper(FormHelper):
     form_method = "GET"
     layout = Layout(
         Row(
-            Column("name", css_id="compilationFilterName", css_class="form-group col-md-3 mb-0"),
-            Div(
-                Column(Submit("submit", "Filter", css_id="compilationFilterSubmit", css_class="col-md mb-0 btn-primary")),
-            ),
-            Div(
-                Column(
-                    Reset(
-                     "clear",
-                     "Clear",
-                        css_id="compilationFilterCancel",
-                        css_class="col-md mb-0 btn-secondary",
-                        onclick='window.location.href="{}"'.format('/compilations'),
-                        type="button",
-                    )
-                ),
+            Column("name", css_id="compilationFilterName", css_class="form-group col-md-12 mb-0"),
+        ),
+        Row(
+            Column(Submit("submit", "Filter", css_id="compilationFilterSubmit", css_class="col-md mb-0 btn-primary")),
+            Column(
+                Reset(
+                    "clear",
+                    "Clear",
+                    css_id="compilationFilterCancel",
+                    css_class="col-md mb-0 btn-secondary",
+                    onclick='window.location.href="{}"'.format('/compilations'),
+                    type="button",
+                )
             ),
         ),
     )
