@@ -24,7 +24,9 @@ const options = {
 };
 
 const map = L.map("map", {
-  options,
+  ...options,
+  zoomSnap: 0.5,  // Allow fractional zoom levels (0.5 increments: 1, 1.5, 2, 2.5, 3, etc.)
+  zoomDelta: 0.5, // Zoom in/out by 0.5 increments
 });
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
 
@@ -938,8 +940,76 @@ let feature = L.geoJSON(missions, {
     return tooltipInfo;
   })
   .addTo(map);
+
+// Fit map to mission bounds - calculate optimal zoom based on viewport size and mission bounds
+// Priority: Show ALL mission data, but optimize zoom to minimize empty space at poles
+map.whenReady(function() {
+  // Invalidate size to ensure Leaflet recalculates container dimensions
+  map.invalidateSize();
+  
+  // Small delay to ensure container has final size after invalidateSize
+  setTimeout(function() {
+    try {
+      var bounds = feature.getBounds();
+      if (bounds && bounds.isValid && bounds.isValid()) {
+        // Get viewport/container dimensions
+        var mapContainer = document.getElementById("map");
+        var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+        var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+        
+        // Get mission bounds coordinates
+        var sw = bounds.getSouthWest(); // Southwest corner
+        var ne = bounds.getNorthEast(); // Northeast corner
+        var missionLatSpan = ne.lat - sw.lat; // Latitude span
+        var missionLngSpan = ne.lng - sw.lng; // Longitude span
+        
+        // Calculate aspect ratios
+        var viewportAspect = viewportWidth / viewportHeight;
+        var missionAspect = missionLngSpan / missionLatSpan;
+        
+        // Calculate padding as percentage of viewport (adaptive to screen size)
+        // Use smaller padding for larger screens, larger for smaller screens
+        var paddingPercent = Math.min(0.1, Math.max(0.05, 100 / viewportWidth)); // 5-10% of viewport
+        var paddingX = Math.round(viewportWidth * paddingPercent);
+        var paddingY = Math.round(viewportHeight * paddingPercent);
+        
+        // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
+        // First, fit bounds to get the zoom level that shows all missions
+        map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+        
+        // Get the zoom level that fitBounds calculated
+        var calculatedZoom = map.getZoom();
+        
+        // Allow fractional zoom for finer control when zooming in
+        // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
+        // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
+      }
+    } catch (err) {
+      console.log("Error fitting bounds: " + err.message);
+    }
+  }, 50);
+});
+
+// Also try immediately as fallback (in case map is already ready and sized)
 try {
-  map.fitBounds(feature.getBounds(), { padding: [100, 100] });
+  map.invalidateSize();
+  var bounds = feature.getBounds();
+  if (bounds && bounds.isValid && bounds.isValid()) {
+    // Get viewport dimensions
+    var mapContainer = document.getElementById("map");
+    var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+    var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+    
+    // Calculate adaptive padding
+    var paddingPercent = Math.min(0.1, Math.max(0.05, 100 / viewportWidth));
+    var paddingX = Math.round(viewportWidth * paddingPercent);
+    var paddingY = Math.round(viewportHeight * paddingPercent);
+    
+    map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+    
+    // Fractional zoom enabled - allows 0.5 increments for finer zoom control
+    // No zoom constraint - fitBounds determines optimal zoom to show all missions
+  }
 } catch (err) {
   console.log(err.message);
 }
