@@ -47,7 +47,7 @@ class MissionSerializer(GeoFeatureModelSerializer):
 
     class Meta:
         model = Mission
-        geo_field = "grid_bounds"  # Changed from nav_track to grid_bounds since all missions have grid_bounds
+        geo_field = "nav_track"  # Use nav_track to display track lines, not bounding boxes
         fields = (
             "slug",
             "thumbnail_image",
@@ -58,6 +58,17 @@ class MissionSerializer(GeoFeatureModelSerializer):
             "route_file",
         )
         nav_track = GeometrySerializerMethodField()
+    
+    def to_representation(self, instance):
+        """Only return missions with nav_track (track lines). Skip missions with only grid_bounds."""
+        # Only display missions that have nav_track data (track lines)
+        # Check if nav_track exists and is not empty
+        if instance.nav_track is None or instance.nav_track.empty:
+            # Skip missions without nav_track - do not display bounding boxes
+            return None
+        
+        # Use nav_track for track lines
+        return super().to_representation(instance)
 
 
 class MissionOverView(TemplateView):
