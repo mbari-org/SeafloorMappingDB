@@ -87,3 +87,97 @@ body {
 .leaflet-control>.leaflet-sidebar-topleft {
   width: 250px !important;
 }
+
+/* Selection Results Panel */
+.selection-results-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 900px;
+  max-height: 80vh;
+  background: white;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  display: none;
+  flex-direction: column;
+}
+
+.selection-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #007bff;
+  color: white;
+  border-radius: 6px 6px 0 0;
+}
+
+.selection-results-header h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.selection-results-header .btn-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.selection-results-header .btn-close:hover {
+  opacity: 1;
+}
+
+.selection-results-body {
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.selection-results-info {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.selection-results-info strong {
+  font-size: 1rem;
+  color: #212529;
+}
+
+.selection-results-panel .table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+.selection-results-panel .table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 10;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.selection-results-panel .table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+.selection-results-panel .table td a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.selection-results-panel .table td a:hover {
+  text-decoration: underline;
+}
