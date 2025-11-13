@@ -1178,6 +1178,14 @@ var drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
+// Add tooltip to draw button
+setTimeout(function() {
+  var drawButton = document.querySelector('.leaflet-draw-draw-rectangle');
+  if (drawButton) {
+    drawButton.setAttribute('title', 'Draw Rectangle - Click and drag to create a rectangular selection area');
+  }
+}, 200);
+
 // Handle rectangle drawing completion
 map.on(L.Draw.Event.CREATED, function (e) {
   var type = e.layerType;
@@ -1227,9 +1235,15 @@ map.on(L.Draw.Event.CREATED, function (e) {
   }
 });
 
-// Handle rectangle deletion
+// Handle rectangle deletion - don't close panel, just remove rectangle
 map.on(L.Draw.Event.DELETED, function (e) {
-  hideResultsPanel();
+  // Panel stays open - user must manually close it with X button
+  // Just remove the rectangle from the map
+  if (drawnItems) {
+    drawnItems.clearLayers();
+  }
+  // Clear stored bounds but keep panel open
+  window.drawnRectangleBounds = null;
 });
 
 // Store drawn rectangle bounds globally for export
@@ -1457,17 +1471,284 @@ function showResultsPanel(loading) {
     panel.innerHTML = `
       <div class="selection-results-header">
         <h5>Selected Missions</h5>
-        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close"></button>
+        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close">×</button>
       </div>
       <div class="selection-results-body">
         <div id="selection-results-content"></div>
       </div>
+      <div class="resize-handle resize-handle-n"></div>
+      <div class="resize-handle resize-handle-e"></div>
+      <div class="resize-handle resize-handle-s"></div>
+      <div class="resize-handle resize-handle-w"></div>
+      <div class="resize-handle resize-handle-ne"></div>
+      <div class="resize-handle resize-handle-nw"></div>
+      <div class="resize-handle resize-handle-se"></div>
+      <div class="resize-handle resize-handle-sw"></div>
     `;
     document.body.appendChild(panel);
+    
+    // Prevent clicks on panel from propagating to map (prevents accidental closing)
+    panel.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+    
+    // Prevent mousedown events from propagating to map
+    panel.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
+    });
+    
+    // Initialize drag functionality
+    initializePanelDrag(panel);
+    
+    // Initialize resize functionality
+    initializePanelResize(panel);
   }
   panel.style.display = "block";
+  
+  // Force a synchronous layout calculation to ensure panel is rendered
+  panel.offsetHeight;
+  
+  // Convert CSS percentage transform to pixel transform immediately
+  // This must happen synchronously before any user interaction
+  var currentTransform = panel.style.transform || '';
+  if (!currentTransform || currentTransform.indexOf('%') !== -1) {
+    var rect = panel.getBoundingClientRect();
+    var currentCenterX = rect.left + rect.width / 2;
+    var currentCenterY = rect.top + rect.height / 2;
+    var viewportCenterX = window.innerWidth / 2;
+    var viewportCenterY = window.innerHeight / 2;
+    var pixelOffsetX = currentCenterX - viewportCenterX;
+    var pixelOffsetY = currentCenterY - viewportCenterY;
+    
+    panel.style.transform = 'translate(' + pixelOffsetX + 'px, ' + pixelOffsetY + 'px)';
+    
+    // Force reflow
+    panel.offsetHeight;
+    
+    // Mark as converted so dragStart doesn't convert again
+    panel._transformConverted = true;
+  } else {
+    panel._transformConverted = true;
+  }
+  
   if (loading) {
     document.getElementById("selection-results-content").innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+  }
+}
+
+// Initialize drag functionality for panel
+function initializePanelDrag(panel) {
+  var header = panel.querySelector('.selection-results-header');
+  var isDragging = false;
+  var startX = 0;
+  var startY = 0;
+  var startLeft = 0;
+  var startTop = 0;
+
+  header.addEventListener('mousedown', dragStart);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', dragEnd);
+
+  function dragStart(e) {
+    // Don't start drag if clicking the close button
+    if (e.target.classList.contains('btn-close') || e.target.closest('.btn-close')) {
+      return;
+    }
+    
+    if (e.target === header || header.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Get current mouse position
+      startX = e.clientX;
+      startY = e.clientY;
+      
+      // Get current panel position - use getBoundingClientRect for actual rendered position
+      // This gives us the true visual position regardless of transform type
+      var rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      
+      isDragging = true;
+      header.style.cursor = 'move';
+    }
+  }
+
+  function drag(e) {
+    if (isDragging) {
+      e.preventDefault();
+      
+      // On first drag movement, ensure transform is in pixels
+      if (!panel._dragTransformConverted) {
+        var currentTransform = panel.style.transform || '';
+        
+        if (!currentTransform || currentTransform.indexOf('%') !== -1) {
+          // Convert to pixels using current position BEFORE any movement
+          // Use the startLeft/startTop we captured in dragStart
+          var panelWidth = panel.offsetWidth;
+          var panelHeight = panel.offsetHeight;
+          var panelCenterX = startLeft + panelWidth / 2;
+          var panelCenterY = startTop + panelHeight / 2;
+          var viewportCenterX = window.innerWidth / 2;
+          var viewportCenterY = window.innerHeight / 2;
+          var pixelOffsetX = panelCenterX - viewportCenterX;
+          var pixelOffsetY = panelCenterY - viewportCenterY;
+          
+          panel.style.transform = 'translate(' + pixelOffsetX + 'px, ' + pixelOffsetY + 'px)';
+          
+          // Force reflow
+          panel.offsetHeight;
+          
+          // Get position AFTER transform change
+          var rectAfter = panel.getBoundingClientRect();
+          
+          // Update start positions if panel moved
+          if (Math.abs(rectAfter.left - startLeft) > 0.1 || Math.abs(rectAfter.top - startTop) > 0.1) {
+            startLeft = rectAfter.left;
+            startTop = rectAfter.top;
+          }
+        }
+        panel._dragTransformConverted = true;
+      }
+      
+      // Calculate how far mouse has moved
+      var deltaX = e.clientX - startX;
+      var deltaY = e.clientY - startY;
+      
+      // Calculate new panel position (top-left corner)
+      var newLeft = startLeft + deltaX;
+      var newTop = startTop + deltaY;
+      
+      // IMPORTANT: Panel has left: 50% and top: 50%, which means its top-left corner is at viewport center
+      // When we apply transform: translate(Xpx, Ypx), the top-left corner ends up at:
+      // (viewportCenterX + X, viewportCenterY + Y)
+      // So to get the top-left at newLeft, newTop:
+      // newLeft = viewportCenterX + transformX
+      // newTop = viewportCenterY + transformY
+      // Therefore:
+      var viewportCenterX = window.innerWidth / 2;
+      var viewportCenterY = window.innerHeight / 2;
+      
+      // Calculate transform needed to position top-left at newLeft, newTop
+      var transformX = newLeft - viewportCenterX;
+      var transformY = newTop - viewportCenterY;
+      
+      panel.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
+    }
+  }
+  
+  function dragEnd(e) {
+    if (isDragging) {
+      isDragging = false;
+      header.style.cursor = 'default';
+      panel._dragTransformConverted = false;
+    }
+  }
+}
+
+// Initialize resize functionality for panel
+function initializePanelResize(panel) {
+  if (!panel) return;
+  
+  var resizeHandles = panel.querySelectorAll('.resize-handle');
+  if (!resizeHandles || resizeHandles.length === 0) {
+    return; // No resize handles found, skip initialization
+  }
+  
+  var isResizing = false;
+  var currentHandle = null;
+  var startX, startY, startWidth, startHeight, startLeft, startTop, startTransformX, startTransformY;
+
+  resizeHandles.forEach(function(handle) {
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing = true;
+      currentHandle = handle;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = parseInt(document.defaultView.getComputedStyle(panel).width, 10);
+      startHeight = parseInt(document.defaultView.getComputedStyle(panel).height, 10);
+      
+      // Get current position accounting for transform
+      var rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      
+      // Parse current transform
+      var transform = panel.style.transform || '';
+      var match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+      startTransformX = match ? parseFloat(match[1]) : 0;
+      startTransformY = match ? parseFloat(match[2]) : 0;
+      
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('mouseup', stopResize);
+    });
+  });
+
+  function doResize(e) {
+    if (!isResizing) return;
+    
+    var deltaX = e.clientX - startX;
+    var deltaY = e.clientY - startY;
+    
+    var width = startWidth;
+    var height = startHeight;
+    var transformX = startTransformX;
+    var transformY = startTransformY;
+    
+    if (currentHandle.classList.contains('resize-handle-e')) {
+      width = startWidth + deltaX;
+    } else if (currentHandle.classList.contains('resize-handle-w')) {
+      width = startWidth - deltaX;
+      transformX = startTransformX + deltaX;
+    } else if (currentHandle.classList.contains('resize-handle-s')) {
+      height = startHeight + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-n')) {
+      height = startHeight - deltaY;
+      transformY = startTransformY + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-se')) {
+      width = startWidth + deltaX;
+      height = startHeight + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-sw')) {
+      width = startWidth - deltaX;
+      height = startHeight + deltaY;
+      transformX = startTransformX + deltaX;
+    } else if (currentHandle.classList.contains('resize-handle-ne')) {
+      width = startWidth + deltaX;
+      height = startHeight - deltaY;
+      transformY = startTransformY + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-nw')) {
+      width = startWidth - deltaX;
+      height = startHeight - deltaY;
+      transformX = startTransformX + deltaX;
+      transformY = startTransformY + deltaY;
+    }
+    
+    // Apply min/max constraints
+    var minWidth = 400;
+    var minHeight = 300;
+    var maxWidth = window.innerWidth - 20;
+    var maxHeight = window.innerHeight - 20;
+    
+    width = Math.max(minWidth, Math.min(maxWidth, width));
+    height = Math.max(minHeight, Math.min(maxHeight, height));
+    
+    // Set width and height with box-sizing
+    panel.style.width = width + 'px';
+    panel.style.height = height + 'px';
+    panel.style.boxSizing = 'border-box';
+    panel.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
+    
+    // Force reflow to ensure content adjusts
+    panel.offsetHeight;
+  }
+
+  function stopResize() {
+    isResizing = false;
+    currentHandle = null;
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
   }
 }
 
@@ -1502,7 +1783,7 @@ function updateResultsPanel(message, missions) {
   html += '</div>';
   
   // Create table
-  html += '<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">';
+  html += '<div class="table-responsive" style="flex: 1; overflow-y: auto; overflow-x: auto; min-height: 0;">';
   html += '<table class="table table-sm table-striped table-hover">';
   html += '<thead class="table-light sticky-top">';
   html += '<tr>';
@@ -1626,6 +1907,9 @@ function exportMissions(format) {
       return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
     })
     .join('&');
+  
+  // Mark as exported
+  window.resultsPanelExported = true;
   
   // Open export URL
   window.location.href = '/api/v1/missions/export?' + queryString;

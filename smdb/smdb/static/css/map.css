@@ -96,7 +96,10 @@ body {
   transform: translate(-50%, -50%);
   width: 80%;
   max-width: 900px;
+  min-width: 400px;
+  min-height: 300px;
   max-height: 80vh;
+  height: 600px;
   background: white;
   border: 2px solid #007bff;
   border-radius: 8px;
@@ -104,6 +107,8 @@ body {
   z-index: 2000;
   display: none;
   flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .selection-results-header {
@@ -114,6 +119,8 @@ body {
   background: #007bff;
   color: white;
   border-radius: 6px 6px 0 0;
+  cursor: move;
+  user-select: none;
 }
 
 .selection-results-header h5 {
@@ -126,24 +133,32 @@ body {
   background: transparent;
   border: none;
   color: white;
-  font-size: 1.5rem;
+  font-size: 2rem;
+  font-weight: bold;
   cursor: pointer;
   padding: 0;
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
+  width: 35px;
+  height: 35px;
+  line-height: 35px;
   text-align: center;
-  opacity: 0.8;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  border-radius: 4px;
 }
 
 .selection-results-header .btn-close:hover {
   opacity: 1;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .selection-results-body {
   padding: 0;
   overflow-y: auto;
+  overflow-x: auto;
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .selection-results-info {
@@ -180,4 +195,80 @@ body {
 
 .selection-results-panel .table td a:hover {
   text-decoration: underline;
+}
+
+/* Resize Handles */
+
+.resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+}
+
+.resize-handle-n {
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.resize-handle-s {
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.resize-handle-e {
+  top: 10px;
+  bottom: 10px;
+  right: 0;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.resize-handle-w {
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.resize-handle-ne {
+  top: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nesw-resize;
+}
+
+.resize-handle-nw {
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nwse-resize;
+}
+
+.resize-handle-se {
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nwse-resize;
+}
+
+.resize-handle-sw {
+  bottom: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nesw-resize;
+}
+
+.resize-handle:hover {
+  background: rgba(0, 123, 255, 0.3);
 }
