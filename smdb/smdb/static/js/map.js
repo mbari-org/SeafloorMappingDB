@@ -114,9 +114,9 @@ const FilterControl = L.Control.extend({
     const sidebar = L.DomUtil.create("div", "filter-sidebar", wrapper);
     sidebar.id = "filter-sidebar";
     sidebar.style.position = "absolute";
-    sidebar.style.left = "-220px"; // Hidden by default (slide out from left)
+    sidebar.style.left = "-250px"; // Hidden by default (slide out from left)
     sidebar.style.top = "0";
-    sidebar.style.width = "220px";
+    sidebar.style.width = "250px";
     sidebar.style.maxHeight = "250vh";
     sidebar.style.height = "auto"; // Auto-adjust to content
     sidebar.style.minHeight = "50px"; // Minimum height for button
@@ -230,6 +230,7 @@ const FilterControl = L.Control.extend({
     const body = L.DomUtil.create("div", "filter-sidebar-body", sidebar);
     body.id = "filter-sidebar-body";
     body.style.padding = "0.5rem 0.5rem 0.75rem 0.5rem"; // Top, Right, Bottom, Left - reduced top padding
+    body.style.paddingBottom = "0.75rem"; // Ensure bottom padding for buttons
     body.style.flex = "1";
     body.style.minHeight = "200px";
     body.style.maxHeight = "calc(80vh - 60px)"; // Account for header height
@@ -301,6 +302,11 @@ const FilterControl = L.Control.extend({
 
       body.appendChild(clonedForm);
       
+      // Debug: Log form structure to see if buttons are present
+      console.log("Form HTML:", clonedForm.innerHTML);
+      console.log("Buttons in form:", clonedForm.querySelectorAll("button").length);
+      console.log("All rows:", clonedForm.querySelectorAll(".row").length);
+      
       // Add global click interceptor for Clear buttons on main map page (before onclick handlers execute)
       const currentPathCheck = window.location.pathname;
       const isMainMapPageCheck = currentPathCheck === '/' || currentPathCheck === '/missions' || currentPathCheck.startsWith('/missions/');
@@ -316,6 +322,10 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            // Store sidebar open state before reloading
+            sessionStorage.setItem('sidebarOpen', 'true');
+            
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
@@ -365,7 +375,7 @@ const FilterControl = L.Control.extend({
       );
       inputs.forEach((el) => {
         el.style.width = "100%";
-        el.style.maxWidth = "200px";
+        el.style.maxWidth = "230px";
         el.style.fontSize = "0.8rem";
         el.style.padding = "0.3rem";
         el.style.marginBottom = "0.4rem";
@@ -411,6 +421,259 @@ const FilterControl = L.Control.extend({
         li.style.color = "#e0e0e0"; // Light text color
       });
 
+      // Create custom dropdown for quality categories with checkboxes
+      const qualitySelect = body.querySelector('select[name="quality_categories"]');
+      const locationSelect = body.querySelector('select[name="region_name"]');
+      
+      if (qualitySelect && qualitySelect.options.length > 0) {
+        // Hide the original select
+        qualitySelect.style.display = "none";
+        
+        // Create custom dropdown container
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.className = 'quality-dropdown-container';
+        dropdownContainer.style.position = 'relative';
+        dropdownContainer.style.width = '230px';
+        dropdownContainer.style.minWidth = '230px';
+        dropdownContainer.style.maxWidth = '230px';
+        dropdownContainer.style.marginBottom = '0.4rem';
+        dropdownContainer.style.flexShrink = '0';
+        dropdownContainer.style.flexGrow = '0';
+        
+        // Create dropdown button (looks like Location field)
+        const dropdownButton = document.createElement('button');
+        dropdownButton.type = 'button';
+        dropdownButton.className = 'quality-dropdown-button';
+        dropdownButton.textContent = '- Quality assessment -';
+        dropdownButton.style.width = '230px';
+        dropdownButton.style.minWidth = '230px';
+        dropdownButton.style.maxWidth = '230px';
+        dropdownButton.style.padding = '0.3rem';
+        dropdownButton.style.fontSize = '0.8rem';
+        dropdownButton.style.fontWeight = '300';
+        dropdownButton.style.border = '1px solid #555';
+        dropdownButton.style.borderRadius = '4px';
+        dropdownButton.style.backgroundColor = '#1e1e1e';
+        dropdownButton.style.color = '#e0e0e0';
+        dropdownButton.style.textAlign = 'left';
+        dropdownButton.style.cursor = 'pointer';
+        dropdownButton.style.boxSizing = 'border-box';
+        dropdownButton.style.position = 'relative';
+        dropdownButton.style.paddingRight = '2rem';
+        dropdownButton.style.overflow = 'hidden';
+        dropdownButton.style.textOverflow = 'ellipsis';
+        dropdownButton.style.whiteSpace = 'nowrap';
+        
+        // Match the native select dropdown arrow from Location field
+        // Native HTML select elements use browser's default dropdown arrow
+        // We'll create a visual match - browsers typically use a downward triangle/chevron
+        const locationSelect = body.querySelector('select[name="region_name"]');
+        
+        // Create V-shaped chevron caret to match Location field dropdown
+        const caret = document.createElement('span');
+        // Use V-shaped chevron (⌄) to match native select dropdown appearance
+        caret.innerHTML = '⌄'; // Downward V-shaped chevron
+        caret.style.position = 'absolute';
+        caret.style.right = '0.3rem'; // Move a few pixels to the right (smaller right value = more to the right)
+        caret.style.top = '38%'; // Slightly above center to account for visual centering
+        caret.style.transform = 'translateY(-50%) scaleX(1.3)'; // Center vertically and widen the V
+        caret.style.transformOrigin = 'center center'; // Ensure scaling happens from center
+        caret.style.fontSize = '1.2rem'; // Size to match image
+        caret.style.color = '#ffffff'; // White color
+        caret.style.pointerEvents = 'none';
+        caret.style.lineHeight = '0'; // Remove line-height to prevent extra space
+        caret.style.display = 'flex';
+        caret.style.alignItems = 'center';
+        caret.style.justifyContent = 'center';
+        caret.style.fontWeight = 'bold'; // Make it bolder/thicker
+        caret.style.fontFamily = 'Arial, sans-serif';
+        caret.style.letterSpacing = '0'; // No extra spacing
+        dropdownButton.appendChild(caret);
+        
+        // Create dropdown menu
+        const dropdownMenu = document.createElement('div');
+        dropdownMenu.className = 'quality-dropdown-menu';
+        dropdownMenu.style.display = 'none';
+        dropdownMenu.style.position = 'absolute';
+        dropdownMenu.style.top = '100%';
+        dropdownMenu.style.left = '0';
+        dropdownMenu.style.width = '230px';
+        dropdownMenu.style.minWidth = '230px';
+        dropdownMenu.style.maxWidth = '230px';
+        dropdownMenu.style.maxHeight = '200px';
+        dropdownMenu.style.overflowY = 'auto';
+        dropdownMenu.style.backgroundColor = '#2d2d2d';
+        dropdownMenu.style.border = '1px solid #555';
+        dropdownMenu.style.borderRadius = '4px';
+        dropdownMenu.style.marginTop = '2px';
+        dropdownMenu.style.zIndex = '1000';
+        dropdownMenu.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+        // Hide scrollbar
+        dropdownMenu.style.scrollbarWidth = 'thin';
+        dropdownMenu.style.scrollbarColor = 'transparent transparent';
+        dropdownMenu.setAttribute('class', 'quality-dropdown-menu custom-scrollbar');
+        
+        // Track last clicked checkbox for Shift+Click range selection
+        let lastClickedCheckbox = null;
+        
+        // Create checkbox options
+        Array.from(qualitySelect.options).forEach((option, index) => {
+          if (option.value) { // Skip empty placeholder option
+            const checkboxItem = document.createElement('label');
+            checkboxItem.style.display = 'flex';
+            checkboxItem.style.alignItems = 'center';
+            checkboxItem.style.padding = '0.5rem';
+            checkboxItem.style.cursor = 'pointer';
+            checkboxItem.style.color = '#ffffff'; // White text for better visibility
+            checkboxItem.style.fontSize = '0.8rem';
+            checkboxItem.style.borderBottom = '1px solid #444';
+            checkboxItem.style.marginBottom = '0';
+            
+            checkboxItem.addEventListener('mouseenter', function() {
+              this.style.backgroundColor = '#3d3d3d';
+            });
+            checkboxItem.addEventListener('mouseleave', function() {
+              this.style.backgroundColor = 'transparent';
+            });
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = option.value;
+            checkbox.name = 'quality_categories';
+            checkbox.style.width = '14px';
+            checkbox.style.height = '14px';
+            checkbox.style.marginRight = '0.5rem';
+            checkbox.style.cursor = 'pointer';
+            checkbox.style.flexShrink = '0';
+            
+            // Store index for Shift+Click range selection
+            checkbox.dataset.index = index;
+            
+            // Sync with original select
+            checkbox.checked = option.selected;
+            
+            // Handle checkbox change with Shift+Click support
+            checkbox.addEventListener('click', function(e) {
+              if (e.shiftKey && lastClickedCheckbox && lastClickedCheckbox !== checkbox) {
+                // Shift+Click: select range between last clicked and current
+                e.preventDefault();
+                const checkboxes = Array.from(dropdownMenu.querySelectorAll('input[type="checkbox"]'));
+                const startIndex = parseInt(lastClickedCheckbox.dataset.index);
+                const endIndex = parseInt(checkbox.dataset.index);
+                const start = Math.min(startIndex, endIndex);
+                const end = Math.max(startIndex, endIndex);
+                
+                // Use the state of the last clicked checkbox as the target state
+                const targetState = lastClickedCheckbox.checked;
+                
+                // Set all checkboxes in range to the target state
+                for (let i = start; i <= end; i++) {
+                  const cb = checkboxes[i];
+                  if (cb) {
+                    cb.checked = targetState;
+                    const originalOption = qualitySelect.querySelector(`option[value="${cb.value}"]`);
+                    if (originalOption) {
+                      originalOption.selected = targetState;
+                    }
+                  }
+                }
+                
+                // Trigger change event on original select
+                qualitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                updateButtonText();
+              } else {
+                // Normal click: checkbox state is toggled automatically by browser
+                // Just sync with original select
+                const originalOption = qualitySelect.querySelector(`option[value="${this.value}"]`);
+                if (originalOption) {
+                  originalOption.selected = this.checked;
+                  // Trigger change event on original select
+                  qualitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                updateButtonText();
+              }
+              
+              // Update last clicked checkbox
+              lastClickedCheckbox = checkbox;
+            });
+            
+            const labelText = document.createElement('span');
+            labelText.textContent = option.text;
+            labelText.style.color = '#ffffff'; // White text for visibility
+            labelText.style.flex = '1';
+            
+            checkboxItem.appendChild(checkbox);
+            checkboxItem.appendChild(labelText);
+            dropdownMenu.appendChild(checkboxItem);
+          }
+        });
+        
+        // Function to update button text
+        function updateButtonText() {
+          const selectedOptions = Array.from(qualitySelect.selectedOptions).filter(opt => opt.value);
+          let displayText = '- Quality assessment -';
+          
+          if (selectedOptions.length === 0) {
+            displayText = '- Quality assessment -';
+          } else if (selectedOptions.length === 1) {
+            displayText = selectedOptions[0].text;
+          } else {
+            // Show all selected options as comma-separated list
+            displayText = selectedOptions.map(opt => opt.text).join(', ');
+          }
+          
+          // Update text content while preserving the caret element
+          // Remove all text nodes but keep the caret span
+          const nodesToRemove = [];
+          Array.from(dropdownButton.childNodes).forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              nodesToRemove.push(node);
+            } else if (node.nodeType === Node.ELEMENT_NODE && node !== caret) {
+              nodesToRemove.push(node);
+            }
+          });
+          nodesToRemove.forEach(node => node.remove());
+          
+          // Insert new text before the caret
+          dropdownButton.insertBefore(document.createTextNode(displayText), caret);
+          
+          // Ensure button maintains fixed width to prevent layout shifts
+          dropdownButton.style.width = '230px';
+          dropdownButton.style.minWidth = '230px';
+          dropdownButton.style.maxWidth = '230px';
+        }
+        
+        // Toggle dropdown
+        dropdownButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isOpen = dropdownMenu.style.display === 'block';
+          dropdownMenu.style.display = isOpen ? 'none' : 'block';
+          
+          // Close other dropdowns
+          body.querySelectorAll('.quality-dropdown-menu').forEach(menu => {
+            if (menu !== dropdownMenu) {
+              menu.style.display = 'none';
+            }
+          });
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!dropdownContainer.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+          }
+        });
+        
+        // Insert custom dropdown before the hidden select
+        const parentElement = qualitySelect.parentElement;
+        dropdownContainer.appendChild(dropdownButton);
+        dropdownContainer.appendChild(dropdownMenu);
+        parentElement.insertBefore(dropdownContainer, qualitySelect);
+        
+        // Initialize button text
+        updateButtonText();
+      }
+
       // Style form groups
       body.querySelectorAll(".form-group").forEach((fg) => {
         fg.style.marginBottom = "0.8rem";
@@ -427,14 +690,20 @@ const FilterControl = L.Control.extend({
         lbl.style.color = "#e0e0e0"; // Light text color for labels
       });
 
-      // Style buttons
-      body.querySelectorAll("button.btn").forEach((btn) => {
+      // Style buttons - find ALL buttons, not just .btn class
+      const allButtons = body.querySelectorAll("button");
+      console.log("Found buttons:", allButtons.length);
+      allButtons.forEach((btn) => {
+        // Ensure button is visible
+        btn.style.display = "block";
+        btn.style.visibility = "visible";
+        btn.style.opacity = "1";
         btn.style.fontSize = "0.75rem";
         btn.style.padding = "0.4rem 0.6rem"; // Reduced horizontal padding
         // Check if buttons are in a row - if so, make them share the row width
         const parentRow = btn.closest(".row");
         const parentColumn = btn.closest("[class*='col-']");
-        if (parentRow && parentRow.querySelectorAll("button.btn").length > 1) {
+        if (parentRow && parentRow.querySelectorAll("button").length > 1) {
           // Multiple buttons in same row - make them narrower to fit side by side
           // Ensure the column container doesn't force full width
           if (parentColumn) {
@@ -443,6 +712,8 @@ const FilterControl = L.Control.extend({
             parentColumn.style.maxWidth = "none";
             parentColumn.style.width = "auto";
             parentColumn.style.flexBasis = "auto";
+            parentColumn.style.display = "block";
+            parentColumn.style.visibility = "visible";
           }
           btn.style.width = "100%";
           btn.style.minWidth = "60px";
@@ -452,7 +723,7 @@ const FilterControl = L.Control.extend({
         } else {
           // Single button - full width
           btn.style.width = "100%";
-          btn.style.maxWidth = "200px";
+          btn.style.maxWidth = "230px";
           btn.style.marginTop = "0.2rem";
         }
         btn.style.boxSizing = "border-box";
@@ -463,6 +734,21 @@ const FilterControl = L.Control.extend({
         } else if (btn.classList.contains("btn-secondary")) {
           btn.style.backgroundColor = "#6c757d";
           btn.style.color = "#ffffff";
+        }
+        // Ensure button row is visible and aligned
+        if (parentRow) {
+          parentRow.style.display = "flex";
+          parentRow.style.visibility = "visible";
+          parentRow.style.opacity = "1";
+          parentRow.style.alignItems = "flex-start"; // Align items to start (top)
+          // If this row contains buttons, ensure they're aligned
+          if (parentRow.querySelectorAll("button").length > 0) {
+            parentRow.style.alignItems = "center"; // Center align buttons vertically
+            // Center buttons horizontally on the row
+            if (btn.classList.contains("button-row")) {
+              parentRow.style.justifyContent = "center"; // Center buttons horizontally
+            }
+          }
         }
         
         // Override Clear button onclick to stay on current page (only on main map/home page)
@@ -484,6 +770,10 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            // Store sidebar open state before reloading
+            sessionStorage.setItem('sidebarOpen', 'true');
+            
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             // Remove all filter-related query parameters
@@ -537,39 +827,72 @@ const FilterControl = L.Control.extend({
         row.style.display = "flex";
         row.style.flexWrap = "wrap";
         row.style.flexDirection = "row";
+        row.style.visibility = "visible";
+        row.style.opacity = "1";
         // Override Bootstrap's default row display
         row.style.setProperty("display", "flex", "important");
+        // Ensure row is not hidden
+        row.style.setProperty("visibility", "visible", "important");
+        row.style.setProperty("opacity", "1", "important");
       });
       
       // Remove left padding from columns and ensure they work with flex
       body.querySelectorAll(".col-md, [class*='col-']").forEach((col) => {
         col.style.paddingLeft = "0.25rem"; // Minimal left padding
         col.style.paddingRight = "0.25rem"; // Minimal right padding
-        // For button rows, make columns flexible
-        const parentRow = col.closest(".row");
-        if (parentRow && parentRow.querySelectorAll("button.btn").length > 1) {
-          col.style.flex = "1 1 auto";
-          col.style.minWidth = "0";
-          col.style.maxWidth = "none";
-          col.style.width = "auto";
-          col.style.flexBasis = "auto";
-          // Override Bootstrap's default column width
-          col.style.setProperty("width", "auto", "important");
-          col.style.setProperty("flex-basis", "auto", "important");
+        // Make all columns flexible to use full sidebar width
+        col.style.flex = "1 1 auto";
+        col.style.minWidth = "0";
+        col.style.maxWidth = "none";
+        col.style.width = "auto";
+        col.style.flexBasis = "auto";
+        // Override Bootstrap's default column width
+        col.style.setProperty("width", "auto", "important");
+        col.style.setProperty("flex-basis", "auto", "important");
+      });
+      
+      // Make expedition__name field column expand to full width (230px) like Name field
+      // This will naturally push buttons to wrap to next line
+      const expeditionNameInput = body.querySelector('input[name="expedition__name"], select[name="expedition__name"]');
+      if (expeditionNameInput) {
+        const expeditionColumn = expeditionNameInput.closest("[class*='col-']");
+        if (expeditionColumn) {
+          // Override the general column styling to force full width (230px) when wrapping
+          // This makes it behave like the Name field above it
+          expeditionColumn.style.setProperty("flex-basis", "230px", "important");
+          expeditionColumn.style.setProperty("min-width", "230px", "important");
+          expeditionColumn.style.setProperty("width", "230px", "important");
+          // This will cause the row to wrap, pushing buttons to next line
+        }
+      }
+      
+      // Force buttons to wrap to new line by making their columns full width
+      body.querySelectorAll(".button-row").forEach((btn) => {
+        const btnColumn = btn.closest("[class*='col-']");
+        if (btnColumn) {
+          btnColumn.style.width = "100%";
+          btnColumn.style.flexBasis = "100%";
+          btnColumn.style.maxWidth = "100%";
+          btnColumn.style.marginTop = "0.5rem";
         }
       });
 
       // Auto-adjust sidebar height after form is copied
       setTimeout(function () {
         if (sidebar) {
+          // Force a reflow to ensure all content is measured
+          body.style.display = "block";
           const bodyHeight = body.scrollHeight;
           const header = sidebar.querySelector(".filter-sidebar-header");
           const headerHeight = header ? header.offsetHeight : 50;
-          const totalHeight = bodyHeight + headerHeight + 10; // Add small padding
+          // Include padding in calculation to ensure buttons are fully visible
+          const bodyPadding = parseFloat(window.getComputedStyle(body).paddingTop) + 
+                             parseFloat(window.getComputedStyle(body).paddingBottom);
+          const totalHeight = bodyHeight + headerHeight + bodyPadding;
           const maxHeight = window.innerHeight * 0.8;
           sidebar.style.height = Math.min(totalHeight, maxHeight) + "px";
         }
-      }, 100);
+      }, 150);
 
       return true;
     };
@@ -592,7 +915,7 @@ const FilterControl = L.Control.extend({
           );
           inputs.forEach((el) => {
             el.style.width = "100%";
-            el.style.maxWidth = "200px";
+            el.style.maxWidth = "230px";
             el.style.fontSize = "0.8rem";
             el.style.padding = "0.3rem";
             el.style.marginBottom = "0.4rem";
@@ -627,7 +950,7 @@ const FilterControl = L.Control.extend({
             } else {
               // Single button - full width
               btn.style.width = "100%";
-              btn.style.maxWidth = "200px";
+              btn.style.maxWidth = "230px";
               btn.style.marginTop = "0.2rem";
             }
             btn.style.boxSizing = "border-box";
@@ -736,9 +1059,9 @@ const FilterControl = L.Control.extend({
     // Helper function to show sidebar (slide out from left, button moves to right edge)
     function showSidebar() {
       sidebar.style.left = "0px"; // Slide sidebar out - left edge aligns with map edge (no gap)
-      // Button is 20px from map edge when closed, sidebar is 220px wide starting at 0px
-      // So button should be at 220px (right edge of sidebar)
-      container.style.left = "220px"; // Move button to right edge of sidebar
+      // Button is 20px from map edge when closed, sidebar is 250px wide starting at 0px
+      // So button should be at 250px (right edge of sidebar)
+      container.style.left = "250px"; // Move button to right edge of sidebar
       // Button stays on right edge - positioned relative to wrapper
 
       // Auto-adjust sidebar height to fit content
@@ -756,10 +1079,15 @@ const FilterControl = L.Control.extend({
           formInBody.style.paddingTop = "0";
         }
 
+        // Force a reflow to ensure all content is measured
+        body.style.display = "block";
         const bodyHeight = body.scrollHeight;
         const headerHeight =
           sidebar.querySelector(".filter-sidebar-header")?.offsetHeight || 50;
-        const totalHeight = bodyHeight + headerHeight + 10; // Add small padding
+        // Include padding in calculation to ensure buttons are fully visible
+        const bodyPadding = parseFloat(window.getComputedStyle(body).paddingTop) + 
+                           parseFloat(window.getComputedStyle(body).paddingBottom);
+        const totalHeight = bodyHeight + headerHeight + bodyPadding;
         sidebar.style.height =
           Math.min(totalHeight, window.innerHeight * 0.8) + "px";
       }
@@ -768,10 +1096,29 @@ const FilterControl = L.Control.extend({
     // Helper function to hide sidebar (slide back left, button returns to left)
     function hideSidebar() {
       if (!sidebarOpen) {
-        sidebar.style.left = "-220px"; // Hide sidebar
+        sidebar.style.left = "-250px"; // Hide sidebar
         container.style.left = "20px"; // Return button to 20px from left edge
         // Icon change is handled in click handler with animation
       }
+    }
+
+    // Ensure icon is set correctly initially (filter icon when closed)
+    if (!sidebarOpen) {
+      icon.className = "fas fa-filter";
+      icon.style.fontSize = "18px";
+      icon.style.color = "#007bff";
+    }
+    
+    // Check if sidebar should be open from sessionStorage (after Clear button reload)
+    const shouldOpenSidebar = sessionStorage.getItem('sidebarOpen') === 'true';
+    if (shouldOpenSidebar) {
+      sidebarOpen = true;
+      icon.className = "fas fa-times"; // Set to X (close icon)
+      icon.style.fontSize = "18px";
+      icon.style.color = "#007bff";
+      showSidebar();
+      // Clear the sessionStorage flag
+      sessionStorage.removeItem('sidebarOpen');
     }
 
     // Click handler - toggle persistent open state
