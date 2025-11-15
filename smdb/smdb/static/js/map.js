@@ -151,8 +151,8 @@ const FilterControl = L.Control.extend({
     container.style.top = "5px";
     container.style.left = "20px"; // 20px from left edge of map when closed
     container.style.zIndex = "1001"; // Above sidebar
-    container.style.transition = "left 0.3s ease, background-color 0.2s ease";
-    container.style.border = "none"; // Ensure no border
+    container.style.transition = "left 0.3s ease, all 0.2s ease"; // Smooth transitions for all properties
+    container.style.border = "1px solid rgba(0, 0, 0, 0.3)"; // More obvious border
     container.style.outline = "none"; // Ensure no outline
     container.style.margin = "0"; // Ensure no margin
     container.style.padding = "0"; // Ensure no padding
@@ -1106,7 +1106,8 @@ const FilterControl = L.Control.extend({
     const shouldOpenSidebar = sessionStorage.getItem('sidebarOpen') === 'true';
     if (shouldOpenSidebar) {
       sidebarOpen = true;
-      icon.className = "fas fa-times"; // Set to X (close icon)
+      // Always keep filter icon - don't change to X
+      icon.className = "fas fa-filter";
       icon.style.fontSize = "18px";
       icon.style.color = "#007bff";
       icon.style.display = "block"; // Ensure icon is visible
@@ -1126,34 +1127,14 @@ const FilterControl = L.Control.extend({
     L.DomEvent.on(container, "click", function (e) {
       L.DomEvent.stopPropagation(e);
 
-      // Remove any existing animation classes
-      icon.classList.remove("rotate-out", "rotate-in");
-
       sidebarOpen = !sidebarOpen;
 
       if (sidebarOpen) {
-        // Animate filter icon out, then change to X
-        icon.classList.add("rotate-out");
-        setTimeout(function () {
-          icon.className = "fas fa-times"; // Change to X (close icon)
-          icon.style.fontSize = "18px";
-          icon.style.color = "#007bff";
-          icon.classList.remove("rotate-out");
-          icon.classList.add("rotate-in");
-          showSidebar();
-        }, 150); // Halfway through animation
+        // Open sidebar - keep filter icon
+        showSidebar();
       } else {
-        // Animate X icon out, then change to filter
-        icon.classList.add("rotate-out");
-        setTimeout(function () {
-          icon.className = "fas fa-filter"; // Change back to filter icon
-          icon.style.fontSize = "18px";
-          icon.style.color = "#007bff";
-          icon.style.display = "block"; // Ensure icon is visible
-          icon.classList.remove("rotate-out");
-          icon.classList.add("rotate-in");
-          hideSidebar();
-        }, 150); // Halfway through animation
+        // Close sidebar - keep filter icon
+        hideSidebar();
       }
     });
 
@@ -1225,6 +1206,9 @@ setTimeout(function () {
 const missions = JSON.parse(
   document.getElementById("missions-data").textContent
 );
+
+// Check if missions data is empty before creating GeoJSON layer
+var hasMissions = missions && missions.features && missions.features.length > 0;
 
 // Add SMDB Missions to Base Map
 let feature = L.geoJSON(missions, {
@@ -1299,93 +1283,76 @@ map.whenReady(function() {
   // Small delay to ensure container has final size after invalidateSize and feature is loaded
   setTimeout(function() {
     try {
-      var bounds = feature.getBounds();
-      if (bounds && bounds.isValid && bounds.isValid()) {
-        // Get viewport/container dimensions
-        var mapContainer = document.getElementById("map");
-        var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
-        var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
-        
-        // Get mission bounds coordinates
-        var sw = bounds.getSouthWest(); // Southwest corner
-        var ne = bounds.getNorthEast(); // Northeast corner
-        var missionLatSpan = ne.lat - sw.lat; // Latitude span
-        var missionLngSpan = ne.lng - sw.lng; // Longitude span
-        
-        // Calculate aspect ratios
-        var viewportAspect = viewportWidth / viewportHeight;
-        var missionAspect = missionLngSpan / missionLatSpan;
-        
-        // Calculate padding as percentage of viewport (adaptive to screen size)
-        // Use smaller padding for tighter fit and more zoom while still showing all missions
-        var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport (reduced from 5-10%)
-        var paddingX = Math.round(viewportWidth * paddingPercent);
-        var paddingY = Math.round(viewportHeight * paddingPercent);
-        
-        // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
-        // Only add vertical padding if needed to show all missions, not to match viewport aspect ratio
-        if (viewportAspect > missionAspect) {
-          // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
-          paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
-        }
-        
-        // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
-        // First, fit bounds to get the zoom level that shows all missions
-        map.fitBounds(bounds, { padding: [paddingY, paddingX] });
-        
-        // Adjust center to better position mission data in viewport
-        // If viewport is wider than mission bounds, shift center southward to show more data areas
-        if (viewportAspect > missionAspect) {
-          var currentCenter = map.getCenter();
-          var missionCenterLat = (sw.lat + ne.lat) / 2;
-          // Shift center slightly south to better position mission data (reduce empty north pole space)
-          var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
-          map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
-        }
-        
-        // Get the zoom level that fitBounds calculated
-        var calculatedZoom = map.getZoom();
-        
-        // Allow fractional zoom for finer control when zooming in
-        // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
-        // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
+      // Check if there are any missions before trying to fit bounds
+      // First check the original missions data
+      if (!hasMissions) {
+        // No missions found - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
       }
-    } catch (err) {
-      console.log("Error fitting bounds: " + err.message);
-    }
-  }, 150);
-});
-
-// Also try after a delay to ensure feature is fully loaded and map is ready
-setTimeout(function() {
-  try {
-    map.invalidateSize();
-    var bounds = feature.getBounds();
-    if (bounds && bounds.isValid && bounds.isValid()) {
-      // Get viewport dimensions
+      
+      // Also check the feature layers as a secondary check
+      var featureLayers = feature.getLayers();
+      if (!featureLayers || featureLayers.length === 0) {
+        // No missions found - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      // Try to get bounds - this may throw an error if layer is empty
+      var bounds;
+      try {
+        bounds = feature.getBounds();
+      } catch (boundsError) {
+        // getBounds() failed (likely empty layer) - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      if (!bounds || !bounds.isValid || !bounds.isValid()) {
+        // Invalid bounds (likely empty layer) - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      // Get mission bounds coordinates
+      var sw = bounds.getSouthWest(); // Southwest corner
+      var ne = bounds.getNorthEast(); // Northeast corner
+      var missionLatSpan = ne.lat - sw.lat; // Latitude span
+      var missionLngSpan = ne.lng - sw.lng; // Longitude span
+      
+      // Check if bounds span is too large (indicating invalid/empty bounds or global span)
+      // If longitude span is >= 360 degrees or latitude span >= 180 degrees, treat as empty
+      if (missionLngSpan >= 360 || missionLatSpan >= 180 || isNaN(missionLatSpan) || isNaN(missionLngSpan)) {
+        // Invalid or global-spanning bounds - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      // Get viewport/container dimensions
       var mapContainer = document.getElementById("map");
       var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
       var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
       
-      // Calculate adaptive padding (reduced for tighter fit and more zoom)
-      var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport
-      var paddingX = Math.round(viewportWidth * paddingPercent);
-      var paddingY = Math.round(viewportHeight * paddingPercent);
-      
-      // Get mission bounds to check aspect ratio
-      var sw = bounds.getSouthWest();
-      var ne = bounds.getNorthEast();
-      var missionLatSpan = ne.lat - sw.lat;
-      var missionLngSpan = ne.lng - sw.lng;
+      // Calculate aspect ratios
       var viewportAspect = viewportWidth / viewportHeight;
       var missionAspect = missionLngSpan / missionLatSpan;
       
+      // Calculate padding as percentage of viewport (adaptive to screen size)
+      // Use smaller padding for tighter fit and more zoom while still showing all missions
+      var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport (reduced from 5-10%)
+      var paddingX = Math.round(viewportWidth * paddingPercent);
+      var paddingY = Math.round(viewportHeight * paddingPercent);
+      
       // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+      // Only add vertical padding if needed to show all missions, not to match viewport aspect ratio
       if (viewportAspect > missionAspect) {
         // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
         paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
       }
       
+      // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
+      // First, fit bounds to get the zoom level that shows all missions
       map.fitBounds(bounds, { padding: [paddingY, paddingX] });
       
       // Adjust center to better position mission data in viewport
@@ -1398,13 +1365,129 @@ setTimeout(function() {
         map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
       }
       
-      // Fractional zoom enabled - allows 0.5 increments for finer zoom control
-      // No zoom constraint - fitBounds determines optimal zoom to show all missions
+      // Get the zoom level that fitBounds calculated
+      var calculatedZoom = map.getZoom();
+      var finalCenter = map.getCenter();
+      console.log("Current map zoom level:", calculatedZoom);
+      console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
+      console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+      
+      // Allow fractional zoom for finer control when zooming in
+      // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
+      // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
+    } catch (err) {
+      // If getBounds fails (e.g., no features), set to default zoom level 3 and center
+      console.log("Error fitting bounds: " + err.message);
+      map.setView([39.8423, -26.8945], 3, { animate: false });
     }
+  }, 150);
+});
+
+// Also try after a delay to ensure feature is fully loaded and map is ready
+setTimeout(function() {
+  try {
+    map.invalidateSize();
+    
+    // Check if there are any missions before trying to fit bounds
+    // First check the original missions data
+    if (!hasMissions) {
+      // No missions found - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Also check the feature layers as a secondary check
+    var featureLayers = feature.getLayers();
+    if (!featureLayers || featureLayers.length === 0) {
+      // No missions found - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Try to get bounds - this may throw an error if layer is empty
+    var bounds;
+    try {
+      bounds = feature.getBounds();
+    } catch (boundsError) {
+      // getBounds() failed (likely empty layer) - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    if (!bounds || !bounds.isValid || !bounds.isValid()) {
+      // Invalid bounds (likely empty layer) - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Get mission bounds to check aspect ratio
+    var sw = bounds.getSouthWest();
+    var ne = bounds.getNorthEast();
+    var missionLatSpan = ne.lat - sw.lat;
+    var missionLngSpan = ne.lng - sw.lng;
+    
+    // Check if bounds span is too large (indicating invalid/empty bounds or global span)
+    // If longitude span is >= 360 degrees or latitude span >= 180 degrees, treat as empty
+    if (missionLngSpan >= 360 || missionLatSpan >= 180 || isNaN(missionLatSpan) || isNaN(missionLngSpan)) {
+      // Invalid or global-spanning bounds - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Get viewport dimensions
+    var mapContainer = document.getElementById("map");
+    var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+    var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+    
+    // Calculate adaptive padding (reduced for tighter fit and more zoom)
+    var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport
+    var paddingX = Math.round(viewportWidth * paddingPercent);
+    var paddingY = Math.round(viewportHeight * paddingPercent);
+    
+    var viewportAspect = viewportWidth / viewportHeight;
+    var missionAspect = missionLngSpan / missionLatSpan;
+    
+    // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+    if (viewportAspect > missionAspect) {
+      // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
+      paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
+    }
+    
+    map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+    
+    // Adjust center to better position mission data in viewport
+    // If viewport is wider than mission bounds, shift center southward to show more data areas
+    if (viewportAspect > missionAspect) {
+      var currentCenter = map.getCenter();
+      var missionCenterLat = (sw.lat + ne.lat) / 2;
+      // Shift center slightly south to better position mission data (reduce empty north pole space)
+      var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
+      map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
+    }
+    
+    // Log the zoom level after fitBounds in fallback setTimeout
+    var finalZoom = map.getZoom();
+    var finalCenterFallback = map.getCenter();
+    console.log("Current map zoom level (fallback setTimeout):", finalZoom);
+    console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
+    console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+    
+    // Fractional zoom enabled - allows 0.5 increments for finer zoom control
+    // No zoom constraint - fitBounds determines optimal zoom to show all missions
   } catch (err) {
+    // If getBounds fails (e.g., no features), set to default zoom level 3 and center
     console.log("Error in fallback fitBounds: " + err.message);
+    map.setView([39.8423, -26.8945], 3, { animate: false });
   }
 }, 100);
+
+// Log final zoom level and center after all initialization is complete
+setTimeout(function() {
+  var finalZoomLevel = map.getZoom();
+  var finalMapCenter = map.getCenter();
+  console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
+  console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
+}, 500);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1503,37 +1586,153 @@ var measure = L.control
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
-var drawControl = new L.Control.Draw({
-  position: "topright",
-  draw: {
-    polygon: false,
-    polyline: false,
-    circle: false,
-    circlemarker: false,
-    marker: false,
-    rectangle: {
-      shapeOptions: {
-        color: "#3388ff",
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        weight: 2,
-      },
-    },
-  },
-  edit: {
-    featureGroup: drawnItems,
-    remove: true,
+// Create rectangle drawing handler (without toolbar UI)
+var rectangleDrawer = new L.Draw.Rectangle(map, {
+  shapeOptions: {
+    color: "#3388ff",
+    fillColor: "#3388ff",
+    fillOpacity: 0.2,
+    weight: 2,
   },
 });
-map.addControl(drawControl);
 
-// Add tooltip to draw button
-setTimeout(function() {
-  var drawButton = document.querySelector('.leaflet-draw-draw-rectangle');
-  if (drawButton) {
-    drawButton.setAttribute('title', 'Draw a square around missions to create an exportable list.');
+// Create custom Draw Square button control matching filter button settings
+var DrawSquareButton = L.Control.extend({
+  onAdd: function(map) {
+    // Create wrapper
+    const wrapper = L.DomUtil.create("div", "draw-square-wrapper");
+    wrapper.style.position = "relative";
+    wrapper.style.width = "40px";
+    wrapper.style.height = "40px"; // Match button height
+    wrapper.style.backgroundColor = "transparent";
+    wrapper.style.border = "none";
+    wrapper.style.boxShadow = "none";
+    wrapper.style.margin = "0";
+    wrapper.style.padding = "0";
+
+    // Draw Square button - same settings as filter button
+    const container = L.DomUtil.create("div", "draw-square-control", wrapper);
+    container.id = "drawSquare-button";
+    container.title = "Draw a square around missions to create an exportable list.";
+    container.style.width = "40px";
+    container.style.height = "40px";
+    container.style.backgroundColor = "hsla(0, 0%, 100%, 0.75)"; // Semi-transparent white like other controls
+    container.style.borderRadius = "4px";
+    container.style.cursor = "pointer";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.alignItems = "center";
+    container.style.justifyContent = "center";
+    container.style.boxShadow = "0 1px 5px rgba(0,0,0,0.4)";
+    container.style.position = "relative"; // Relative to wrapper, not absolute
+    container.style.zIndex = "1001";
+    container.style.transition = "all 0.2s ease"; // Smooth transitions for all properties
+    container.style.border = "1px solid rgba(0, 0, 0, 0.3)"; // More obvious border
+    container.style.outline = "none";
+    container.style.margin = "0";
+    container.style.padding = "0";
+
+    // Square icon - using larger size and thicker stroke, or create custom SVG for better control
+    // Option 1: Try larger Font Awesome icon with thicker stroke
+    const icon = L.DomUtil.create("i", "fa-regular fa-square", container);
+    icon.id = "draw-square-icon";
+    icon.style.fontSize = "22px"; // Increased from 18px for larger icon
+    icon.style.color = "#007bff"; // Same blue color as filter button
+    // Increase stroke thickness using text-stroke - thicker stroke
+    icon.style.webkitTextStroke = "2.5px #007bff";
+    icon.style.webkitTextFillColor = "transparent";
+    icon.style.textStroke = "2.5px #007bff";
+    icon.style.textFillColor = "transparent";
+    
+    // Alternative: Create custom SVG square with thicker stroke for better control
+    // Uncomment below and comment out the Font Awesome icon above if needed
+    /*
+    const icon = L.DomUtil.createNS("http://www.w3.org/2000/svg", "svg");
+    icon.id = "draw-square-icon";
+    icon.setAttribute("width", "18");
+    icon.setAttribute("height", "18");
+    icon.setAttribute("viewBox", "0 0 18 18");
+    icon.style.display = "block";
+    const rect = L.DomUtil.createNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", "2");
+    rect.setAttribute("y", "2");
+    rect.setAttribute("width", "14");
+    rect.setAttribute("height", "14");
+    rect.setAttribute("fill", "none");
+    rect.setAttribute("stroke", "#007bff");
+    rect.setAttribute("stroke-width", "2.5");
+    rect.setAttribute("stroke-linecap", "square");
+    icon.appendChild(rect);
+    container.appendChild(icon);
+    */
+
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(container, "click", function(e) {
+      L.DomEvent.stopPropagation(e);
+      e.preventDefault();
+      rectangleDrawer.enable();
+    });
+
+    return wrapper;
+  },
+});
+
+// Add draw square button to map at top-right
+const drawSquareButton = new DrawSquareButton({ position: "topright" });
+drawSquareButton.addTo(map);
+
+// Remove Leaflet's default control styling from draw square button container
+// But preserve margin-top so it participates in Leaflet's control stacking
+// Use multiple attempts to ensure DOM is ready
+function styleDrawSquareControl() {
+  const controlContainer = drawSquareButton.getContainer();
+  
+  if (!controlContainer) {
+    console.log("Control container not found, retrying...");
+    setTimeout(styleDrawSquareControl, 100);
+    return;
   }
-}, 200);
+  
+  // Find the .leaflet-control wrapper that Leaflet creates
+  let leafletControlDiv = controlContainer.closest(".leaflet-control");
+  
+  // If closest doesn't work, walk up manually
+  if (!leafletControlDiv) {
+    leafletControlDiv = controlContainer.parentElement;
+    while (leafletControlDiv && !leafletControlDiv.classList.contains("leaflet-control")) {
+      leafletControlDiv = leafletControlDiv.parentElement;
+    }
+  }
+  
+  if (leafletControlDiv && leafletControlDiv.classList.contains("leaflet-control")) {
+    // Remove background/border/shadow but keep margin-top for stacking
+    leafletControlDiv.style.background = "transparent";
+    leafletControlDiv.style.border = "none";
+    leafletControlDiv.style.boxShadow = "none";
+    // Set margin-top to 10px to create space from control above (mousePosition)
+    // Use transform to move left 10px (works better with right-aligned controls)
+    leafletControlDiv.style.setProperty("margin-top", "10px", "important");
+    leafletControlDiv.style.setProperty("transform", "translateX(-10px)", "important");
+    leafletControlDiv.style.padding = "0";
+    leafletControlDiv.style.width = "auto";
+    leafletControlDiv.style.height = "auto";
+    leafletControlDiv.style.minHeight = "0";
+    leafletControlDiv.style.minWidth = "0";
+    // Add a class and ID for CSS targeting
+    leafletControlDiv.classList.add("draw-square-control-wrapper");
+    leafletControlDiv.id = "draw-square-control-wrapper";
+    console.log("Applied styles to draw square control wrapper");
+    console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
+    console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
+  } else {
+    console.log("Could not find .leaflet-control wrapper, retrying...");
+    setTimeout(styleDrawSquareControl, 100);
+  }
+}
+
+// Try immediately and also after a delay
+setTimeout(styleDrawSquareControl, 100);
+setTimeout(styleDrawSquareControl, 500);
 
 // Handle rectangle drawing completion
 map.on(L.Draw.Event.CREATED, function (e) {
