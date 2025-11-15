@@ -1102,13 +1102,6 @@ const FilterControl = L.Control.extend({
       }
     }
 
-    // Ensure icon is set correctly initially (filter icon when closed)
-    if (!sidebarOpen) {
-      icon.className = "fas fa-filter";
-      icon.style.fontSize = "18px";
-      icon.style.color = "#007bff";
-    }
-    
     // Check if sidebar should be open from sessionStorage (after Clear button reload)
     const shouldOpenSidebar = sessionStorage.getItem('sidebarOpen') === 'true';
     if (shouldOpenSidebar) {
@@ -1116,9 +1109,17 @@ const FilterControl = L.Control.extend({
       icon.className = "fas fa-times"; // Set to X (close icon)
       icon.style.fontSize = "18px";
       icon.style.color = "#007bff";
+      icon.style.display = "block"; // Ensure icon is visible
       showSidebar();
       // Clear the sessionStorage flag
       sessionStorage.removeItem('sidebarOpen');
+    } else {
+      // Ensure icon is set correctly when sidebar is closed
+      sidebarOpen = false;
+      icon.className = "fas fa-filter";
+      icon.style.fontSize = "18px";
+      icon.style.color = "#007bff";
+      icon.style.display = "block"; // Ensure icon is visible
     }
 
     // Click handler - toggle persistent open state
@@ -1148,6 +1149,7 @@ const FilterControl = L.Control.extend({
           icon.className = "fas fa-filter"; // Change back to filter icon
           icon.style.fontSize = "18px";
           icon.style.color = "#007bff";
+          icon.style.display = "block"; // Ensure icon is visible
           icon.classList.remove("rotate-out");
           icon.classList.add("rotate-in");
           hideSidebar();
@@ -1529,7 +1531,7 @@ map.addControl(drawControl);
 setTimeout(function() {
   var drawButton = document.querySelector('.leaflet-draw-draw-rectangle');
   if (drawButton) {
-    drawButton.setAttribute('title', 'Draw Rectangle - Click and drag to create a rectangular selection area');
+    drawButton.setAttribute('title', 'Draw a square around missions to create an exportable list.');
   }
 }, 200);
 
@@ -2204,9 +2206,9 @@ function updateResultsPanel(message, missions) {
   
   var html = '<div class="selection-results-info p-3 border-bottom">';
   html += '<strong>' + missions.length + ' mission' + (missions.length !== 1 ? 's' : '') + ' found</strong>';
-  html += '<div class="mt-2">';
-  html += '<a href="#" class="btn btn-sm btn-primary me-2" onclick="exportMissions(\'csv\')">Export CSV</a>';
-  html += '<a href="#" class="btn btn-sm btn-success" onclick="exportMissions(\'excel\')">Export Excel</a>';
+  html += '<div class="mt-2 d-flex justify-content-end">';
+  html += '<a href="#" class="btn btn-sm btn-primary" style="min-width: 120px; margin-right: 20px;" onclick="exportMissions(\'csv\')">Export CSV</a>';
+  html += '<a href="#" class="btn btn-sm btn-success" style="min-width: 120px;" onclick="exportMissions(\'excel\')">Export Excel</a>';
   html += '</div>';
   html += '</div>';
   
