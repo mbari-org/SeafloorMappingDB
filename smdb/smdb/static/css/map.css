@@ -95,7 +95,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 80%;
-  max-width: 900px;
+  max-width: 95vw; /* Allow wider panels to accommodate content */
   min-width: 400px;
   min-height: 300px;
   max-height: 80vh;
@@ -211,6 +211,14 @@ body {
 .selection-results-panel .table {
   margin-bottom: 0;
   font-size: 0.9rem;
+  table-layout: auto; /* Allow columns to size based on content */
+  width: 100%;
+}
+
+.selection-results-panel .table td,
+.selection-results-panel .table th {
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow content to overflow if needed */
 }
 
 .selection-results-panel .table thead th {
@@ -313,10 +321,109 @@ body {
   background: rgba(0, 123, 255, 0.3);
 }
 
+/* Leaflet Draw Tooltip Styling */
+.leaflet-draw-tooltip {
+  background-color: #e9ecef !important; /* Light gray background */
+  color: #007bff !important; /* Blue text matching filter button */
+  border: 1px solid #007bff !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-draw-tooltip-single {
+  background-color: #e9ecef !important;
+  color: #007bff !important;
+}
+
+.leaflet-draw-tooltip-subtext {
+  color: #0056b3 !important; /* Slightly darker blue for subtext */
+}
+
+/* Hide Leaflet Draw container structure - only show the button */
+.leaflet-draw {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  margin-top: 10px !important; /* Add separation from other controls */
+}
+
+.leaflet-draw-toolbar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.leaflet-draw .leaflet-bar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* Add 10px spacing above drawSquare-button control and move left 10px to align */
+#draw-square-control-wrapper,
+.leaflet-top.leaflet-right .draw-square-control-wrapper,
+.leaflet-top.leaflet-right .leaflet-control:has(#drawSquare-button),
+.leaflet-top.leaflet-right .leaflet-control:has(.draw-square-wrapper) {
+  margin-top: 10px !important;
+  transform: translateX(-10px) !important;
+}
+
+/* Hover effect for drawSquare-button - emphasize on hover */
+#drawSquare-button:hover {
+  background-color: hsla(0, 0%, 100%, 0.95) !important; /* More opaque white */
+  border-color: rgba(0, 123, 255, 0.6) !important; /* Blue border to match icon */
+  transform: scale(1.05) !important; /* Slight size increase */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important; /* Stronger shadow */
+  transition: all 0.2s ease !important; /* Smooth transition */
+}
+
+/* Hover effect for filter-button - same as drawSquare-button */
+#filter-button:hover {
+  background-color: hsla(0, 0%, 100%, 0.95) !important; /* More opaque white */
+  border-color: rgba(0, 123, 255, 0.6) !important; /* Blue border to match icon */
+  transform: scale(1.05) !important; /* Slight size increase */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important; /* Stronger shadow */
+  transition: all 0.2s ease !important; /* Smooth transition */
+}
+
 /* Disable resize handles when mouse is over scrollbar area */
 .resize-handle-e.scrollbar-active,
 .resize-handle-s.scrollbar-active,
 .resize-handle-se.scrollbar-active {
   pointer-events: none;
   cursor: default;
+}
+
+/* Hide scrollbar for quality dropdown menu */
+.quality-dropdown-menu.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.quality-dropdown-menu.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.quality-dropdown-menu.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.quality-dropdown-menu.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.quality-dropdown-menu.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
