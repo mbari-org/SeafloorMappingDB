@@ -1,4 +1,5 @@
 from django import forms
+from django.http import QueryDict
 from django_filters import (
     FilterSet,
     CharFilter,
@@ -6,6 +7,7 @@ from django_filters import (
     ModelMultipleChoiceFilter,
 )
 from django.db.utils import ProgrammingError
+from django.db.models import Q
 from smdb.models import Mission, Expedition, Compilation, Quality_Category
 
 from django.forms.widgets import TextInput
@@ -16,7 +18,7 @@ class MissionFilter(FilterSet):
         field_name="name",
         lookup_expr="icontains",
         label="",
-        widget=TextInput(attrs={"placeholder": "Name contains..."}),
+        widget=TextInput(attrs={"placeholder": "Survey name contains..."}),
     )
     try:
         region_name = ChoiceFilter(
@@ -26,7 +28,7 @@ class MissionFilter(FilterSet):
                 for m in Mission.objects.values_list("region_name", flat=True).distinct()
             ],
             label="",
-            empty_label="- region -",
+            empty_label="- Location -",
             widget=forms.Select(
                 attrs={
                     "class": "form-control",
@@ -109,6 +111,50 @@ class MissionFilter(FilterSet):
             "mgds_compilation",
             "expedition__name",
         ]
+    
+    def filter_queryset(self, queryset):
+        """
+        Override to use OR logic for name and expedition__name text search fields.
+        This allows searching for partial words like "Northern", "Auv", "Ops" 
+        in either field to find matches in both mission names and expedition names.
+        """
+        # Get the search values for name and expedition__name
+        name_value = self.data.get('name', '').strip()
+        expedition_name_value = self.data.get('expedition__name', '').strip()
+        
+        # Create a copy of data without name fields to avoid double filtering
+        filtered_data = QueryDict(mutable=True)
+        for key, value_list in self.data.lists():
+            if key not in ['name', 'expedition__name']:
+                filtered_data.setlist(key, value_list)
+        
+        # Temporarily replace data to exclude name fields from base filtering
+        original_data = self.data
+        self.data = filtered_data
+        
+        # Get the base filtered queryset with AND logic for other fields
+        qs = super().filter_queryset(queryset)
+        
+        # Restore original data
+        self.data = original_data
+        
+        # Apply OR logic for text search fields
+        if name_value or expedition_name_value:
+            # Build OR conditions for text search
+            text_search_q = Q()
+            
+            if name_value:
+                # Search in both mission name and expedition name when name is provided
+                text_search_q |= Q(name__icontains=name_value) | Q(expedition__name__icontains=name_value)
+            
+            if expedition_name_value:
+                # Search in both mission name and expedition name when expedition__name is provided
+                text_search_q |= Q(name__icontains=expedition_name_value) | Q(expedition__name__icontains=expedition_name_value)
+            
+            # Apply the text search filter
+            qs = qs.filter(text_search_q)
+        
+        return qs
 
 
 class ExpeditionFilter(FilterSet):

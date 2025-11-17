@@ -121,7 +121,7 @@ class MissionOverView(TemplateView):
         # Check if any filter parameters are present in the request
         has_mission_filter_params = any(
             key in self.request.GET and self.request.GET.get(key)
-            for key in ['region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
         ) or (filter_type == 'mission' and 'name' in self.request.GET and self.request.GET.get('name'))
         
         has_expedition_filter_params = filter_type == 'expedition' or (
