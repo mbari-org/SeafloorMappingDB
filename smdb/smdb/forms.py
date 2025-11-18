@@ -8,18 +8,19 @@ class MissionFilterFormHelper(FormHelper):
         Row(
             Column("name", css_class="form-group col-md mb-0"),
             Column("region_name", css_class="form-group col-md mb-0"),
+            Column("vehicle_name", css_class="form-group col-md mb-0"),
             Column("quality_categories", css_class="form-group col-md mb-0"),
             Column("patch_test", css_class="form-group col-md mb-0"),
             Column("repeat_survey", css_class="form-group col-md mb-0"),
             Column("mgds_compilation", css_class="form-group col-md mb-0"),
             Column("expedition__name", css_class="form-group col-md mb-0"),
-            Column(Submit("submit", "Filter", css_id="missionFilterSubmit", css_class="col-md mb-0 btn-primary")),
+            Column(Submit("submit", "Apply", css_id="missionFilterSubmit", css_class="col-md mb-0 btn-primary button-row")),
             Column(
                 Reset(
                     "clear",
                     "Clear",
-                    css_id="missionFilterCancel",
-                    css_class="col-md mb-0 btn-secondary",
+                    css_id="missionFilterClear",
+                    css_class="col-md mb-0 btn-secondary button-row",
                     onclick='window.location.href="{}"'.format('/missions'),
                     type="button",
                 )

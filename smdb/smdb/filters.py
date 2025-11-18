@@ -5,6 +5,7 @@ from django_filters import (
     CharFilter,
     ChoiceFilter,
     ModelMultipleChoiceFilter,
+    MultipleChoiceFilter,
 )
 from django.db.utils import ProgrammingError
 from django.db.models import Q
@@ -39,6 +40,26 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
+    vehicle_name = MultipleChoiceFilter(
+        field_name="vehicle_name",
+        choices=[
+            # Vehicle options
+            ("MAUV1", "MAUV1"),
+            ("LASS", "LASS"),
+            ("MAUV2", "MAUV2"),
+            ("Sentry", "Sentry"),
+            ("ABE", "ABE"),
+            # Platform options
+            ("R/V David Packard", "R/V David Packard"),
+            ("Paragon", "R/V Paragon"),
+            ("Iceberg", "Iceberg"),
+            ("", "None"),  # Use empty string for None/null values
+        ],
+        label="",
+        widget=forms.SelectMultiple(
+            attrs={"class": "form-control", "size": 2, "style": "font-size: x-small;"}
+        ),
+    )
     quality_categories = ModelMultipleChoiceFilter(
         field_name="quality_categories__name",
         queryset=Quality_Category.objects.all(),
@@ -105,6 +126,7 @@ class MissionFilter(FilterSet):
         fields = [
             "name",
             "region_name",
+            "vehicle_name",
             "quality_categories",
             "patch_test",
             "repeat_survey",
@@ -129,13 +151,16 @@ class MissionFilter(FilterSet):
         name_value = self.data.get('name', '').strip()
         expedition_name_value = self.data.get('expedition__name', '').strip()
         
-        # Create a copy of data without name fields to avoid double filtering
+        # Handle vehicle_name filter separately to handle None values
+        vehicle_name_values = self.data.getlist('vehicle_name', [])
+        
+        # Create a copy of data without name and vehicle_name fields to avoid double filtering
         filtered_data = QueryDict(mutable=True)
         for key, value_list in self.data.lists():
-            if key not in ['name', 'expedition__name']:
+            if key not in ['name', 'expedition__name', 'vehicle_name']:
                 filtered_data.setlist(key, value_list)
         
-        # Temporarily replace data to exclude name fields from base filtering
+        # Temporarily replace data to exclude name and vehicle_name fields from base filtering
         original_data = self.data
         self.data = filtered_data
         
@@ -144,6 +169,18 @@ class MissionFilter(FilterSet):
         
         # Restore original data
         self.data = original_data
+        
+        # Apply vehicle_name filter manually to handle None/empty values
+        if vehicle_name_values:
+            vehicle_q = Q()
+            for vehicle_value in vehicle_name_values:
+                # Handle None/empty values - empty string represents None/null
+                if vehicle_value == '' or vehicle_value is None:
+                    # Handle None/empty values
+                    vehicle_q |= Q(vehicle_name__isnull=True) | Q(vehicle_name='')
+                else:
+                    vehicle_q |= Q(vehicle_name=vehicle_value)
+            qs = qs.filter(vehicle_q)
         
         # Apply OR logic for text search fields
         if name_value or expedition_name_value:

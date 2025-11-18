@@ -121,7 +121,7 @@ class MissionOverView(TemplateView):
         # Check if any filter parameters are present in the request
         has_mission_filter_params = any(
             key in self.request.GET and self.request.GET.get(key)
-            for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            for key in ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
         ) or (filter_type == 'mission' and 'name' in self.request.GET and self.request.GET.get('name'))
         
         has_expedition_filter_params = filter_type == 'expedition' or (
@@ -487,7 +487,7 @@ class MissionSelectAPIView(View):
             filter_type = filter_params.get('filter_type', 'mission')
             
             # Apply mission filter
-            if filter_type == 'mission' or (filter_type == '' and any(key in filter_params for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name'])):
+            if filter_type == 'mission' or (filter_type == '' and any(key in filter_params for key in ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name'])):
                 mission_filter = MissionFilter(filter_params, queryset=missions)
                 missions = mission_filter.qs
             

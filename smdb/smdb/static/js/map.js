@@ -326,9 +326,69 @@ const FilterControl = L.Control.extend({
             // Store sidebar open state before reloading
             sessionStorage.setItem('sidebarOpen', 'true');
             
+            // Clear ALL checkboxes visually before reload
+            // Clear vehicle_name checkboxes
+            const vehicleSelect = document.querySelector('#filter-sidebar-body select[name="vehicle_name"]');
+            if (vehicleSelect) {
+              Array.from(vehicleSelect.options).forEach(option => {
+                option.selected = false;
+              });
+              // Also clear custom vehicle_name checkboxes
+              document.querySelectorAll('#filter-sidebar-body input[name="vehicle_name"][type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+              });
+            }
+            
+            // Clear quality_categories checkboxes
+            const qualitySelect = document.querySelector('#filter-sidebar-body select[name="quality_categories"]');
+            if (qualitySelect) {
+              Array.from(qualitySelect.options).forEach(option => {
+                option.selected = false;
+              });
+              // Also clear custom quality checkboxes if they exist
+              document.querySelectorAll('#filter-sidebar-body input[name="quality_categories"][type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+              });
+            }
+            
+            // Clear any other checkboxes in the form
+            document.querySelectorAll('#filter-sidebar-body input[type="checkbox"]').forEach(checkbox => {
+              checkbox.checked = false;
+            });
+            
+            // Update Vehicle/Platform dropdown button text
+            const vehicleDropdownButton = document.querySelector('#filter-sidebar-body .vehicle-dropdown-button');
+            if (vehicleDropdownButton) {
+              const vehicleCaret = vehicleDropdownButton.querySelector('span');
+              vehicleDropdownButton.textContent = '- Vehicle / Platform -';
+              if (vehicleCaret) {
+                vehicleDropdownButton.appendChild(vehicleCaret);
+              }
+            }
+            
+            // Update Quality Assessment dropdown button text
+            const qualityDropdownButton = document.querySelector('#filter-sidebar-body .quality-dropdown-button');
+            if (qualityDropdownButton) {
+              const qualityCaret = qualityDropdownButton.querySelector('span');
+              qualityDropdownButton.textContent = '- Quality assessment -';
+              if (qualityCaret) {
+                qualityDropdownButton.appendChild(qualityCaret);
+              }
+            }
+            
+            // Clear all text inputs
+            document.querySelectorAll('#filter-sidebar-body input[type="text"]').forEach(input => {
+              input.value = '';
+            });
+            
+            // Reset all select dropdowns (except the hidden ones)
+            document.querySelectorAll('#filter-sidebar-body select:not([style*="display: none"])').forEach(select => {
+              select.selectedIndex = 0;
+            });
+            
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
-            const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+            const filterKeys = ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             window.location.href = currentUrl.toString();
             return false;
@@ -345,12 +405,20 @@ const FilterControl = L.Control.extend({
         // Preserve current URL path and add filter parameters
         const currentUrl = new URL(window.location.href);
         // Clear existing filter params to avoid conflicts
-        const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type'];
+        const filterKeys = ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type'];
         filterKeys.forEach(key => currentUrl.searchParams.delete(key));
         // Add new filter params from form
+        // Handle multiple values for SelectMultiple fields (like vehicle_name, quality_categories)
+        const multiValueKeys = ['vehicle_name', 'quality_categories'];
         for (const [key, value] of params.entries()) {
           if (value) { // Only add non-empty values
-            currentUrl.searchParams.set(key, value);
+            if (multiValueKeys.includes(key)) {
+              // Append multiple values for SelectMultiple fields
+              currentUrl.searchParams.append(key, value);
+            } else {
+              // Set single value for other fields
+              currentUrl.searchParams.set(key, value);
+            }
           }
         }
         // Reload page with filter parameters
@@ -384,6 +452,16 @@ const FilterControl = L.Control.extend({
         el.style.boxSizing = "border-box";
         el.style.backgroundColor = "#1e1e1e"; // Dark input background
         el.style.color = "#e0e0e0"; // Light text color
+        
+        // Add hover effect to match other fields
+        el.addEventListener('mouseenter', function() {
+          this.style.borderColor = 'cornflowerblue';
+          this.style.boxShadow = 'inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue';
+        });
+        el.addEventListener('mouseleave', function() {
+          this.style.borderColor = '#555';
+          this.style.boxShadow = 'none';
+        });
       });
 
       // Style checkboxes for quality categories (CheckboxSelectMultiple creates <ul><li> structure)
@@ -463,6 +541,16 @@ const FilterControl = L.Control.extend({
         dropdownButton.style.overflow = 'hidden';
         dropdownButton.style.textOverflow = 'ellipsis';
         dropdownButton.style.whiteSpace = 'nowrap';
+        
+        // Add hover effect to match other fields
+        dropdownButton.addEventListener('mouseenter', function() {
+          this.style.borderColor = 'cornflowerblue';
+          this.style.boxShadow = 'inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue';
+        });
+        dropdownButton.addEventListener('mouseleave', function() {
+          this.style.borderColor = '#555';
+          this.style.boxShadow = 'none';
+        });
         
         // Match the native select dropdown arrow from Location field
         // Native HTML select elements use browser's default dropdown arrow
@@ -650,7 +738,7 @@ const FilterControl = L.Control.extend({
           dropdownMenu.style.display = isOpen ? 'none' : 'block';
           
           // Close other dropdowns
-          body.querySelectorAll('.quality-dropdown-menu').forEach(menu => {
+          body.querySelectorAll('.quality-dropdown-menu, .vehicle-dropdown-menu').forEach(menu => {
             if (menu !== dropdownMenu) {
               menu.style.display = 'none';
             }
@@ -672,6 +760,337 @@ const FilterControl = L.Control.extend({
         
         // Initialize button text
         updateButtonText();
+      }
+
+      // Create custom dropdown for vehicle_name with Vehicle and Platform subheaders
+      const vehicleSelect = body.querySelector('select[name="vehicle_name"]');
+      
+      if (vehicleSelect && vehicleSelect.options.length > 0) {
+        // Ensure no options are selected by default (unless from URL parameters)
+        // Only preserve selections that come from URL/form state, don't add any defaults
+        // This ensures clean initial state
+        // Hide the original select
+        vehicleSelect.style.display = "none";
+        
+        // Create custom dropdown container
+        const vehicleDropdownContainer = document.createElement('div');
+        vehicleDropdownContainer.className = 'vehicle-dropdown-container';
+        vehicleDropdownContainer.style.position = 'relative';
+        vehicleDropdownContainer.style.width = '230px';
+        vehicleDropdownContainer.style.minWidth = '230px';
+        vehicleDropdownContainer.style.maxWidth = '230px';
+        vehicleDropdownContainer.style.marginBottom = '0.4rem';
+        vehicleDropdownContainer.style.flexShrink = '0';
+        vehicleDropdownContainer.style.flexGrow = '0';
+        
+        // Create dropdown button (looks like Location field)
+        const vehicleDropdownButton = document.createElement('button');
+        vehicleDropdownButton.type = 'button';
+        vehicleDropdownButton.className = 'vehicle-dropdown-button';
+        vehicleDropdownButton.textContent = '- Vehicle / Platform -';
+        vehicleDropdownButton.style.width = '230px';
+        vehicleDropdownButton.style.minWidth = '230px';
+        vehicleDropdownButton.style.maxWidth = '230px';
+        vehicleDropdownButton.style.padding = '0.3rem';
+        vehicleDropdownButton.style.fontSize = '0.8rem';
+        vehicleDropdownButton.style.fontWeight = '300';
+        vehicleDropdownButton.style.border = '1px solid #555';
+        vehicleDropdownButton.style.borderRadius = '4px';
+        vehicleDropdownButton.style.backgroundColor = '#1e1e1e';
+        vehicleDropdownButton.style.color = '#e0e0e0';
+        vehicleDropdownButton.style.textAlign = 'left';
+        vehicleDropdownButton.style.cursor = 'pointer';
+        vehicleDropdownButton.style.boxSizing = 'border-box';
+        vehicleDropdownButton.style.position = 'relative';
+        vehicleDropdownButton.style.paddingRight = '2rem';
+        vehicleDropdownButton.style.overflow = 'hidden';
+        vehicleDropdownButton.style.textOverflow = 'ellipsis';
+        vehicleDropdownButton.style.whiteSpace = 'nowrap';
+        
+        // Add hover effect to match other fields
+        vehicleDropdownButton.addEventListener('mouseenter', function() {
+          this.style.borderColor = 'cornflowerblue';
+          this.style.boxShadow = 'inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue';
+        });
+        vehicleDropdownButton.addEventListener('mouseleave', function() {
+          this.style.borderColor = '#555';
+          this.style.boxShadow = 'none';
+        });
+        
+        // Create V-shaped chevron caret to match Location field dropdown
+        const vehicleCaret = document.createElement('span');
+        vehicleCaret.innerHTML = '⌄';
+        vehicleCaret.style.position = 'absolute';
+        vehicleCaret.style.right = '0.3rem';
+        vehicleCaret.style.top = '38%';
+        vehicleCaret.style.transform = 'translateY(-50%) scaleX(1.3)';
+        vehicleCaret.style.transformOrigin = 'center center';
+        vehicleCaret.style.fontSize = '1.2rem';
+        vehicleCaret.style.color = '#ffffff';
+        vehicleCaret.style.pointerEvents = 'none';
+        vehicleCaret.style.lineHeight = '0';
+        vehicleCaret.style.display = 'flex';
+        vehicleCaret.style.alignItems = 'center';
+        vehicleCaret.style.justifyContent = 'center';
+        vehicleCaret.style.fontWeight = 'bold';
+        vehicleCaret.style.fontFamily = 'Arial, sans-serif';
+        vehicleCaret.style.letterSpacing = '0';
+        vehicleDropdownButton.appendChild(vehicleCaret);
+        
+        // Create dropdown menu
+        const vehicleDropdownMenu = document.createElement('div');
+        vehicleDropdownMenu.className = 'vehicle-dropdown-menu';
+        vehicleDropdownMenu.style.display = 'none';
+        vehicleDropdownMenu.style.position = 'absolute';
+        vehicleDropdownMenu.style.top = '100%';
+        vehicleDropdownMenu.style.left = '0';
+        vehicleDropdownMenu.style.width = '230px';
+        vehicleDropdownMenu.style.minWidth = '230px';
+        vehicleDropdownMenu.style.maxWidth = '230px';
+        vehicleDropdownMenu.style.maxHeight = '300px';
+        vehicleDropdownMenu.style.overflowY = 'auto';
+        vehicleDropdownMenu.style.backgroundColor = '#2d2d2d';
+        vehicleDropdownMenu.style.border = '1px solid #555';
+        vehicleDropdownMenu.style.borderRadius = '4px';
+        vehicleDropdownMenu.style.marginTop = '2px';
+        vehicleDropdownMenu.style.zIndex = '1000';
+        vehicleDropdownMenu.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+        vehicleDropdownMenu.style.scrollbarWidth = 'thin';
+        vehicleDropdownMenu.style.scrollbarColor = 'transparent transparent';
+        vehicleDropdownMenu.setAttribute('class', 'vehicle-dropdown-menu custom-scrollbar');
+        
+        // Track last clicked checkbox for Shift+Click range selection
+        let lastClickedVehicleCheckbox = null;
+        
+        // Define Vehicle and Platform options (Vehicles in alphabetical order)
+        const vehicleOptions = [
+          { value: 'ABE', label: 'ABE' },
+          { value: 'LASS', label: 'LASS' },
+          { value: 'MAUV1', label: 'MAUV1' },
+          { value: 'MAUV2', label: 'MAUV2' },
+          { value: 'Sentry', label: 'Sentry' }
+        ];
+        
+        const platformOptions = [
+          { value: 'R/V David Packard', label: 'R/V David Packard' },
+          { value: 'Paragon', label: 'R/V Paragon' },
+          { value: 'Iceberg', label: 'Iceberg' },
+          { value: '', label: 'None' } // Empty string represents None/null
+        ];
+        
+        // Helper function to create checkbox item
+        function createVehicleCheckboxItem(option, index, isVehicle) {
+          const checkboxItem = document.createElement('label');
+          checkboxItem.style.display = 'flex';
+          checkboxItem.style.alignItems = 'center';
+          checkboxItem.style.padding = '0.5rem';
+          checkboxItem.style.cursor = 'pointer';
+          checkboxItem.style.color = '#ffffff';
+          checkboxItem.style.fontSize = '0.8rem';
+          checkboxItem.style.borderBottom = '1px solid #444';
+          checkboxItem.style.marginBottom = '0';
+          
+          checkboxItem.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#3d3d3d';
+          });
+          checkboxItem.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'transparent';
+          });
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = option.value;
+          checkbox.name = 'vehicle_name';
+          checkbox.style.width = '14px';
+          checkbox.style.height = '14px';
+          checkbox.style.marginRight = '0.5rem';
+          checkbox.style.cursor = 'pointer';
+          checkbox.style.flexShrink = '0';
+          
+          // Store index and category for Shift+Click range selection
+          checkbox.dataset.index = index;
+          checkbox.dataset.category = isVehicle ? 'vehicle' : 'platform';
+          
+          // Check if this option is selected in the original select
+          const originalOption = vehicleSelect.querySelector(`option[value="${option.value}"]`);
+          checkbox.checked = originalOption ? originalOption.selected : false;
+          
+          // Handle checkbox change with Shift+Click support
+          checkbox.addEventListener('click', function(e) {
+            if (e.shiftKey && lastClickedVehicleCheckbox && lastClickedVehicleCheckbox !== checkbox) {
+              // Shift+Click: select range between last clicked and current (within same category)
+              e.preventDefault();
+              const checkboxes = Array.from(vehicleDropdownMenu.querySelectorAll('input[type="checkbox"]'));
+              const sameCategoryCheckboxes = checkboxes.filter(cb => cb.dataset.category === checkbox.dataset.category);
+              const startIndex = parseInt(lastClickedVehicleCheckbox.dataset.index);
+              const endIndex = parseInt(checkbox.dataset.index);
+              const start = Math.min(startIndex, endIndex);
+              const end = Math.max(startIndex, endIndex);
+              
+              const targetState = lastClickedVehicleCheckbox.checked;
+              
+              // Set all checkboxes in range to the target state
+              for (let i = start; i <= end; i++) {
+                const cb = sameCategoryCheckboxes[i];
+                if (cb) {
+                  cb.checked = targetState;
+                  const originalOpt = vehicleSelect.querySelector(`option[value="${cb.value}"]`);
+                  if (originalOpt) {
+                    originalOpt.selected = targetState;
+                  }
+                }
+              }
+              
+              vehicleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+              updateVehicleButtonText();
+              
+              // Trigger form change to update filters if auto-apply is enabled
+              const form = vehicleSelect.closest('form');
+              if (form) {
+                form.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            } else {
+              // Normal click: sync with original select
+              const originalOpt = vehicleSelect.querySelector(`option[value="${this.value}"]`);
+              if (originalOpt) {
+                originalOpt.selected = this.checked;
+                vehicleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Trigger form change to update filters if auto-apply is enabled
+                const form = vehicleSelect.closest('form');
+                if (form) {
+                  form.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }
+              updateVehicleButtonText();
+            }
+            
+            lastClickedVehicleCheckbox = checkbox;
+          });
+          
+          const labelText = document.createElement('span');
+          labelText.textContent = option.label;
+          labelText.style.color = '#ffffff';
+          labelText.style.flex = '1';
+          
+          checkboxItem.appendChild(checkbox);
+          checkboxItem.appendChild(labelText);
+          
+          return checkboxItem;
+        }
+        
+        // Add Vehicle subheader
+        const vehicleHeader = document.createElement('div');
+        vehicleHeader.textContent = 'Vehicle';
+        vehicleHeader.style.padding = '0.5rem';
+        vehicleHeader.style.fontWeight = 'bold';
+        vehicleHeader.style.fontSize = '0.85rem';
+        vehicleHeader.style.color = '#ffffff';
+        vehicleHeader.style.backgroundColor = '#3d3d3d';
+        vehicleHeader.style.borderBottom = '1px solid #555';
+        vehicleDropdownMenu.appendChild(vehicleHeader);
+        
+        // Add Vehicle checkboxes
+        vehicleOptions.forEach((option, index) => {
+          const checkboxItem = createVehicleCheckboxItem(option, index, true);
+          vehicleDropdownMenu.appendChild(checkboxItem);
+        });
+        
+        // Add Platform subheader
+        const platformHeader = document.createElement('div');
+        platformHeader.textContent = 'Platform';
+        platformHeader.style.padding = '0.5rem';
+        platformHeader.style.fontWeight = 'bold';
+        platformHeader.style.fontSize = '0.85rem';
+        platformHeader.style.color = '#ffffff';
+        platformHeader.style.backgroundColor = '#3d3d3d';
+        platformHeader.style.borderTop = '2px solid #555';
+        platformHeader.style.borderBottom = '1px solid #555';
+        vehicleDropdownMenu.appendChild(platformHeader);
+        
+        // Add Platform checkboxes
+        platformOptions.forEach((option, index) => {
+          const checkboxItem = createVehicleCheckboxItem(option, index + vehicleOptions.length, false);
+          vehicleDropdownMenu.appendChild(checkboxItem);
+        });
+        
+        // Function to update button text
+        function updateVehicleButtonText() {
+          const selectedOptions = Array.from(vehicleSelect.selectedOptions).filter(opt => opt.value !== '');
+          let displayText = '- Vehicle / Platform -';
+          
+          if (selectedOptions.length === 0) {
+            displayText = '- Vehicle / Platform -';
+          } else if (selectedOptions.length === 1) {
+            displayText = selectedOptions[0].text;
+          } else {
+            displayText = selectedOptions.map(opt => opt.text).join(', ');
+          }
+          
+          // Update text content while preserving the caret element
+          const nodesToRemove = [];
+          Array.from(vehicleDropdownButton.childNodes).forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              nodesToRemove.push(node);
+            } else if (node.nodeType === Node.ELEMENT_NODE && node !== vehicleCaret) {
+              nodesToRemove.push(node);
+            }
+          });
+          nodesToRemove.forEach(node => node.remove());
+          
+          vehicleDropdownButton.insertBefore(document.createTextNode(displayText), vehicleCaret);
+          
+          vehicleDropdownButton.style.width = '230px';
+          vehicleDropdownButton.style.minWidth = '230px';
+          vehicleDropdownButton.style.maxWidth = '230px';
+        }
+        
+        // Toggle dropdown
+        vehicleDropdownButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isOpen = vehicleDropdownMenu.style.display === 'block';
+          vehicleDropdownMenu.style.display = isOpen ? 'none' : 'block';
+          
+          // Close other dropdowns
+          body.querySelectorAll('.quality-dropdown-menu, .vehicle-dropdown-menu').forEach(menu => {
+            if (menu !== vehicleDropdownMenu) {
+              menu.style.display = 'none';
+            }
+          });
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!vehicleDropdownContainer.contains(e.target)) {
+            vehicleDropdownMenu.style.display = 'none';
+          }
+        });
+        
+        // Clear any pre-selected options in the original select (unless they come from URL parameters)
+        // Check if there are URL parameters - if not, clear all selections
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasVehicleParam = urlParams.has('vehicle_name');
+        
+        if (!hasVehicleParam) {
+          // No vehicle_name in URL, so clear all selections to ensure clean initial state
+          Array.from(vehicleSelect.options).forEach(option => {
+            option.selected = false;
+          });
+          
+          // Update checkboxes to match cleared state
+          vehicleDropdownMenu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+          });
+        }
+        
+        // Insert custom dropdown before the hidden select
+        const vehicleParentElement = vehicleSelect.parentElement;
+        vehicleDropdownContainer.appendChild(vehicleDropdownButton);
+        vehicleDropdownContainer.appendChild(vehicleDropdownMenu);
+        vehicleParentElement.insertBefore(vehicleDropdownContainer, vehicleSelect);
+        
+        // Initialize button text
+        updateVehicleButtonText();
       }
 
       // Style form groups
@@ -774,10 +1193,70 @@ const FilterControl = L.Control.extend({
             // Store sidebar open state before reloading
             sessionStorage.setItem('sidebarOpen', 'true');
             
+            // Clear ALL checkboxes visually before reload
+            // Clear vehicle_name checkboxes
+            const vehicleSelect = body.querySelector('select[name="vehicle_name"]');
+            if (vehicleSelect) {
+              Array.from(vehicleSelect.options).forEach(option => {
+                option.selected = false;
+              });
+              // Also clear custom vehicle_name checkboxes
+              body.querySelectorAll('input[name="vehicle_name"][type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+              });
+            }
+            
+            // Clear quality_categories checkboxes
+            const qualitySelect = body.querySelector('select[name="quality_categories"]');
+            if (qualitySelect) {
+              Array.from(qualitySelect.options).forEach(option => {
+                option.selected = false;
+              });
+              // Also clear custom quality checkboxes if they exist
+              body.querySelectorAll('input[name="quality_categories"][type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+              });
+            }
+            
+            // Clear any other checkboxes in the form
+            body.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+              checkbox.checked = false;
+            });
+            
+            // Update Vehicle/Platform dropdown button text
+            const vehicleDropdownButton = body.querySelector('.vehicle-dropdown-button');
+            if (vehicleDropdownButton) {
+              const vehicleCaret = vehicleDropdownButton.querySelector('span');
+              vehicleDropdownButton.textContent = '- Vehicle / Platform -';
+              if (vehicleCaret) {
+                vehicleDropdownButton.appendChild(vehicleCaret);
+              }
+            }
+            
+            // Update Quality Assessment dropdown button text
+            const qualityDropdownButton = body.querySelector('.quality-dropdown-button');
+            if (qualityDropdownButton) {
+              const qualityCaret = qualityDropdownButton.querySelector('span');
+              qualityDropdownButton.textContent = '- Quality assessment -';
+              if (qualityCaret) {
+                qualityDropdownButton.appendChild(qualityCaret);
+              }
+            }
+            
+            // Clear all text inputs
+            body.querySelectorAll('input[type="text"]').forEach(input => {
+              input.value = '';
+            });
+            
+            // Reset all select dropdowns (except the hidden ones)
+            body.querySelectorAll('select:not([style*="display: none"])').forEach(select => {
+              select.selectedIndex = 0;
+            });
+            
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             // Remove all filter-related query parameters
-            const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+            const filterKeys = ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             // Reload page without filter parameters (stay on home/map page)
             window.location.href = currentUrl.toString();
@@ -981,10 +1460,41 @@ const FilterControl = L.Control.extend({
                 e.preventDefault();
                 e.stopPropagation();
                 e.stopImmediatePropagation();
+                
+                // Clear ALL checkboxes visually before reload
+                // Clear vehicle_name checkboxes
+                const vehicleSelect = body.querySelector('select[name="vehicle_name"]');
+                if (vehicleSelect) {
+                  Array.from(vehicleSelect.options).forEach(option => {
+                    option.selected = false;
+                  });
+                  // Also clear custom vehicle_name checkboxes
+                  body.querySelectorAll('input[name="vehicle_name"][type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                  });
+                }
+                
+                // Clear quality_categories checkboxes
+                const qualitySelect = body.querySelector('select[name="quality_categories"]');
+                if (qualitySelect) {
+                  Array.from(qualitySelect.options).forEach(option => {
+                    option.selected = false;
+                  });
+                  // Also clear custom quality checkboxes if they exist
+                  body.querySelectorAll('input[name="quality_categories"][type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                  });
+                }
+                
+                // Clear any other checkboxes in the form
+                body.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                  checkbox.checked = false;
+                });
+                
                 // Clear all filter parameters and reload current page
                 const currentUrl = new URL(window.location.href);
                 // Remove all filter-related query parameters
-                const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+                const filterKeys = ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
                 filterKeys.forEach(key => currentUrl.searchParams.delete(key));
                 // Reload page without filter parameters (stay on home/map page)
                 window.location.href = currentUrl.toString();
@@ -1761,7 +2271,7 @@ map.on(L.Draw.Event.CREATED, function (e) {
     // Get current filter parameters from URL
     var urlParams = new URLSearchParams(window.location.search);
     var filterParams = {};
-    var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
+    var filterKeys = ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
     filterKeys.forEach(function(key) {
       if (urlParams.has(key)) {
         filterParams[key] = urlParams.get(key);
@@ -2514,7 +3024,7 @@ function exportMissions(format) {
   // Build query string from current filter params
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
-  var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
+  var filterKeys = ['name', 'region_name', 'vehicle_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
   filterKeys.forEach(function(key) {
     if (urlParams.has(key)) {
       filterParams[key] = urlParams.get(key);
