@@ -1497,13 +1497,94 @@ function showResultsPanel(loading) {
       e.stopPropagation();
     });
     
+    // Prevent wheel events from propagating to map (allows panel to scroll)
+    panel.addEventListener('wheel', function(e) {
+      e.stopPropagation();
+      
+      // Find the scrollable container (selection-results-body)
+      var body = panel.querySelector('.selection-results-body');
+      if (body) {
+        var scrollTop = body.scrollTop;
+        var scrollHeight = body.scrollHeight;
+        var clientHeight = body.clientHeight;
+        
+        // Check if we can scroll
+        if (scrollHeight > clientHeight) {
+          // Prevent default map zoom/pan behavior
+          e.preventDefault();
+          
+          // Scroll the body
+          var delta = e.deltaY;
+          body.scrollTop += delta;
+          
+          // Prevent further propagation
+          e.stopImmediatePropagation();
+        }
+      }
+    }, { passive: false });
+    
+    // Detect when mouse is over scrollbar area and disable resize handles
+    var body = panel.querySelector('.selection-results-body');
+    if (body) {
+      body.addEventListener('mousemove', function(e) {
+        var rect = body.getBoundingClientRect();
+        var scrollbarWidth = 17; // Typical scrollbar width
+        var scrollbarHeight = 17; // Typical scrollbar height
+        
+        // Check if mouse is in scrollbar area (right edge for vertical, bottom for horizontal)
+        var isOverVerticalScrollbar = (e.clientX >= rect.right - scrollbarWidth && e.clientX <= rect.right);
+        var isOverHorizontalScrollbar = (e.clientY >= rect.bottom - scrollbarHeight && e.clientY <= rect.bottom);
+        // Check if mouse is in the scrollbar intersection (bottom-right corner where scrollbars meet)
+        var isOverScrollbarIntersection = isOverVerticalScrollbar && isOverHorizontalScrollbar;
+        
+        // Get resize handles
+        var handleE = panel.querySelector('.resize-handle-e');
+        var handleS = panel.querySelector('.resize-handle-s');
+        var handleSE = panel.querySelector('.resize-handle-se');
+        
+        // Disable right edge handle when over vertical scrollbar (but not intersection)
+        if (handleE) {
+          if (isOverVerticalScrollbar && !isOverScrollbarIntersection) {
+            handleE.classList.add('scrollbar-active');
+          } else {
+            handleE.classList.remove('scrollbar-active');
+          }
+        }
+        
+        // Disable bottom handle when over horizontal scrollbar (but not intersection)
+        if (handleS) {
+          if (isOverHorizontalScrollbar && !isOverScrollbarIntersection) {
+            handleS.classList.add('scrollbar-active');
+          } else {
+            handleS.classList.remove('scrollbar-active');
+          }
+        }
+        
+        // Bottom-right corner handle is always active (never disabled)
+        // The reserved space prevents scrollbars from overlapping it
+        if (handleSE) {
+          handleSE.classList.remove('scrollbar-active');
+        }
+      });
+      
+      body.addEventListener('mouseleave', function() {
+        // Remove scrollbar-active when mouse leaves body
+        var handleE = panel.querySelector('.resize-handle-e');
+        var handleS = panel.querySelector('.resize-handle-s');
+        var handleSE = panel.querySelector('.resize-handle-se');
+        if (handleE) handleE.classList.remove('scrollbar-active');
+        if (handleS) handleS.classList.remove('scrollbar-active');
+        if (handleSE) handleSE.classList.remove('scrollbar-active');
+      });
+    }
+    
     // Initialize drag functionality
     initializePanelDrag(panel);
     
     // Initialize resize functionality
     initializePanelResize(panel);
   }
-  panel.style.display = "block";
+  panel.style.display = "flex";
   
   // Force a synchronous layout calculation to ensure panel is rendered
   panel.offsetHeight;
@@ -1783,7 +1864,7 @@ function updateResultsPanel(message, missions) {
   html += '</div>';
   
   // Create table
-  html += '<div class="table-responsive" style="flex: 1; overflow-y: auto; overflow-x: auto; min-height: 0;">';
+  html += '<div class="table-responsive">';
   html += '<table class="table table-sm table-striped table-hover">';
   html += '<thead class="table-light sticky-top">';
   html += '<tr>';
