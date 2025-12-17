@@ -24,7 +24,9 @@ const options = {
 };
 
 const map = L.map("map", {
-  options,
+  ...options,
+  zoomSnap: 0.5,  // Allow fractional zoom levels (0.5 increments: 1, 1.5, 2, 2.5, 3, etc.)
+  zoomDelta: 0.5, // Zoom in/out by 0.5 increments
 });
 const media_url = JSON.parse(document.getElementById("MEDIA-URL").textContent);
 
@@ -938,11 +940,122 @@ let feature = L.geoJSON(missions, {
     return tooltipInfo;
   })
   .addTo(map);
-try {
-  map.fitBounds(feature.getBounds(), { padding: [100, 100] });
-} catch (err) {
-  console.log(err.message);
-}
+
+// Fit map to mission bounds - calculate optimal zoom based on viewport size and mission bounds
+// Priority: Show ALL mission data, but optimize zoom to minimize empty space at poles
+map.whenReady(function() {
+  // Invalidate size to ensure Leaflet recalculates container dimensions
+  map.invalidateSize();
+  
+  // Small delay to ensure container has final size after invalidateSize and feature is loaded
+  setTimeout(function() {
+    try {
+      var bounds = feature.getBounds();
+      if (bounds && bounds.isValid && bounds.isValid()) {
+        // Get viewport/container dimensions
+        var mapContainer = document.getElementById("map");
+        var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+        var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+        
+        // Get mission bounds coordinates
+        var sw = bounds.getSouthWest(); // Southwest corner
+        var ne = bounds.getNorthEast(); // Northeast corner
+        var missionLatSpan = ne.lat - sw.lat; // Latitude span
+        var missionLngSpan = ne.lng - sw.lng; // Longitude span
+        
+        // Calculate aspect ratios
+        var viewportAspect = viewportWidth / viewportHeight;
+        var missionAspect = missionLngSpan / missionLatSpan;
+        
+        // Calculate padding as percentage of viewport (adaptive to screen size)
+        // Use smaller padding for tighter fit and more zoom while still showing all missions
+        var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport (reduced from 5-10%)
+        var paddingX = Math.round(viewportWidth * paddingPercent);
+        var paddingY = Math.round(viewportHeight * paddingPercent);
+        
+        // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+        // Only add vertical padding if needed to show all missions, not to match viewport aspect ratio
+        if (viewportAspect > missionAspect) {
+          // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
+          paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
+        }
+        
+        // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
+        // First, fit bounds to get the zoom level that shows all missions
+        map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+        
+        // Adjust center to better position mission data in viewport
+        // If viewport is wider than mission bounds, shift center southward to show more data areas
+        if (viewportAspect > missionAspect) {
+          var currentCenter = map.getCenter();
+          var missionCenterLat = (sw.lat + ne.lat) / 2;
+          // Shift center slightly south to better position mission data (reduce empty north pole space)
+          var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
+          map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
+        }
+        
+        // Get the zoom level that fitBounds calculated
+        var calculatedZoom = map.getZoom();
+        
+        // Allow fractional zoom for finer control when zooming in
+        // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
+        // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
+      }
+    } catch (err) {
+      console.log("Error fitting bounds: " + err.message);
+    }
+  }, 150);
+});
+
+// Also try after a delay to ensure feature is fully loaded and map is ready
+setTimeout(function() {
+  try {
+    map.invalidateSize();
+    var bounds = feature.getBounds();
+    if (bounds && bounds.isValid && bounds.isValid()) {
+      // Get viewport dimensions
+      var mapContainer = document.getElementById("map");
+      var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+      var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+      
+      // Calculate adaptive padding (reduced for tighter fit and more zoom)
+      var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport
+      var paddingX = Math.round(viewportWidth * paddingPercent);
+      var paddingY = Math.round(viewportHeight * paddingPercent);
+      
+      // Get mission bounds to check aspect ratio
+      var sw = bounds.getSouthWest();
+      var ne = bounds.getNorthEast();
+      var missionLatSpan = ne.lat - sw.lat;
+      var missionLngSpan = ne.lng - sw.lng;
+      var viewportAspect = viewportWidth / viewportHeight;
+      var missionAspect = missionLngSpan / missionLatSpan;
+      
+      // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+      if (viewportAspect > missionAspect) {
+        // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
+        paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
+      }
+      
+      map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+      
+      // Adjust center to better position mission data in viewport
+      // If viewport is wider than mission bounds, shift center southward to show more data areas
+      if (viewportAspect > missionAspect) {
+        var currentCenter = map.getCenter();
+        var missionCenterLat = (sw.lat + ne.lat) / 2;
+        // Shift center slightly south to better position mission data (reduce empty north pole space)
+        var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
+        map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
+      }
+      
+      // Fractional zoom enabled - allows 0.5 increments for finer zoom control
+      // No zoom constraint - fitBounds determines optimal zoom to show all missions
+    }
+  } catch (err) {
+    console.log("Error in fallback fitBounds: " + err.message);
+  }
+}, 100);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1065,6 +1178,14 @@ var drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
+// Add tooltip to draw button
+setTimeout(function() {
+  var drawButton = document.querySelector('.leaflet-draw-draw-rectangle');
+  if (drawButton) {
+    drawButton.setAttribute('title', 'Draw Rectangle - Click and drag to create a rectangular selection area');
+  }
+}, 200);
+
 // Handle rectangle drawing completion
 map.on(L.Draw.Event.CREATED, function (e) {
   var type = e.layerType;
@@ -1114,9 +1235,15 @@ map.on(L.Draw.Event.CREATED, function (e) {
   }
 });
 
-// Handle rectangle deletion
+// Handle rectangle deletion - don't close panel, just remove rectangle
 map.on(L.Draw.Event.DELETED, function (e) {
-  hideResultsPanel();
+  // Panel stays open - user must manually close it with X button
+  // Just remove the rectangle from the map
+  if (drawnItems) {
+    drawnItems.clearLayers();
+  }
+  // Clear stored bounds but keep panel open
+  window.drawnRectangleBounds = null;
 });
 
 // Store drawn rectangle bounds globally for export
@@ -1333,91 +1460,6 @@ L.Control.Layers.include({
   },
 });
 
-// Add Draw Control for Rectangle Selection
-var drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-
-var drawControl = new L.Control.Draw({
-  position: "topright",
-  draw: {
-    polygon: false,
-    polyline: false,
-    circle: false,
-    circlemarker: false,
-    marker: false,
-    rectangle: {
-      shapeOptions: {
-        color: "#3388ff",
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        weight: 2,
-      },
-    },
-  },
-  edit: {
-    featureGroup: drawnItems,
-    remove: true,
-  },
-});
-map.addControl(drawControl);
-
-// Handle rectangle drawing completion
-map.on(L.Draw.Event.CREATED, function (e) {
-  var type = e.layerType;
-  var layer = e.layer;
-
-  if (type === "rectangle") {
-    // Remove any existing rectangles
-    drawnItems.clearLayers();
-    
-    // Add the new rectangle to the map
-    drawnItems.addLayer(layer);
-    
-    // Get rectangle bounds
-    var bounds = layer.getBounds();
-    var bbox = {
-      xmin: bounds.getWest(),
-      ymin: bounds.getSouth(),
-      xmax: bounds.getEast(),
-      ymax: bounds.getNorth(),
-    };
-    
-    // Store bounds globally for export
-    window.drawnRectangleBounds = bbox;
-    
-    // Get current filter parameters from URL
-    var urlParams = new URLSearchParams(window.location.search);
-    var filterParams = {};
-    var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
-    filterKeys.forEach(function(key) {
-      if (urlParams.has(key)) {
-        filterParams[key] = urlParams.get(key);
-      }
-    });
-    
-    // Add bbox to filter params
-    filterParams.xmin = bbox.xmin;
-    filterParams.xmax = bbox.xmax;
-    filterParams.ymin = bbox.ymin;
-    filterParams.ymax = bbox.ymax;
-    
-    // Show loading indicator
-    showResultsPanel(true);
-    updateResultsPanel("Loading missions...", []);
-    
-    // Fetch filtered missions
-    fetchFilteredMissions(filterParams);
-  }
-});
-
-// Handle rectangle deletion
-map.on(L.Draw.Event.DELETED, function (e) {
-  hideResultsPanel();
-});
-
-// Store drawn rectangle bounds globally for export
-window.drawnRectangleBounds = null;
-
 // Results Panel Functions
 function showResultsPanel(loading) {
   var panel = document.getElementById("selection-results-panel");
@@ -1429,17 +1471,284 @@ function showResultsPanel(loading) {
     panel.innerHTML = `
       <div class="selection-results-header">
         <h5>Selected Missions</h5>
-        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close"></button>
+        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close">×</button>
       </div>
       <div class="selection-results-body">
         <div id="selection-results-content"></div>
       </div>
+      <div class="resize-handle resize-handle-n"></div>
+      <div class="resize-handle resize-handle-e"></div>
+      <div class="resize-handle resize-handle-s"></div>
+      <div class="resize-handle resize-handle-w"></div>
+      <div class="resize-handle resize-handle-ne"></div>
+      <div class="resize-handle resize-handle-nw"></div>
+      <div class="resize-handle resize-handle-se"></div>
+      <div class="resize-handle resize-handle-sw"></div>
     `;
     document.body.appendChild(panel);
+    
+    // Prevent clicks on panel from propagating to map (prevents accidental closing)
+    panel.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+    
+    // Prevent mousedown events from propagating to map
+    panel.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
+    });
+    
+    // Initialize drag functionality
+    initializePanelDrag(panel);
+    
+    // Initialize resize functionality
+    initializePanelResize(panel);
   }
   panel.style.display = "block";
+  
+  // Force a synchronous layout calculation to ensure panel is rendered
+  panel.offsetHeight;
+  
+  // Convert CSS percentage transform to pixel transform immediately
+  // This must happen synchronously before any user interaction
+  var currentTransform = panel.style.transform || '';
+  if (!currentTransform || currentTransform.indexOf('%') !== -1) {
+    var rect = panel.getBoundingClientRect();
+    var currentCenterX = rect.left + rect.width / 2;
+    var currentCenterY = rect.top + rect.height / 2;
+    var viewportCenterX = window.innerWidth / 2;
+    var viewportCenterY = window.innerHeight / 2;
+    var pixelOffsetX = currentCenterX - viewportCenterX;
+    var pixelOffsetY = currentCenterY - viewportCenterY;
+    
+    panel.style.transform = 'translate(' + pixelOffsetX + 'px, ' + pixelOffsetY + 'px)';
+    
+    // Force reflow
+    panel.offsetHeight;
+    
+    // Mark as converted so dragStart doesn't convert again
+    panel._transformConverted = true;
+  } else {
+    panel._transformConverted = true;
+  }
+  
   if (loading) {
     document.getElementById("selection-results-content").innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+  }
+}
+
+// Initialize drag functionality for panel
+function initializePanelDrag(panel) {
+  var header = panel.querySelector('.selection-results-header');
+  var isDragging = false;
+  var startX = 0;
+  var startY = 0;
+  var startLeft = 0;
+  var startTop = 0;
+
+  header.addEventListener('mousedown', dragStart);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', dragEnd);
+
+  function dragStart(e) {
+    // Don't start drag if clicking the close button
+    if (e.target.classList.contains('btn-close') || e.target.closest('.btn-close')) {
+      return;
+    }
+    
+    if (e.target === header || header.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Get current mouse position
+      startX = e.clientX;
+      startY = e.clientY;
+      
+      // Get current panel position - use getBoundingClientRect for actual rendered position
+      // This gives us the true visual position regardless of transform type
+      var rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      
+      isDragging = true;
+      header.style.cursor = 'move';
+    }
+  }
+
+  function drag(e) {
+    if (isDragging) {
+      e.preventDefault();
+      
+      // On first drag movement, ensure transform is in pixels
+      if (!panel._dragTransformConverted) {
+        var currentTransform = panel.style.transform || '';
+        
+        if (!currentTransform || currentTransform.indexOf('%') !== -1) {
+          // Convert to pixels using current position BEFORE any movement
+          // Use the startLeft/startTop we captured in dragStart
+          var panelWidth = panel.offsetWidth;
+          var panelHeight = panel.offsetHeight;
+          var panelCenterX = startLeft + panelWidth / 2;
+          var panelCenterY = startTop + panelHeight / 2;
+          var viewportCenterX = window.innerWidth / 2;
+          var viewportCenterY = window.innerHeight / 2;
+          var pixelOffsetX = panelCenterX - viewportCenterX;
+          var pixelOffsetY = panelCenterY - viewportCenterY;
+          
+          panel.style.transform = 'translate(' + pixelOffsetX + 'px, ' + pixelOffsetY + 'px)';
+          
+          // Force reflow
+          panel.offsetHeight;
+          
+          // Get position AFTER transform change
+          var rectAfter = panel.getBoundingClientRect();
+          
+          // Update start positions if panel moved
+          if (Math.abs(rectAfter.left - startLeft) > 0.1 || Math.abs(rectAfter.top - startTop) > 0.1) {
+            startLeft = rectAfter.left;
+            startTop = rectAfter.top;
+          }
+        }
+        panel._dragTransformConverted = true;
+      }
+      
+      // Calculate how far mouse has moved
+      var deltaX = e.clientX - startX;
+      var deltaY = e.clientY - startY;
+      
+      // Calculate new panel position (top-left corner)
+      var newLeft = startLeft + deltaX;
+      var newTop = startTop + deltaY;
+      
+      // IMPORTANT: Panel has left: 50% and top: 50%, which means its top-left corner is at viewport center
+      // When we apply transform: translate(Xpx, Ypx), the top-left corner ends up at:
+      // (viewportCenterX + X, viewportCenterY + Y)
+      // So to get the top-left at newLeft, newTop:
+      // newLeft = viewportCenterX + transformX
+      // newTop = viewportCenterY + transformY
+      // Therefore:
+      var viewportCenterX = window.innerWidth / 2;
+      var viewportCenterY = window.innerHeight / 2;
+      
+      // Calculate transform needed to position top-left at newLeft, newTop
+      var transformX = newLeft - viewportCenterX;
+      var transformY = newTop - viewportCenterY;
+      
+      panel.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
+    }
+  }
+  
+  function dragEnd(e) {
+    if (isDragging) {
+      isDragging = false;
+      header.style.cursor = 'default';
+      panel._dragTransformConverted = false;
+    }
+  }
+}
+
+// Initialize resize functionality for panel
+function initializePanelResize(panel) {
+  if (!panel) return;
+  
+  var resizeHandles = panel.querySelectorAll('.resize-handle');
+  if (!resizeHandles || resizeHandles.length === 0) {
+    return; // No resize handles found, skip initialization
+  }
+  
+  var isResizing = false;
+  var currentHandle = null;
+  var startX, startY, startWidth, startHeight, startLeft, startTop, startTransformX, startTransformY;
+
+  resizeHandles.forEach(function(handle) {
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing = true;
+      currentHandle = handle;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = parseInt(document.defaultView.getComputedStyle(panel).width, 10);
+      startHeight = parseInt(document.defaultView.getComputedStyle(panel).height, 10);
+      
+      // Get current position accounting for transform
+      var rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      
+      // Parse current transform
+      var transform = panel.style.transform || '';
+      var match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+      startTransformX = match ? parseFloat(match[1]) : 0;
+      startTransformY = match ? parseFloat(match[2]) : 0;
+      
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('mouseup', stopResize);
+    });
+  });
+
+  function doResize(e) {
+    if (!isResizing) return;
+    
+    var deltaX = e.clientX - startX;
+    var deltaY = e.clientY - startY;
+    
+    var width = startWidth;
+    var height = startHeight;
+    var transformX = startTransformX;
+    var transformY = startTransformY;
+    
+    if (currentHandle.classList.contains('resize-handle-e')) {
+      width = startWidth + deltaX;
+    } else if (currentHandle.classList.contains('resize-handle-w')) {
+      width = startWidth - deltaX;
+      transformX = startTransformX + deltaX;
+    } else if (currentHandle.classList.contains('resize-handle-s')) {
+      height = startHeight + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-n')) {
+      height = startHeight - deltaY;
+      transformY = startTransformY + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-se')) {
+      width = startWidth + deltaX;
+      height = startHeight + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-sw')) {
+      width = startWidth - deltaX;
+      height = startHeight + deltaY;
+      transformX = startTransformX + deltaX;
+    } else if (currentHandle.classList.contains('resize-handle-ne')) {
+      width = startWidth + deltaX;
+      height = startHeight - deltaY;
+      transformY = startTransformY + deltaY;
+    } else if (currentHandle.classList.contains('resize-handle-nw')) {
+      width = startWidth - deltaX;
+      height = startHeight - deltaY;
+      transformX = startTransformX + deltaX;
+      transformY = startTransformY + deltaY;
+    }
+    
+    // Apply min/max constraints
+    var minWidth = 400;
+    var minHeight = 300;
+    var maxWidth = window.innerWidth - 20;
+    var maxHeight = window.innerHeight - 20;
+    
+    width = Math.max(minWidth, Math.min(maxWidth, width));
+    height = Math.max(minHeight, Math.min(maxHeight, height));
+    
+    // Set width and height with box-sizing
+    panel.style.width = width + 'px';
+    panel.style.height = height + 'px';
+    panel.style.boxSizing = 'border-box';
+    panel.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
+    
+    // Force reflow to ensure content adjusts
+    panel.offsetHeight;
+  }
+
+  function stopResize() {
+    isResizing = false;
+    currentHandle = null;
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
   }
 }
 
@@ -1474,7 +1783,7 @@ function updateResultsPanel(message, missions) {
   html += '</div>';
   
   // Create table
-  html += '<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">';
+  html += '<div class="table-responsive" style="flex: 1; overflow-y: auto; overflow-x: auto; min-height: 0;">';
   html += '<table class="table table-sm table-striped table-hover">';
   html += '<thead class="table-light sticky-top">';
   html += '<tr>';
@@ -1599,190 +1908,8 @@ function exportMissions(format) {
     })
     .join('&');
   
-  // Open export URL
-  window.location.href = '/api/v1/missions/export?' + queryString;
-}
-
-// Results Panel Functions
-function showResultsPanel(loading) {
-  var panel = document.getElementById("selection-results-panel");
-  if (!panel) {
-    // Create results panel if it doesn't exist
-    panel = document.createElement("div");
-    panel.id = "selection-results-panel";
-    panel.className = "selection-results-panel";
-    panel.innerHTML = `
-      <div class="selection-results-header">
-        <h5>Selected Missions</h5>
-        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close"></button>
-      </div>
-      <div class="selection-results-body">
-        <div id="selection-results-content"></div>
-      </div>
-    `;
-    document.body.appendChild(panel);
-  }
-  panel.style.display = "block";
-  if (loading) {
-    document.getElementById("selection-results-content").innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-  }
-}
-
-function hideResultsPanel() {
-  var panel = document.getElementById("selection-results-panel");
-  if (panel) {
-    panel.style.display = "none";
-  }
-  // Also remove drawn rectangle
-  if (drawnItems) {
-    drawnItems.clearLayers();
-  }
-  // Clear stored bounds
-  window.drawnRectangleBounds = null;
-}
-
-function updateResultsPanel(message, missions) {
-  var content = document.getElementById("selection-results-content");
-  if (!content) return;
-  
-  if (missions.length === 0) {
-    content.innerHTML = '<div class="alert alert-info m-3">No missions found in the selected area.</div>';
-    return;
-  }
-  
-  var html = '<div class="selection-results-info p-3 border-bottom">';
-  html += '<strong>' + missions.length + ' mission' + (missions.length !== 1 ? 's' : '') + ' found</strong>';
-  html += '<div class="mt-2">';
-  html += '<a href="#" class="btn btn-sm btn-primary me-2" onclick="exportMissions(\'csv\')">Export CSV</a>';
-  html += '<a href="#" class="btn btn-sm btn-success" onclick="exportMissions(\'excel\')">Export Excel</a>';
-  html += '</div>';
-  html += '</div>';
-  
-  // Create table
-  html += '<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">';
-  html += '<table class="table table-sm table-striped table-hover">';
-  html += '<thead class="table-light sticky-top">';
-  html += '<tr>';
-  html += '<th>Name</th>';
-  html += '<th>Start Date</th>';
-  html += '<th>Region</th>';
-  html += '<th>Track Length</th>';
-  html += '<th>Start Depth</th>';
-  html += '<th>Vehicle</th>';
-  html += '<th>Expedition</th>';
-  html += '</tr>';
-  html += '</thead>';
-  html += '<tbody>';
-  
-  missions.forEach(function(mission) {
-    html += '<tr>';
-    html += '<td><a href="/missions/' + mission.slug + '/">' + escapeHtml(mission.name) + '</a></td>';
-    html += '<td>' + (mission.start_date || '-') + '</td>';
-    html += '<td>' + (mission.region_name || '-') + '</td>';
-    html += '<td>' + (mission.track_length || '-') + '</td>';
-    html += '<td>' + (mission.start_depth || '-') + '</td>';
-    html += '<td>' + (mission.vehicle_name || '-') + '</td>';
-    html += '<td>' + (mission.expedition_name || '-') + '</td>';
-    html += '</tr>';
-  });
-  
-  html += '</tbody>';
-  html += '</table>';
-  html += '</div>';
-  
-  content.innerHTML = html;
-  
-  // Store missions for export
-  window.selectedMissions = missions;
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  var map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
-}
-
-function fetchFilteredMissions(filterParams) {
-  // Build query string
-  var queryString = Object.keys(filterParams)
-    .map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
-    })
-    .join('&');
-  
-  // Fetch from API endpoint
-  fetch('/api/v1/missions/select?' + queryString)
-    .then(function(response) {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(function(data) {
-      updateResultsPanel('', data.missions || []);
-    })
-    .catch(function(error) {
-      console.error('Error fetching missions:', error);
-      updateResultsPanel('Error loading missions. Please try again.', []);
-    });
-}
-
-function exportMissions(format) {
-  // Get bbox from stored global variable or drawn rectangle
-  var bbox = window.drawnRectangleBounds;
-  
-  if (!bbox) {
-    // Try to get from drawn items as fallback
-    if (drawnItems && drawnItems.getLayers().length > 0) {
-      var layer = drawnItems.getLayers()[0];
-      if (layer instanceof L.Rectangle) {
-        var bounds = layer.getBounds();
-        bbox = {
-          xmin: bounds.getWest(),
-          ymin: bounds.getSouth(),
-          xmax: bounds.getEast(),
-          ymax: bounds.getNorth(),
-        };
-      }
-    }
-  }
-  
-  if (!bbox) {
-    alert('No selection area found. Please draw a rectangle first.');
-    return;
-  }
-  
-  // Build query string from current filter params
-  var urlParams = new URLSearchParams(window.location.search);
-  var filterParams = {};
-  var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
-  filterKeys.forEach(function(key) {
-    if (urlParams.has(key)) {
-      filterParams[key] = urlParams.get(key);
-    }
-  });
-  
-  // Add bbox to filter params
-  filterParams.xmin = bbox.xmin;
-  filterParams.xmax = bbox.xmax;
-  filterParams.ymin = bbox.ymin;
-  filterParams.ymax = bbox.ymax;
-  
-  // Add format parameter
-  filterParams.format = format;
-  
-  // Build query string
-  var queryString = Object.keys(filterParams)
-    .map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
-    })
-    .join('&');
+  // Mark as exported
+  window.resultsPanelExported = true;
   
   // Open export URL
   window.location.href = '/api/v1/missions/export?' + queryString;
