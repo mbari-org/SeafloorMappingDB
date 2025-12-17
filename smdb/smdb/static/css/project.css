@@ -200,27 +200,6 @@ div.width_fixed {
   height: 80px;
 }
 
-#footer {
-  position: fixed;
-  background-color: white;
-  bottom: 0;
-  width: 100%;
-  height: auto;
-  min-height: auto;
-  font-size: 12px;
-  color: #f00;
-  text-align: center;
-  z-index: 1000;
-  padding: 0.2rem 0;
-  line-height: 1.2;
-}
-
-@media print {
-  #footer {
-    position: fixed;
-    bottom: 0;
-  }
-
   .content-block,
   p {
     page-break-inside: avoid;
