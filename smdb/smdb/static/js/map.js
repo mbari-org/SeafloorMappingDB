@@ -947,7 +947,7 @@ map.whenReady(function() {
   // Invalidate size to ensure Leaflet recalculates container dimensions
   map.invalidateSize();
   
-  // Small delay to ensure container has final size after invalidateSize
+  // Small delay to ensure container has final size after invalidateSize and feature is loaded
   setTimeout(function() {
     try {
       var bounds = feature.getBounds();
@@ -968,14 +968,31 @@ map.whenReady(function() {
         var missionAspect = missionLngSpan / missionLatSpan;
         
         // Calculate padding as percentage of viewport (adaptive to screen size)
-        // Use smaller padding for larger screens, larger for smaller screens
-        var paddingPercent = Math.min(0.1, Math.max(0.05, 100 / viewportWidth)); // 5-10% of viewport
+        // Use smaller padding for tighter fit and more zoom while still showing all missions
+        var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport (reduced from 5-10%)
         var paddingX = Math.round(viewportWidth * paddingPercent);
         var paddingY = Math.round(viewportHeight * paddingPercent);
+        
+        // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+        // Only add vertical padding if needed to show all missions, not to match viewport aspect ratio
+        if (viewportAspect > missionAspect) {
+          // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
+          paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
+        }
         
         // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
         // First, fit bounds to get the zoom level that shows all missions
         map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+        
+        // Adjust center to better position mission data in viewport
+        // If viewport is wider than mission bounds, shift center southward to show more data areas
+        if (viewportAspect > missionAspect) {
+          var currentCenter = map.getCenter();
+          var missionCenterLat = (sw.lat + ne.lat) / 2;
+          // Shift center slightly south to better position mission data (reduce empty north pole space)
+          var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
+          map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
+        }
         
         // Get the zoom level that fitBounds calculated
         var calculatedZoom = map.getZoom();
@@ -987,32 +1004,58 @@ map.whenReady(function() {
     } catch (err) {
       console.log("Error fitting bounds: " + err.message);
     }
-  }, 50);
+  }, 150);
 });
 
-// Also try immediately as fallback (in case map is already ready and sized)
-try {
-  map.invalidateSize();
-  var bounds = feature.getBounds();
-  if (bounds && bounds.isValid && bounds.isValid()) {
-    // Get viewport dimensions
-    var mapContainer = document.getElementById("map");
-    var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
-    var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
-    
-    // Calculate adaptive padding
-    var paddingPercent = Math.min(0.1, Math.max(0.05, 100 / viewportWidth));
-    var paddingX = Math.round(viewportWidth * paddingPercent);
-    var paddingY = Math.round(viewportHeight * paddingPercent);
-    
-    map.fitBounds(bounds, { padding: [paddingY, paddingX] });
-    
-    // Fractional zoom enabled - allows 0.5 increments for finer zoom control
-    // No zoom constraint - fitBounds determines optimal zoom to show all missions
+// Also try after a delay to ensure feature is fully loaded and map is ready
+setTimeout(function() {
+  try {
+    map.invalidateSize();
+    var bounds = feature.getBounds();
+    if (bounds && bounds.isValid && bounds.isValid()) {
+      // Get viewport dimensions
+      var mapContainer = document.getElementById("map");
+      var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+      var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+      
+      // Calculate adaptive padding (reduced for tighter fit and more zoom)
+      var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport
+      var paddingX = Math.round(viewportWidth * paddingPercent);
+      var paddingY = Math.round(viewportHeight * paddingPercent);
+      
+      // Get mission bounds to check aspect ratio
+      var sw = bounds.getSouthWest();
+      var ne = bounds.getNorthEast();
+      var missionLatSpan = ne.lat - sw.lat;
+      var missionLngSpan = ne.lng - sw.lng;
+      var viewportAspect = viewportWidth / viewportHeight;
+      var missionAspect = missionLngSpan / missionLatSpan;
+      
+      // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+      if (viewportAspect > missionAspect) {
+        // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
+        paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
+      }
+      
+      map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+      
+      // Adjust center to better position mission data in viewport
+      // If viewport is wider than mission bounds, shift center southward to show more data areas
+      if (viewportAspect > missionAspect) {
+        var currentCenter = map.getCenter();
+        var missionCenterLat = (sw.lat + ne.lat) / 2;
+        // Shift center slightly south to better position mission data (reduce empty north pole space)
+        var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
+        map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
+      }
+      
+      // Fractional zoom enabled - allows 0.5 increments for finer zoom control
+      // No zoom constraint - fitBounds determines optimal zoom to show all missions
+    }
+  } catch (err) {
+    console.log("Error in fallback fitBounds: " + err.message);
   }
-} catch (err) {
-  console.log(err.message);
-}
+}, 100);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1402,276 +1445,6 @@ L.Control.Layers.include({
     return layers;
   },
 });
-
-// Add Draw Control for Rectangle Selection
-var drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-
-var drawControl = new L.Control.Draw({
-  position: "topright",
-  draw: {
-    polygon: false,
-    polyline: false,
-    circle: false,
-    circlemarker: false,
-    marker: false,
-    rectangle: {
-      shapeOptions: {
-        color: "#3388ff",
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        weight: 2,
-      },
-    },
-  },
-  edit: {
-    featureGroup: drawnItems,
-    remove: true,
-  },
-});
-map.addControl(drawControl);
-
-// Handle rectangle drawing completion
-map.on(L.Draw.Event.CREATED, function (e) {
-  var type = e.layerType;
-  var layer = e.layer;
-
-  if (type === "rectangle") {
-    // Remove any existing rectangles
-    drawnItems.clearLayers();
-    
-    // Add the new rectangle to the map
-    drawnItems.addLayer(layer);
-    
-    // Get rectangle bounds
-    var bounds = layer.getBounds();
-    var bbox = {
-      xmin: bounds.getWest(),
-      ymin: bounds.getSouth(),
-      xmax: bounds.getEast(),
-      ymax: bounds.getNorth(),
-    };
-    
-    // Store bounds globally for export
-    window.drawnRectangleBounds = bbox;
-    
-    // Get current filter parameters from URL
-    var urlParams = new URLSearchParams(window.location.search);
-    var filterParams = {};
-    var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
-    filterKeys.forEach(function(key) {
-      if (urlParams.has(key)) {
-        filterParams[key] = urlParams.get(key);
-      }
-    });
-    
-    // Add bbox to filter params
-    filterParams.xmin = bbox.xmin;
-    filterParams.xmax = bbox.xmax;
-    filterParams.ymin = bbox.ymin;
-    filterParams.ymax = bbox.ymax;
-    
-    // Show loading indicator
-    showResultsPanel(true);
-    updateResultsPanel("Loading missions...", []);
-    
-    // Fetch filtered missions
-    fetchFilteredMissions(filterParams);
-  }
-});
-
-// Handle rectangle deletion
-map.on(L.Draw.Event.DELETED, function (e) {
-  hideResultsPanel();
-});
-
-// Store drawn rectangle bounds globally for export
-window.drawnRectangleBounds = null;
-
-// Results Panel Functions
-function showResultsPanel(loading) {
-  var panel = document.getElementById("selection-results-panel");
-  if (!panel) {
-    // Create results panel if it doesn't exist
-    panel = document.createElement("div");
-    panel.id = "selection-results-panel";
-    panel.className = "selection-results-panel";
-    panel.innerHTML = `
-      <div class="selection-results-header">
-        <h5>Selected Missions</h5>
-        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close"></button>
-      </div>
-      <div class="selection-results-body">
-        <div id="selection-results-content"></div>
-      </div>
-    `;
-    document.body.appendChild(panel);
-  }
-  panel.style.display = "block";
-  if (loading) {
-    document.getElementById("selection-results-content").innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-  }
-}
-
-function hideResultsPanel() {
-  var panel = document.getElementById("selection-results-panel");
-  if (panel) {
-    panel.style.display = "none";
-  }
-  // Also remove drawn rectangle
-  if (drawnItems) {
-    drawnItems.clearLayers();
-  }
-  // Clear stored bounds
-  window.drawnRectangleBounds = null;
-}
-
-function updateResultsPanel(message, missions) {
-  var content = document.getElementById("selection-results-content");
-  if (!content) return;
-  
-  if (missions.length === 0) {
-    content.innerHTML = '<div class="alert alert-info m-3">No missions found in the selected area.</div>';
-    return;
-  }
-  
-  var html = '<div class="selection-results-info p-3 border-bottom">';
-  html += '<strong>' + missions.length + ' mission' + (missions.length !== 1 ? 's' : '') + ' found</strong>';
-  html += '<div class="mt-2">';
-  html += '<a href="#" class="btn btn-sm btn-primary me-2" onclick="exportMissions(\'csv\')">Export CSV</a>';
-  html += '<a href="#" class="btn btn-sm btn-success" onclick="exportMissions(\'excel\')">Export Excel</a>';
-  html += '</div>';
-  html += '</div>';
-  
-  // Create table
-  html += '<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">';
-  html += '<table class="table table-sm table-striped table-hover">';
-  html += '<thead class="table-light sticky-top">';
-  html += '<tr>';
-  html += '<th>Name</th>';
-  html += '<th>Start Date</th>';
-  html += '<th>Region</th>';
-  html += '<th>Track Length</th>';
-  html += '<th>Start Depth</th>';
-  html += '<th>Vehicle</th>';
-  html += '<th>Expedition</th>';
-  html += '</tr>';
-  html += '</thead>';
-  html += '<tbody>';
-  
-  missions.forEach(function(mission) {
-    html += '<tr>';
-    html += '<td><a href="/missions/' + mission.slug + '/">' + escapeHtml(mission.name) + '</a></td>';
-    html += '<td>' + (mission.start_date || '-') + '</td>';
-    html += '<td>' + (mission.region_name || '-') + '</td>';
-    html += '<td>' + (mission.track_length || '-') + '</td>';
-    html += '<td>' + (mission.start_depth || '-') + '</td>';
-    html += '<td>' + (mission.vehicle_name || '-') + '</td>';
-    html += '<td>' + (mission.expedition_name || '-') + '</td>';
-    html += '</tr>';
-  });
-  
-  html += '</tbody>';
-  html += '</table>';
-  html += '</div>';
-  
-  content.innerHTML = html;
-  
-  // Store missions for export
-  window.selectedMissions = missions;
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  var map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
-}
-
-function fetchFilteredMissions(filterParams) {
-  // Build query string
-  var queryString = Object.keys(filterParams)
-    .map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
-    })
-    .join('&');
-  
-  // Fetch from API endpoint
-  fetch('/api/v1/missions/select?' + queryString)
-    .then(function(response) {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(function(data) {
-      updateResultsPanel('', data.missions || []);
-    })
-    .catch(function(error) {
-      console.error('Error fetching missions:', error);
-      updateResultsPanel('Error loading missions. Please try again.', []);
-    });
-}
-
-function exportMissions(format) {
-  // Get bbox from stored global variable or drawn rectangle
-  var bbox = window.drawnRectangleBounds;
-  
-  if (!bbox) {
-    // Try to get from drawn items as fallback
-    if (drawnItems && drawnItems.getLayers().length > 0) {
-      var layer = drawnItems.getLayers()[0];
-      if (layer instanceof L.Rectangle) {
-        var bounds = layer.getBounds();
-        bbox = {
-          xmin: bounds.getWest(),
-          ymin: bounds.getSouth(),
-          xmax: bounds.getEast(),
-          ymax: bounds.getNorth(),
-        };
-      }
-    }
-  }
-  
-  if (!bbox) {
-    alert('No selection area found. Please draw a rectangle first.');
-    return;
-  }
-  
-  // Build query string from current filter params
-  var urlParams = new URLSearchParams(window.location.search);
-  var filterParams = {};
-  var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
-  filterKeys.forEach(function(key) {
-    if (urlParams.has(key)) {
-      filterParams[key] = urlParams.get(key);
-    }
-  });
-  
-  // Add bbox to filter params
-  filterParams.xmin = bbox.xmin;
-  filterParams.xmax = bbox.xmax;
-  filterParams.ymin = bbox.ymin;
-  filterParams.ymax = bbox.ymax;
-  
-  // Add format parameter
-  filterParams.format = format;
-  
-  // Build query string
-  var queryString = Object.keys(filterParams)
-    .map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
-    })
-    .join('&');
-  
-  // Open export URL
-  window.location.href = '/api/v1/missions/export?' + queryString;
-}
 
 // Results Panel Functions
 function showResultsPanel(loading) {
