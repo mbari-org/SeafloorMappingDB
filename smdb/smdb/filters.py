@@ -117,6 +117,13 @@ class MissionFilter(FilterSet):
         Override to use OR logic for name and expedition__name text search fields.
         This allows searching for partial words like "Northern", "Auv", "Ops" 
         in either field to find matches in both mission names and expedition names.
+        
+        Supports:
+        - Single word searches: "Northern" finds missions with "Northern" anywhere in name or expedition name
+        - Multiple word searches: "Northern Mapping" finds missions containing BOTH "Northern" AND "Mapping"
+        - Partial word searches: "Map" finds "Mapping", "Map", "Mapped", etc.
+        - Case-insensitive searches
+        - Searches across both mission names and expedition names (OR logic for fields)
         """
         # Get the search values for name and expedition__name
         name_value = self.data.get('name', '').strip()
@@ -143,16 +150,52 @@ class MissionFilter(FilterSet):
             # Build OR conditions for text search
             text_search_q = Q()
             
+            # Helper function to build search query for a search term
+            def build_search_query(search_term):
+                """
+                Build a Q object that searches for search_term in both mission name and expedition name.
+                If search_term contains multiple words (separated by spaces), each word must be found
+                (AND logic for words, OR logic for fields).
+                """
+                if not search_term:
+                    return Q()
+                
+                # Split by whitespace to handle multiple words
+                words = search_term.split()
+                
+                if len(words) == 1:
+                    # Single word: search in both fields (OR logic)
+                    single_word = words[0]
+                    return Q(name__icontains=single_word) | Q(expedition__name__icontains=single_word)
+                else:
+                    # Multiple words: each word must be found somewhere (AND logic for words)
+                    # But can be in either mission name OR expedition name (OR logic for fields)
+                    multi_word_q = Q()
+                    for word in words:
+                        # Each word must appear in at least one of the fields
+                        word_q = Q(name__icontains=word) | Q(expedition__name__icontains=word)
+                        if multi_word_q:
+                            # AND logic: combine with existing conditions
+                            multi_word_q &= word_q
+                        else:
+                            multi_word_q = word_q
+                    return multi_word_q
+            
             if name_value:
                 # Search in both mission name and expedition name when name is provided
-                text_search_q |= Q(name__icontains=name_value) | Q(expedition__name__icontains=name_value)
+                name_query = build_search_query(name_value)
+                if name_query:
+                    text_search_q |= name_query
             
             if expedition_name_value:
                 # Search in both mission name and expedition name when expedition__name is provided
-                text_search_q |= Q(name__icontains=expedition_name_value) | Q(expedition__name__icontains=expedition_name_value)
+                expedition_query = build_search_query(expedition_name_value)
+                if expedition_query:
+                    text_search_q |= expedition_query
             
-            # Apply the text search filter
-            qs = qs.filter(text_search_q)
+            # Apply the text search filter if we have any conditions
+            if text_search_q:
+                qs = qs.filter(text_search_q)
         
         return qs
 
