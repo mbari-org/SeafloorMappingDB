@@ -91,7 +91,7 @@ class BaseLoader:
     LOCAL_LOG_FILE = f"/etc/smdb/{LOG_FILE}"
     MEDIA_LOG_FILE = f"logs/{LOG_FILE}"
     MEDIA_EXCLUDE_LIST_FILE = "logs/exclude_list.txt"
-    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
+    LOCATE_DB = "/etc/smdb/etc/SeafloorMapping.db"
 
     def __init__(self):
         self.logger = logging.getLogger("load")
@@ -292,7 +292,13 @@ class BaseLoader:
             self.logger.info(
                 "Copying local log file to media log file: %s", self.MEDIA_LOG_FILE
             )
-            ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
+            try:
+                ds.save(self.MEDIA_LOG_FILE, ContentFile(log_file.read().encode()))
+            except PermissionError:
+                self.logger.warning(
+                    f"Permission denied writing to {self.MEDIA_LOG_FILE}. "
+                    f"Log file saved to {self.LOCAL_LOG_FILE} instead."
+                )
 
     def extent(self, ds, file):
         if "x" in ds.variables and "y" in ds.variables:
@@ -1161,10 +1167,12 @@ class BootStrapper(BaseLoader):
             else:
                 self.flush_database()
         # Avoid ._ZTopo.grd and ZTopo.grd.cmd files with regex locate
+        # Try locate first, fall back to find if locate database is not available
         locate_cmd = f"locate -d {self.LOCATE_DB} -r '\/ZTopo.grd$'"
         start_processing = True
         if self.args.skipuntil_regex:
             start_processing = False
+        count = 0
         miss_count = 0
         match_count = 0
         miss_loaded = 0
@@ -1173,6 +1181,24 @@ class BootStrapper(BaseLoader):
             self.logger.info(
                 "Loading Missions newer than %f days", self.args.last_n_days
             )
+        
+        # Test if locate database is available
+        test_proc = subprocess.Popen(
+            f"locate -d {self.LOCATE_DB} -r 'ZTopo.grd$' 2>&1",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        test_output, test_error = test_proc.communicate()
+        use_find = False
+        if test_proc.returncode != 0 or b"does not seem to be" in test_error or b"can not stat" in test_error:
+            use_find = True
+            self.logger.warning(
+                f"Locate database not available ({test_error.decode().strip()}). "
+                f"Using 'find' instead (slower but will work)."
+            )
+            locate_cmd = f"find {MBARI_DIR} -name 'ZTopo.grd' -type f"
+        
         with subprocess.Popen(locate_cmd, shell=True, stdout=subprocess.PIPE) as proc:
             for count, fp in enumerate(proc.stdout, start=1):
                 fp = fp.decode().strip()
@@ -1813,22 +1839,34 @@ class ExcludeFile(BaseLoader):
             csv_file = os.path.join(
                 MBARI_DIR, parent_dir, "SMDB", f"{parent_dir}_exclude_list.csv"
             )
-            with open(csv_file, "w") as fh:
-                fh.write("path\n")
-                for path in paths:
-                    fh.write(f"{path}\n")
-            self.logger.info(f"Wrote {len(paths)} paths to {csv_file}")
+            try:
+                with open(csv_file, "w") as fh:
+                    fh.write("path\n")
+                    for path in paths:
+                        fh.write(f"{path}\n")
+                self.logger.info(f"Wrote {len(paths)} paths to {csv_file}")
+            except PermissionError:
+                self.logger.warning(
+                    f"Permission denied writing to {csv_file}. Skipping CSV file creation. "
+                    f"This is expected if the NFS mount is read-only."
+                )
 
     def write_consolidated_exclude_list(self) -> None:
         """Write the consolidated exclude paths to exclude_list.txt next to the load log file"""
         ds = DefaultStorage()
-        ds.delete(self.MEDIA_EXCLUDE_LIST_FILE)
-        with ds.open(self.MEDIA_EXCLUDE_LIST_FILE, "w") as fh:
-            for path in sorted(self.exclude_paths):
-                fh.write(f"{path}\n")
-        self.logger.info(
-            f"Wrote {len(self.exclude_paths)} paths to {self.MEDIA_EXCLUDE_LIST_FILE}"
-        )
+        try:
+            ds.delete(self.MEDIA_EXCLUDE_LIST_FILE)
+            with ds.open(self.MEDIA_EXCLUDE_LIST_FILE, "w") as fh:
+                for path in sorted(self.exclude_paths):
+                    fh.write(f"{path}\n")
+            self.logger.info(
+                f"Wrote {len(self.exclude_paths)} paths to {self.MEDIA_EXCLUDE_LIST_FILE}"
+            )
+        except PermissionError:
+            self.logger.warning(
+                f"Permission denied writing to {self.MEDIA_EXCLUDE_LIST_FILE}. "
+                f"Skipping consolidated exclude list file creation."
+            )
 
 
 def run(*args):
