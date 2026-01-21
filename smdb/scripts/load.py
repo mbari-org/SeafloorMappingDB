@@ -100,6 +100,7 @@ class BaseLoader:
         self.commandline = None
         self.exclude_paths = set()
         self.start_proc = datetime.now()
+        self._grid_area_cache = {}  # Cache grid area calculations
 
     def process_command_line(self):
         parser = argparse.ArgumentParser(
@@ -342,49 +343,93 @@ class BaseLoader:
 
         return grid_bounds
 
-    def calculate_grid_area(self, ds, grid_bounds: Polygon) -> float:
+    def calculate_grid_area(self, ds, grid_bounds: Polygon, filepath: str = None) -> float:
         """Calculate area in square kilometers for valid (non-NaN) grid cells.
-        Reads the actual grid data and counts only cells with valid values.
+        Uses sampling for large grids (>10M cells) for speed.
+        Caches results by file path and modification time.
+        
+        Args:
+            ds: xarray.Dataset object or ignored if filepath provided
+            grid_bounds: Polygon defining the grid boundaries
+            filepath: File path for direct xarray opening (preferred)
         """
         import numpy as np
+        import xarray as xr
+        
+        # Check cache first (using filepath and mtime as key)
+        if filepath and os.path.exists(filepath):
+            file_mtime = os.path.getmtime(filepath)
+            cache_key = (filepath, file_mtime)
+            if cache_key in self._grid_area_cache:
+                self.logger.debug("Using cached area for %s", filepath)
+                return self._grid_area_cache[cache_key]
+        
+        # Open with xarray
+        if filepath:
+            ds_xr = xr.open_dataset(filepath)
+        elif isinstance(ds, xr.Dataset):
+            ds_xr = ds
+        else:
+            raise ValueError("Must provide either filepath or xarray.Dataset")
 
         # Get coordinate arrays
-        if "x" in ds.variables and "y" in ds.variables:
+        if "x" in ds_xr.coords and "y" in ds_xr.coords:
             X, Y = "x", "y"
-        elif "lon" in ds.variables and "lat" in ds.variables:
+        elif "lon" in ds_xr.coords and "lat" in ds_xr.coords:
             X, Y = "lon", "lat"
         else:
             raise ValueError("Cannot find coordinate variables")
 
-        lon = ds[X][:]
-        lat = ds[Y][:]
+        # Only load coordinate endpoints and middle value for calculations
+        lon_size = len(ds_xr[X])
+        lat_size = len(ds_xr[Y])
+        lon_start = float(ds_xr[X][0].values)
+        lon_end = float(ds_xr[X][-1].values)
+        lat_start = float(ds_xr[Y][0].values)
+        lat_end = float(ds_xr[Y][-1].values)
+        lon_mid = float(ds_xr[X][lon_size // 2].values)
+        lat_mid = float(ds_xr[Y][lat_size // 2].values)
 
         # Get the grid data - try common variable names
-        z_var = None
+        z_var_name = None
         for var_name in ["z", "altitude", "elevation", "depth", "Band1"]:
-            if var_name in ds.variables:
-                z_var = ds.variables[var_name]
+            if var_name in ds_xr.data_vars:
+                z_var_name = var_name
                 break
 
-        if z_var is None:
+        if z_var_name is None:
             self.logger.warning("Could not find data variable in grid file")
             return None
 
-        # Get the data and identify valid cells
-        z_data = z_var[:]
-
-        # Mask NaN and fill values
-        if hasattr(z_data, "mask"):
-            valid_mask = ~z_data.mask
+        data_array = ds_xr[z_var_name]
+        total_count = data_array.size
+        
+        # For large grids (>10M cells), use sampling for speed
+        # For smaller grids, do full count
+        if total_count > 10_000_000:
+            self.logger.debug("Large grid detected (%d cells), using sampling", total_count)
+            
+            # Sample every Nth cell to estimate valid ratio
+            # Sample ~10,000 cells for good statistical accuracy
+            sample_interval = max(1, int(np.sqrt(total_count / 10000)))
+            
+            # Use strided indexing for fast sampling (no data loading until compute)
+            sample = data_array[::sample_interval, ::sample_interval]
+            sample_valid = int(sample.count().values)
+            sample_total = sample.size
+            
+            # Estimate total valid count from sample ratio
+            valid_ratio = sample_valid / sample_total if sample_total > 0 else 0
+            valid_count = int(total_count * valid_ratio)
+            
+            self.logger.debug(
+                "Sampled %d of %d cells (every %dth cell), "
+                "valid ratio: %.3f, estimated valid cells: %d",
+                sample_total, total_count, sample_interval, valid_ratio, valid_count
+            )
         else:
-            valid_mask = ~np.isnan(z_data)
-
-        # Also check for fill values
-        if hasattr(z_var, "_FillValue"):
-            valid_mask &= z_data != z_var._FillValue
-
-        valid_count = np.sum(valid_mask)
-        total_count = z_data.size
+            # For smaller grids, do full count
+            valid_count = int(data_array.count().values)
 
         self.logger.debug(
             "Grid has %d valid cells out of %d total cells (%.1f%%)",
@@ -394,8 +439,8 @@ class BaseLoader:
         )
 
         # Calculate cell resolution (assuming uniform spacing)
-        dlon = float(np.abs(lon[1] - lon[0]))
-        dlat = float(np.abs(lat[1] - lat[0]))
+        dlon = float(np.abs(lon_end - lon_start) / (lon_size - 1))
+        dlat = float(np.abs(lat_end - lat_start) / (lat_size - 1))
 
         # Find appropriate UTM zone for accurate area calculation
         centroid = grid_bounds.centroid
@@ -405,8 +450,8 @@ class BaseLoader:
 
         # Calculate area of a single cell in the middle of the grid
         # (cells vary slightly in size with latitude, but this is close enough)
-        mid_lat = float(np.mean(lat))
-        mid_lon = float(np.mean(lon))
+        mid_lat = lat_mid
+        mid_lon = lon_mid
 
         # Create a cell polygon in geographic coordinates
         cell_poly = Polygon(
@@ -440,6 +485,12 @@ class BaseLoader:
             utm_zone,
             hemisphere[0].upper(),
         )
+
+        # Cache the result
+        if filepath and os.path.exists(filepath):
+            file_mtime = os.path.getmtime(filepath)
+            cache_key = (filepath, file_mtime)
+            self._grid_area_cache[cache_key] = area_km2
 
         return area_km2
 
@@ -1339,7 +1390,7 @@ class BootStrapper(BaseLoader):
 
                 # Calculate area in square kilometers
                 try:
-                    area_km2 = self.calculate_grid_area(ds, grid_bounds)
+                    area_km2 = self.calculate_grid_area(ds, grid_bounds, filepath=fp)
                 except Exception as e:
                     self.logger.warning("Could not calculate area: %s", e)
                     area_km2 = None

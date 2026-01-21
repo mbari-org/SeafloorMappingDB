@@ -34,9 +34,11 @@ graphviz==0.20.1 # https://stackoverflow.com/a/13987392/1281657
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
 ipykernel==6.18.0 # For use in Notebooks
 matplotlib==3.6.2 # For plotting in Notebooks
-netCDF4==1.6.2 # https://pypi.org/project/netCDF4/
-numpy==1.23.5 # For use in Notebooks
-pandas==1.5.2 # For use in Notebooks
+netCDF4==1.7.4 # https://pypi.org/project/netCDF4/
+numpy==2.2.6 # For use in Notebooks and numerical processing
+pandas==2.3.3 # For use in Notebooks
+dask==2026.1.1 # For use in parallel processing by xarray
+xarray==2025.6.1  # https://pypi.org/project/xarray/
 pathspec==0.10.2 # https://pypi.org/project/pathspec/
 pygraphviz==1.10 # https://django-extensions.readthedocs.io/en/latest/graph_models.html
 pytest-cov==4.0.0 # Referred by https://djangostars.com/blog/django-pytest-testing/
