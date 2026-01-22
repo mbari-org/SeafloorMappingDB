@@ -15,9 +15,30 @@ body {
   width: 100%;
   height: 85%;
   padding-bottom: 2.5rem; /* Space for footer */
-  /* padding-top: 10%; */
   z-index: 500;
-  /*margin-left: 250px; - Testing with new proSidebar*/
+}
+
+/* Footer styles - moved from project.css for map-specific footer optimization */
+#footer {
+  position: fixed;
+  background-color: white;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  min-height: auto;
+  font-size: 12px;
+  color: #f00;
+  text-align: center;
+  z-index: 1000;
+  padding: 0.2rem 0;
+  line-height: 1.2; 
+}
+
+@media print {
+  #footer {     
+    position: fixed;
+    bottom: 0;
+  }
 }
 
 #mapNav {
@@ -87,6 +108,7 @@ body {
 .leaflet-control>.leaflet-sidebar-topleft {
   width: 250px !important;
 }
+<<<<<<< HEAD
 
 /* Selection Results Panel */
 .selection-results-panel {
@@ -320,3 +342,5 @@ body {
   pointer-events: none;
   cursor: default;
 }
+=======
+>>>>>>> origin/feature/footer-css-refactor
