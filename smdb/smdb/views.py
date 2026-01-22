@@ -26,8 +26,11 @@ from rest_framework.serializers import HyperlinkedModelSerializer
 from smdb.filters import CompilationFilter, ExpeditionFilter, MissionFilter
 from smdb.forms import (
     CompilationFilterFormHelper,
+    CompilationFilterSidebarHelper,
     ExpeditionFilterFormHelper,
+    ExpeditionFilterSidebarHelper,
     MissionFilterFormHelper,
+    MissionFilterSidebarHelper,
 )
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
@@ -80,19 +83,20 @@ class MissionOverView(TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Add all filter forms to context for sidebar (Missions, Expeditions, Compilations)
+        # Use sidebar-specific helpers for vertical layout in the sidebar
         missions_queryset = Mission.objects.all()
         mission_filter = MissionFilter(self.request.GET, queryset=missions_queryset)
-        mission_filter.form.helper = MissionFilterFormHelper()
+        mission_filter.form.helper = MissionFilterSidebarHelper()
         context["mission_filter"] = mission_filter
         
         expeditions_queryset = Expedition.objects.all()
         expedition_filter = ExpeditionFilter(self.request.GET, queryset=expeditions_queryset)
-        expedition_filter.form.helper = ExpeditionFilterFormHelper()
+        expedition_filter.form.helper = ExpeditionFilterSidebarHelper()
         context["expedition_filter"] = expedition_filter
         
         compilations_queryset = Compilation.objects.all()
         compilation_filter = CompilationFilter(self.request.GET, queryset=compilations_queryset)
-        compilation_filter.form.helper = CompilationFilterFormHelper()
+        compilation_filter.form.helper = CompilationFilterSidebarHelper()
         context["compilation_filter"] = compilation_filter
         
         # Default to mission filter for backward compatibility
@@ -462,14 +466,28 @@ class MissionSelectAPIView(View):
             if not all([xmin, xmax, ymin, ymax]):
                 return JsonResponse({'error': 'Missing spatial bounds'}, status=400)
             
+            # Validate and convert bounds to floats
+            try:
+                xmin_float = float(xmin)
+                xmax_float = float(xmax)
+                ymin_float = float(ymin)
+                ymax_float = float(ymax)
+            except (ValueError, TypeError):
+                return JsonResponse({'error': 'Invalid spatial bounds coordinates'}, status=400)
+            
+            # Validate coordinate ranges (longitude: -180..180, latitude: -90..90)
+            if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
+                    -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
+                return JsonResponse({'error': 'Coordinates out of valid range'}, status=400)
+            
             # Create polygon from bounds
             search_geom = Polygon(
                 (
-                    (float(xmin), float(ymin)),
-                    (float(xmin), float(ymax)),
-                    (float(xmax), float(ymax)),
-                    (float(xmax), float(ymin)),
-                    (float(xmin), float(ymin)),
+                    (xmin_float, ymin_float),
+                    (xmin_float, ymax_float),
+                    (xmax_float, ymax_float),
+                    (xmax_float, ymin_float),
+                    (xmin_float, ymin_float),
                 ),
                 srid=4326,
             )
@@ -522,7 +540,7 @@ class MissionSelectAPIView(View):
                 )
             
             # Select related to avoid N+1 queries
-            missions = missions.select_related('expedition').order_by('start_date')
+            missions = missions.select_related('expedition').prefetch_related('quality_categories').order_by('start_date')
             
             # Serialize mission data
             mission_data = []
@@ -566,14 +584,28 @@ class MissionExportAPIView(View):
             if not all([xmin, xmax, ymin, ymax]):
                 return HttpResponse('Missing spatial bounds', status=400)
             
+            # Validate and convert bounds to floats
+            try:
+                xmin_float = float(xmin)
+                xmax_float = float(xmax)
+                ymin_float = float(ymin)
+                ymax_float = float(ymax)
+            except (ValueError, TypeError):
+                return HttpResponse('Invalid spatial bounds coordinates', status=400)
+            
+            # Validate coordinate ranges (longitude: -180..180, latitude: -90..90)
+            if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
+                    -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
+                return HttpResponse('Coordinates out of valid range', status=400)
+            
             # Create polygon from bounds
             search_geom = Polygon(
                 (
-                    (float(xmin), float(ymin)),
-                    (float(xmin), float(ymax)),
-                    (float(xmax), float(ymax)),
-                    (float(xmax), float(ymin)),
-                    (float(xmin), float(ymin)),
+                    (xmin_float, ymin_float),
+                    (xmin_float, ymax_float),
+                    (xmax_float, ymax_float),
+                    (xmax_float, ymin_float),
+                    (xmin_float, ymin_float),
                 ),
                 srid=4326,
             )
@@ -617,7 +649,7 @@ class MissionExportAPIView(View):
                     end_date__lte=filter_params.get('tmax'),
                 )
             
-            missions = missions.select_related('expedition').order_by('start_date')
+            missions = missions.select_related('expedition').prefetch_related('quality_categories').order_by('start_date')
             
             if export_format == 'csv':
                 return self.export_csv(missions)

@@ -29,7 +29,7 @@ class MissionFilter(FilterSet):
                 for m in Mission.objects.values_list("region_name", flat=True).distinct()
             ],
             label="",
-            empty_label="- Location -",
+            empty_label="- region -",
             widget=forms.Select(
                 attrs={
                     "class": "form-control",

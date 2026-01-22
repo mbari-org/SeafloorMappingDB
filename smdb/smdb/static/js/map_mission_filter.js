@@ -94,13 +94,6 @@ map.whenReady(function() {
         return;
       }
       
-      // Additional check: ensure bounds are reasonable before fitting
-      // If the span is still very large (e.g., > 180 degrees longitude), use default view
-      if (Math.abs(missionLngSpan) > 180 || Math.abs(missionLatSpan) > 90) {
-        map.setView([39.8423, -26.8945], 3, { animate: false });
-        return;
-      }
-      
       // Valid bounds - fit to bounds with padding
       map.fitBounds(bounds, { padding: [100, 100] });
     } catch (err) {

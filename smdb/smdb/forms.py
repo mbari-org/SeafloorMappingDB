@@ -75,3 +75,43 @@ class CompilationFilterFormHelper(FormHelper):
             ),
         ),
     )
+
+
+class MissionFilterSidebarHelper(FormHelper):
+    """
+    Form helper for MissionFilter in the sidebar with vertical layout.
+    Excludes the submit/clear buttons (handled separately in JavaScript).
+    """
+    form_method = "GET"
+    layout = Layout(
+        Div("name", css_class="mb-3"),
+        Div("region_name", css_class="mb-3"),
+        Div("quality_categories", css_class="mb-3"),
+        Div("patch_test", css_class="mb-3"),
+        Div("repeat_survey", css_class="mb-3"),
+        Div("mgds_compilation", css_class="mb-3"),
+        Div("expedition__name", css_class="mb-3"),
+        # tmin and tmax are hidden fields, no need to include in layout
+    )
+
+
+class ExpeditionFilterSidebarHelper(FormHelper):
+    """
+    Form helper for ExpeditionFilter in the sidebar with vertical layout.
+    Excludes the submit/clear buttons (handled separately in JavaScript).
+    """
+    form_method = "GET"
+    layout = Layout(
+        Div("name", css_class="mb-3"),
+    )
+
+
+class CompilationFilterSidebarHelper(FormHelper):
+    """
+    Form helper for CompilationFilter in the sidebar with vertical layout.
+    Excludes the submit/clear buttons (handled separately in JavaScript).
+    """
+    form_method = "GET"
+    layout = Layout(
+        Div("name", css_class="mb-3"),
+    )

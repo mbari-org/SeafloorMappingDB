@@ -244,14 +244,15 @@ const FilterControl = L.Control.extend({
       }
 
       const formId = `filter-form-${filterType}`;
-      const form = formContainer.querySelector(`#${formId}`);
-      if (!form) {
+      const formWrapper = formContainer.querySelector(`#${formId}`);
+      if (!formWrapper) {
         console.warn(`Filter form ${formId} not found in container`);
         return false;
       }
 
-      // Check if form has content
-      if (form.children.length === 0) {
+      // Find the actual form element inside the wrapper (crispy forms renders a <form> tag)
+      const form = formWrapper.querySelector('form') || formWrapper;
+      if (!form || form.children.length === 0) {
         console.warn(
           "Filter form is empty - may need to wait for Django rendering"
         );
@@ -423,7 +424,6 @@ const FilterControl = L.Control.extend({
 
       // Create custom dropdown for quality categories with checkboxes
       const qualitySelect = body.querySelector('select[name="quality_categories"]');
-      const locationSelect = body.querySelector('select[name="region_name"]');
       
       if (qualitySelect && qualitySelect.options.length > 0) {
         // Hide the original select
@@ -467,7 +467,6 @@ const FilterControl = L.Control.extend({
         // Match the native select dropdown arrow from Location field
         // Native HTML select elements use browser's default dropdown arrow
         // We'll create a visual match - browsers typically use a downward triangle/chevron
-        const locationSelect = body.querySelector('select[name="region_name"]');
         
         // Create V-shaped chevron caret to match Location field dropdown
         const caret = document.createElement('span');
@@ -611,15 +610,15 @@ const FilterControl = L.Control.extend({
         // Function to update button text
         function updateButtonText() {
           const selectedOptions = Array.from(qualitySelect.selectedOptions).filter(opt => opt.value);
-          let displayText = '- Quality assessment -';
+          let displayText;
           
-          if (selectedOptions.length === 0) {
-            displayText = '- Quality assessment -';
-          } else if (selectedOptions.length === 1) {
+          if (selectedOptions.length === 1) {
             displayText = selectedOptions[0].text;
-          } else {
+          } else if (selectedOptions.length > 1) {
             // Show all selected options as comma-separated list
             displayText = selectedOptions.map(opt => opt.text).join(', ');
+          } else {
+            displayText = '- Quality assessment -';
           }
           
           // Update text content while preserving the caret element
@@ -967,9 +966,10 @@ const FilterControl = L.Control.extend({
             const currentPath = window.location.pathname;
             const isMainMapPage = currentPath === '/' || currentPath === '/missions' || currentPath.startsWith('/missions/');
             // Check if this is a Clear button by type, ID, or onclick attribute
+            const onclickAttr = btn.getAttribute("onclick");
             const isClearButton = btn.type === "reset" || 
                                  (btn.id && (btn.id.includes("Cancel") || btn.id.includes("clear"))) ||
-                                 (btn.getAttribute("onclick") && btn.getAttribute("onclick") && btn.getAttribute("onclick").includes("window.location"));
+                                 (onclickAttr && onclickAttr.includes("window.location"));
             if (isMainMapPage && isClearButton) {
               // Remove any existing onclick attribute
               btn.removeAttribute("onclick");
@@ -1576,8 +1576,8 @@ var measure = L.control
     secondaryLengthUnit: "feet",
     primaryAreaUnit: "sqmeters",
     secondaryAreaUnit: "sqmiles",
-    activeColor: "#ABE67E",
-    completedColor: "#C8F2BE",
+    activeColor: "#0066CC", // darker blue for active measurement (while drawing)
+    completedColor: "#0000FF", // lighter blue for completed measurement (matches GMRT map)
     captureZIndex: 5000,
   })
   .addTo(map);
@@ -1964,6 +1964,252 @@ L.Control.Measure.include({
   },
 });
 
+// Function to force blue color on capture markers and measurement paths
+function forceBlueCaptureMarkers() {
+  // Find ALL circles and paths in the map and check if they're capture markers
+  document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
+    var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
+    if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
+      // This is likely a capture marker - force blue
+      if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
+        element.setAttribute('stroke', '#0066CC');
+        element.setAttribute('fill', 'none');
+        element.style.stroke = '#0066CC';
+        element.style.fill = 'none';
+        element.style.strokeWidth = '2';
+        // Add class to parent for CSS targeting
+        if (parent) parent.classList.add('leaflet-measure-capture');
+      } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
+        element.setAttribute('stroke', '#0066CC');
+        element.style.stroke = '#0066CC';
+        // Add measurement class to path
+        element.classList.add('leaflet-measure-path');
+      }
+    }
+  });
+  
+  // Also style any measurement paths that are being drawn
+  document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Check if this is part of a measurement (not a track)
+    var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
+                       path.classList.contains('leaflet-measure-resultarea') ||
+                       path.closest('.leaflet-measure') !== null ||
+                       (path._leaflet_id && map.hasLayer && map.hasLayer(path));
+    
+    if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
+                         !path.classList.contains('leaflet-measure-resultarea') &&
+                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
+                         path.style.stroke === 'rgb(0, 102, 204)' ||
+                         path.style.stroke === '#0066CC')) {
+      path.classList.add('leaflet-measure-path');
+      path.style.stroke = '#0066CC';
+      path.setAttribute('stroke', '#0066CC');
+    }
+  });
+}
+
+// Style capture markers to match active measurement color (without breaking click functionality)
+var captureMarkerObserver = new MutationObserver(function(mutations) {
+  forceBlueCaptureMarkers();
+});
+
+// Start observing the map container for changes
+captureMarkerObserver.observe(map.getContainer(), {
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['style', 'stroke', 'fill']
+});
+
+// Also check periodically when measurement is active
+setInterval(function() {
+  if (measure && measure._measuring) {
+    forceBlueCaptureMarkers();
+  }
+}, 100);
+
+map.on('layeradd', function(e) {
+  if (e.layer && e.layer._icon) {
+    var icon = e.layer._icon;
+    // Check if this is a capture marker by looking for the large divIcon
+    if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
+      // Force blue color on any SVG elements inside
+      setTimeout(function() {
+        var circles = icon.querySelectorAll('circle, path');
+        circles.forEach(function(circle) {
+          circle.setAttribute('stroke', '#0066CC');
+          circle.setAttribute('fill', 'none');
+          circle.style.stroke = '#0066CC';
+          circle.style.fill = 'none';
+        });
+        
+        // Also add a blue dot if no SVG exists
+        var existingDot = icon.querySelector('.measure-capture-dot');
+        if (!existingDot && circles.length === 0) {
+          var dot = document.createElement('div');
+          dot.className = 'measure-capture-dot';
+          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #0066CC; box-shadow: 0 0 0 1px white, 0 0 0 3px #0066CC; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
+          icon.appendChild(dot);
+        }
+      }, 50);
+    }
+  }
+});
+
+// Force Arial font on measurement popup headers and add color picker icon
+map.on('popupopen', function(e) {
+  var popup = e.popup;
+  if (popup && popup._container) {
+    var h3Elements = popup._container.querySelectorAll('.leaflet-measure-resultpopup h3, h3');
+    h3Elements.forEach(function(h3) {
+      h3.style.fontFamily = 'Arial, sans-serif';
+      h3.style.fontSize = '16px';
+      
+      // Add paintbrush icon if not already added
+      if (!h3.querySelector('.measure-color-picker-btn')) {
+        // Create icon container
+        var iconContainer = document.createElement('span');
+        iconContainer.className = 'measure-color-picker-btn';
+        iconContainer.style.cssText = 'float: right; cursor: pointer; margin-left: 10px; color: #666; font-size: 16px;';
+        iconContainer.innerHTML = '<i class="fas fa-paint-brush"></i>';
+        iconContainer.title = 'Change color';
+        
+        // Add click handler
+        iconContainer.addEventListener('click', function(event) {
+          event.stopPropagation();
+          event.preventDefault();
+          showColorPicker(popup, h3);
+        });
+        
+        h3.appendChild(iconContainer);
+      }
+    });
+  }
+});
+
+// Show color picker for measurement layer
+function showColorPicker(popup, headerElement) {
+  // Find the layer associated with this popup
+  var layer = popup._source;
+  if (!layer) return;
+  
+  // Get current color (default to rust/brown)
+  var currentColor = layer.options.color || 'rgb(139, 64, 0)';
+  if (layer._path) {
+    var computedStyle = window.getComputedStyle(layer._path);
+    currentColor = computedStyle.stroke || currentColor;
+  }
+  
+  // Convert rgb/rgba to hex if needed
+  function rgbToHex(rgb) {
+    if (rgb.startsWith('#')) return rgb;
+    var match = rgb.match(/\d+/g);
+    if (match && match.length >= 3) {
+      return '#' + [1,2,3].map(function(i) {
+        return ('0' + parseInt(match[i-1]).toString(16)).slice(-2);
+      }).join('');
+    }
+    return '#8b4000'; // default rust
+  }
+  
+  var hexColor = rgbToHex(currentColor);
+  
+  // Create color picker popup
+  var colorPickerDiv = document.createElement('div');
+  colorPickerDiv.className = 'measure-color-picker-popup';
+  colorPickerDiv.style.cssText = 'position: absolute; background: white; border: 2px solid #ccc; border-radius: 5px; padding: 15px; z-index: 10000; box-shadow: 0 4px 8px rgba(0,0,0,0.2);';
+  colorPickerDiv.innerHTML = '<div style="margin-bottom: 10px; font-weight: bold;">Choose Color:</div>' +
+    '<input type="color" id="measureColorInput" value="' + hexColor + '" style="width: 100%; height: 40px; margin-bottom: 10px; cursor: pointer;">' +
+    '<div style="display: flex; gap: 5px; margin-bottom: 10px;">' +
+    '<button class="color-preset" data-color="#8b4000" style="width: 30px; height: 30px; background: #8b4000; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Rust/Brown (default)"></button>' +
+    '<button class="color-preset" data-color="#0000ff" style="width: 30px; height: 30px; background: #0000ff; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Blue"></button>' +
+    '<button class="color-preset" data-color="#ff0000" style="width: 30px; height: 30px; background: #ff0000; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Red"></button>' +
+    '<button class="color-preset" data-color="#00ff00" style="width: 30px; height: 30px; background: #00ff00; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Green"></button>' +
+    '<button class="color-preset" data-color="#ff00ff" style="width: 30px; height: 30px; background: #ff00ff; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Magenta"></button>' +
+    '</div>' +
+    '<button id="applyColorBtn" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; font-weight: bold;">Apply</button>';
+  
+  // Position near the header
+  var rect = headerElement.getBoundingClientRect();
+  colorPickerDiv.style.left = (rect.right + 10) + 'px';
+  colorPickerDiv.style.top = rect.top + 'px';
+  
+  document.body.appendChild(colorPickerDiv);
+  
+  // Handle preset colors
+  colorPickerDiv.querySelectorAll('.color-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById('measureColorInput').value = btn.dataset.color;
+    });
+  });
+  
+  // Handle apply button
+  document.getElementById('applyColorBtn').addEventListener('click', function() {
+    var newColor = document.getElementById('measureColorInput').value;
+    applyColorToLayer(layer, newColor);
+    document.body.removeChild(colorPickerDiv);
+  });
+  
+  // Close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', function closePicker(event) {
+      if (!colorPickerDiv.contains(event.target) && event.target !== headerElement.querySelector('.measure-color-picker-btn')) {
+        if (document.body.contains(colorPickerDiv)) {
+          document.body.removeChild(colorPickerDiv);
+        }
+        document.removeEventListener('click', closePicker);
+      }
+    });
+  }, 100);
+}
+
+// Apply color to measurement layer
+function applyColorToLayer(layer, color) {
+  if (!layer) return;
+  
+  // Convert hex to rgb for Leaflet
+  function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+  
+  var rgb = hexToRgb(color);
+  if (!rgb) return;
+  
+  var rgbString = 'rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')';
+  
+  // Update layer style
+  if (layer.setStyle) {
+    // For paths (lines/polygons)
+    layer.setStyle({
+      color: rgbString,
+      fillColor: layer.options.fillColor || rgbString,
+      fillOpacity: layer.options.fillOpacity || 0.2
+    });
+  } else if (layer._path) {
+    // Direct DOM manipulation as fallback
+    layer._path.setAttribute('stroke', rgbString);
+    if (layer._path.getAttribute('fill') !== 'none') {
+      layer._path.setAttribute('fill', rgbString);
+    }
+  } else if (layer._icon) {
+    // For markers/points
+    if (layer._icon.style) {
+      layer._icon.style.backgroundColor = rgbString;
+    }
+  }
+  
+  // Store color in layer options for persistence
+  layer.options.color = rgbString;
+  if (layer.options.fillColor) {
+    layer.options.fillColor = rgbString;
+  }
+}
+
 // Try and determine the active overlay - Currently not working.
 L.Control.Layers.include({
   _getMapLayers: function () {
@@ -2052,7 +2298,6 @@ function showResultsPanel(loading) {
       // Find the scrollable container (selection-results-body)
       var body = panel.querySelector('.selection-results-body');
       if (body) {
-        var scrollTop = body.scrollTop;
         var scrollHeight = body.scrollHeight;
         var clientHeight = body.clientHeight;
         

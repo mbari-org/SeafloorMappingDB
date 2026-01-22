@@ -91,7 +91,7 @@ class BaseLoader:
     LOCAL_LOG_FILE = f"/etc/smdb/{LOG_FILE}"
     MEDIA_LOG_FILE = f"logs/{LOG_FILE}"
     MEDIA_EXCLUDE_LIST_FILE = "logs/exclude_list.txt"
-    LOCATE_DB = "/etc/smdb/etc/SeafloorMapping.db"
+    LOCATE_DB = "/etc/smdb/SeafloorMapping.db"
 
     def __init__(self):
         self.logger = logging.getLogger("load")
@@ -1342,9 +1342,7 @@ class BootStrapper(BaseLoader):
             stderr=subprocess.PIPE
         )
         test_output, test_error = test_proc.communicate()
-        use_find = False
         if test_proc.returncode != 0 or b"does not seem to be" in test_error or b"can not stat" in test_error:
-            use_find = True
             self.logger.warning(
                 f"Locate database not available ({test_error.decode().strip()}). "
                 f"Using 'find' instead (slower but will work)."
