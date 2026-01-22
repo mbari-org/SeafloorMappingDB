@@ -114,9 +114,9 @@ const FilterControl = L.Control.extend({
     const sidebar = L.DomUtil.create("div", "filter-sidebar", wrapper);
     sidebar.id = "filter-sidebar";
     sidebar.style.position = "absolute";
-    sidebar.style.left = "-220px"; // Hidden by default (slide out from left)
+    sidebar.style.left = "-250px"; // Hidden by default (slide out from left)
     sidebar.style.top = "0";
-    sidebar.style.width = "220px";
+    sidebar.style.width = "250px";
     sidebar.style.maxHeight = "250vh";
     sidebar.style.height = "auto"; // Auto-adjust to content
     sidebar.style.minHeight = "50px"; // Minimum height for button
@@ -151,8 +151,8 @@ const FilterControl = L.Control.extend({
     container.style.top = "5px";
     container.style.left = "20px"; // 20px from left edge of map when closed
     container.style.zIndex = "1001"; // Above sidebar
-    container.style.transition = "left 0.3s ease, background-color 0.2s ease";
-    container.style.border = "none"; // Ensure no border
+    container.style.transition = "left 0.3s ease, all 0.2s ease"; // Smooth transitions for all properties
+    container.style.border = "1px solid rgba(0, 0, 0, 0.3)"; // More obvious border
     container.style.outline = "none"; // Ensure no outline
     container.style.margin = "0"; // Ensure no margin
     container.style.padding = "0"; // Ensure no padding
@@ -230,6 +230,7 @@ const FilterControl = L.Control.extend({
     const body = L.DomUtil.create("div", "filter-sidebar-body", sidebar);
     body.id = "filter-sidebar-body";
     body.style.padding = "0.5rem 0.5rem 0.75rem 0.5rem"; // Top, Right, Bottom, Left - reduced top padding
+    body.style.paddingBottom = "0.75rem"; // Ensure bottom padding for buttons
     body.style.flex = "1";
     body.style.minHeight = "200px";
     body.style.maxHeight = "calc(80vh - 60px)"; // Account for header height
@@ -301,6 +302,11 @@ const FilterControl = L.Control.extend({
 
       body.appendChild(clonedForm);
       
+      // Debug: Log form structure to see if buttons are present
+      console.log("Form HTML:", clonedForm.innerHTML);
+      console.log("Buttons in form:", clonedForm.querySelectorAll("button").length);
+      console.log("All rows:", clonedForm.querySelectorAll(".row").length);
+      
       // Add global click interceptor for Clear buttons on main map page (before onclick handlers execute)
       const currentPathCheck = window.location.pathname;
       const isMainMapPageCheck = currentPathCheck === '/' || currentPathCheck === '/missions' || currentPathCheck.startsWith('/missions/');
@@ -316,6 +322,10 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            // Store sidebar open state before reloading
+            sessionStorage.setItem('sidebarOpen', 'true');
+            
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
@@ -365,7 +375,7 @@ const FilterControl = L.Control.extend({
       );
       inputs.forEach((el) => {
         el.style.width = "100%";
-        el.style.maxWidth = "200px";
+        el.style.maxWidth = "230px";
         el.style.fontSize = "0.8rem";
         el.style.padding = "0.3rem";
         el.style.marginBottom = "0.4rem";
@@ -411,6 +421,259 @@ const FilterControl = L.Control.extend({
         li.style.color = "#e0e0e0"; // Light text color
       });
 
+      // Create custom dropdown for quality categories with checkboxes
+      const qualitySelect = body.querySelector('select[name="quality_categories"]');
+      const locationSelect = body.querySelector('select[name="region_name"]');
+      
+      if (qualitySelect && qualitySelect.options.length > 0) {
+        // Hide the original select
+        qualitySelect.style.display = "none";
+        
+        // Create custom dropdown container
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.className = 'quality-dropdown-container';
+        dropdownContainer.style.position = 'relative';
+        dropdownContainer.style.width = '230px';
+        dropdownContainer.style.minWidth = '230px';
+        dropdownContainer.style.maxWidth = '230px';
+        dropdownContainer.style.marginBottom = '0.4rem';
+        dropdownContainer.style.flexShrink = '0';
+        dropdownContainer.style.flexGrow = '0';
+        
+        // Create dropdown button (looks like Location field)
+        const dropdownButton = document.createElement('button');
+        dropdownButton.type = 'button';
+        dropdownButton.className = 'quality-dropdown-button';
+        dropdownButton.textContent = '- Quality assessment -';
+        dropdownButton.style.width = '230px';
+        dropdownButton.style.minWidth = '230px';
+        dropdownButton.style.maxWidth = '230px';
+        dropdownButton.style.padding = '0.3rem';
+        dropdownButton.style.fontSize = '0.8rem';
+        dropdownButton.style.fontWeight = '300';
+        dropdownButton.style.border = '1px solid #555';
+        dropdownButton.style.borderRadius = '4px';
+        dropdownButton.style.backgroundColor = '#1e1e1e';
+        dropdownButton.style.color = '#e0e0e0';
+        dropdownButton.style.textAlign = 'left';
+        dropdownButton.style.cursor = 'pointer';
+        dropdownButton.style.boxSizing = 'border-box';
+        dropdownButton.style.position = 'relative';
+        dropdownButton.style.paddingRight = '2rem';
+        dropdownButton.style.overflow = 'hidden';
+        dropdownButton.style.textOverflow = 'ellipsis';
+        dropdownButton.style.whiteSpace = 'nowrap';
+        
+        // Match the native select dropdown arrow from Location field
+        // Native HTML select elements use browser's default dropdown arrow
+        // We'll create a visual match - browsers typically use a downward triangle/chevron
+        const locationSelect = body.querySelector('select[name="region_name"]');
+        
+        // Create V-shaped chevron caret to match Location field dropdown
+        const caret = document.createElement('span');
+        // Use V-shaped chevron (⌄) to match native select dropdown appearance
+        caret.innerHTML = '⌄'; // Downward V-shaped chevron
+        caret.style.position = 'absolute';
+        caret.style.right = '0.3rem'; // Move a few pixels to the right (smaller right value = more to the right)
+        caret.style.top = '38%'; // Slightly above center to account for visual centering
+        caret.style.transform = 'translateY(-50%) scaleX(1.3)'; // Center vertically and widen the V
+        caret.style.transformOrigin = 'center center'; // Ensure scaling happens from center
+        caret.style.fontSize = '1.2rem'; // Size to match image
+        caret.style.color = '#ffffff'; // White color
+        caret.style.pointerEvents = 'none';
+        caret.style.lineHeight = '0'; // Remove line-height to prevent extra space
+        caret.style.display = 'flex';
+        caret.style.alignItems = 'center';
+        caret.style.justifyContent = 'center';
+        caret.style.fontWeight = 'bold'; // Make it bolder/thicker
+        caret.style.fontFamily = 'Arial, sans-serif';
+        caret.style.letterSpacing = '0'; // No extra spacing
+        dropdownButton.appendChild(caret);
+        
+        // Create dropdown menu
+        const dropdownMenu = document.createElement('div');
+        dropdownMenu.className = 'quality-dropdown-menu';
+        dropdownMenu.style.display = 'none';
+        dropdownMenu.style.position = 'absolute';
+        dropdownMenu.style.top = '100%';
+        dropdownMenu.style.left = '0';
+        dropdownMenu.style.width = '230px';
+        dropdownMenu.style.minWidth = '230px';
+        dropdownMenu.style.maxWidth = '230px';
+        dropdownMenu.style.maxHeight = '200px';
+        dropdownMenu.style.overflowY = 'auto';
+        dropdownMenu.style.backgroundColor = '#2d2d2d';
+        dropdownMenu.style.border = '1px solid #555';
+        dropdownMenu.style.borderRadius = '4px';
+        dropdownMenu.style.marginTop = '2px';
+        dropdownMenu.style.zIndex = '1000';
+        dropdownMenu.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+        // Hide scrollbar
+        dropdownMenu.style.scrollbarWidth = 'thin';
+        dropdownMenu.style.scrollbarColor = 'transparent transparent';
+        dropdownMenu.setAttribute('class', 'quality-dropdown-menu custom-scrollbar');
+        
+        // Track last clicked checkbox for Shift+Click range selection
+        let lastClickedCheckbox = null;
+        
+        // Create checkbox options
+        Array.from(qualitySelect.options).forEach((option, index) => {
+          if (option.value) { // Skip empty placeholder option
+            const checkboxItem = document.createElement('label');
+            checkboxItem.style.display = 'flex';
+            checkboxItem.style.alignItems = 'center';
+            checkboxItem.style.padding = '0.5rem';
+            checkboxItem.style.cursor = 'pointer';
+            checkboxItem.style.color = '#ffffff'; // White text for better visibility
+            checkboxItem.style.fontSize = '0.8rem';
+            checkboxItem.style.borderBottom = '1px solid #444';
+            checkboxItem.style.marginBottom = '0';
+            
+            checkboxItem.addEventListener('mouseenter', function() {
+              this.style.backgroundColor = '#3d3d3d';
+            });
+            checkboxItem.addEventListener('mouseleave', function() {
+              this.style.backgroundColor = 'transparent';
+            });
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = option.value;
+            checkbox.name = 'quality_categories';
+            checkbox.style.width = '14px';
+            checkbox.style.height = '14px';
+            checkbox.style.marginRight = '0.5rem';
+            checkbox.style.cursor = 'pointer';
+            checkbox.style.flexShrink = '0';
+            
+            // Store index for Shift+Click range selection
+            checkbox.dataset.index = index;
+            
+            // Sync with original select
+            checkbox.checked = option.selected;
+            
+            // Handle checkbox change with Shift+Click support
+            checkbox.addEventListener('click', function(e) {
+              if (e.shiftKey && lastClickedCheckbox && lastClickedCheckbox !== checkbox) {
+                // Shift+Click: select range between last clicked and current
+                e.preventDefault();
+                const checkboxes = Array.from(dropdownMenu.querySelectorAll('input[type="checkbox"]'));
+                const startIndex = parseInt(lastClickedCheckbox.dataset.index);
+                const endIndex = parseInt(checkbox.dataset.index);
+                const start = Math.min(startIndex, endIndex);
+                const end = Math.max(startIndex, endIndex);
+                
+                // Use the state of the last clicked checkbox as the target state
+                const targetState = lastClickedCheckbox.checked;
+                
+                // Set all checkboxes in range to the target state
+                for (let i = start; i <= end; i++) {
+                  const cb = checkboxes[i];
+                  if (cb) {
+                    cb.checked = targetState;
+                    const originalOption = qualitySelect.querySelector(`option[value="${cb.value}"]`);
+                    if (originalOption) {
+                      originalOption.selected = targetState;
+                    }
+                  }
+                }
+                
+                // Trigger change event on original select
+                qualitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                updateButtonText();
+              } else {
+                // Normal click: checkbox state is toggled automatically by browser
+                // Just sync with original select
+                const originalOption = qualitySelect.querySelector(`option[value="${this.value}"]`);
+                if (originalOption) {
+                  originalOption.selected = this.checked;
+                  // Trigger change event on original select
+                  qualitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                updateButtonText();
+              }
+              
+              // Update last clicked checkbox
+              lastClickedCheckbox = checkbox;
+            });
+            
+            const labelText = document.createElement('span');
+            labelText.textContent = option.text;
+            labelText.style.color = '#ffffff'; // White text for visibility
+            labelText.style.flex = '1';
+            
+            checkboxItem.appendChild(checkbox);
+            checkboxItem.appendChild(labelText);
+            dropdownMenu.appendChild(checkboxItem);
+          }
+        });
+        
+        // Function to update button text
+        function updateButtonText() {
+          const selectedOptions = Array.from(qualitySelect.selectedOptions).filter(opt => opt.value);
+          let displayText = '- Quality assessment -';
+          
+          if (selectedOptions.length === 0) {
+            displayText = '- Quality assessment -';
+          } else if (selectedOptions.length === 1) {
+            displayText = selectedOptions[0].text;
+          } else {
+            // Show all selected options as comma-separated list
+            displayText = selectedOptions.map(opt => opt.text).join(', ');
+          }
+          
+          // Update text content while preserving the caret element
+          // Remove all text nodes but keep the caret span
+          const nodesToRemove = [];
+          Array.from(dropdownButton.childNodes).forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              nodesToRemove.push(node);
+            } else if (node.nodeType === Node.ELEMENT_NODE && node !== caret) {
+              nodesToRemove.push(node);
+            }
+          });
+          nodesToRemove.forEach(node => node.remove());
+          
+          // Insert new text before the caret
+          dropdownButton.insertBefore(document.createTextNode(displayText), caret);
+          
+          // Ensure button maintains fixed width to prevent layout shifts
+          dropdownButton.style.width = '230px';
+          dropdownButton.style.minWidth = '230px';
+          dropdownButton.style.maxWidth = '230px';
+        }
+        
+        // Toggle dropdown
+        dropdownButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isOpen = dropdownMenu.style.display === 'block';
+          dropdownMenu.style.display = isOpen ? 'none' : 'block';
+          
+          // Close other dropdowns
+          body.querySelectorAll('.quality-dropdown-menu').forEach(menu => {
+            if (menu !== dropdownMenu) {
+              menu.style.display = 'none';
+            }
+          });
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!dropdownContainer.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+          }
+        });
+        
+        // Insert custom dropdown before the hidden select
+        const parentElement = qualitySelect.parentElement;
+        dropdownContainer.appendChild(dropdownButton);
+        dropdownContainer.appendChild(dropdownMenu);
+        parentElement.insertBefore(dropdownContainer, qualitySelect);
+        
+        // Initialize button text
+        updateButtonText();
+      }
+
       // Style form groups
       body.querySelectorAll(".form-group").forEach((fg) => {
         fg.style.marginBottom = "0.8rem";
@@ -427,14 +690,20 @@ const FilterControl = L.Control.extend({
         lbl.style.color = "#e0e0e0"; // Light text color for labels
       });
 
-      // Style buttons
-      body.querySelectorAll("button.btn").forEach((btn) => {
+      // Style buttons - find ALL buttons, not just .btn class
+      const allButtons = body.querySelectorAll("button");
+      console.log("Found buttons:", allButtons.length);
+      allButtons.forEach((btn) => {
+        // Ensure button is visible
+        btn.style.display = "block";
+        btn.style.visibility = "visible";
+        btn.style.opacity = "1";
         btn.style.fontSize = "0.75rem";
         btn.style.padding = "0.4rem 0.6rem"; // Reduced horizontal padding
         // Check if buttons are in a row - if so, make them share the row width
         const parentRow = btn.closest(".row");
         const parentColumn = btn.closest("[class*='col-']");
-        if (parentRow && parentRow.querySelectorAll("button.btn").length > 1) {
+        if (parentRow && parentRow.querySelectorAll("button").length > 1) {
           // Multiple buttons in same row - make them narrower to fit side by side
           // Ensure the column container doesn't force full width
           if (parentColumn) {
@@ -443,6 +712,8 @@ const FilterControl = L.Control.extend({
             parentColumn.style.maxWidth = "none";
             parentColumn.style.width = "auto";
             parentColumn.style.flexBasis = "auto";
+            parentColumn.style.display = "block";
+            parentColumn.style.visibility = "visible";
           }
           btn.style.width = "100%";
           btn.style.minWidth = "60px";
@@ -452,7 +723,7 @@ const FilterControl = L.Control.extend({
         } else {
           // Single button - full width
           btn.style.width = "100%";
-          btn.style.maxWidth = "200px";
+          btn.style.maxWidth = "230px";
           btn.style.marginTop = "0.2rem";
         }
         btn.style.boxSizing = "border-box";
@@ -463,6 +734,21 @@ const FilterControl = L.Control.extend({
         } else if (btn.classList.contains("btn-secondary")) {
           btn.style.backgroundColor = "#6c757d";
           btn.style.color = "#ffffff";
+        }
+        // Ensure button row is visible and aligned
+        if (parentRow) {
+          parentRow.style.display = "flex";
+          parentRow.style.visibility = "visible";
+          parentRow.style.opacity = "1";
+          parentRow.style.alignItems = "flex-start"; // Align items to start (top)
+          // If this row contains buttons, ensure they're aligned
+          if (parentRow.querySelectorAll("button").length > 0) {
+            parentRow.style.alignItems = "center"; // Center align buttons vertically
+            // Center buttons horizontally on the row
+            if (btn.classList.contains("button-row")) {
+              parentRow.style.justifyContent = "center"; // Center buttons horizontally
+            }
+          }
         }
         
         // Override Clear button onclick to stay on current page (only on main map/home page)
@@ -484,6 +770,10 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            // Store sidebar open state before reloading
+            sessionStorage.setItem('sidebarOpen', 'true');
+            
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             // Remove all filter-related query parameters
@@ -537,39 +827,72 @@ const FilterControl = L.Control.extend({
         row.style.display = "flex";
         row.style.flexWrap = "wrap";
         row.style.flexDirection = "row";
+        row.style.visibility = "visible";
+        row.style.opacity = "1";
         // Override Bootstrap's default row display
         row.style.setProperty("display", "flex", "important");
+        // Ensure row is not hidden
+        row.style.setProperty("visibility", "visible", "important");
+        row.style.setProperty("opacity", "1", "important");
       });
       
       // Remove left padding from columns and ensure they work with flex
       body.querySelectorAll(".col-md, [class*='col-']").forEach((col) => {
         col.style.paddingLeft = "0.25rem"; // Minimal left padding
         col.style.paddingRight = "0.25rem"; // Minimal right padding
-        // For button rows, make columns flexible
-        const parentRow = col.closest(".row");
-        if (parentRow && parentRow.querySelectorAll("button.btn").length > 1) {
-          col.style.flex = "1 1 auto";
-          col.style.minWidth = "0";
-          col.style.maxWidth = "none";
-          col.style.width = "auto";
-          col.style.flexBasis = "auto";
-          // Override Bootstrap's default column width
-          col.style.setProperty("width", "auto", "important");
-          col.style.setProperty("flex-basis", "auto", "important");
+        // Make all columns flexible to use full sidebar width
+        col.style.flex = "1 1 auto";
+        col.style.minWidth = "0";
+        col.style.maxWidth = "none";
+        col.style.width = "auto";
+        col.style.flexBasis = "auto";
+        // Override Bootstrap's default column width
+        col.style.setProperty("width", "auto", "important");
+        col.style.setProperty("flex-basis", "auto", "important");
+      });
+      
+      // Make expedition__name field column expand to full width (230px) like Name field
+      // This will naturally push buttons to wrap to next line
+      const expeditionNameInput = body.querySelector('input[name="expedition__name"], select[name="expedition__name"]');
+      if (expeditionNameInput) {
+        const expeditionColumn = expeditionNameInput.closest("[class*='col-']");
+        if (expeditionColumn) {
+          // Override the general column styling to force full width (230px) when wrapping
+          // This makes it behave like the Name field above it
+          expeditionColumn.style.setProperty("flex-basis", "230px", "important");
+          expeditionColumn.style.setProperty("min-width", "230px", "important");
+          expeditionColumn.style.setProperty("width", "230px", "important");
+          // This will cause the row to wrap, pushing buttons to next line
+        }
+      }
+      
+      // Force buttons to wrap to new line by making their columns full width
+      body.querySelectorAll(".button-row").forEach((btn) => {
+        const btnColumn = btn.closest("[class*='col-']");
+        if (btnColumn) {
+          btnColumn.style.width = "100%";
+          btnColumn.style.flexBasis = "100%";
+          btnColumn.style.maxWidth = "100%";
+          btnColumn.style.marginTop = "0.5rem";
         }
       });
 
       // Auto-adjust sidebar height after form is copied
       setTimeout(function () {
         if (sidebar) {
+          // Force a reflow to ensure all content is measured
+          body.style.display = "block";
           const bodyHeight = body.scrollHeight;
           const header = sidebar.querySelector(".filter-sidebar-header");
           const headerHeight = header ? header.offsetHeight : 50;
-          const totalHeight = bodyHeight + headerHeight + 10; // Add small padding
+          // Include padding in calculation to ensure buttons are fully visible
+          const bodyPadding = parseFloat(window.getComputedStyle(body).paddingTop) + 
+                             parseFloat(window.getComputedStyle(body).paddingBottom);
+          const totalHeight = bodyHeight + headerHeight + bodyPadding;
           const maxHeight = window.innerHeight * 0.8;
           sidebar.style.height = Math.min(totalHeight, maxHeight) + "px";
         }
-      }, 100);
+      }, 150);
 
       return true;
     };
@@ -592,7 +915,7 @@ const FilterControl = L.Control.extend({
           );
           inputs.forEach((el) => {
             el.style.width = "100%";
-            el.style.maxWidth = "200px";
+            el.style.maxWidth = "230px";
             el.style.fontSize = "0.8rem";
             el.style.padding = "0.3rem";
             el.style.marginBottom = "0.4rem";
@@ -627,7 +950,7 @@ const FilterControl = L.Control.extend({
             } else {
               // Single button - full width
               btn.style.width = "100%";
-              btn.style.maxWidth = "200px";
+              btn.style.maxWidth = "230px";
               btn.style.marginTop = "0.2rem";
             }
             btn.style.boxSizing = "border-box";
@@ -736,9 +1059,9 @@ const FilterControl = L.Control.extend({
     // Helper function to show sidebar (slide out from left, button moves to right edge)
     function showSidebar() {
       sidebar.style.left = "0px"; // Slide sidebar out - left edge aligns with map edge (no gap)
-      // Button is 20px from map edge when closed, sidebar is 220px wide starting at 0px
-      // So button should be at 220px (right edge of sidebar)
-      container.style.left = "220px"; // Move button to right edge of sidebar
+      // Button is 20px from map edge when closed, sidebar is 250px wide starting at 0px
+      // So button should be at 250px (right edge of sidebar)
+      container.style.left = "250px"; // Move button to right edge of sidebar
       // Button stays on right edge - positioned relative to wrapper
 
       // Auto-adjust sidebar height to fit content
@@ -756,10 +1079,15 @@ const FilterControl = L.Control.extend({
           formInBody.style.paddingTop = "0";
         }
 
+        // Force a reflow to ensure all content is measured
+        body.style.display = "block";
         const bodyHeight = body.scrollHeight;
         const headerHeight =
           sidebar.querySelector(".filter-sidebar-header")?.offsetHeight || 50;
-        const totalHeight = bodyHeight + headerHeight + 10; // Add small padding
+        // Include padding in calculation to ensure buttons are fully visible
+        const bodyPadding = parseFloat(window.getComputedStyle(body).paddingTop) + 
+                           parseFloat(window.getComputedStyle(body).paddingBottom);
+        const totalHeight = bodyHeight + headerHeight + bodyPadding;
         sidebar.style.height =
           Math.min(totalHeight, window.innerHeight * 0.8) + "px";
       }
@@ -768,43 +1096,45 @@ const FilterControl = L.Control.extend({
     // Helper function to hide sidebar (slide back left, button returns to left)
     function hideSidebar() {
       if (!sidebarOpen) {
-        sidebar.style.left = "-220px"; // Hide sidebar
+        sidebar.style.left = "-250px"; // Hide sidebar
         container.style.left = "20px"; // Return button to 20px from left edge
         // Icon change is handled in click handler with animation
       }
+    }
+
+    // Check if sidebar should be open from sessionStorage (after Clear button reload)
+    const shouldOpenSidebar = sessionStorage.getItem('sidebarOpen') === 'true';
+    if (shouldOpenSidebar) {
+      sidebarOpen = true;
+      // Always keep filter icon - don't change to X
+      icon.className = "fas fa-filter";
+      icon.style.fontSize = "18px";
+      icon.style.color = "#007bff";
+      icon.style.display = "block"; // Ensure icon is visible
+      showSidebar();
+      // Clear the sessionStorage flag
+      sessionStorage.removeItem('sidebarOpen');
+    } else {
+      // Ensure icon is set correctly when sidebar is closed
+      sidebarOpen = false;
+      icon.className = "fas fa-filter";
+      icon.style.fontSize = "18px";
+      icon.style.color = "#007bff";
+      icon.style.display = "block"; // Ensure icon is visible
     }
 
     // Click handler - toggle persistent open state
     L.DomEvent.on(container, "click", function (e) {
       L.DomEvent.stopPropagation(e);
 
-      // Remove any existing animation classes
-      icon.classList.remove("rotate-out", "rotate-in");
-
       sidebarOpen = !sidebarOpen;
 
       if (sidebarOpen) {
-        // Animate filter icon out, then change to X
-        icon.classList.add("rotate-out");
-        setTimeout(function () {
-          icon.className = "fas fa-times"; // Change to X (close icon)
-          icon.style.fontSize = "18px";
-          icon.style.color = "#007bff";
-          icon.classList.remove("rotate-out");
-          icon.classList.add("rotate-in");
-          showSidebar();
-        }, 150); // Halfway through animation
+        // Open sidebar - keep filter icon
+        showSidebar();
       } else {
-        // Animate X icon out, then change to filter
-        icon.classList.add("rotate-out");
-        setTimeout(function () {
-          icon.className = "fas fa-filter"; // Change back to filter icon
-          icon.style.fontSize = "18px";
-          icon.style.color = "#007bff";
-          icon.classList.remove("rotate-out");
-          icon.classList.add("rotate-in");
-          hideSidebar();
-        }, 150); // Halfway through animation
+        // Close sidebar - keep filter icon
+        hideSidebar();
       }
     });
 
@@ -876,6 +1206,9 @@ setTimeout(function () {
 const missions = JSON.parse(
   document.getElementById("missions-data").textContent
 );
+
+// Check if missions data is empty before creating GeoJSON layer
+var hasMissions = missions && missions.features && missions.features.length > 0;
 
 // Add SMDB Missions to Base Map
 let feature = L.geoJSON(missions, {
@@ -950,68 +1283,157 @@ map.whenReady(function() {
   // Small delay to ensure container has final size after invalidateSize and feature is loaded
   setTimeout(function() {
     try {
-      var bounds = feature.getBounds();
-      if (bounds && bounds.isValid && bounds.isValid()) {
-        // Get viewport/container dimensions
-        var mapContainer = document.getElementById("map");
-        var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
-        var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
-        
-        // Get mission bounds coordinates
-        var sw = bounds.getSouthWest(); // Southwest corner
-        var ne = bounds.getNorthEast(); // Northeast corner
-        var missionLatSpan = ne.lat - sw.lat; // Latitude span
-        var missionLngSpan = ne.lng - sw.lng; // Longitude span
-        
-        // Calculate aspect ratios
-        var viewportAspect = viewportWidth / viewportHeight;
-        var missionAspect = missionLngSpan / missionLatSpan;
-        
-        // Calculate padding as percentage of viewport (adaptive to screen size)
-        // Use smaller padding for tighter fit and more zoom while still showing all missions
-        var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport (reduced from 5-10%)
-        var paddingX = Math.round(viewportWidth * paddingPercent);
-        var paddingY = Math.round(viewportHeight * paddingPercent);
-        
-        // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
-        // Only add vertical padding if needed to show all missions, not to match viewport aspect ratio
-        if (viewportAspect > missionAspect) {
-          // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
-          paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
-        }
-        
-        // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
-        // First, fit bounds to get the zoom level that shows all missions
-        map.fitBounds(bounds, { padding: [paddingY, paddingX] });
-        
-        // Adjust center to better position mission data in viewport
-        // If viewport is wider than mission bounds, shift center southward to show more data areas
-        if (viewportAspect > missionAspect) {
-          var currentCenter = map.getCenter();
-          var missionCenterLat = (sw.lat + ne.lat) / 2;
-          // Shift center slightly south to better position mission data (reduce empty north pole space)
-          var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
-          map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
-        }
-        
-        // Get the zoom level that fitBounds calculated
-        var calculatedZoom = map.getZoom();
-        
-        // Allow fractional zoom for finer control when zooming in
-        // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
-        // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
+      // Check if there are any missions before trying to fit bounds
+      // First check the original missions data
+      if (!hasMissions) {
+        // No missions found - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
       }
+      
+      // Also check the feature layers as a secondary check
+      var featureLayers = feature.getLayers();
+      if (!featureLayers || featureLayers.length === 0) {
+        // No missions found - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      // Try to get bounds - this may throw an error if layer is empty
+      var bounds;
+      try {
+        bounds = feature.getBounds();
+      } catch (boundsError) {
+        // getBounds() failed (likely empty layer) - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      if (!bounds || !bounds.isValid || !bounds.isValid()) {
+        // Invalid bounds (likely empty layer) - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      // Get mission bounds coordinates
+      var sw = bounds.getSouthWest(); // Southwest corner
+      var ne = bounds.getNorthEast(); // Northeast corner
+      var missionLatSpan = ne.lat - sw.lat; // Latitude span
+      var missionLngSpan = ne.lng - sw.lng; // Longitude span
+      
+      // Check if bounds span is too large (indicating invalid/empty bounds or global span)
+      // If longitude span is >= 360 degrees or latitude span >= 180 degrees, treat as empty
+      if (missionLngSpan >= 360 || missionLatSpan >= 180 || isNaN(missionLatSpan) || isNaN(missionLngSpan)) {
+        // Invalid or global-spanning bounds - set to default zoom level 3 and center
+        map.setView([39.8423, -26.8945], 3, { animate: false });
+        return;
+      }
+      
+      // Get viewport/container dimensions
+      var mapContainer = document.getElementById("map");
+      var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
+      var viewportHeight = mapContainer.offsetHeight || window.innerHeight;
+      
+      // Calculate aspect ratios
+      var viewportAspect = viewportWidth / viewportHeight;
+      var missionAspect = missionLngSpan / missionLatSpan;
+      
+      // Calculate padding as percentage of viewport (adaptive to screen size)
+      // Use smaller padding for tighter fit and more zoom while still showing all missions
+      var paddingPercent = Math.min(0.05, Math.max(0.02, 50 / viewportWidth)); // 2-5% of viewport (reduced from 5-10%)
+      var paddingX = Math.round(viewportWidth * paddingPercent);
+      var paddingY = Math.round(viewportHeight * paddingPercent);
+      
+      // If viewport is wider than mission bounds, reduce vertical padding to avoid showing empty pole areas
+      // Only add vertical padding if needed to show all missions, not to match viewport aspect ratio
+      if (viewportAspect > missionAspect) {
+        // Viewport is wider - use minimal vertical padding to avoid showing empty north/south pole areas
+        paddingY = Math.min(paddingY, Math.round(viewportHeight * 0.01)); // Max 1% vertical padding when viewport is wide
+      }
+      
+      // Calculate optimal zoom that shows all missions but doesn't zoom out excessively
+      // First, fit bounds to get the zoom level that shows all missions
+      map.fitBounds(bounds, { padding: [paddingY, paddingX] });
+      
+      // Adjust center to better position mission data in viewport
+      // If viewport is wider than mission bounds, shift center southward to show more data areas
+      if (viewportAspect > missionAspect) {
+        var currentCenter = map.getCenter();
+        var missionCenterLat = (sw.lat + ne.lat) / 2;
+        // Shift center slightly south to better position mission data (reduce empty north pole space)
+        var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
+        map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
+      }
+      
+      // Get the zoom level that fitBounds calculated
+      var calculatedZoom = map.getZoom();
+      var finalCenter = map.getCenter();
+      console.log("Current map zoom level:", calculatedZoom);
+      console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
+      console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+      
+      // Allow fractional zoom for finer control when zooming in
+      // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
+      // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
     } catch (err) {
+      // If getBounds fails (e.g., no features), set to default zoom level 3 and center
       console.log("Error fitting bounds: " + err.message);
+      map.setView([39.8423, -26.8945], 3, { animate: false });
     }
   }, 150);
 });
 
-// Also try immediately as fallback (in case map is already ready and sized)
-try {
-  map.invalidateSize();
-  var bounds = feature.getBounds();
-  if (bounds && bounds.isValid && bounds.isValid()) {
+// Also try after a delay to ensure feature is fully loaded and map is ready
+setTimeout(function() {
+  try {
+    map.invalidateSize();
+    
+    // Check if there are any missions before trying to fit bounds
+    // First check the original missions data
+    if (!hasMissions) {
+      // No missions found - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Also check the feature layers as a secondary check
+    var featureLayers = feature.getLayers();
+    if (!featureLayers || featureLayers.length === 0) {
+      // No missions found - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Try to get bounds - this may throw an error if layer is empty
+    var bounds;
+    try {
+      bounds = feature.getBounds();
+    } catch (boundsError) {
+      // getBounds() failed (likely empty layer) - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    if (!bounds || !bounds.isValid || !bounds.isValid()) {
+      // Invalid bounds (likely empty layer) - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
+    // Get mission bounds to check aspect ratio
+    var sw = bounds.getSouthWest();
+    var ne = bounds.getNorthEast();
+    var missionLatSpan = ne.lat - sw.lat;
+    var missionLngSpan = ne.lng - sw.lng;
+    
+    // Check if bounds span is too large (indicating invalid/empty bounds or global span)
+    // If longitude span is >= 360 degrees or latitude span >= 180 degrees, treat as empty
+    if (missionLngSpan >= 360 || missionLatSpan >= 180 || isNaN(missionLatSpan) || isNaN(missionLngSpan)) {
+      // Invalid or global-spanning bounds - set to default zoom level 3 and center
+      map.setView([39.8423, -26.8945], 3, { animate: false });
+      return;
+    }
+    
     // Get viewport dimensions
     var mapContainer = document.getElementById("map");
     var viewportWidth = mapContainer.offsetWidth || window.innerWidth;
@@ -1022,11 +1444,6 @@ try {
     var paddingX = Math.round(viewportWidth * paddingPercent);
     var paddingY = Math.round(viewportHeight * paddingPercent);
     
-    // Get mission bounds to check aspect ratio
-    var sw = bounds.getSouthWest();
-    var ne = bounds.getNorthEast();
-    var missionLatSpan = ne.lat - sw.lat;
-    var missionLngSpan = ne.lng - sw.lng;
     var viewportAspect = viewportWidth / viewportHeight;
     var missionAspect = missionLngSpan / missionLatSpan;
     
@@ -1048,12 +1465,29 @@ try {
       map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
     }
     
+    // Log the zoom level after fitBounds in fallback setTimeout
+    var finalZoom = map.getZoom();
+    var finalCenterFallback = map.getCenter();
+    console.log("Current map zoom level (fallback setTimeout):", finalZoom);
+    console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
+    console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+    
     // Fractional zoom enabled - allows 0.5 increments for finer zoom control
     // No zoom constraint - fitBounds determines optimal zoom to show all missions
+  } catch (err) {
+    // If getBounds fails (e.g., no features), set to default zoom level 3 and center
+    console.log("Error in fallback fitBounds: " + err.message);
+    map.setView([39.8423, -26.8945], 3, { animate: false });
   }
-} catch (err) {
-  console.log("Error in fallback fitBounds: " + err.message);
-}
+}, 100);
+
+// Log final zoom level and center after all initialization is complete
+setTimeout(function() {
+  var finalZoomLevel = map.getZoom();
+  var finalMapCenter = map.getCenter();
+  console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
+  console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
+}, 500);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1152,41 +1586,154 @@ var measure = L.control
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
-var drawControl = new L.Control.Draw({
-  position: "topright",
-  draw: {
-    polygon: false,
-    polyline: false,
-    circle: false,
-    circlemarker: false,
-    marker: false,
-    rectangle: {
-      shapeOptions: {
-        color: "#3388ff",
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        weight: 2,
-      },
-    },
-  },
-  edit: {
-    featureGroup: drawnItems,
-    remove: true,
+// Create rectangle drawing handler (without toolbar UI)
+var rectangleDrawer = new L.Draw.Rectangle(map, {
+  shapeOptions: {
+    color: "#3388ff",
+    fillColor: "#3388ff",
+    fillOpacity: 0.2,
+    weight: 2,
   },
 });
-map.addControl(drawControl);
 
-<<<<<<< HEAD
-=======
-// Add tooltip to draw button
-setTimeout(function() {
-  var drawButton = document.querySelector('.leaflet-draw-draw-rectangle');
-  if (drawButton) {
-    drawButton.setAttribute('title', 'Draw Rectangle - Click and drag to create a rectangular selection area');
+// Create custom Draw Square button control matching filter button settings
+var DrawSquareButton = L.Control.extend({
+  onAdd: function(map) {
+    // Create wrapper
+    const wrapper = L.DomUtil.create("div", "draw-square-wrapper");
+    wrapper.style.position = "relative";
+    wrapper.style.width = "40px";
+    wrapper.style.height = "40px"; // Match button height
+    wrapper.style.backgroundColor = "transparent";
+    wrapper.style.border = "none";
+    wrapper.style.boxShadow = "none";
+    wrapper.style.margin = "0";
+    wrapper.style.padding = "0";
+
+    // Draw Square button - same settings as filter button
+    const container = L.DomUtil.create("div", "draw-square-control", wrapper);
+    container.id = "drawSquare-button";
+    container.title = "Draw a square around missions to create an exportable list.";
+    container.style.width = "40px";
+    container.style.height = "40px";
+    container.style.backgroundColor = "hsla(0, 0%, 100%, 0.75)"; // Semi-transparent white like other controls
+    container.style.borderRadius = "4px";
+    container.style.cursor = "pointer";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.alignItems = "center";
+    container.style.justifyContent = "center";
+    container.style.boxShadow = "0 1px 5px rgba(0,0,0,0.4)";
+    container.style.position = "relative"; // Relative to wrapper, not absolute
+    container.style.zIndex = "1001";
+    container.style.transition = "all 0.2s ease"; // Smooth transitions for all properties
+    container.style.border = "1px solid rgba(0, 0, 0, 0.3)"; // More obvious border
+    container.style.outline = "none";
+    container.style.margin = "0";
+    container.style.padding = "0";
+
+    // Square icon - using larger size and thicker stroke, or create custom SVG for better control
+    // Option 1: Try larger Font Awesome icon with thicker stroke
+    const icon = L.DomUtil.create("i", "fa-regular fa-square", container);
+    icon.id = "draw-square-icon";
+    icon.style.fontSize = "22px"; // Increased from 18px for larger icon
+    icon.style.color = "#007bff"; // Same blue color as filter button
+    // Increase stroke thickness using text-stroke - thicker stroke
+    icon.style.webkitTextStroke = "2.5px #007bff";
+    icon.style.webkitTextFillColor = "transparent";
+    icon.style.textStroke = "2.5px #007bff";
+    icon.style.textFillColor = "transparent";
+    
+    // Alternative: Create custom SVG square with thicker stroke for better control
+    // Uncomment below and comment out the Font Awesome icon above if needed
+    /*
+    const icon = L.DomUtil.createNS("http://www.w3.org/2000/svg", "svg");
+    icon.id = "draw-square-icon";
+    icon.setAttribute("width", "18");
+    icon.setAttribute("height", "18");
+    icon.setAttribute("viewBox", "0 0 18 18");
+    icon.style.display = "block";
+    const rect = L.DomUtil.createNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", "2");
+    rect.setAttribute("y", "2");
+    rect.setAttribute("width", "14");
+    rect.setAttribute("height", "14");
+    rect.setAttribute("fill", "none");
+    rect.setAttribute("stroke", "#007bff");
+    rect.setAttribute("stroke-width", "2.5");
+    rect.setAttribute("stroke-linecap", "square");
+    icon.appendChild(rect);
+    container.appendChild(icon);
+    */
+
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(container, "click", function(e) {
+      L.DomEvent.stopPropagation(e);
+      e.preventDefault();
+      rectangleDrawer.enable();
+    });
+
+    return wrapper;
+  },
+});
+
+// Add draw square button to map at top-right
+const drawSquareButton = new DrawSquareButton({ position: "topright" });
+drawSquareButton.addTo(map);
+
+// Remove Leaflet's default control styling from draw square button container
+// But preserve margin-top so it participates in Leaflet's control stacking
+// Use multiple attempts to ensure DOM is ready
+function styleDrawSquareControl() {
+  const controlContainer = drawSquareButton.getContainer();
+  
+  if (!controlContainer) {
+    console.log("Control container not found, retrying...");
+    setTimeout(styleDrawSquareControl, 100);
+    return;
   }
-}, 200);
+  
+  // Find the .leaflet-control wrapper that Leaflet creates
+  let leafletControlDiv = controlContainer.closest(".leaflet-control");
+  
+  // If closest doesn't work, walk up manually
+  if (!leafletControlDiv) {
+    leafletControlDiv = controlContainer.parentElement;
+    while (leafletControlDiv && !leafletControlDiv.classList.contains("leaflet-control")) {
+      leafletControlDiv = leafletControlDiv.parentElement;
+    }
+  }
+  
+  if (leafletControlDiv && leafletControlDiv.classList.contains("leaflet-control")) {
+    // Remove background/border/shadow but keep margin-top for stacking
+    leafletControlDiv.style.background = "transparent";
+    leafletControlDiv.style.border = "none";
+    leafletControlDiv.style.boxShadow = "none";
+    // Set margin-top to 10px to create space from control above (mousePosition)
+    // Use transform to move left 10px (works better with right-aligned controls)
+    leafletControlDiv.style.setProperty("margin-top", "10px", "important");
+    leafletControlDiv.style.setProperty("transform", "translateX(-10px)", "important");
+    leafletControlDiv.style.padding = "0";
+    leafletControlDiv.style.width = "auto";
+    leafletControlDiv.style.height = "auto";
+    leafletControlDiv.style.minHeight = "0";
+    leafletControlDiv.style.minWidth = "0";
+    // Add a class and ID for CSS targeting
+    leafletControlDiv.classList.add("draw-square-control-wrapper");
+    leafletControlDiv.id = "draw-square-control-wrapper";
+    console.log("Applied styles to draw square control wrapper");
+    console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
+    console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
+  } else {
+    console.log("Could not find .leaflet-control wrapper, retrying...");
+    setTimeout(styleDrawSquareControl, 100);
+  }
+}
 
->>>>>>> origin/feature/draw-control-results-panel
+// Try immediately and also after a delay
+setTimeout(styleDrawSquareControl, 100);
+setTimeout(styleDrawSquareControl, 500);
+
 // Handle rectangle drawing completion
 map.on(L.Draw.Event.CREATED, function (e) {
   var type = e.layerType;
@@ -1236,11 +1783,6 @@ map.on(L.Draw.Event.CREATED, function (e) {
   }
 });
 
-<<<<<<< HEAD
-// Handle rectangle deletion
-map.on(L.Draw.Event.DELETED, function (e) {
-  hideResultsPanel();
-=======
 // Handle rectangle deletion - don't close panel, just remove rectangle
 map.on(L.Draw.Event.DELETED, function (e) {
   // Panel stays open - user must manually close it with X button
@@ -1250,7 +1792,6 @@ map.on(L.Draw.Event.DELETED, function (e) {
   }
   // Clear stored bounds but keep panel open
   window.drawnRectangleBounds = null;
->>>>>>> origin/feature/draw-control-results-panel
 });
 
 // Store drawn rectangle bounds globally for export
@@ -1478,21 +2019,11 @@ function showResultsPanel(loading) {
     panel.innerHTML = `
       <div class="selection-results-header">
         <h5>Selected Missions</h5>
-<<<<<<< HEAD
-        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close"></button>
-=======
         <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close">×</button>
->>>>>>> origin/feature/draw-control-results-panel
       </div>
       <div class="selection-results-body">
         <div id="selection-results-content"></div>
       </div>
-<<<<<<< HEAD
-    `;
-    document.body.appendChild(panel);
-  }
-  panel.style.display = "block";
-=======
       <div class="resize-handle resize-handle-n"></div>
       <div class="resize-handle resize-handle-e"></div>
       <div class="resize-handle resize-handle-s"></div>
@@ -1629,14 +2160,11 @@ function showResultsPanel(loading) {
     panel._transformConverted = true;
   }
   
->>>>>>> origin/feature/draw-control-results-panel
   if (loading) {
     document.getElementById("selection-results-content").innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
   }
 }
 
-<<<<<<< HEAD
-=======
 // Initialize drag functionality for panel
 function initializePanelDrag(panel) {
   var header = panel.querySelector('.selection-results-header');
@@ -1853,7 +2381,6 @@ function initializePanelResize(panel) {
   }
 }
 
->>>>>>> origin/feature/draw-control-results-panel
 function hideResultsPanel() {
   var panel = document.getElementById("selection-results-panel");
   if (panel) {
@@ -1878,18 +2405,14 @@ function updateResultsPanel(message, missions) {
   
   var html = '<div class="selection-results-info p-3 border-bottom">';
   html += '<strong>' + missions.length + ' mission' + (missions.length !== 1 ? 's' : '') + ' found</strong>';
-  html += '<div class="mt-2">';
-  html += '<a href="#" class="btn btn-sm btn-primary me-2" onclick="exportMissions(\'csv\')">Export CSV</a>';
-  html += '<a href="#" class="btn btn-sm btn-success" onclick="exportMissions(\'excel\')">Export Excel</a>';
+  html += '<div class="mt-2 d-flex justify-content-end">';
+  html += '<a href="#" class="btn btn-sm btn-primary" style="min-width: 120px; margin-right: 20px;" onclick="exportMissions(\'csv\')">Export CSV</a>';
+  html += '<a href="#" class="btn btn-sm btn-success" style="min-width: 120px;" onclick="exportMissions(\'excel\')">Export Excel</a>';
   html += '</div>';
   html += '</div>';
   
   // Create table
-<<<<<<< HEAD
-  html += '<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">';
-=======
   html += '<div class="table-responsive">';
->>>>>>> origin/feature/draw-control-results-panel
   html += '<table class="table table-sm table-striped table-hover">';
   html += '<thead class="table-light sticky-top">';
   html += '<tr>';
@@ -2014,12 +2537,9 @@ function exportMissions(format) {
     })
     .join('&');
   
-<<<<<<< HEAD
-=======
   // Mark as exported
   window.resultsPanelExported = true;
   
->>>>>>> origin/feature/draw-control-results-panel
   // Open export URL
   window.location.href = '/api/v1/missions/export?' + queryString;
 }

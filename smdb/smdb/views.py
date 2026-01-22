@@ -159,6 +159,7 @@ class MissionOverView(TemplateView):
             missions = missions.filter(
                 Q(name__icontains=search_string)
                 | Q(notes_text__icontains=search_string)
+                | Q(expedition__name__icontains=search_string)
             )
         if search_geom:
             missions = missions.filter(grid_bounds__contained=search_geom)
@@ -336,7 +337,7 @@ class MissionDetailView(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
-        mission = super().get_object()
+        mission = self.get_object()
         try:
             context["thumbnail_url"] = mission.thumbnail_image.url
         except (AttributeError, ValueError):
@@ -363,7 +364,14 @@ class MissionDetailView(DetailView):
         return context
 
     def get_object(self):
-        obj = super().get_object()
+        try:
+            obj = super().get_object()
+        except Mission.MultipleObjectsReturned:
+            obj = Mission.objects.filter(slug=self.kwargs["slug"]).first()
+            messages.warning(
+                self.request,
+                f"Multiple Missions with slug '{self.kwargs['slug']}'. Using first one.",
+            )
         return obj
 
 
@@ -501,7 +509,9 @@ class MissionSelectAPIView(View):
             if filter_params.get('q'):
                 search_string = filter_params.get('q')
                 missions = missions.filter(
-                    Q(name__icontains=search_string) | Q(notes_text__icontains=search_string)
+                    Q(name__icontains=search_string) 
+                    | Q(notes_text__icontains=search_string)
+                    | Q(expedition__name__icontains=search_string)
                 )
             
             # Apply time filter
@@ -596,7 +606,9 @@ class MissionExportAPIView(View):
             if filter_params.get('q'):
                 search_string = filter_params.get('q')
                 missions = missions.filter(
-                    Q(name__icontains=search_string) | Q(notes_text__icontains=search_string)
+                    Q(name__icontains=search_string) 
+                    | Q(notes_text__icontains=search_string)
+                    | Q(expedition__name__icontains=search_string)
                 )
             
             if filter_params.get('tmin') and filter_params.get('tmax'):
