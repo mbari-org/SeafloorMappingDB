@@ -74,7 +74,9 @@ map.whenReady(function() {
       var missionLngSpan = ne.lng - sw.lng;
       
       // Check if bounds span is too large (indicating invalid/empty bounds or global span)
-      if (missionLngSpan >= 360 || missionLatSpan >= 180 || isNaN(missionLatSpan) || isNaN(missionLngSpan)) {
+      // Also check for extremely large spans that would cause excessive zoom-out
+      if (missionLngSpan >= 360 || missionLatSpan >= 180 || isNaN(missionLatSpan) || isNaN(missionLngSpan) || 
+          missionLngSpan > 350 || missionLatSpan > 170) {
         // Invalid or global-spanning bounds - set to default zoom level 3 and center
         map.setView([39.8423, -26.8945], 3, { animate: false });
         return;
