@@ -250,6 +250,9 @@ class CompilationTableView(FilterView, SingleTableView):
             .select_related("expedition")
             .distinct()
         )
+        # Filter to only missions with nav_track (for map display)
+        # This ensures the map shows track lines, not just bounding boxes
+        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
         context["missions"] = MissionSerializer(missions, many=True).data
         return context
 
@@ -301,6 +304,9 @@ class ExpeditionTableView(FilterView, SingleTableView):
             .select_related("expedition")
             .distinct()
         )
+        # Filter to only missions with nav_track (for map display)
+        # This ensures the map shows track lines, not just bounding boxes
+        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
         context["missions"] = MissionSerializer(missions, many=True).data
         return context
 
