@@ -229,8 +229,8 @@ const FilterControl = L.Control.extend({
     // Body - copy form from hidden container
     const body = L.DomUtil.create("div", "filter-sidebar-body", sidebar);
     body.id = "filter-sidebar-body";
-    body.style.padding = "0.5rem 0.5rem 0.75rem 0.5rem"; // Top, Right, Bottom, Left - reduced top padding
-    body.style.paddingBottom = "0.75rem"; // Ensure bottom padding for buttons
+    body.style.padding = "0.5rem 0.5rem 0.25rem 0.5rem"; // Top, Right, Bottom, Left - reduced bottom padding
+    body.style.paddingBottom = "0.25rem"; // Reduced bottom padding
     body.style.flex = "1";
     body.style.minHeight = "200px";
     body.style.maxHeight = "calc(80vh - 60px)"; // Account for header height
@@ -302,6 +302,98 @@ const FilterControl = L.Control.extend({
       clonedForm.style.display = "block";
 
       body.appendChild(clonedForm);
+      
+      // Create Filter and Clear buttons dynamically
+      const buttonRow = document.createElement("div");
+      buttonRow.className = "button-row mb-3";
+      buttonRow.style.cssText = "display: flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; margin-bottom: 0.5rem; width: 100%;";
+      
+      const filterBtn = document.createElement("button");
+      filterBtn.type = "submit";
+      filterBtn.id = filterType + "FilterSubmit";
+      filterBtn.className = "btn btn-primary";
+      filterBtn.textContent = "Filter";
+      // Force explicit matching values - no auto, ensure both buttons are identical in size and alignment
+      filterBtn.style.setProperty("height", "38px", "important");
+      filterBtn.style.setProperty("width", "auto", "important");
+      filterBtn.style.setProperty("min-height", "38px", "important");
+      filterBtn.style.setProperty("max-height", "38px", "important");
+      filterBtn.style.setProperty("margin", "0px", "important");
+      filterBtn.style.setProperty("margin-top", "0px", "important");
+      filterBtn.style.setProperty("margin-bottom", "0px", "important");
+      filterBtn.style.setProperty("margin-left", "0px", "important");
+      filterBtn.style.setProperty("margin-right", "0px", "important");
+      filterBtn.style.setProperty("padding", "6px 12px", "important");
+      filterBtn.style.setProperty("padding-top", "6px", "important");
+      filterBtn.style.setProperty("padding-bottom", "6px", "important");
+      filterBtn.style.setProperty("padding-left", "12px", "important");
+      filterBtn.style.setProperty("padding-right", "12px", "important");
+      filterBtn.style.setProperty("line-height", "26px", "important");
+      filterBtn.style.setProperty("border", "1px solid", "important");
+      filterBtn.style.setProperty("border-color", "#007bff", "important");
+      filterBtn.style.setProperty("border-width", "1px", "important");
+      filterBtn.style.setProperty("box-sizing", "border-box", "important");
+      filterBtn.style.setProperty("flex", "1 1 auto", "important");
+      filterBtn.style.setProperty("align-self", "center", "important");
+      
+      const clearBtn = document.createElement("button");
+      clearBtn.type = "reset";
+      clearBtn.id = filterType + "FilterCancel";
+      clearBtn.className = "btn btn-secondary";
+      clearBtn.textContent = "Clear";
+      // Force explicit matching values - identical to Filter button
+      clearBtn.style.setProperty("height", "38px", "important");
+      clearBtn.style.setProperty("width", "auto", "important");
+      clearBtn.style.setProperty("min-height", "38px", "important");
+      clearBtn.style.setProperty("max-height", "38px", "important");
+      clearBtn.style.setProperty("margin", "0px", "important");
+      clearBtn.style.setProperty("margin-top", "0px", "important");
+      clearBtn.style.setProperty("margin-bottom", "0px", "important");
+      clearBtn.style.setProperty("margin-left", "0px", "important");
+      clearBtn.style.setProperty("margin-right", "0px", "important");
+      clearBtn.style.setProperty("padding", "6px 12px", "important");
+      clearBtn.style.setProperty("padding-top", "6px", "important");
+      clearBtn.style.setProperty("padding-bottom", "6px", "important");
+      clearBtn.style.setProperty("padding-left", "12px", "important");
+      clearBtn.style.setProperty("padding-right", "12px", "important");
+      clearBtn.style.setProperty("line-height", "26px", "important");
+      clearBtn.style.setProperty("border", "1px solid", "important");
+      clearBtn.style.setProperty("border-color", "#6c757d", "important");
+      clearBtn.style.setProperty("border-width", "1px", "important");
+      clearBtn.style.setProperty("box-sizing", "border-box", "important");
+      clearBtn.style.setProperty("flex", "1 1 auto", "important");
+      clearBtn.style.setProperty("align-self", "center", "important");
+      
+      buttonRow.appendChild(filterBtn);
+      buttonRow.appendChild(clearBtn);
+      clonedForm.appendChild(buttonRow);
+      
+      // CRITICAL: Re-apply our explicit styles AFTER the button-row is appended
+      // This ensures our styles override any CSS or later JavaScript that might affect these buttons
+      setTimeout(function() {
+        // Re-apply all explicit styles to both buttons to override any conflicting CSS/JS
+        [filterBtn, clearBtn].forEach(function(btn) {
+          btn.style.setProperty("height", "38px", "important");
+          btn.style.setProperty("margin", "0px", "important");
+          btn.style.setProperty("margin-top", "0px", "important");
+          btn.style.setProperty("margin-bottom", "0px", "important");
+          btn.style.setProperty("margin-left", "0px", "important");
+          btn.style.setProperty("margin-right", "0px", "important");
+          btn.style.setProperty("padding", "6px 12px", "important");
+          btn.style.setProperty("padding-top", "6px", "important");
+          btn.style.setProperty("padding-bottom", "6px", "important");
+          btn.style.setProperty("padding-left", "12px", "important");
+          btn.style.setProperty("padding-right", "12px", "important");
+          btn.style.setProperty("line-height", "26px", "important");
+          btn.style.setProperty("box-sizing", "border-box", "important");
+          btn.style.setProperty("flex", "1 1 auto", "important");
+          btn.style.setProperty("align-self", "center", "important");
+          btn.style.setProperty("vertical-align", "middle", "important");
+        });
+        // Ensure button-row alignment
+        buttonRow.style.setProperty("display", "flex", "important");
+        buttonRow.style.setProperty("align-items", "center", "important");
+      }, 100);
       
       // Debug: Log form structure to see if buttons are present
       console.log("Form HTML:", clonedForm.innerHTML);
@@ -690,8 +782,12 @@ const FilterControl = L.Control.extend({
       });
 
       // Style buttons - find ALL buttons, not just .btn class
+      // Make sure to include buttons we just created
       const allButtons = body.querySelectorAll("button");
       console.log("Found buttons:", allButtons.length);
+      console.log("Button row exists:", body.querySelector(".button-row"));
+      console.log("Filter button exists:", body.querySelector("button[type='submit']"));
+      console.log("Clear button exists:", body.querySelector("button[type='reset']"));
       allButtons.forEach((btn) => {
         // Ensure button is visible
         btn.style.display = "block";
@@ -926,39 +1022,12 @@ const FilterControl = L.Control.extend({
           });
           
           body.querySelectorAll("button.btn").forEach((btn) => {
-            btn.style.fontSize = "0.75rem";
-            btn.style.padding = "0.4rem 0.6rem"; // Reduced horizontal padding
-            // Check if buttons are in a row - if so, make them share the row width
-            const parentRow = btn.closest(".row");
-            const parentColumn = btn.closest("[class*='col-']");
-            if (parentRow && parentRow.querySelectorAll("button.btn").length > 1) {
-              // Multiple buttons in same row - make them narrower to fit side by side
-              // Ensure the column container doesn't force full width
-              if (parentColumn) {
-                parentColumn.style.flex = "1 1 auto";
-                parentColumn.style.minWidth = "0";
-                parentColumn.style.maxWidth = "none";
-                parentColumn.style.width = "auto";
-                parentColumn.style.flexBasis = "auto";
-              }
-              btn.style.width = "100%";
-              btn.style.minWidth = "60px";
-              btn.style.maxWidth = "none";
-              btn.style.marginRight = "0.3rem";
-              btn.style.marginTop = "0.2rem";
-            } else {
-              // Single button - full width
-              btn.style.width = "100%";
-              btn.style.maxWidth = "230px";
-              btn.style.marginTop = "0.2rem";
-            }
-            btn.style.boxSizing = "border-box";
-            if (btn.classList.contains("btn-primary")) {
-              btn.style.backgroundColor = "#007bff";
-              btn.style.color = "#ffffff";
-            } else if (btn.classList.contains("btn-secondary")) {
-              btn.style.backgroundColor = "#6c757d";
-              btn.style.color = "#ffffff";
+            // Don't apply any size constraints - let Bootstrap handle button sizing
+            // Only ensure buttons in button-row flex container share space equally
+            const parentDiv = btn.closest(".button-row");
+            if (parentDiv && parentDiv.querySelectorAll("button.btn").length > 1) {
+              // Multiple buttons in same row - make them share the row width equally
+              btn.style.flex = "1 1 auto";
             }
             
             // Override Clear button onclick to stay on current page (only on main map/home page)

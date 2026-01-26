@@ -80,7 +80,7 @@ class CompilationFilterFormHelper(FormHelper):
 class MissionFilterSidebarHelper(FormHelper):
     """
     Form helper for MissionFilter in the sidebar with vertical layout.
-    Excludes the submit/clear buttons (handled separately in JavaScript).
+    Includes Filter and Clear buttons at the bottom.
     """
     form_method = "GET"
     layout = Layout(
@@ -92,26 +92,47 @@ class MissionFilterSidebarHelper(FormHelper):
         Div("mgds_compilation", css_class="mb-3"),
         Div("expedition__name", css_class="mb-3"),
         # tmin and tmax are hidden fields, no need to include in layout
+        # Buttons are created dynamically by JavaScript in map.js
+        # Div(
+        #     Submit("submit", "Filter", css_id="missionFilterSubmit", css_class="btn-primary"),
+        #     Reset("clear", "Clear", css_id="missionFilterCancel", css_class="btn-secondary"),
+        #     css_class="button-row mb-3",
+        #     css_style="display: flex; gap: 0.5rem; margin-top: 0.5rem; width: 100%;"
+        # ),
     )
 
 
 class ExpeditionFilterSidebarHelper(FormHelper):
     """
     Form helper for ExpeditionFilter in the sidebar with vertical layout.
-    Excludes the submit/clear buttons (handled separately in JavaScript).
+    Includes Filter and Clear buttons at the bottom.
     """
     form_method = "GET"
     layout = Layout(
         Div("name", css_class="mb-3"),
+        # Buttons are created dynamically by JavaScript in map.js
+        # Div(
+        #     Submit("submit", "Filter", css_id="expeditionFilterSubmit", css_class="btn-primary"),
+        #     Reset("clear", "Clear", css_id="expeditionFilterCancel", css_class="btn-secondary"),
+        #     css_class="button-row mb-3",
+        #     css_style="display: flex; gap: 0.5rem; margin-top: 0.5rem; width: 100%;"
+        # ),
     )
 
 
 class CompilationFilterSidebarHelper(FormHelper):
     """
     Form helper for CompilationFilter in the sidebar with vertical layout.
-    Excludes the submit/clear buttons (handled separately in JavaScript).
+    Includes Filter and Clear buttons at the bottom.
     """
     form_method = "GET"
     layout = Layout(
         Div("name", css_class="mb-3"),
+        # Buttons are created dynamically by JavaScript in map.js
+        # Div(
+        #     Submit("submit", "Filter", css_id="compilationFilterSubmit", css_class="btn-primary"),
+        #     Reset("clear", "Clear", css_id="compilationFilterCancel", css_class="btn-secondary"),
+        #     css_class="button-row mb-3",
+        #     css_style="display: flex; gap: 0.5rem; margin-top: 0.5rem; width: 100%;"
+        # ),
     )
