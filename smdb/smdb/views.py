@@ -327,6 +327,12 @@ class MissionTableView(FilterView, SingleTableView):
         sort = self.request.GET.get("sort")
         if sort:
             missions = missions.order_by(sort)
+        
+        # Filter to only missions with nav_track before pagination (for map display)
+        # This ensures the map shows track lines, not just bounding boxes
+        # Missions without nav_track will be filtered out by the serializer anyway
+        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
+        
         per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
         missions = missions[slice((page - 1) * per_page, page * per_page)]
