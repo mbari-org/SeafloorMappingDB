@@ -4,6 +4,8 @@ import re
 import csv
 from os.path import join
 from io import BytesIO
+from datetime import datetime
+from django.utils.dateparse import parse_date
 
 from django.conf import settings
 from django.contrib import messages
@@ -168,12 +170,16 @@ class MissionOverView(TemplateView):
         if search_geom:
             missions = missions.filter(grid_bounds__contained=search_geom)
         if context["view"].request.GET.get("tmin"):
-            min_date = context["view"].request.GET.get("tmin")
-            max_date = context["view"].request.GET.get("tmax")
-            missions = missions.filter(
-                start_date__gte=min_date,
-                end_date__lte=max_date,
-            )
+            min_date_str = context["view"].request.GET.get("tmin")
+            max_date_str = context["view"].request.GET.get("tmax")
+            # Parse string dates to date objects to avoid TypeError with datetime.combine()
+            min_date = parse_date(str(min_date_str)) if min_date_str else None
+            max_date = parse_date(str(max_date_str)) if max_date_str else None
+            if min_date and max_date:
+                missions = missions.filter(
+                    start_date__gte=min_date,
+                    end_date__lte=max_date,
+                )
 
         # Ensure nav_track and expedition are selected for serialization
         # Filter to only missions with nav_track at the database level for efficiency
@@ -409,7 +415,14 @@ class ExpeditionDetailView(DetailView):
         return context
 
     def get_object(self):
-        obj = super().get_object()
+        try:
+            obj = super().get_object()
+        except Expedition.MultipleObjectsReturned:
+            obj = Expedition.objects.filter(slug=self.kwargs["slug"]).first()
+            messages.warning(
+                self.request,
+                f"Multiple Expeditions with slug '{self.kwargs['slug']}'. Using first one.",
+            )
         return obj
 
 
@@ -545,11 +558,17 @@ class MissionSelectAPIView(View):
                 )
             
             # Apply time filter
-            if filter_params.get('tmin') and filter_params.get('tmax'):
-                missions = missions.filter(
-                    start_date__gte=filter_params.get('tmin'),
-                    end_date__lte=filter_params.get('tmax'),
-                )
+            tmin_str = filter_params.get('tmin')
+            tmax_str = filter_params.get('tmax')
+            if tmin_str and tmax_str:
+                # Parse string dates to date objects to avoid TypeError with datetime.combine()
+                min_date = parse_date(str(tmin_str))
+                max_date = parse_date(str(tmax_str))
+                if min_date and max_date:
+                    missions = missions.filter(
+                        start_date__gte=min_date,
+                        end_date__lte=max_date,
+                    )
             
             # Select related to avoid N+1 queries
             missions = missions.select_related('expedition').prefetch_related('quality_categories').order_by('start_date')
@@ -655,11 +674,17 @@ class MissionExportAPIView(View):
                     | Q(expedition__name__icontains=search_string)
                 )
             
-            if filter_params.get('tmin') and filter_params.get('tmax'):
-                missions = missions.filter(
-                    start_date__gte=filter_params.get('tmin'),
-                    end_date__lte=filter_params.get('tmax'),
-                )
+            tmin_str = filter_params.get('tmin')
+            tmax_str = filter_params.get('tmax')
+            if tmin_str and tmax_str:
+                # Parse string dates to date objects to avoid TypeError with datetime.combine()
+                min_date = parse_date(str(tmin_str))
+                max_date = parse_date(str(tmax_str))
+                if min_date and max_date:
+                    missions = missions.filter(
+                        start_date__gte=min_date,
+                        end_date__lte=max_date,
+                    )
             
             missions = missions.select_related('expedition').prefetch_related('quality_categories').order_by('start_date')
             
