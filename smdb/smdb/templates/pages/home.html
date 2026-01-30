@@ -12,8 +12,12 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" crossorigin="" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.css">
-<link rel="stylesheet" type="text/css" href="{% static 'lib/leaflet-measure/leaflet-measure.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'css/leaflet-measure.css' %}">
+{# RESTORED FROM MAIN BRANCH - CDN version #}
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css">
+{# Custom leaflet-measure overrides - MUST load AFTER CDN to override styles #}
+<link rel="stylesheet" type="text/css" href="{% static 'css/leaflet-measure.css' %}?{% now "U" %}">
+{# OLD CODE - MARKED FOR DELETION - DO NOT DELETE YET #}
+{# <link rel="stylesheet" type="text/css" href="{% static 'lib/leaflet-measure/leaflet-measure.css' %}"> #}
 <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
 <link href=https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.css rel="stylesheet" />
 
@@ -73,8 +77,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-groupedlayercontrol/0.6.1/leaflet.groupedlayercontrol.js"></script>
 {#<script src="../../static/js/leaflet.groupedlayercontrol.js"></script>#}
 
-{#  Load Leaflet Measure from local file #}
-<script src="{% static 'lib/leaflet-measure/leaflet-measure.js' %}?nocache={{ 'now'|date:'U' }}&v=2"></script>
+{#  Load Leaflet Draw for Draw Square button #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+{# RESTORED FROM MAIN BRANCH - CDN version #}
+<script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+{# OLD CODE - MARKED FOR DELETION - DO NOT DELETE YET #}
+{# <script src="{% static 'lib/leaflet-measure/leaflet-measure.js' %}?{% now "U" %}&v=2"></script> #}
 {#  <script src="https://cdn.jsdelivr.net/npm/leaflet-sidebar@0.2.4/src/L.Control.Sidebar.min.js"></script> #}
 
 {#  Leaflet-sidebar v2 #}
