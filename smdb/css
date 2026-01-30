@@ -1,0 +1,23 @@
+#!/bin/bash
+# FOOLPROOF CSS Hot-Reload - Just works, every time
+# Usage: ./css
+
+set -e
+
+echo "⚡ CSS Hot-Reload"
+
+# Step 1: Copy to SOURCE directory (where collectstatic reads from)
+docker cp ./smdb/static/css/leaflet-measure.css smdb_django_1:/app/smdb/static/css/leaflet-measure.css
+docker cp ./smdb/static/css/project.css smdb_django_1:/app/smdb/static/css/project.css
+docker cp ./smdb/static/css/map.css smdb_django_1:/app/smdb/static/css/map.css
+docker cp ./smdb/templates/pages/home.html smdb_django_1:/app/smdb/templates/pages/home.html
+
+# Step 2: Run collectstatic (regenerates hashes)
+docker-compose -f production_localhost.yml run --rm django python manage.py collectstatic --noinput -v0 > /dev/null 2>&1
+
+# Step 3: Restart Django to reload manifest
+docker restart smdb_django_1 > /dev/null
+sleep 7
+
+echo "✅ Done! Hard refresh: Ctrl+Shift+R"
+echo "🌐 https://smdb-dev.shore.mbari.org/"
