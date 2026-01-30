@@ -2125,10 +2125,22 @@ map.on('layeradd', function(e) {
 map.on('popupopen', function(e) {
   var popup = e.popup;
   if (popup && popup._container) {
+    // Add custom class to ONLY initial measurement popups (not result popups)
+    var isInitialPopup = popup._container.querySelector('.leaflet-control-measure-interaction');
+    var isResultPopup = popup._container.querySelector('.leaflet-measure-resultpopup');
+    
+    if (isInitialPopup && !isResultPopup) {
+      // This is an initial measurement popup - add custom class for CSS targeting
+      popup._container.classList.add('smdb-initial-measure-popup');
+    }
+    
     var h3Elements = popup._container.querySelectorAll('.leaflet-measure-resultpopup h3, h3');
     h3Elements.forEach(function(h3) {
-      h3.style.fontFamily = 'Arial, sans-serif';
-      h3.style.fontSize = '16px';
+      // Only apply inline styles to result popups, NOT initial popups (let CSS handle those)
+      if (isResultPopup) {
+        h3.style.fontFamily = 'Arial, sans-serif';
+        h3.style.fontSize = '14px';
+      }
       
       // Add paintbrush icon if not already added
       if (!h3.querySelector('.measure-color-picker-btn')) {
