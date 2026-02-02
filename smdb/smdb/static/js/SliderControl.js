@@ -130,9 +130,9 @@ L.Control.SliderControl = L.Control.extend({
       // Add tics to slider
       this.setSliderMarks(options.markers, options.minValue, options.maxValue);
     } else {
-      console.log(
-        "Error: You have to specify a layer via new SliderControl({layer: your_layer});"
-      );
+      // console.log(
+      //   "Error: You have to specify a layer via new SliderControl({layer: your_layer});"
+      // );
     }
     $("#slider-min", sliderContainer).html(
       this.extractTimestamp(

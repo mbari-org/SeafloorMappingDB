@@ -239,7 +239,7 @@ const FilterControl = L.Control.extend({
     const copyForm = function (filterType = "mission") {
       const formContainer = document.getElementById("filter-form-container");
       if (!formContainer) {
-        console.warn("Filter form container not found");
+        // console.warn("Filter form container not found");
         return false;
       }
 
@@ -396,6 +396,11 @@ const FilterControl = L.Control.extend({
         buttonRow.style.setProperty("align-items", "center", "important");
       }, 100);
       
+      // Debug: Log form structure to see if buttons are present
+      // console.log("Form HTML:", clonedForm.innerHTML);
+      // console.log("Buttons in form:", clonedForm.querySelectorAll("button").length);
+      // console.log("All rows:", clonedForm.querySelectorAll(".row").length);
+      
       // Add global click interceptor for Clear buttons on main map page (before onclick handlers execute)
       const currentPathCheck = window.location.pathname;
       const isMainMapPageCheck = currentPathCheck === '/' || currentPathCheck === '/missions' || currentPathCheck.startsWith('/missions/');
@@ -449,6 +454,7 @@ const FilterControl = L.Control.extend({
       const fieldCount = body.querySelectorAll(
         'input:not([type="hidden"]), select, textarea'
       ).length;
+      // console.log("Form copied to sidebar. Fields found:", fieldCount);
 
       if (fieldCount === 0) {
         console.warn(
@@ -779,10 +785,10 @@ const FilterControl = L.Control.extend({
       // Style buttons - find ALL buttons, not just .btn class
       // Make sure to include buttons we just created
       const allButtons = body.querySelectorAll("button");
-      console.log("Found buttons:", allButtons.length);
-      console.log("Button row exists:", body.querySelector(".button-row"));
-      console.log("Filter button exists:", body.querySelector("button[type='submit']"));
-      console.log("Clear button exists:", body.querySelector("button[type='reset']"));
+      // console.log("Found buttons:", allButtons.length);
+      // console.log("Button row exists:", body.querySelector(".button-row"));
+      // console.log("Filter button exists:", body.querySelector("button[type='submit']"));
+      // console.log("Clear button exists:", body.querySelector("button[type='reset']"));
       allButtons.forEach((btn) => {
         // Ensure button is visible
         btn.style.display = "block";
@@ -1095,16 +1101,16 @@ const FilterControl = L.Control.extend({
     const maxRetries = 10;
     const tryCopyForm = function () {
       if (copyForm(currentFilterType)) {
-        console.log(`Form successfully copied to sidebar (${currentFilterType})`);
+        // console.log(`Form successfully copied to sidebar (${currentFilterType})`);
       } else {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(
-            `Retrying form copy (attempt ${retryCount}/${maxRetries})...`
-          );
+          // console.log(
+          //   `Retrying form copy (attempt ${retryCount}/${maxRetries})...`
+          // );
           setTimeout(tryCopyForm, 300);
         } else {
-          console.error("Failed to copy form after", maxRetries, "attempts");
+          // console.error("Failed to copy form after", maxRetries, "attempts");
         }
       }
     };
@@ -1433,16 +1439,16 @@ map.whenReady(function() {
       // Get the zoom level that fitBounds calculated
       var calculatedZoom = map.getZoom();
       var finalCenter = map.getCenter();
-      console.log("Current map zoom level:", calculatedZoom);
-      console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
-      console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+      // console.log("Current map zoom level:", calculatedZoom);
+      // console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
+      // console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
       
       // Allow fractional zoom for finer control when zooming in
       // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
       // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
     } catch (err) {
       // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-      console.log("Error fitting bounds: " + err.message);
+      // console.log("Error fitting bounds: " + err.message);
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
   }, 150);
@@ -1533,26 +1539,26 @@ setTimeout(function() {
     // Log the zoom level after fitBounds in fallback setTimeout
     var finalZoom = map.getZoom();
     var finalCenterFallback = map.getCenter();
-    console.log("Current map zoom level (fallback setTimeout):", finalZoom);
-    console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
-    console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+    // console.log("Current map zoom level (fallback setTimeout):", finalZoom);
+    // console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
+    // console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
     
     // Fractional zoom enabled - allows 0.5 increments for finer zoom control
     // No zoom constraint - fitBounds determines optimal zoom to show all missions
   } catch (err) {
     // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-    console.log("Error in fallback fitBounds: " + err.message);
+    // console.log("Error in fallback fitBounds: " + err.message);
     map.setView([39.8423, -26.8945], 3, { animate: false });
   }
 }, 100);
 
 // Log final zoom level and center after all initialization is complete
-setTimeout(function() {
-  var finalZoomLevel = map.getZoom();
-  var finalMapCenter = map.getCenter();
-  console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
-  console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
-}, 500);
+// setTimeout(function() {
+//   var finalZoomLevel = map.getZoom();
+//   var finalMapCenter = map.getCenter();
+//   console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
+//   console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
+// }, 500);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1646,6 +1652,61 @@ var measure = L.control
     captureZIndex: 5000,
   })
   .addTo(map);
+
+// Predictive closing line: dotted green segment from last vertex back to first (after 3rd click)
+// so the user sees how the polygon would close; updates on each new vertex until Finish/Cancel.
+var measurePredictiveClosingLine = null;
+var MEASURE_PREDICTIVE_OPTIONS = {
+  color: '#ABE67E',
+  weight: 2,
+  opacity: 0.9,
+  dashArray: '6, 8',
+  className: 'smdb-measure-predictive-closing',
+  interactive: false
+};
+function updateMeasurePredictiveClosingLine() {
+  if (!measure || !measure._layer) return;
+  var latlngs = measure._latlngs;
+  if (latlngs && latlngs.length >= 3) {
+    var first = latlngs[0];
+    var last = latlngs[latlngs.length - 1];
+    if (!measurePredictiveClosingLine) {
+      measurePredictiveClosingLine = L.polyline([last, first], MEASURE_PREDICTIVE_OPTIONS).addTo(measure._layer);
+    } else {
+      measurePredictiveClosingLine.setLatLngs([last, first]);
+    }
+    /* Ensure dotted closing line draws above the plugin’s solid area stroke, then vertices on top */
+    measurePredictiveClosingLine.bringToFront();
+    if (measure._measureBoundary) measure._measureBoundary.bringToFront();
+    if (measure._measureVertexes) measure._measureVertexes.bringToFront();
+  } else {
+    if (measurePredictiveClosingLine) {
+      measure._layer.removeLayer(measurePredictiveClosingLine);
+      measurePredictiveClosingLine = null;
+    }
+  }
+}
+function removeMeasurePredictiveClosingLine() {
+  if (measurePredictiveClosingLine && measure && measure._layer) {
+    measure._layer.removeLayer(measurePredictiveClosingLine);
+    measurePredictiveClosingLine = null;
+  }
+}
+var _origHandleMeasureClick = measure._handleMeasureClick.bind(measure);
+measure._handleMeasureClick = function(e) {
+  _origHandleMeasureClick(e);
+  updateMeasurePredictiveClosingLine();
+};
+var _origFinishMeasure = measure._finishMeasure.bind(measure);
+measure._finishMeasure = function() {
+  removeMeasurePredictiveClosingLine();
+  _origFinishMeasure();
+};
+var _origClearMeasure = measure._clearMeasure.bind(measure);
+measure._clearMeasure = function() {
+  removeMeasurePredictiveClosingLine();
+  _origClearMeasure();
+};
 
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
@@ -1753,7 +1814,7 @@ function styleDrawSquareControl() {
   const controlContainer = drawSquareButton.getContainer();
   
   if (!controlContainer) {
-    console.log("Control container not found, retrying...");
+    // console.log("Control container not found, retrying...");
     setTimeout(styleDrawSquareControl, 100);
     return;
   }
@@ -1786,11 +1847,11 @@ function styleDrawSquareControl() {
     // Add a class and ID for CSS targeting
     leafletControlDiv.classList.add("draw-square-control-wrapper");
     leafletControlDiv.id = "draw-square-control-wrapper";
-    console.log("Applied styles to draw square control wrapper");
-    console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
-    console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
+    // console.log("Applied styles to draw square control wrapper");
+    // console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
+    // console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
   } else {
-    console.log("Could not find .leaflet-control wrapper, retrying...");
+    // console.log("Could not find .leaflet-control wrapper, retrying...");
     setTimeout(styleDrawSquareControl, 100);
   }
 }
@@ -1958,7 +2019,7 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  console.log("You are using " + browserName + " browser");
+  // console.log("You are using " + browserName + " browser");
   return browserName;
 }
 /////////////////////////////////////////////////////////////////////////////////
@@ -2043,6 +2104,10 @@ function forceBlueCaptureMarkers() {
   var mapEl = document.getElementById('map');
   if (!mapEl) return;
   mapEl.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Skip paths that user has recolored via the measure popup color picker
+    if (path.closest('.smdb-measure-user-color')) return;
+    // Skip if currently in yellow-hover state (avoid overwriting hover)
+    if (path.hasAttribute('data-smdb-hover-stroke')) return;
     var icon = path.closest('.leaflet-marker-icon, .leaflet-div-icon');
     var isCaptureMarkerIcon = icon && icon.style && icon.style.width && parseFloat(icon.style.width) > 100;
     var inMeasureLayer = path.closest('.leaflet-measure-layer');
@@ -2146,6 +2211,8 @@ function forceBlueCaptureMarkers() {
 
   // Points (circles): add geometry class so CSS can target point styling separately.
   mapEl.querySelectorAll('circle.leaflet-interactive').forEach(function(circle) {
+    if (circle.closest('.smdb-measure-user-color')) return;
+    if (circle.hasAttribute('data-smdb-hover-stroke')) return;
     circle.classList.add('smdb-geometry-point');
   });
 }
@@ -2165,7 +2232,7 @@ captureMarkerObserver.observe(map.getContainer(), {
 // Plugin sets inline styles via Leaflet setStyle(); only inline style with !important beats that.
 var MEASURE_GREEN = '#ABE67E';
 // Deploy check: if you see this in the browser console, the updated map.js is loaded.
-if (typeof window !== 'undefined' && window.console) { try { console.log('[smdb] map.js measure-override build 2025-02'); } catch (e) {} }
+// if (typeof window !== 'undefined' && window.console) { try { console.log('[smdb] map.js measure-override build 2025-02'); } catch (e) {} }
 
 function setMeasureGreenStyle(el, asLine) {
   el.setAttribute('stroke', MEASURE_GREEN);
@@ -2183,9 +2250,10 @@ function forceMeasureColors() {
   container.classList.add('smdb-measure-active');
   container.querySelectorAll('path, circle').forEach(function(el) {
     var skipReason = null;
+    if (el.closest('.smdb-measure-user-color')) skipReason = 'user-chosen color';
     if (el.classList.contains('smdb-draw-polygon')) skipReason = 'smdb-draw-polygon';
     if (el.classList.contains('smdb-track-line')) {
-      var inMeasureContainer = el.closest('.layer-measuredrag') || el.closest('.layer-measurevertex') || el.closest('.layer-measurearea') || el.closest('.layer-measureboundary') || el.closest('.leaflet-measure-layer');
+      var inMeasureContainer = el.closest('.layer-measuredrag') || el.closest('.layer-measurevertex') || el.closest('.layer-measurearea') || el.closest('.layer-measureboundary') || el.closest('.leaflet-measure-layer') || el.closest('.smdb-measure-predictive-closing');
       if (!inMeasureContainer) skipReason = 'smdb-track-line (basemap)';
     }
     if (skipReason) return;
@@ -2193,7 +2261,11 @@ function forceMeasureColors() {
     var icon = el.closest('.leaflet-marker-icon, .leaflet-div-icon');
     var isCapture = icon && icon.style && icon.style.width && parseFloat(icon.style.width) > 100;
     var isResultLine = el.classList.contains('leaflet-measure-resultline') || el.classList.contains('leaflet-measure-resultarea');
-    if (isCapture || !isResultLine) {
+    var isPredictiveClosing = el.closest('.smdb-measure-predictive-closing');
+    if (isPredictiveClosing) {
+      setMeasureGreenStyle(el, true);  /* line only */
+      el.style.setProperty('stroke-dasharray', '6 8', 'important');  /* dotted until confirm */
+    } else if (isCapture || !isResultLine) {
       setMeasureGreenStyle(el, false);
     } else {
       el.setAttribute('stroke', MEASURE_GREEN);
@@ -2398,31 +2470,78 @@ function applyColorToLayer(layer, color) {
   
   // Update layer style
   if (layer.setStyle) {
-    // For paths (lines/polygons)
     layer.setStyle({
       color: rgbString,
       fillColor: layer.options.fillColor || rgbString,
-      fillOpacity: layer.options.fillOpacity || 0.2
+      fillOpacity: layer.options.fillOpacity !== undefined ? layer.options.fillOpacity : 0.2
     });
-  } else if (layer._path) {
-    // Direct DOM manipulation as fallback
-    layer._path.setAttribute('stroke', rgbString);
+  }
+  
+  // Our CSS uses !important on measure result paths, so we must set inline style with
+  // !important for the user's color to win. Also mark layer so forceMeasureColors skips it.
+  if (layer._path) {
+    layer._path.style.setProperty('stroke', rgbString, 'important');
+    layer._path.style.setProperty('stroke-width', '3.5', 'important');
     if (layer._path.getAttribute('fill') !== 'none') {
-      layer._path.setAttribute('fill', rgbString);
+      layer._path.style.setProperty('fill', rgbString, 'important');
+      layer._path.style.setProperty('fill-opacity', '0.2', 'important');
+    } else {
+      layer._path.style.setProperty('fill', 'none', 'important');
     }
-  } else if (layer._icon) {
-    // For markers/points
-    if (layer._icon.style) {
-      layer._icon.style.backgroundColor = rgbString;
-    }
+  }
+  if (layer._container) {
+    layer._container.classList.add('smdb-measure-user-color');
+  }
+  if (layer._icon) {
+    layer._icon.style.setProperty('background-color', rgbString, 'important');
+    if (layer._container) layer._container.classList.add('smdb-measure-user-color');
   }
   
   // Store color in layer options for persistence
   layer.options.color = rgbString;
-  if (layer.options.fillColor) {
-    layer.options.fillColor = rgbString;
-  }
+  layer.options.fillColor = rgbString;
 }
+
+// Yellow hover for finished measure result layers (point, line, polygon).
+// We use JS because the observer sets inline !important, which overrides CSS :hover.
+function setupMeasureResultHover() {
+  var mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  mapContainer.addEventListener('mouseover', function(e) {
+    var el = e.target;
+    if (el.nodeName.toLowerCase() !== 'path' && el.nodeName.toLowerCase() !== 'circle') return;
+    var resultLayer = el.closest('.layer-measure-resultline, .layer-measure-resultarea, .layer-measure-resultpoint');
+    if (!resultLayer) return;
+    var isArea = el.closest('.layer-measure-resultarea');
+    var computed = window.getComputedStyle(el);
+    el.setAttribute('data-smdb-hover-stroke', computed.stroke || '');
+    el.setAttribute('data-smdb-hover-fill', computed.fill || '');
+    el.setAttribute('data-smdb-hover-fill-opacity', computed.fillOpacity || '');
+    el.style.setProperty('stroke', 'yellow', 'important');
+    if (el.nodeName.toLowerCase() === 'circle') {
+      el.style.setProperty('fill', 'yellow', 'important');
+      el.style.setProperty('fill-opacity', '0.5', 'important');
+    } else if (isArea) {
+      el.style.setProperty('fill', 'yellow', 'important');
+      el.style.setProperty('fill-opacity', '0.25', 'important');
+    } else {
+      el.style.setProperty('fill', 'none', 'important');
+    }
+  });
+  mapContainer.addEventListener('mouseout', function(e) {
+    var el = e.target;
+    if (el.nodeName.toLowerCase() !== 'path' && el.nodeName.toLowerCase() !== 'circle') return;
+    var stroke = el.getAttribute('data-smdb-hover-stroke');
+    if (stroke == null) return;
+    el.style.setProperty('stroke', stroke, 'important');
+    el.style.setProperty('fill', el.getAttribute('data-smdb-hover-fill') || 'none', 'important');
+    el.style.setProperty('fill-opacity', el.getAttribute('data-smdb-hover-fill-opacity') || '0', 'important');
+    el.removeAttribute('data-smdb-hover-stroke');
+    el.removeAttribute('data-smdb-hover-fill');
+    el.removeAttribute('data-smdb-hover-fill-opacity');
+  });
+}
+setupMeasureResultHover();
 
 // Try and determine the active overlay - Currently not working.
 L.Control.Layers.include({
@@ -2436,7 +2555,7 @@ L.Control.Layers.include({
     this._groupedLayers.forEach(function (obj) {
       // Check if it's an overlay and added to the map
       if (obj.overlay && this._map.hasLayer(obj.layer)) {
-        console.log("OBJECT OVERLAY");
+        // console.log("OBJECT OVERLAY");
         // Push layer to active array
         active.push(obj.layer);
       }
