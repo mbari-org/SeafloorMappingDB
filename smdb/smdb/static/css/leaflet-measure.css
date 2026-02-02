@@ -1,21 +1,185 @@
-path.leaflet-interactive {
-  /* rust */
-  stroke: rgb(139, 64, 0); 
-  /* orange */
-  /* stroke: rgb(218, 135, 29); */
-  /* standard green */
-  /*stroke: #ABE67E; */
-  stroke-opacity: 100;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
+/* =============================================================================
+   LEAFLET-MEASURE (plugin) - how it works:
+   - Plugin uses getSymbol(key) returning { color, fillColor, className, ... }.
+   - activeColor = active measurement (cursor, vertices, boundary, area-in-progress).
+   - completedColor = finished measurement (resultLine, resultArea, resultPoint).
+   - className is set on the LAYER CONTAINER (the div wrapping the SVG), not on the
+     path/circle. So DOM is: div.<className> > svg > path or circle.
+   - Plugin class names: layer-measuredrag (cursor circle), layer-measurevertex,
+     layer-measurevertex.active, layer-measurearea, layer-measureboundary,
+     layer-measure-resultline, layer-measure-resultarea, layer-measure-resultpoint.
+   We want all measure UI green (#ABE67E); final lines/areas green; closing line dotted.
+   Load AFTER CDN leaflet-measure.css so these overrides win.
+   NOTE: The plugin sets inline styles via Leaflet setStyle(); stylesheet !important
+   does NOT override inline style. map.js uses element.style.setProperty(..., 'important')
+   so our green always wins.
+   ============================================================================= */
+
+/* ----- PLUGIN LAYER CLASSES: active cursor + vertices (the moving dot) = green ----- */
+/* These are the class names the plugin puts on the layer container (parent of svg). */
+#map .layer-measuredrag path,
+#map .layer-measuredrag circle,
+#map .layer-measurevertex path,
+#map .layer-measurevertex circle,
+#map .layer-measurevertex.active path,
+#map .layer-measurevertex.active circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
 }
 
-path.leaflet-interactive:hover {
-  /*stroke: lightgoldenrodyellow;*/
-  stroke: yellow;
+/* ----- Moving measure dot (cursor) when under Leaflet drag/grab classes = green ----- */
+#map.smdb-measure-active .leaflet-dragging .leaflet-grab path,
+#map.smdb-measure-active .leaflet-dragging .leaflet-grab circle,
+#map.smdb-measure-active .leaflet-dragging .leaflet-marker-draggable path,
+#map.smdb-measure-active .leaflet-dragging .leaflet-marker-draggable circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
 }
+
+/* ----- Override project.css track-line rule: measure paths/circles must stay green even if they have .smdb-track-line ----- */
+#map .layer-measuredrag path.smdb-track-line,
+#map .layer-measuredrag circle.smdb-track-line,
+#map .layer-measurevertex path.smdb-track-line,
+#map .layer-measurevertex circle.smdb-track-line,
+#map .layer-measurearea path.smdb-track-line,
+#map .layer-measureboundary path.smdb-track-line,
+#map .layer-measure-resultline path.smdb-track-line,
+#map .layer-measure-resultarea path.smdb-track-line,
+#map .layer-measure-resultpoint path.smdb-track-line,
+#map .layer-measure-resultpoint circle.smdb-track-line,
+#map .leaflet-measure-layer path.smdb-track-line,
+#map .leaflet-measure-layer circle.smdb-track-line,
+#map.smdb-measure-active path.smdb-track-line,
+#map.smdb-measure-active circle.smdb-track-line {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+#map .layer-measure-resultline path.smdb-track-line,
+#map .layer-measure-resultarea path.smdb-track-line,
+#map .leaflet-measure-layer path.smdb-track-line.smdb-measurement-path,
+#map.smdb-measure-active path.smdb-measurement-path.smdb-track-line {
+  stroke-width: 3.5 !important;
+  fill: none !important;
+}
+
+/* ----- PLUGIN LAYER CLASSES: active area fill + boundary (while drawing) = green ----- */
+#map .layer-measurearea path,
+#map .layer-measurearea circle,
+#map .layer-measureboundary path {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.2 !important;
+}
+#map .layer-measureboundary path {
+  fill: none !important;
+}
+
+/* ----- WHEN MEASURE IS ACTIVE: our classes + capture marker = green ----- */
+#map.smdb-measure-active path.leaflet-interactive:not(.smdb-track-line),
+#map.smdb-measure-active path.smdb-capture-path,
+#map.smdb-measure-active circle.leaflet-interactive,
+#map.smdb-measure-active .smdb-capture-marker path,
+#map.smdb-measure-active .smdb-capture-marker circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+
+/* ----- WHEN MEASURE IS ACTIVE: lines/polygons (measurement result) = green ----- */
+#map.smdb-measure-active path.leaflet-interactive.smdb-measurement-path {
+  stroke: #ABE67E !important;  /* green - final measure line/area */
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+/* ----- WHEN MEASURE IS ACTIVE: polygon suggestion/closing line (3rd+ click) = dotted ----- */
+#map.smdb-measure-active path.leaflet-interactive.smdb-measure-closing-line {
+  stroke: #ABE67E !important;
+  stroke-opacity: 0.9 !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: 6 4 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+/* ----- NOT MEASURING: points (capture cursor) + capture path = green ----- */
+#map .leaflet-measure-layer path.leaflet-interactive:not(.smdb-measurement-path),
+#map .leaflet-measure-layer circle.leaflet-interactive,
+#map .leaflet-measure-layer path.smdb-capture-path,
+#map path.smdb-capture-path,
+#map .smdb-capture-marker path,
+#map .smdb-capture-marker circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+
+/* ----- PLUGIN RESULT LAYERS: completed line/area/point = green ----- */
+#map .layer-measure-resultline path,
+#map .layer-measure-resultarea path,
+#map .layer-measure-resultpoint path,
+#map .layer-measure-resultpoint circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+#map .layer-measure-resultline path,
+#map .layer-measure-resultarea path {
+  stroke-width: 3.5 !important;
+  fill: none !important;
+}
+
+/* ----- NOT MEASURING: our classes (measurement result) = green ----- */
+#map .leaflet-measure-layer path.leaflet-interactive.smdb-measurement-path,
+#map path.leaflet-interactive.smdb-measurement-path {
+  stroke: #ABE67E !important;  /* green - final measure line/area */
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+#map path.leaflet-interactive.smdb-measurement-path:hover {
+  stroke: #8BC34A !important;  /* slightly darker green on hover */
+}
+
+/* ----- Polygon suggestion/closing line (when not measuring) = dotted ----- */
+#map path.leaflet-interactive.smdb-measure-closing-line {
+  stroke: #ABE67E !important;
+  stroke-opacity: 0.9 !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: 6 4 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+/* Fallback for dynamically created circles (plugin default blue) */
+#map circle[stroke="#0066CC"],
+#map circle[fill="#0066CC"],
+#map circle[stroke="rgb(0, 102, 204)"],
+#map circle[fill="rgb(0, 102, 204)"] {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+
 
 /* .leaflet-control-measure a.finish {
   text-align: center;
@@ -256,7 +420,7 @@ p #js-starthelp {
   box-sizing: border-box !important;
   overflow: hidden !important;
 }
-
+*/
 .layer-measure-resultline {
   stroke: #ABE67E;
 }
@@ -264,7 +428,7 @@ p #js-starthelp {
 .layer-measure-resultarea {
   stroke: #ABE67E;
 }
-*/
+
 
 /* ==========================================
    CUSTOM MEASURE BUTTON ICON - ACTIVE
