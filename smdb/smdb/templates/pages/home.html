@@ -74,7 +74,7 @@
 {#<script src="../../static/js/leaflet.groupedlayercontrol.js"></script>#}
 
 {#  Load Leaflet Measure from local file #}
-<script src="{% static 'lib/leaflet-measure/leaflet-measure.js' %}?nocache={{ 'now'|date:'U' }}&v=2"></script>
+<script src="{% static 'lib/leaflet-measure/leaflet-measure.js' %}?nocache={% now 'U' %}&v=2"></script>
 {#  <script src="https://cdn.jsdelivr.net/npm/leaflet-sidebar@0.2.4/src/L.Control.Sidebar.min.js"></script> #}
 
 {#  Leaflet-sidebar v2 #}
