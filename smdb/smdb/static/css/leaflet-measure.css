@@ -81,6 +81,19 @@
   fill: none !important;
 }
 
+/* ----- In-progress area: dotted stroke so closing segment (last→first) is dotted until confirm ----- */
+/* Boundary (1→2→3…) is solid and on top; only the closing edge is area stroke, so this makes that line dotted. */
+#map .layer-measurearea path {
+  stroke-dasharray: 6 8 !important;
+}
+/* ----- Our predictive closing line (backup): dotted green, shown after 3rd click until Finish ----- */
+#map .smdb-measure-predictive-closing path {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 6 8 !important;
+  fill: none !important;
+}
+
 /* ----- WHEN MEASURE IS ACTIVE: our classes + capture marker = green ----- */
 #map.smdb-measure-active path.leaflet-interactive:not(.smdb-track-line),
 #map.smdb-measure-active path.smdb-capture-path,
@@ -141,6 +154,23 @@
 #map .layer-measure-resultarea path {
   stroke-width: 3.5 !important;
   fill: none !important;
+}
+
+/* ----- Result layers: yellow on hover ----- */
+#map .layer-measure-resultline path:hover,
+#map .layer-measure-resultarea path:hover,
+#map .layer-measure-resultpoint path:hover {
+  stroke: yellow !important;
+  fill: none !important;
+}
+#map .layer-measure-resultarea path:hover {
+  fill: yellow !important;
+  fill-opacity: 0.25 !important;
+}
+#map .layer-measure-resultpoint circle:hover {
+  stroke: yellow !important;
+  fill: yellow !important;
+  fill-opacity: 0.5 !important;
 }
 
 /* ----- NOT MEASURING: our classes (measurement result) = green ----- */
