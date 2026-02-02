@@ -37,6 +37,7 @@ nano smdb/static/css/leaflet-measure.css
 - `smdb/static/css/leaflet-measure.css` - Leaflet measurement tool styling
 - `smdb/static/css/project.css` - Main project styles
 - `smdb/static/css/map.css` - Map-specific styles
+- `smdb/static/js/map.js` - Map logic (measure colors, closing-line detection)
 - `smdb/templates/pages/home.html` - Home page template
 
 All get deployed by `./css`
@@ -44,12 +45,12 @@ All get deployed by `./css`
 ## How It Works
 
 The `./css` script:
-- Copies files to `/app/smdb/static/css/` (source)
-- Runs `collectstatic` which:
-  - Generates hashed filenames like `leaflet-measure.9ccf36ebeb9e.css`
-  - Updates the manifest so Django knows which hash to use
-  - Copies everything to `/app/staticfiles/`
-- Django serves the updated files immediately
+- Copies CSS + **map.js** + home.html into the **running** container at `/app/smdb/static/`
+- Runs `collectstatic` **inside that same container** (`docker exec`) so it reads the files you just copied
+- Restarts Django so the manifest is reloaded
+- Collectstatic generates hashed filenames and writes to `/app/staticfiles/`
+
+**Important:** Collectstatic must run inside the container that received the copied files. Running `docker-compose run --rm django collectstatic` would use a new container with old files from the image, so nothing would update.
 
 ## Browser Cache
 
