@@ -1,7 +1,5 @@
 import pytest
 from django.urls import reverse
-from django.utils.dateparse import parse_date
-from datetime import date
 
 
 pytestmark = pytest.mark.django_db
@@ -71,10 +69,23 @@ def test_home_view_with_invalid_date_format(client):
     assert isinstance(missions, list)
 
 
+def test_mission_select_api_requires_spatial_bounds(client):
+    """Test MissionSelectAPIView returns 400 when spatial bounds are missing."""
+    url = reverse("mission-select-api")
+    response = client.get(url, {"tmin": "2019-01-01", "tmax": "2019-12-31"})
+    assert response.status_code == 400
+    data = response.json()
+    assert "error" in data
+    assert "bounds" in data["error"].lower()
+
+
 def test_mission_select_api_with_tmin_tmax(client):
     """Test MissionSelectAPIView with tmin/tmax date filtering."""
     url = reverse("mission-select-api")
-    response = client.get(url, {"tmin": "2019-01-01", "tmax": "2019-12-31"})
+    response = client.get(url, {
+        "xmin": "-180", "xmax": "180", "ymin": "-90", "ymax": "90",
+        "tmin": "2019-01-01", "tmax": "2019-12-31",
+    })
     assert response.status_code == 200
     data = response.json()
     assert "missions" in data
@@ -82,9 +93,12 @@ def test_mission_select_api_with_tmin_tmax(client):
 
 
 def test_mission_select_api_with_empty_dates(client):
-    """Test MissionSelectAPIView with empty tmin/tmax strings."""
+    """Test MissionSelectAPIView with empty tmin/tmax strings (bounds required)."""
     url = reverse("mission-select-api")
-    response = client.get(url, {"tmin": "", "tmax": ""})
+    response = client.get(url, {
+        "xmin": "-180", "xmax": "180", "ymin": "-90", "ymax": "90",
+        "tmin": "", "tmax": "",
+    })
     assert response.status_code == 200
     data = response.json()
     assert "missions" in data
@@ -93,12 +107,13 @@ def test_mission_select_api_with_empty_dates(client):
 def test_mission_select_api_with_invalid_dates(client):
     """Test MissionSelectAPIView handles invalid date formats."""
     url = reverse("mission-select-api")
-    response = client.get(url, {"tmin": "not-a-date", "tmax": "also-not-a-date"})
-    # Should not return 500 error
-    assert response.status_code in [200, 400]
-    if response.status_code == 200:
-        data = response.json()
-        assert "missions" in data or "error" in data
+    response = client.get(url, {
+        "xmin": "-180", "xmax": "180", "ymin": "-90", "ymax": "90",
+        "tmin": "not-a-date", "tmax": "also-not-a-date",
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert "missions" in data
 
 
 def test_mission_export_api_with_tmin_tmax(client):

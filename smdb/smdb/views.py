@@ -4,7 +4,6 @@ import re
 import csv
 from os.path import join
 from io import BytesIO
-from datetime import datetime
 from django.utils.dateparse import parse_date
 
 from django.conf import settings
@@ -505,6 +504,13 @@ class MissionSelectAPIView(View):
                     -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
                 return JsonResponse({'error': 'Coordinates out of valid range'}, status=400)
             
+            # Validate bounding box ordering: xmin <= xmax and ymin <= ymax
+            if xmin_float > xmax_float or ymin_float > ymax_float:
+                return JsonResponse(
+                    {'error': 'Invalid bounding box: xmin must be <= xmax and ymin must be <= ymax'},
+                    status=400,
+                )
+            
             # Create polygon from bounds
             search_geom = Polygon(
                 (
@@ -628,6 +634,13 @@ class MissionExportAPIView(View):
             if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
                     -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
                 return HttpResponse('Coordinates out of valid range', status=400)
+            
+            # Validate bounding box ordering: xmin <= xmax and ymin <= ymax
+            if xmin_float > xmax_float or ymin_float > ymax_float:
+                return HttpResponse(
+                    'Invalid bounding box: xmin must be <= xmax and ymin must be <= ymax',
+                    status=400,
+                )
             
             # Create polygon from bounds
             search_geom = Polygon(

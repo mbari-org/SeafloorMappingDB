@@ -277,9 +277,10 @@ const FilterControl = L.Control.extend({
       if (isMainMapPage) {
         clonedForm.querySelectorAll("button").forEach((btn) => {
           // Check if this is a Clear button by ID, type, or onclick attribute
+          const onclickAttr = btn.getAttribute("onclick");
           const isClearBtn = btn.type === "reset" || 
                             (btn.id && (btn.id.includes("Cancel") || btn.id.includes("clear"))) ||
-                            (btn.getAttribute("onclick") && btn.getAttribute("onclick").includes("window.location"));
+                            (onclickAttr && onclickAttr.includes("window.location"));
           if (isClearBtn) {
             // Remove onclick attribute completely
             btn.removeAttribute("onclick");
@@ -851,9 +852,10 @@ const FilterControl = L.Control.extend({
         const currentPath = window.location.pathname;
         const isMainMapPage = currentPath === '/' || currentPath === '/missions' || currentPath.startsWith('/missions/');
         // Check if this is a Clear button by type, ID, or onclick attribute
+        const onclickAttr = btn.getAttribute("onclick");
         const isClearButton = btn.type === "reset" || 
                              (btn.id && (btn.id.includes("Cancel") || btn.id.includes("clear"))) ||
-                             (btn.getAttribute("onclick") && btn.getAttribute("onclick") && btn.getAttribute("onclick").includes("window.location"));
+                             (onclickAttr && onclickAttr.includes("window.location"));
         if (isMainMapPage && isClearButton) {
           // Remove any existing onclick attribute
           btn.removeAttribute("onclick");
@@ -3005,7 +3007,7 @@ function updateResultsPanel(message, missions) {
   
   missions.forEach(function(mission) {
     html += '<tr>';
-    html += '<td><a href="/missions/' + mission.slug + '/">' + escapeHtml(mission.name) + '</a></td>';
+    html += '<td><a href="/missions/' + (mission.slug ? encodeURIComponent(mission.slug) : '') + '/">' + escapeHtml(mission.name) + '</a></td>';
     html += '<td>' + (mission.start_date || '-') + '</td>';
     html += '<td>' + (mission.region_name || '-') + '</td>';
     html += '<td>' + (mission.track_length || '-') + '</td>';
