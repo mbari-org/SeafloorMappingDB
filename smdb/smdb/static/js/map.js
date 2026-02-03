@@ -396,11 +396,6 @@ const FilterControl = L.Control.extend({
         buttonRow.style.setProperty("align-items", "center", "important");
       }, 100);
       
-      // Debug: Log form structure to see if buttons are present
-      // console.log("Form HTML:", clonedForm.innerHTML);
-      // console.log("Buttons in form:", clonedForm.querySelectorAll("button").length);
-      // console.log("All rows:", clonedForm.querySelectorAll(".row").length);
-      
       // Add global click interceptor for Clear buttons on main map page (before onclick handlers execute)
       const currentPathCheck = window.location.pathname;
       const isMainMapPageCheck = currentPathCheck === '/' || currentPathCheck === '/missions' || currentPathCheck.startsWith('/missions/');
@@ -454,7 +449,6 @@ const FilterControl = L.Control.extend({
       const fieldCount = body.querySelectorAll(
         'input:not([type="hidden"]), select, textarea'
       ).length;
-      // console.log("Form copied to sidebar. Fields found:", fieldCount);
 
       if (fieldCount === 0) {
         console.warn(
