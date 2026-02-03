@@ -8,6 +8,4 @@ RUN useradd --uid $DOCKER_USER_ID docker_user
 
 ADD compose/production/nginx/nginx.conf /etc/nginx/
 
-# Add SSL certs to location specified in nginx.conf
-ADD ./compose/production/traefik/smdb.crt /etc/ssl/certs/
-ADD ./compose/production/traefik/smdb.key /etc/ssl/private/
+# SSL certs not in repo; mount at runtime (e.g. production_dev.yml).

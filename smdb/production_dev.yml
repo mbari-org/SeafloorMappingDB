@@ -1,0 +1,42 @@
+# Override for running production stack on smdb-dev (development server).
+# Use: docker compose -f production_localhost.yml -f production_dev.yml up -d --build
+# Paths: /opt/docker_smdb_vol (etc, .ssh), /mbari/SeafloorMapping (shared mount).
+# DOCKER_USER_ID = your user id (id -u) so container user matches host.
+
+services:
+  django:
+    ports:
+      - "8000:5000"  # gunicorn binds to 5000; expose for testing on smdb-dev
+    build:
+      args:
+        - DOCKER_USER_ID=11341
+    volumes:
+      - /opt/docker_smdb_vol/.ssh:/home/docker_user/.ssh:z
+      - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
+      - /opt/docker_smdb_vol/etc:/etc/smdb:z
+      - local_media_files:/media:z
+    # amd64 GEOS/GDAL paths (override if .envs has aarch64)
+    # Allow localhost/127.0.0.1 when testing on smdb-dev (port 8000)
+    environment:
+      - GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
+      - GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,django,smdb-dev.shore.mbari.org
+
+  mb-system:
+    build:
+      args:
+        - DOCKER_USER_ID=11341
+    volumes:
+      - /opt/docker_smdb_vol/.ssh:/home/docker_user/.ssh:z
+      - /mbari/SeafloorMapping:/mbari/SeafloorMapping:z
+
+  nginx:
+    build:
+      args:
+        - DOCKER_USER_ID=11341
+    volumes:
+      - /mbari/SeafloorMapping:/srv/SeafloorMapping:ro
+      - local_media_files:/media
+      # Auto-renewing ACME certs on smdb-dev (actual filenames in /etc/ssl/acme-certs/)
+      - /etc/ssl/acme-certs/smdb-dev.shore.mbari.org-chain.crt:/etc/ssl/certs/smdb.crt:ro
+      - /etc/ssl/acme-certs/smdb-dev.shore.mbari.org.key:/etc/ssl/private/smdb.key:ro
