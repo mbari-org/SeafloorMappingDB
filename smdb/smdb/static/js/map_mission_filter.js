@@ -43,14 +43,12 @@ map.whenReady(function() {
       // Check if there are any missions before trying to fit bounds
       if (!hasMissions) {
         // No missions found - set to default zoom level 3 and center
-        console.log("No missions found - using default view");
         map.setView([39.8423, -26.8945], 3, { animate: false });
         return;
       }
       
       // Double-check missions data structure
       if (!missions || !missions.features || missions.features.length === 0) {
-        console.log("Missions data structure invalid - using default view");
         map.setView([39.8423, -26.8945], 3, { animate: false });
         return;
       }
@@ -97,7 +95,6 @@ map.whenReady(function() {
       // Valid bounds - fit to bounds with padding
       map.fitBounds(bounds, { padding: [100, 100] });
     } catch (err) {
-      console.log(err.message);
       // On any error, set to default zoom level 3 and center
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
