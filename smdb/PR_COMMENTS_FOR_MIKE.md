@@ -1,43 +1,179 @@
 # PR Review Comments for Mike McCann
 
-## Note to Mike: Test failure when running `pytest smdb/smdb/tests/test_views.py` (with resolution)
+## Email to Mike: Response re test errors (pytest / Docker build)
 
-**Use this to reply to Mike about the test errors he saw:**
+**Copy the text below to reply to Mike's email about PR #286 test failures.**
 
 ---
 
 Hi Mike,
 
-I ran the same test and hit the same kind of failure. It wasn’t a bad merge—the **Docker image was failing to build** before pytest could run. The test code itself is fine.
+I ran the same test and hit the same errors—so it wasn’t a merge issue on your side.
 
 **What was going wrong**  
-The Django image is based on a GDAL image that uses **Python 3.8**. Several pins in `requirements/base.txt` (netCDF4, numpy, pandas, dask, xarray) don’t have wheels for Python 3.8, so `pip` failed during the image build and the test command never got to run.
+The failure was from the **Docker image build**, not from the test code. The Django image (GDAL base) uses Python 3.8, and several pins in `requirements/base.txt` (netCDF4, numpy, pandas, dask, xarray) don’t have wheels for Python 3.8, so the image failed to build and the test command never got to run.
 
-**Resolution**  
-We’ve updated `requirements/base.txt` so the stack builds on Python 3.8:
+**What we did**  
+We’ve fixed this and **checked the fix into PR #286**. In `smdb/requirements/base.txt` we pinned those packages to versions that have Python 3.8 wheels and added a short comment so future dependency bumps don’t break the build again.
 
-- **netCDF4**: 1.7.4 → 1.7.2  
-- **numpy**: 2.2.6 → 1.24.4  
-- **pandas**: 2.3.3 → 2.0.3  
-- **dask**: 2026.1.1 → 2023.5.0  
-- **xarray**: 2025.6.1 → 2023.1.0  
-
-After you pull/merge the latest (with these changes), please run the tests **with an explicit compose file** and with Postgres already up:
-
-1. **Start the stack** (so Postgres is available):  
-   `docker compose -f local.yml up -d`  
-   (or your usual compose file, e.g. `production.yml`.)
-
-2. **Run the view tests**:  
+**What you should do**  
+1. Pull the latest from the PR #286 branch (`review/filter-sidebar-improvements-consolidated`).
+2. Run the test with an **explicit compose file** (e.g. from the `smdb` directory):
    ```bash
    docker compose -f local.yml run --rm django pytest smdb/smdb/tests/test_views.py -v
-   ```  
-   (From the `smdb` directory. If you’re in the repo root, use `COMPOSE_FILE=$SMDB_HOME/smdb/local.yml` and the same `docker-compose run ...` style as in the README.)
+   ```
+   Use whatever compose file you normally use for that environment (e.g. `production.yml` on the production server). **For the production server, see the step-by-step below.**
+3. Make sure **PostgreSQL is running** before the test (e.g. `docker compose -f local.yml up -d` first).
 
-The first run may build the image; after that it should use the cache and the view tests should pass. If you still see a build or test error, sending the exact command and full output would help.
+The first run may build the image; after that the view tests should pass. If you still see a build or test error, send me the exact command and full output and we can track it down.
 
 Thanks,  
 Karen
+
+---
+
+## Step-by-step: Run view tests on production server (production.yml)
+
+**For Mike (or anyone) on the production server (e.g. smdb.shore.mbari.org).**  
+Use this when you are on the host where the app runs with `production.yml` and you want to run the view tests after merging PR #286.
+
+**Assumptions:** You have shell access as the user that runs Docker (e.g. `docker_user`), the repo is at `/opt/SeafloorMappingDB`, and production env files exist at `smdb/.envs/.production/`.
+
+---
+
+### 1. Log in and go to the repo
+
+```bash
+# If you use a dedicated deploy user (as in README):
+sudo -u docker_user -i
+
+# Go to the repo root (adjust path if yours is different)
+cd /opt/SeafloorMappingDB
+```
+
+---
+
+### 2. Get the latest code with the fix
+
+Pull the branch that has the dependency fix (and the rest of PR #286):
+
+```bash
+# Fetch and checkout the PR branch
+git fetch origin review/filter-sidebar-improvements-consolidated
+git checkout review/filter-sidebar-improvements-consolidated
+
+# Or, if PR #286 is already merged into main:
+# git checkout main
+# git pull origin main
+```
+
+Confirm the fix is present (optional):
+
+```bash
+grep "netCDF4==1.7.2" smdb/requirements/base.txt
+# Should print the line with netCDF4==1.7.2
+```
+
+---
+
+### 3. Set environment variables
+
+Same as for normal production runs (see README):
+
+```bash
+export DOCKER_USER_ID=$(id -u)
+export SMDB_HOME=/opt/SeafloorMappingDB
+export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
+```
+
+---
+
+### 4. Ensure the stack is up (so Postgres and Redis are available)
+
+The test runs in a one-off Django container that talks to the same Postgres (and Redis) as the app. Bring the stack up if it isn’t already:
+
+```bash
+docker compose up -d
+```
+
+Wait a few seconds for Postgres to be ready. Optionally check:
+
+```bash
+docker compose ps
+# postgres and django (and redis, nginx, mb-system) should be up
+```
+
+---
+
+### 5. Rebuild the Django image (so it uses the new pins)
+
+The fix is in `requirements/base.txt`; production builds from `requirements/production.txt` (which includes `base.txt`). Rebuild the Django image once so the new pins are used:
+
+```bash
+docker compose build django
+```
+
+This can take several minutes. When it finishes, the image `smdb_production_django` will have the updated dependencies.
+
+---
+
+### 6. Run the view tests
+
+From the **repo root** (`/opt/SeafloorMappingDB`), with `COMPOSE_FILE` set as above:
+
+```bash
+docker compose run --rm django pytest smdb/smdb/tests/test_views.py -v
+```
+
+Or from the **smdb** directory:
+
+```bash
+cd $SMDB_HOME/smdb
+docker compose -f production.yml run --rm django pytest smdb/smdb/tests/test_views.py -v
+```
+
+- `run --rm` = one-off container, removed when the command exits.  
+- The test needs `config.settings.test`; production compose uses production env files. The Django image still has `DJANGO_SETTINGS_MODULE` from the env file. For tests you may need the test settings. Check: if `.envs/.production/.django` (or the env passed to the container) sets `DJANGO_SETTINGS_MODULE=config.settings.test`, you’re good. If not, override for this run:
+
+```bash
+docker compose run --rm -e DJANGO_SETTINGS_MODULE=config.settings.test django pytest smdb/smdb/tests/test_views.py -v
+```
+
+---
+
+### 7. Interpret the result
+
+- **All tests passed** – You’re done. The fix and the test run are working.  
+- **Build failed** – Share the full `docker compose build django` output (and, if different, the run command you used).  
+- **Tests failed (e.g. DB or env)** – Share the full `docker compose run ... pytest ...` output.
+
+---
+
+### 8. (Optional) Switch back to your usual branch
+
+If you had checked out the PR branch only to test:
+
+```bash
+git checkout main
+# or your usual deploy branch
+```
+
+---
+
+### Quick copy-paste (after PR #286 is on the server)
+
+If the stack is already up and you only need to rebuild and run tests:
+
+```bash
+cd /opt/SeafloorMappingDB
+export SMDB_HOME=/opt/SeafloorMappingDB
+export COMPOSE_FILE=$SMDB_HOME/smdb/production.yml
+export DOCKER_USER_ID=$(id -u)
+docker compose build django
+docker compose run --rm -e DJANGO_SETTINGS_MODULE=config.settings.test django pytest smdb/smdb/tests/test_views.py -v
+```
+
+(Adjust `SMDB_HOME` and paths if your server layout is different.)
 
 ---
 
