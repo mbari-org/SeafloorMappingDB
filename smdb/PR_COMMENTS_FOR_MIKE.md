@@ -1,5 +1,46 @@
 # PR Review Comments for Mike McCann
 
+## Note to Mike: Test failure when running `pytest smdb/smdb/tests/test_views.py` (with resolution)
+
+**Use this to reply to Mike about the test errors he saw:**
+
+---
+
+Hi Mike,
+
+I ran the same test and hit the same kind of failure. It wasn’t a bad merge—the **Docker image was failing to build** before pytest could run. The test code itself is fine.
+
+**What was going wrong**  
+The Django image is based on a GDAL image that uses **Python 3.8**. Several pins in `requirements/base.txt` (netCDF4, numpy, pandas, dask, xarray) don’t have wheels for Python 3.8, so `pip` failed during the image build and the test command never got to run.
+
+**Resolution**  
+We’ve updated `requirements/base.txt` so the stack builds on Python 3.8:
+
+- **netCDF4**: 1.7.4 → 1.7.2  
+- **numpy**: 2.2.6 → 1.24.4  
+- **pandas**: 2.3.3 → 2.0.3  
+- **dask**: 2026.1.1 → 2023.5.0  
+- **xarray**: 2025.6.1 → 2023.1.0  
+
+After you pull/merge the latest (with these changes), please run the tests **with an explicit compose file** and with Postgres already up:
+
+1. **Start the stack** (so Postgres is available):  
+   `docker compose -f local.yml up -d`  
+   (or your usual compose file, e.g. `production.yml`.)
+
+2. **Run the view tests**:  
+   ```bash
+   docker compose -f local.yml run --rm django pytest smdb/smdb/tests/test_views.py -v
+   ```  
+   (From the `smdb` directory. If you’re in the repo root, use `COMPOSE_FILE=$SMDB_HOME/smdb/local.yml` and the same `docker-compose run ...` style as in the README.)
+
+The first run may build the image; after that it should use the cache and the view tests should pass. If you still see a build or test error, sending the exact command and full output would help.
+
+Thanks,  
+Karen
+
+---
+
 ## Comment 1: Reply to Mike's Comment on MissionTableView
 
 **Use this when replying to Mike's comment about the paginated view issue:**
@@ -157,6 +198,36 @@ The existing tests only checked that pages load (status 200) but didn't test dat
 **Files Changed:**
 - `smdb/views.py`: Added `parse_date()` imports and date parsing logic in three views
 - `smdb/tests/test_views.py`: Added 8 comprehensive tests for date filtering
+
+---
+
+## Comment 5: Running the view tests
+
+**For Mike (and anyone merging/ testing PR #286):**
+
+If the Docker image fails to build when you run the tests, it’s due to dependency pins in `requirements/base.txt` that don’t have wheels for Python 3.8 in the GDAL image. This PR includes version relaxations (netCDF4, numpy, pandas, dask, xarray) so the image builds.
+
+**How to run the view tests**
+
+1. **Use an explicit compose file** (from the repo root or from `smdb`):
+
+   From repo root (`SeafloorMappingDB/`):
+   ```bash
+   export COMPOSE_FILE=$SMDB_HOME/smdb/local.yml
+   docker-compose run --rm django pytest smdb/smdb/tests/test_views.py -v
+   ```
+
+   Or from the `smdb` directory:
+   ```bash
+   cd smdb
+   docker compose -f local.yml run --rm django pytest smdb/smdb/tests/test_views.py -v
+   ```
+
+   On production or staging, use the same command with your compose file (e.g. `production.yml` or `production_localhost.yml`).
+
+2. **Ensure PostgreSQL is running.** The django container’s entrypoint waits for Postgres. If you normally start the stack with `docker-compose up -d` (or `docker compose -f local.yml up -d`), do that first so postgres is up, then run the `docker-compose run ... pytest` command above.
+
+3. **First run may need a build.** After pulling/merging, the first run may build the image (and apply the dependency fixes). Later runs will use the cached image.
 
 ---
 
