@@ -1671,6 +1671,61 @@ window.addEventListener('hashchange', function() {
   }
 });
 
+// Predictive closing line: dotted green segment from last vertex back to first (after 3rd click)
+// so the user sees how the polygon would close; updates on each new vertex until Finish/Cancel.
+var measurePredictiveClosingLine = null;
+var MEASURE_PREDICTIVE_OPTIONS = {
+  color: '#ABE67E',
+  weight: 2,
+  opacity: 0.9,
+  dashArray: '6, 8',
+  className: 'smdb-measure-predictive-closing',
+  interactive: false
+};
+function updateMeasurePredictiveClosingLine() {
+  if (!measure || !measure._layer) return;
+  var latlngs = measure._latlngs;
+  if (latlngs && latlngs.length >= 3) {
+    var first = latlngs[0];
+    var last = latlngs[latlngs.length - 1];
+    if (!measurePredictiveClosingLine) {
+      measurePredictiveClosingLine = L.polyline([last, first], MEASURE_PREDICTIVE_OPTIONS).addTo(measure._layer);
+    } else {
+      measurePredictiveClosingLine.setLatLngs([last, first]);
+    }
+    /* Ensure dotted closing line draws above the plugin's solid area stroke, then vertices on top */
+    measurePredictiveClosingLine.bringToFront();
+    if (measure._measureBoundary) measure._measureBoundary.bringToFront();
+    if (measure._measureVertexes) measure._measureVertexes.bringToFront();
+  } else {
+    if (measurePredictiveClosingLine) {
+      measure._layer.removeLayer(measurePredictiveClosingLine);
+      measurePredictiveClosingLine = null;
+    }
+  }
+}
+function removeMeasurePredictiveClosingLine() {
+  if (measurePredictiveClosingLine && measure && measure._layer) {
+    measure._layer.removeLayer(measurePredictiveClosingLine);
+    measurePredictiveClosingLine = null;
+  }
+}
+var _origHandleMeasureClick = measure._handleMeasureClick.bind(measure);
+measure._handleMeasureClick = function(e) {
+  _origHandleMeasureClick(e);
+  updateMeasurePredictiveClosingLine();
+};
+var _origFinishMeasure = measure._finishMeasure.bind(measure);
+measure._finishMeasure = function() {
+  removeMeasurePredictiveClosingLine();
+  _origFinishMeasure();
+};
+var _origClearMeasure = measure._clearMeasure.bind(measure);
+measure._clearMeasure = function() {
+  removeMeasurePredictiveClosingLine();
+  _origClearMeasure();
+};
+
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
