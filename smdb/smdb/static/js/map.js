@@ -1277,7 +1277,16 @@ var hasMissions = missions && missions.features && missions.features.length > 0;
 
 // Add SMDB Missions to Base Map
 let feature = L.geoJSON(missions, {
-  style: function () { },
+  style: function () {
+    return {
+      color: 'rgb(139, 64, 0)',  // rust - GMRT default
+      weight: 3.5,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+      fill: false
+    };
+  },
   hover: function () { },
   onEachFeature: function(feature, layer) {
     // Mark this layer as a track so we can identify it when path is created
