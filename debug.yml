@@ -95,7 +95,10 @@ services:
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
     ports:
       - "7900:7900"
+    tmpfs:
+      - /tmp
 
+  # Open http://localhost:7902/?autoconnect=1&resize=scale&password=secret to monitor browser progress
   firefox:
     image: seleniarm/node-firefox:117.0
     shm_size: 2gb
@@ -105,6 +108,10 @@ services:
       - SE_EVENT_BUS_HOST=selenium-hub
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      - "7902:7900"
+    tmpfs:
+      - /tmp
 
   selenium-hub:
     image: seleniarm/hub:4.10.0
