@@ -165,5 +165,5 @@
 
 {{ missions|json_script:"missions-data" }}
 {{ MEDIA_URL|json_script:"MEDIA-URL" }}
-<script src="{% static 'js/map.js' %}"></script>
+<script src="{% static 'js/map.js' %}?{% now "U" %}"></script>
 {% endblock %}
