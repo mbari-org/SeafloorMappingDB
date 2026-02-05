@@ -2164,7 +2164,7 @@ function forceGreenCaptureMarkers() {
     }
   });
   
-  // Also style any measurement paths that are being drawn
+  // Also add classes to measurement paths so CSS can style them
   document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
     // EXCLUDE track lines - they should keep their rust/orange color
     if (path.classList.contains('smdb-track-line')) {
@@ -2174,19 +2174,11 @@ function forceGreenCaptureMarkers() {
     // Check if this is part of a measurement (not a track)
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
-                       path.closest('.leaflet-measure') !== null ||
-                       (path._leaflet_id && map.hasLayer && map.hasLayer(path));
+                       path.closest('.leaflet-measure') !== null;
     
-    if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
-                         !path.classList.contains('leaflet-measure-resultarea') &&
-                         (path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
-                          path.style.stroke === 'rgb(0, 102, 204)' ||
-                          path.style.stroke === '#0066CC' ||
-                          path.getAttribute('stroke') === '#ABE67E' ||
-                          path.style.stroke === '#ABE67E'))) {
+    if (isMeasurement) {
+      // Just add class - let CSS handle the styling
       path.classList.add('leaflet-measure-path');
-      path.style.stroke = '#ABE67E'; // Green for measurements (PR #288)
-      path.setAttribute('stroke', '#ABE67E');
     }
   });
 }
