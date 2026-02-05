@@ -2149,36 +2149,48 @@ L.Control.Measure.include({
 // Function to force green color on capture markers and measurement paths (PR #288 green theme)
 function forceGreenCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
-  document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
+  var container = document.getElementById('map');
+  if (!container) return;
+  container.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
-      // This is likely a capture marker - force green (PR #288 theme)
+      // This is likely a capture marker - force green with !important so plugin cannot overwrite
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        // Don't set inline styles - let CSS handle it with !important rules
-        // Just add the class so CSS knows this is a capture marker
-        parent.classList.add('leaflet-measure-capture');
+        element.setAttribute('stroke', '#ABE67E');
+        element.setAttribute('fill', '#ABE67E');
+        element.setAttribute('fill-opacity', '0.5');
+        element.style.setProperty('stroke', '#ABE67E', 'important');
+        element.style.setProperty('fill', '#ABE67E', 'important');
+        element.style.setProperty('fill-opacity', '0.5', 'important');
+        element.style.setProperty('stroke-width', '2', 'important');
+        if (parent) {
+          parent.classList.add('smdb-capture-marker');
+          parent.classList.add('leaflet-measure-capture');
+        }
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        // Don't set inline styles - let CSS handle it
+        element.classList.add('smdb-measurement-path');
         element.classList.add('leaflet-measure-path');
       }
     }
   });
   
-  // Also add classes to measurement paths so CSS can style them
-  document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+  // Also style measurement paths, but EXCLUDE track lines
+  var mapEl = document.getElementById('map');
+  if (!mapEl) return;
+  mapEl.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
     // EXCLUDE track lines - they should keep their rust/orange color
     if (path.classList.contains('smdb-track-line')) {
-      return; // Skip track lines
+      return; // Skip track lines completely
     }
     
-    // Check if this is part of a measurement (not a track)
+    // Check if this is part of a measurement
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
-                       path.closest('.leaflet-measure') !== null;
+                       path.closest('.leaflet-measure-layer');
     
     if (isMeasurement) {
-      // Just add class - let CSS handle the styling
       path.classList.add('leaflet-measure-path');
+      path.classList.add('smdb-measurement-path');
     }
   });
 }
