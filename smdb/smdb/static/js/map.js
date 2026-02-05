@@ -1280,10 +1280,8 @@ let feature = L.geoJSON(missions, {
   style: function () { },
   hover: function () { },
   onEachFeature: function(feature, layer) {
-    // Add classes to track line paths so CSS and JS can identify them
-    if (layer._path) {
-      layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
-    }
+    // Mark this layer as a track so we can identify it when path is created
+    layer._isTrackLine = true;
   }
 })
   // Popup Thumbnail Images of Missions
