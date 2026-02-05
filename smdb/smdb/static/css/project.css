@@ -549,27 +549,28 @@ div,
 
 /* ----- LINES (stroke): track lines only - baselayer-dependent ----- */
 /* GMRT = rust; Google Hybrid = orange. Measure UI overridden to green below. */
+/* !important needed to override JavaScript inline styles */
 #map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
 #map path.leaflet-interactive.smdb-track-line.smdb-geometry-line {
-  stroke: rgb(139, 64, 0);  /* rust - GMRT / default */
-  stroke-opacity: 1;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
+  stroke: rgb(139, 64, 0) !important;  /* rust - GMRT / default */
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
 }
 
 #map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line {
-  stroke: rgb(218, 135, 29);  /* orange - Google Hybrid */
-  stroke-opacity: 1;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
+  stroke: rgb(218, 135, 29) !important;  /* orange - Google Hybrid */
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
 }
 
 #map path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
-  stroke: yellow;
+  stroke: yellow !important;
 }
 
 /* ----- LEAFLET-MEASURE: cursor, vertices, lines, result = green ----- */
