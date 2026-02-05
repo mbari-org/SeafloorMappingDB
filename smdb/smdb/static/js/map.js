@@ -2158,11 +2158,7 @@ function forceGreenCaptureMarkers() {
         // Just add the class so CSS knows this is a capture marker
         parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        element.setAttribute('stroke', '#ABE67E');
-        element.setAttribute('stroke-width', '2');
-        element.style.stroke = '#ABE67E';
-        element.style.strokeWidth = '2';
-        // Add measurement class to path
+        // Don't set inline styles - let CSS handle it
         element.classList.add('leaflet-measure-path');
       }
     }
