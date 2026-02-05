@@ -11,22 +11,21 @@ def test_home_view(client):
     assert response.status_code == 200
 
 
-def test_num_missions(client):
+def test_num_missions(client, missions_notes_5):
     url = reverse("home")
     response = client.get(url)
     assert response.status_code == 200
     missions = response.context["missions"]["features"]
-    # Depends on missions_notes_5.json fixture being loaded
+    # Depends on missions_notes_5 fixture (loaddata missions_notes_5.json)
     assert len(missions) == 5
 
 
-def test_search_missions(client):
+def test_search_missions(client, missions_notes_5):
     url = reverse("home")
     response = client.get(url, {"q": "20190308"})
     assert response.status_code == 200
     missions = response.context["missions"]["features"]
-    # Depends on missions_notes_5.json fixture being loaded
-    # As of 30 Sep 2021 notes_text are also searched, returning 3
+    # Depends on missions_notes_5 fixture; search in name/notes_text returns 3
     assert len(missions) == 3
 
 

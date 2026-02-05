@@ -2709,7 +2709,9 @@ function updateResultsPanel(message, missions) {
   if (!content) return;
   
   if (missions.length === 0) {
-    content.innerHTML = '<div class="alert alert-info m-3">No missions found in the selected area.</div>';
+    content.innerHTML = message
+      ? '<div class="alert alert-secondary m-3">' + escapeHtml(message) + '</div>'
+      : '<div class="alert alert-info m-3">No missions found in the selected area.</div>';
     return;
   }
   
@@ -2772,27 +2774,35 @@ function escapeHtml(text) {
 }
 
 function fetchFilteredMissions(filterParams) {
-  // Build query string
+  // Build query string (ensure bbox params are strings for the API)
   var queryString = Object.keys(filterParams)
     .map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
+      var val = filterParams[key];
+      return encodeURIComponent(key) + '=' + encodeURIComponent(val != null ? String(val) : '');
     })
     .join('&');
   
-  // Fetch from API endpoint
-  fetch('/api/v1/missions/select?' + queryString)
+  var url = '/api/v1/missions/select?' + queryString;
+  fetch(url)
     .then(function(response) {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
+      return response.text().then(function(text) {
+        if (!response.ok) {
+          var errMsg = 'Request failed (' + response.status + ')';
+          try {
+            var data = JSON.parse(text);
+            if (data && data.error) errMsg = data.error;
+          } catch (e) { /* use status text */ }
+          throw new Error(errMsg);
+        }
+        return text ? JSON.parse(text) : {};
+      });
     })
     .then(function(data) {
       updateResultsPanel('', data.missions || []);
     })
     .catch(function(error) {
       console.error('Error fetching missions:', error);
-      updateResultsPanel('Error loading missions. Please try again.', []);
+      updateResultsPanel('Error loading missions. ' + (error.message || 'Please try again.'), []);
     });
 }
 
