@@ -2154,15 +2154,8 @@ function forceGreenCaptureMarkers() {
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
       // This is likely a capture marker - force green (PR #288 theme)
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        element.setAttribute('stroke', '#ABE67E');
-        element.setAttribute('fill', '#ABE67E');
-        element.setAttribute('fill-opacity', '0.5');
-        element.setAttribute('stroke-width', '2');
-        element.style.stroke = '#ABE67E';
-        element.style.fill = '#ABE67E';
-        element.style.fillOpacity = '0.5';
-        element.style.strokeWidth = '2';
-        // Add class to parent for CSS targeting
+        // Don't set inline styles - let CSS handle it with !important rules
+        // Just add the class so CSS knows this is a capture marker
         parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
         element.setAttribute('stroke', '#ABE67E');
