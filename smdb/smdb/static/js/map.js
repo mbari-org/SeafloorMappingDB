@@ -2174,10 +2174,13 @@ function forceGreenCaptureMarkers() {
     }
   });
   
-  // Also style measurement paths, but EXCLUDE track lines
+  // Also style measurement paths, but EXCLUDE track lines and user-colored paths
   var mapEl = document.getElementById('map');
   if (!mapEl) return;
   mapEl.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Skip paths that user has recolored via the measure popup color picker
+    if (path.closest('.smdb-measure-user-color')) return;
+    
     // EXCLUDE track lines - they should keep their rust/orange color
     if (path.classList.contains('smdb-track-line')) {
       return; // Skip track lines completely
@@ -2376,30 +2379,36 @@ function applyColorToLayer(layer, color) {
   
   // Update layer style
   if (layer.setStyle) {
-    // For paths (lines/polygons)
     layer.setStyle({
       color: rgbString,
       fillColor: layer.options.fillColor || rgbString,
-      fillOpacity: layer.options.fillOpacity || 0.2
+      fillOpacity: layer.options.fillOpacity !== undefined ? layer.options.fillOpacity : 0.2
     });
-  } else if (layer._path) {
-    // Direct DOM manipulation as fallback
-    layer._path.setAttribute('stroke', rgbString);
+  }
+  
+  // Our CSS uses !important on measure result paths, so we must set inline style with
+  // !important for the user's color to win. Also mark layer so forceGreenCaptureMarkers skips it.
+  if (layer._path) {
+    layer._path.style.setProperty('stroke', rgbString, 'important');
+    layer._path.style.setProperty('stroke-width', '3.5', 'important');
     if (layer._path.getAttribute('fill') !== 'none') {
-      layer._path.setAttribute('fill', rgbString);
+      layer._path.style.setProperty('fill', rgbString, 'important');
+      layer._path.style.setProperty('fill-opacity', '0.2', 'important');
+    } else {
+      layer._path.style.setProperty('fill', 'none', 'important');
     }
-  } else if (layer._icon) {
-    // For markers/points
-    if (layer._icon.style) {
-      layer._icon.style.backgroundColor = rgbString;
-    }
+  }
+  if (layer._container) {
+    layer._container.classList.add('smdb-measure-user-color');
+  }
+  if (layer._icon) {
+    layer._icon.style.setProperty('background-color', rgbString, 'important');
+    if (layer._container) layer._container.classList.add('smdb-measure-user-color');
   }
   
   // Store color in layer options for persistence
   layer.options.color = rgbString;
-  if (layer.options.fillColor) {
-    layer.options.fillColor = rgbString;
-  }
+  layer.options.fillColor = rgbString;
 }
 
 // Try and determine the active overlay - Currently not working.
