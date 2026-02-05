@@ -239,7 +239,7 @@ const FilterControl = L.Control.extend({
     const copyForm = function (filterType = "mission") {
       const formContainer = document.getElementById("filter-form-container");
       if (!formContainer) {
-        // console.warn("Filter form container not found");
+        console.warn("Filter form container not found");
         return false;
       }
 
@@ -779,10 +779,10 @@ const FilterControl = L.Control.extend({
       // Style buttons - find ALL buttons, not just .btn class
       // Make sure to include buttons we just created
       const allButtons = body.querySelectorAll("button");
-      // console.log("Found buttons:", allButtons.length);
-      // console.log("Button row exists:", body.querySelector(".button-row"));
-      // console.log("Filter button exists:", body.querySelector("button[type='submit']"));
-      // console.log("Clear button exists:", body.querySelector("button[type='reset']"));
+      console.log("Found buttons:", allButtons.length);
+      console.log("Button row exists:", body.querySelector(".button-row"));
+      console.log("Filter button exists:", body.querySelector("button[type='submit']"));
+      console.log("Clear button exists:", body.querySelector("button[type='reset']"));
       allButtons.forEach((btn) => {
         // Ensure button is visible
         btn.style.display = "block";
@@ -1095,16 +1095,16 @@ const FilterControl = L.Control.extend({
     const maxRetries = 10;
     const tryCopyForm = function () {
       if (copyForm(currentFilterType)) {
-        // console.log(`Form successfully copied to sidebar (${currentFilterType})`);
+        console.log(`Form successfully copied to sidebar (${currentFilterType})`);
       } else {
         retryCount++;
         if (retryCount < maxRetries) {
-          // console.log(
-          //   `Retrying form copy (attempt ${retryCount}/${maxRetries})...`
-          // );
+          console.log(
+            `Retrying form copy (attempt ${retryCount}/${maxRetries})...`
+          );
           setTimeout(tryCopyForm, 300);
         } else {
-          // console.error("Failed to copy form after", maxRetries, "attempts");
+          console.error("Failed to copy form after", maxRetries, "attempts");
         }
       }
     };
@@ -1433,16 +1433,16 @@ map.whenReady(function() {
       // Get the zoom level that fitBounds calculated
       var calculatedZoom = map.getZoom();
       var finalCenter = map.getCenter();
-      // console.log("Current map zoom level:", calculatedZoom);
-      // console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
-      // console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+      console.log("Current map zoom level:", calculatedZoom);
+      console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
+      console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
       
       // Allow fractional zoom for finer control when zooming in
       // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
       // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
     } catch (err) {
       // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-      // console.log("Error fitting bounds: " + err.message);
+      console.log("Error fitting bounds: " + err.message);
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
   }, 150);
@@ -1533,26 +1533,26 @@ setTimeout(function() {
     // Log the zoom level after fitBounds in fallback setTimeout
     var finalZoom = map.getZoom();
     var finalCenterFallback = map.getCenter();
-    // console.log("Current map zoom level (fallback setTimeout):", finalZoom);
-    // console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
-    // console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
+    console.log("Current map zoom level (fallback setTimeout):", finalZoom);
+    console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
+    console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
     
     // Fractional zoom enabled - allows 0.5 increments for finer zoom control
     // No zoom constraint - fitBounds determines optimal zoom to show all missions
   } catch (err) {
     // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-    // console.log("Error in fallback fitBounds: " + err.message);
+    console.log("Error in fallback fitBounds: " + err.message);
     map.setView([39.8423, -26.8945], 3, { animate: false });
   }
 }, 100);
 
 // Log final zoom level and center after all initialization is complete
-// setTimeout(function() {
-//   var finalZoomLevel = map.getZoom();
-//   var finalMapCenter = map.getCenter();
-//   console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
-//   console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
-// }, 500);
+setTimeout(function() {
+  var finalZoomLevel = map.getZoom();
+  var finalMapCenter = map.getCenter();
+  console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
+  console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
+}, 500);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1641,66 +1641,35 @@ var measure = L.control
     secondaryLengthUnit: "feet",
     primaryAreaUnit: "sqmeters",
     secondaryAreaUnit: "sqmiles",
-    activeColor: "#ABE67E", // standard green for active measurement (while drawing) including capture marker
+    activeColor: "#0066CC", // darker blue for active measurement (while drawing)
     completedColor: "#0000FF", // lighter blue for completed measurement (matches GMRT map)
     captureZIndex: 5000,
   })
   .addTo(map);
 
-// Predictive closing line: dotted green segment from last vertex back to first (after 3rd click)
-// so the user sees how the polygon would close; updates on each new vertex until Finish/Cancel.
-var measurePredictiveClosingLine = null;
-var MEASURE_PREDICTIVE_OPTIONS = {
-  color: '#ABE67E',
-  weight: 2,
-  opacity: 0.9,
-  dashArray: '6, 8',
-  className: 'smdb-measure-predictive-closing',
-  interactive: false
-};
-function updateMeasurePredictiveClosingLine() {
-  if (!measure || !measure._layer) return;
-  var latlngs = measure._latlngs;
-  if (latlngs && latlngs.length >= 3) {
-    var first = latlngs[0];
-    var last = latlngs[latlngs.length - 1];
-    if (!measurePredictiveClosingLine) {
-      measurePredictiveClosingLine = L.polyline([last, first], MEASURE_PREDICTIVE_OPTIONS).addTo(measure._layer);
-    } else {
-      measurePredictiveClosingLine.setLatLngs([last, first]);
-    }
-    /* Ensure dotted closing line draws above the plugin’s solid area stroke, then vertices on top */
-    measurePredictiveClosingLine.bringToFront();
-    if (measure._measureBoundary) measure._measureBoundary.bringToFront();
-    if (measure._measureVertexes) measure._measureVertexes.bringToFront();
-  } else {
-    if (measurePredictiveClosingLine) {
-      measure._layer.removeLayer(measurePredictiveClosingLine);
-      measurePredictiveClosingLine = null;
-    }
+// Prevent #close from being added to URL when closing measure control
+// Use capture phase to intercept before the default action
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  // Check if click is on a link with #close or within measure control
+  if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
+    e.preventDefault();
+    return false;
   }
-}
-function removeMeasurePredictiveClosingLine() {
-  if (measurePredictiveClosingLine && measure && measure._layer) {
-    measure._layer.removeLayer(measurePredictiveClosingLine);
-    measurePredictiveClosingLine = null;
+  // Also check parent elements
+  var parent = target.closest('a[href="#close"]');
+  if (parent) {
+    e.preventDefault();
+    return false;
   }
-}
-var _origHandleMeasureClick = measure._handleMeasureClick.bind(measure);
-measure._handleMeasureClick = function(e) {
-  _origHandleMeasureClick(e);
-  updateMeasurePredictiveClosingLine();
-};
-var _origFinishMeasure = measure._finishMeasure.bind(measure);
-measure._finishMeasure = function() {
-  removeMeasurePredictiveClosingLine();
-  _origFinishMeasure();
-};
-var _origClearMeasure = measure._clearMeasure.bind(measure);
-measure._clearMeasure = function() {
-  removeMeasurePredictiveClosingLine();
-  _origClearMeasure();
-};
+}, true);
+
+// Also watch for hash changes and remove #close if it appears
+window.addEventListener('hashchange', function() {
+  if (window.location.hash === '#close') {
+    history.replaceState(null, null, window.location.pathname + window.location.search);
+  }
+});
 
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
@@ -1808,7 +1777,7 @@ function styleDrawSquareControl() {
   const controlContainer = drawSquareButton.getContainer();
   
   if (!controlContainer) {
-    // console.log("Control container not found, retrying...");
+    console.log("Control container not found, retrying...");
     setTimeout(styleDrawSquareControl, 100);
     return;
   }
@@ -1841,11 +1810,11 @@ function styleDrawSquareControl() {
     // Add a class and ID for CSS targeting
     leafletControlDiv.classList.add("draw-square-control-wrapper");
     leafletControlDiv.id = "draw-square-control-wrapper";
-    // console.log("Applied styles to draw square control wrapper");
-    // console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
-    // console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
+    console.log("Applied styles to draw square control wrapper");
+    console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
+    console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
   } else {
-    // console.log("Could not find .leaflet-control wrapper, retrying...");
+    console.log("Could not find .leaflet-control wrapper, retrying...");
     setTimeout(styleDrawSquareControl, 100);
   }
 }
@@ -1865,14 +1834,6 @@ map.on(L.Draw.Event.CREATED, function (e) {
     
     // Add the new rectangle to the map
     drawnItems.addLayer(layer);
-    // Mark path so CSS and forceBlueCaptureMarkers treat it as draw (not track). Enables separate stroke/control.
-    (function markDrawPath(l) {
-      if (l._path) {
-        l._path.classList.add('smdb-draw-polygon', 'smdb-geometry-polygon');
-      } else {
-        l.on('add', function() { markDrawPath(this); });
-      }
-    })(layer);
     
     // Get rectangle bounds
     var bounds = layer.getBounds();
@@ -2013,38 +1974,65 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  // console.log("You are using " + browserName + " browser");
+  console.log("You are using " + browserName + " browser");
   return browserName;
 }
 /////////////////////////////////////////////////////////////////////////////////
-// Baselayer-dependent track line colors (TRACK LINES ONLY - leaflet-measure stays green).
-// GMRT (default): rust. Google Hybrid: orange. Set via class on map container; CSS applies.
+// Determine which BaseMap is selected and if the Google Hybrid Map, change the
+// stroke color to orange in order to visually see the tracks better
+// Hovering over these orange track lines will also produce a yellow focus color change
 ////////////////////////////////////////////////////////////////////////////////
-
-function updateBaselayerTrackColor() {
-  var container = map.getContainer();
-  if (!container) return;
-  var radioButton = $(
-    "input[name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector:checked"
-  );
-  var label_value = radioButton.closest("label").find("span").html();
-  container.classList.remove("smdb-baselayer-gmrt", "smdb-baselayer-google-hybrid");
-  if (label_value === "  Google Hybrid Layer ") {
-    container.classList.add("smdb-baselayer-google-hybrid");
-  } else {
-    container.classList.add("smdb-baselayer-gmrt"); // GMRT, Masked GMRT, ESRI, etc.
-  }
-}
-
-// Set initial baselayer class (default = GMRT = rust)
-updateBaselayerTrackColor();
 
 var radios = document.querySelectorAll(
   "input[type=radio][name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector"
 );
 [].forEach.call(radios, function (radio) {
   radio.onchange = function () {
-    updateBaselayerTrackColor();
+    var radioButton = $(
+      "input[name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector:checked"
+    );
+    var label_value = radioButton.closest("label").find("span").html();
+    // console.log(
+    //   "BaseMap Label: " +
+    //     label_value +
+    //     "\nradioButton: " +
+    //     radioButton +
+    //     "\nradios: " +
+    //     radios
+    // );
+    for (var i = 0; i < radioButton.length; i++) {
+      if (radioButton[i].checked) {
+        if (label_value == "  Google Hybrid Layer ") {
+          $("path.leaflet-interactive").css("stroke", "");
+          $("path.leaflet-interactive").css("stroke", "orange");
+          $(document).ready(function () {
+            $("path.leaflet-interactive").hover(
+              function () {
+                $(this).css("stroke", "yellow");
+              },
+              function () {
+                $(this).css("stroke", "orange");
+              }
+            );
+          });
+        } else {
+          if (label_value !== "  Google Hybrid Layer ") {
+            $(document).ready(function () {
+              $("path.leaflet-interactive").css("stroke", "");
+              $("path.leaflet-interactive").css("stroke", "rust");
+              $("path.leaflet-interactive").hover(
+                function () {
+                  $(this).css("stroke", "yellow");
+                },
+                function () {
+                  $(this).css("stroke", "");
+                }
+              );
+            });
+          }
+        }
+      }
+    }
   };
 });
 
@@ -2068,146 +2056,44 @@ L.Control.Measure.include({
 // Function to force blue color on capture markers and measurement paths
 function forceBlueCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
-  var container = document.getElementById('map');
-  if (!container) return;
-  container.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
+  document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
-      // This is likely a capture marker - force green with !important so plugin cannot overwrite
+      // This is likely a capture marker - force blue
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        element.setAttribute('stroke', '#ABE67E');
-        element.setAttribute('fill', '#ABE67E');
-        element.setAttribute('fill-opacity', '0.5');
-        element.style.setProperty('stroke', '#ABE67E', 'important');
-        element.style.setProperty('fill', '#ABE67E', 'important');
-        element.style.setProperty('fill-opacity', '0.5', 'important');
-        element.style.setProperty('stroke-width', '2', 'important');
-        if (parent) {
-          parent.classList.add('smdb-capture-marker');
-          parent.classList.add('leaflet-measure-capture');
-        }
+        element.setAttribute('stroke', '#0066CC');
+        element.setAttribute('fill', 'none');
+        element.style.stroke = '#0066CC';
+        element.style.fill = 'none';
+        element.style.strokeWidth = '2';
+        // Add class to parent for CSS targeting
+        parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        element.classList.add('smdb-measurement-path');
+        element.setAttribute('stroke', '#0066CC');
+        element.style.stroke = '#0066CC';
+        // Add measurement class to path
         element.classList.add('leaflet-measure-path');
       }
     }
   });
   
-  // Add classes: LEAFLET-MEASURE = green cursor / measure paths. TRACK LINES = baselayer color. DRAW = separate. Never mix.
-  // Geometry classes (smdb-geometry-point, smdb-geometry-line, smdb-geometry-polygon) allow CSS to target stroke/point/line/polygon separately per baselayer and per control.
-  var mapEl = document.getElementById('map');
-  if (!mapEl) return;
-  mapEl.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
-    // Skip paths that user has recolored via the measure popup color picker
-    if (path.closest('.smdb-measure-user-color')) return;
-    // Skip if currently in yellow-hover state (avoid overwriting hover)
-    if (path.hasAttribute('data-smdb-hover-stroke')) return;
-    var icon = path.closest('.leaflet-marker-icon, .leaflet-div-icon');
-    var isCaptureMarkerIcon = icon && icon.style && icon.style.width && parseFloat(icon.style.width) > 100;
-    var inMeasureLayer = path.closest('.leaflet-measure-layer');
-    var hasMeasureClass = path.classList.contains('leaflet-measure-resultline') || path.classList.contains('leaflet-measure-resultarea');
-    var isDrawPath = path.classList.contains('smdb-draw-polygon');
-
-    path.classList.remove('smdb-geometry-line', 'smdb-geometry-polygon');
-
-    // When measure is active, NEVER add smdb-track-line to any path (so baselayer CSS never applies).
-    if (measure && measure._measuring) {
-      path.classList.remove('smdb-track-line');
-      if (isCaptureMarkerIcon || (inMeasureLayer && !hasMeasureClass)) {
-        path.classList.add('smdb-capture-path', 'smdb-geometry-line');
-        path.classList.remove('smdb-measurement-path');
-        path.setAttribute('stroke', '#ABE67E');
-        path.setAttribute('fill', '#ABE67E');
-        path.setAttribute('fill-opacity', '0.5');
-        path.style.setProperty('stroke', '#ABE67E', 'important');
-        path.style.setProperty('fill', '#ABE67E', 'important');
-        path.style.setProperty('fill-opacity', '0.5', 'important');
-        } else {
-          path.classList.remove('smdb-capture-path');
-        if (path.classList.contains('leaflet-measure-resultarea')) {
-          path.classList.add('smdb-geometry-polygon');
-          var dActive = path.getAttribute('d') || '';
-          var lineSegmentsActive = (dActive.match(/L/gi) || []).length;
-          if (lineSegmentsActive === 1) {
-            path.classList.add('smdb-measure-closing-line');
-            path.classList.remove('smdb-measurement-path');
-            path.setAttribute('stroke', '#ABE67E');
-            path.style.setProperty('stroke', '#ABE67E', 'important');
-            path.style.setProperty('fill', 'none', 'important');
-          } else {
-            path.classList.add('smdb-measurement-path', 'leaflet-measure-path');
-            path.classList.remove('smdb-measure-closing-line');
-            path.setAttribute('stroke', '#ABE67E');
-            path.setAttribute('fill', 'none');
-            path.style.setProperty('stroke', '#ABE67E', 'important');
-            path.style.setProperty('fill', 'none', 'important');
-          }
-        } else {
-          path.classList.add('smdb-measurement-path', 'leaflet-measure-path', 'smdb-geometry-line');
-          path.classList.remove('smdb-measure-closing-line');
-          path.setAttribute('stroke', '#ABE67E');
-          path.setAttribute('fill', 'none');
-          path.style.setProperty('stroke', '#ABE67E', 'important');
-          path.style.setProperty('fill', 'none', 'important');
-        }
-      }
-      return;
+  // Also style any measurement paths that are being drawn
+  document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Check if this is part of a measurement (not a track)
+    var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
+                       path.classList.contains('leaflet-measure-resultarea') ||
+                       path.closest('.leaflet-measure') !== null ||
+                       (path._leaflet_id && map.hasLayer && map.hasLayer(path));
+    
+    if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
+                         !path.classList.contains('leaflet-measure-resultarea') &&
+                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
+                         path.style.stroke === 'rgb(0, 102, 204)' ||
+                         path.style.stroke === '#0066CC')) {
+      path.classList.add('leaflet-measure-path');
+      path.style.stroke = '#0066CC';
+      path.setAttribute('stroke', '#0066CC');
     }
-
-    // Not measuring: classify by location/class. Never add smdb-track-line to draw or measure elements.
-    if (isDrawPath || inMeasureLayer || hasMeasureClass || isCaptureMarkerIcon) {
-      path.classList.remove('smdb-track-line');
-      if (isCaptureMarkerIcon || (inMeasureLayer && !hasMeasureClass)) {
-        path.classList.add('smdb-capture-path', 'smdb-geometry-line');
-        path.classList.remove('smdb-measurement-path');
-        path.setAttribute('stroke', '#ABE67E');
-        path.setAttribute('fill', '#ABE67E');
-        path.setAttribute('fill-opacity', '0.5');
-        path.style.setProperty('stroke', '#ABE67E', 'important');
-        path.style.setProperty('fill', '#ABE67E', 'important');
-        path.style.setProperty('fill-opacity', '0.5', 'important');
-      } else if (isDrawPath) {
-        path.classList.remove('smdb-capture-path', 'smdb-measurement-path');
-        path.classList.add('smdb-geometry-polygon');
-      } else {
-        path.classList.remove('smdb-capture-path');
-        if (path.classList.contains('leaflet-measure-resultarea')) {
-          path.classList.add('smdb-geometry-polygon');
-          var d = path.getAttribute('d') || '';
-          var lineSegments = (d.match(/L/gi) || []).length;
-          if (lineSegments === 1) {
-            path.classList.add('smdb-measure-closing-line');
-            path.classList.remove('smdb-measurement-path');
-            path.setAttribute('stroke', '#ABE67E');
-            path.style.setProperty('stroke', '#ABE67E', 'important');
-            path.style.setProperty('fill', 'none', 'important');
-          } else {
-            path.classList.add('smdb-measurement-path', 'leaflet-measure-path');
-            path.classList.remove('smdb-measure-closing-line');
-            path.setAttribute('stroke', '#ABE67E');
-            path.setAttribute('fill', 'none');
-            path.style.setProperty('stroke', '#ABE67E', 'important');
-            path.style.setProperty('fill', 'none', 'important');
-          }
-        } else {
-          path.classList.add('smdb-measurement-path', 'leaflet-measure-path', 'smdb-geometry-line');
-          path.classList.remove('smdb-measure-closing-line');
-          path.setAttribute('stroke', '#ABE67E');
-          path.setAttribute('fill', 'none');
-          path.style.setProperty('stroke', '#ABE67E', 'important');
-          path.style.setProperty('fill', 'none', 'important');
-        }
-      }
-      return;
-    }
-    path.classList.add('smdb-track-line', 'smdb-geometry-line');
-  });
-
-  // Points (circles): add geometry class so CSS can target point styling separately.
-  mapEl.querySelectorAll('circle.leaflet-interactive').forEach(function(circle) {
-    if (circle.closest('.smdb-measure-user-color')) return;
-    if (circle.hasAttribute('data-smdb-hover-stroke')) return;
-    circle.classList.add('smdb-geometry-point');
   });
 }
 
@@ -2216,110 +2102,45 @@ var captureMarkerObserver = new MutationObserver(function(mutations) {
   forceBlueCaptureMarkers();
 });
 
-// Start observing the map container for changes (childList only – observing style/stroke/fill caused infinite loop: we set them, observer fired, we ran again)
+// Start observing the map container for changes
 captureMarkerObserver.observe(map.getContainer(), {
   childList: true,
-  subtree: true
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['style', 'stroke', 'fill']
 });
 
-// When measure is active: add class AND force inline stroke/fill so we always win over plugin + baselayer CSS.
-// Plugin sets inline styles via Leaflet setStyle(); only inline style with !important beats that.
-var MEASURE_GREEN = '#ABE67E';
-// Deploy check: if you see this in the browser console, the updated map.js is loaded.
-// if (typeof window !== 'undefined' && window.console) { try { console.log('[smdb] map.js measure-override build 2025-02'); } catch (e) {} }
-
-function setMeasureGreenStyle(el, asLine) {
-  el.setAttribute('stroke', MEASURE_GREEN);
-  el.setAttribute('fill', asLine ? 'none' : MEASURE_GREEN);
-  if (!asLine) el.setAttribute('fill-opacity', '0.5');
-  el.style.setProperty('stroke', MEASURE_GREEN, 'important');
-  el.style.setProperty('fill', asLine ? 'none' : MEASURE_GREEN, 'important');
-  if (!asLine) el.style.setProperty('fill-opacity', '0.5', 'important');
-}
-
-function forceMeasureColors() {
-  if (!measure || !measure._measuring) return;
-  var container = document.getElementById('map');
-  if (!container) return;
-  container.classList.add('smdb-measure-active');
-  container.querySelectorAll('path, circle').forEach(function(el) {
-    var skipReason = null;
-    if (el.closest('.smdb-measure-user-color')) skipReason = 'user-chosen color';
-    if (el.classList.contains('smdb-draw-polygon')) skipReason = 'smdb-draw-polygon';
-    if (el.classList.contains('smdb-track-line')) {
-      var inMeasureContainer = el.closest('.layer-measuredrag') || el.closest('.layer-measurevertex') || el.closest('.layer-measurearea') || el.closest('.layer-measureboundary') || el.closest('.leaflet-measure-layer') || el.closest('.smdb-measure-predictive-closing');
-      if (!inMeasureContainer) skipReason = 'smdb-track-line (basemap)';
-    }
-    if (skipReason) return;
-    el.classList.remove('smdb-track-line');
-    var icon = el.closest('.leaflet-marker-icon, .leaflet-div-icon');
-    var isCapture = icon && icon.style && icon.style.width && parseFloat(icon.style.width) > 100;
-    var isResultLine = el.classList.contains('leaflet-measure-resultline') || el.classList.contains('leaflet-measure-resultarea');
-    var isPredictiveClosing = el.closest('.smdb-measure-predictive-closing');
-    if (isPredictiveClosing) {
-      setMeasureGreenStyle(el, true);  /* line only */
-      el.style.setProperty('stroke-dasharray', '6 8', 'important');  /* dotted until confirm */
-    } else if (isCapture || !isResultLine) {
-      setMeasureGreenStyle(el, false);
-    } else {
-      el.setAttribute('stroke', MEASURE_GREEN);
-      el.setAttribute('fill', 'none');
-      el.style.setProperty('stroke', MEASURE_GREEN, 'important');
-      el.style.setProperty('fill', 'none', 'important');
-    }
-  });
-}
-
-function updateMeasureActiveClass() {
-  var container = map.getContainer();
-  if (!container) return;
-  if (measure && measure._measuring) {
-    container.classList.add('smdb-measure-active');
-    forceMeasureColors();
-    forceBlueCaptureMarkers();
-  } else {
-    container.classList.remove('smdb-measure-active');
-  }
-}
-setInterval(updateMeasureActiveClass, 50);
-
-// While measuring, keep forcing capture cursor dot to green (plugin may re-apply default color on mousemove)
+// Also check periodically when measurement is active
 setInterval(function() {
-  if (!measure || !measure._measuring) return;
-  var container = map.getContainer();
-  container.querySelectorAll('.leaflet-marker-icon, .leaflet-div-icon').forEach(function(icon) {
-    if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
-      styleCaptureMarkerGreen(icon);
-    }
-  });
-}, 150);
-
-function styleCaptureMarkerGreen(icon) {
-  if (!icon) return;
-  icon.classList.add('smdb-capture-marker');
-  var circles = icon.querySelectorAll('circle, path');
-  circles.forEach(function(el) {
-    setMeasureGreenStyle(el, false);
-    el.classList.add('smdb-capture-path');
-  });
-  var existingDot = icon.querySelector('.measure-capture-dot');
-  if (!existingDot && circles.length === 0) {
-    var dot = document.createElement('div');
-    dot.className = 'measure-capture-dot';
-    dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: ' + MEASURE_GREEN + '; border: 2px solid ' + MEASURE_GREEN + '; box-shadow: 0 0 0 1px white; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001; opacity: 0.7;';
-    icon.appendChild(dot);
+  if (measure && measure._measuring) {
+    forceBlueCaptureMarkers();
   }
-}
+}, 100);
 
 map.on('layeradd', function(e) {
   if (e.layer && e.layer._icon) {
     var icon = e.layer._icon;
-    // Capture marker = large divIcon; style dot green (#ABE67E)
+    // Check if this is a capture marker by looking for the large divIcon
     if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
-      map.getContainer().classList.add('smdb-measure-active');
-      styleCaptureMarkerGreen(icon);
-      setTimeout(function() { styleCaptureMarkerGreen(icon); }, 50);
-      setTimeout(function() { styleCaptureMarkerGreen(icon); }, 200);
+      // Force blue color on any SVG elements inside
+      setTimeout(function() {
+        var circles = icon.querySelectorAll('circle, path');
+        circles.forEach(function(circle) {
+          circle.setAttribute('stroke', '#0066CC');
+          circle.setAttribute('fill', 'none');
+          circle.style.stroke = '#0066CC';
+          circle.style.fill = 'none';
+        });
+        
+        // Also add a blue dot if no SVG exists
+        var existingDot = icon.querySelector('.measure-capture-dot');
+        if (!existingDot && circles.length === 0) {
+          var dot = document.createElement('div');
+          dot.className = 'measure-capture-dot';
+          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #0066CC; box-shadow: 0 0 0 1px white, 0 0 0 3px #0066CC; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
+          icon.appendChild(dot);
+        }
+      }, 50);
     }
   }
 });
@@ -2328,22 +2149,10 @@ map.on('layeradd', function(e) {
 map.on('popupopen', function(e) {
   var popup = e.popup;
   if (popup && popup._container) {
-    // Add custom class to ONLY initial measurement popups (not result popups)
-    var isInitialPopup = popup._container.querySelector('.leaflet-control-measure-interaction');
-    var isResultPopup = popup._container.querySelector('.leaflet-measure-resultpopup');
-    
-    if (isInitialPopup && !isResultPopup) {
-      // This is an initial measurement popup - add custom class for CSS targeting
-      popup._container.classList.add('smdb-initial-measure-popup');
-    }
-    
     var h3Elements = popup._container.querySelectorAll('.leaflet-measure-resultpopup h3, h3');
     h3Elements.forEach(function(h3) {
-      // Only apply inline styles to result popups, NOT initial popups (let CSS handle those)
-      if (isResultPopup) {
-        h3.style.fontFamily = 'Arial, sans-serif';
-        h3.style.fontSize = '14px';
-      }
+      h3.style.fontFamily = 'Arial, sans-serif';
+      h3.style.fontSize = '16px';
       
       // Add paintbrush icon if not already added
       if (!h3.querySelector('.measure-color-picker-btn')) {
@@ -2373,8 +2182,8 @@ function showColorPicker(popup, headerElement) {
   var layer = popup._source;
   if (!layer) return;
   
-  // Get current color (default to green)
-  var currentColor = layer.options.color || 'rgb(171, 230, 126)';
+  // Get current color (default to rust/brown)
+  var currentColor = layer.options.color || 'rgb(139, 64, 0)';
   if (layer._path) {
     var computedStyle = window.getComputedStyle(layer._path);
     currentColor = computedStyle.stroke || currentColor;
@@ -2389,7 +2198,7 @@ function showColorPicker(popup, headerElement) {
         return ('0' + parseInt(match[i-1]).toString(16)).slice(-2);
       }).join('');
     }
-    return '#ABE67E'; // default green
+    return '#8b4000'; // default rust
   }
   
   var hexColor = rgbToHex(currentColor);
@@ -2401,7 +2210,7 @@ function showColorPicker(popup, headerElement) {
   colorPickerDiv.innerHTML = '<div style="margin-bottom: 10px; font-weight: bold;">Choose Color:</div>' +
     '<input type="color" id="measureColorInput" value="' + hexColor + '" style="width: 100%; height: 40px; margin-bottom: 10px; cursor: pointer;">' +
     '<div style="display: flex; gap: 5px; margin-bottom: 10px;">' +
-    '<button class="color-preset" data-color="#ABE67E" style="width: 30px; height: 30px; background: #ABE67E; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Green (default)"></button>' +
+    '<button class="color-preset" data-color="#8b4000" style="width: 30px; height: 30px; background: #8b4000; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Rust/Brown (default)"></button>' +
     '<button class="color-preset" data-color="#0000ff" style="width: 30px; height: 30px; background: #0000ff; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Blue"></button>' +
     '<button class="color-preset" data-color="#ff0000" style="width: 30px; height: 30px; background: #ff0000; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Red"></button>' +
     '<button class="color-preset" data-color="#00ff00" style="width: 30px; height: 30px; background: #00ff00; border: 1px solid #666; cursor: pointer; border-radius: 3px;" title="Green"></button>' +
@@ -2464,78 +2273,31 @@ function applyColorToLayer(layer, color) {
   
   // Update layer style
   if (layer.setStyle) {
+    // For paths (lines/polygons)
     layer.setStyle({
       color: rgbString,
       fillColor: layer.options.fillColor || rgbString,
-      fillOpacity: layer.options.fillOpacity !== undefined ? layer.options.fillOpacity : 0.2
+      fillOpacity: layer.options.fillOpacity || 0.2
     });
-  }
-  
-  // Our CSS uses !important on measure result paths, so we must set inline style with
-  // !important for the user's color to win. Also mark layer so forceMeasureColors skips it.
-  if (layer._path) {
-    layer._path.style.setProperty('stroke', rgbString, 'important');
-    layer._path.style.setProperty('stroke-width', '3.5', 'important');
+  } else if (layer._path) {
+    // Direct DOM manipulation as fallback
+    layer._path.setAttribute('stroke', rgbString);
     if (layer._path.getAttribute('fill') !== 'none') {
-      layer._path.style.setProperty('fill', rgbString, 'important');
-      layer._path.style.setProperty('fill-opacity', '0.2', 'important');
-    } else {
-      layer._path.style.setProperty('fill', 'none', 'important');
+      layer._path.setAttribute('fill', rgbString);
     }
-  }
-  if (layer._container) {
-    layer._container.classList.add('smdb-measure-user-color');
-  }
-  if (layer._icon) {
-    layer._icon.style.setProperty('background-color', rgbString, 'important');
-    if (layer._container) layer._container.classList.add('smdb-measure-user-color');
+  } else if (layer._icon) {
+    // For markers/points
+    if (layer._icon.style) {
+      layer._icon.style.backgroundColor = rgbString;
+    }
   }
   
   // Store color in layer options for persistence
   layer.options.color = rgbString;
-  layer.options.fillColor = rgbString;
+  if (layer.options.fillColor) {
+    layer.options.fillColor = rgbString;
+  }
 }
-
-// Yellow hover for finished measure result layers (point, line, polygon).
-// We use JS because the observer sets inline !important, which overrides CSS :hover.
-function setupMeasureResultHover() {
-  var mapContainer = document.getElementById('map');
-  if (!mapContainer) return;
-  mapContainer.addEventListener('mouseover', function(e) {
-    var el = e.target;
-    if (el.nodeName.toLowerCase() !== 'path' && el.nodeName.toLowerCase() !== 'circle') return;
-    var resultLayer = el.closest('.layer-measure-resultline, .layer-measure-resultarea, .layer-measure-resultpoint');
-    if (!resultLayer) return;
-    var isArea = el.closest('.layer-measure-resultarea');
-    var computed = window.getComputedStyle(el);
-    el.setAttribute('data-smdb-hover-stroke', computed.stroke || '');
-    el.setAttribute('data-smdb-hover-fill', computed.fill || '');
-    el.setAttribute('data-smdb-hover-fill-opacity', computed.fillOpacity || '');
-    el.style.setProperty('stroke', 'yellow', 'important');
-    if (el.nodeName.toLowerCase() === 'circle') {
-      el.style.setProperty('fill', 'yellow', 'important');
-      el.style.setProperty('fill-opacity', '0.5', 'important');
-    } else if (isArea) {
-      el.style.setProperty('fill', 'yellow', 'important');
-      el.style.setProperty('fill-opacity', '0.25', 'important');
-    } else {
-      el.style.setProperty('fill', 'none', 'important');
-    }
-  });
-  mapContainer.addEventListener('mouseout', function(e) {
-    var el = e.target;
-    if (el.nodeName.toLowerCase() !== 'path' && el.nodeName.toLowerCase() !== 'circle') return;
-    var stroke = el.getAttribute('data-smdb-hover-stroke');
-    if (stroke == null) return;
-    el.style.setProperty('stroke', stroke, 'important');
-    el.style.setProperty('fill', el.getAttribute('data-smdb-hover-fill') || 'none', 'important');
-    el.style.setProperty('fill-opacity', el.getAttribute('data-smdb-hover-fill-opacity') || '0', 'important');
-    el.removeAttribute('data-smdb-hover-stroke');
-    el.removeAttribute('data-smdb-hover-fill');
-    el.removeAttribute('data-smdb-hover-fill-opacity');
-  });
-}
-setupMeasureResultHover();
 
 // Try and determine the active overlay - Currently not working.
 L.Control.Layers.include({
@@ -2549,7 +2311,7 @@ L.Control.Layers.include({
     this._groupedLayers.forEach(function (obj) {
       // Check if it's an overlay and added to the map
       if (obj.overlay && this._map.hasLayer(obj.layer)) {
-        // console.log("OBJECT OVERLAY");
+        console.log("OBJECT OVERLAY");
         // Push layer to active array
         active.push(obj.layer);
       }
@@ -2971,7 +2733,9 @@ function updateResultsPanel(message, missions) {
   if (!content) return;
   
   if (missions.length === 0) {
-    content.innerHTML = '<div class="alert alert-info m-3">No missions found in the selected area.</div>';
+    content.innerHTML = message
+      ? '<div class="alert alert-secondary m-3">' + escapeHtml(message) + '</div>'
+      : '<div class="alert alert-info m-3">No missions found in the selected area.</div>';
     return;
   }
   
@@ -3034,27 +2798,35 @@ function escapeHtml(text) {
 }
 
 function fetchFilteredMissions(filterParams) {
-  // Build query string
+  // Build query string (ensure bbox params are strings for the API)
   var queryString = Object.keys(filterParams)
     .map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(filterParams[key]);
+      var val = filterParams[key];
+      return encodeURIComponent(key) + '=' + encodeURIComponent(val != null ? String(val) : '');
     })
     .join('&');
   
-  // Fetch from API endpoint
-  fetch('/api/v1/missions/select?' + queryString)
+  var url = '/api/v1/missions/select?' + queryString;
+  fetch(url)
     .then(function(response) {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
+      return response.text().then(function(text) {
+        if (!response.ok) {
+          var errMsg = 'Request failed (' + response.status + ')';
+          try {
+            var data = JSON.parse(text);
+            if (data && data.error) errMsg = data.error;
+          } catch (e) { /* use status text */ }
+          throw new Error(errMsg);
+        }
+        return text ? JSON.parse(text) : {};
+      });
     })
     .then(function(data) {
       updateResultsPanel('', data.missions || []);
     })
     .catch(function(error) {
       console.error('Error fetching missions:', error);
-      updateResultsPanel('Error loading missions. Please try again.', []);
+      updateResultsPanel('Error loading missions. ' + (error.message || 'Please try again.'), []);
     });
 }
 
