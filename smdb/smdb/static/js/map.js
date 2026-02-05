@@ -2226,7 +2226,6 @@ map.on('layeradd', function(e) {
   // Add classes to track line paths when they're created
   if (e.layer && e.layer._isTrackLine && e.layer._path) {
     e.layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
-    console.log('Track line classes added:', e.layer._path.className);
   }
   
   if (e.layer && e.layer._icon) {
