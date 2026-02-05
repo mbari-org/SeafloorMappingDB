@@ -1641,8 +1641,8 @@ var measure = L.control
     secondaryLengthUnit: "feet",
     primaryAreaUnit: "sqmeters",
     secondaryAreaUnit: "sqmiles",
-    activeColor: "#0066CC", // darker blue for active measurement (while drawing)
-    completedColor: "#0000FF", // lighter blue for completed measurement (matches GMRT map)
+    activeColor: "#ABE67E", // green for active measurement (PR #288 theme)
+    completedColor: "#ABE67E", // green for completed measurement (PR #288 theme)
     captureZIndex: 5000,
   })
   .addTo(map);
@@ -2108,24 +2108,24 @@ L.Control.Measure.include({
   },
 });
 
-// Function to force blue color on capture markers and measurement paths
-function forceBlueCaptureMarkers() {
+// Function to force green color on capture markers and measurement paths (PR #288 green theme)
+function forceGreenCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
   document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
-      // This is likely a capture marker - force blue
+      // This is likely a capture marker - force green (PR #288 theme)
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        element.setAttribute('stroke', '#0066CC');
+        element.setAttribute('stroke', '#ABE67E');
         element.setAttribute('fill', 'none');
-        element.style.stroke = '#0066CC';
+        element.style.stroke = '#ABE67E';
         element.style.fill = 'none';
         element.style.strokeWidth = '2';
         // Add class to parent for CSS targeting
         parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        element.setAttribute('stroke', '#0066CC');
-        element.style.stroke = '#0066CC';
+        element.setAttribute('stroke', '#ABE67E');
+        element.style.stroke = '#ABE67E';
         // Add measurement class to path
         element.classList.add('leaflet-measure-path');
       }
@@ -2134,6 +2134,11 @@ function forceBlueCaptureMarkers() {
   
   // Also style any measurement paths that are being drawn
   document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // EXCLUDE track lines - they should keep their rust/orange color
+    if (path.classList.contains('smdb-track-line')) {
+      return; // Skip track lines
+    }
+    
     // Check if this is part of a measurement (not a track)
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
@@ -2142,19 +2147,21 @@ function forceBlueCaptureMarkers() {
     
     if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
                          !path.classList.contains('leaflet-measure-resultarea') &&
-                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
-                         path.style.stroke === 'rgb(0, 102, 204)' ||
-                         path.style.stroke === '#0066CC')) {
+                         (path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
+                          path.style.stroke === 'rgb(0, 102, 204)' ||
+                          path.style.stroke === '#0066CC' ||
+                          path.getAttribute('stroke') === '#ABE67E' ||
+                          path.style.stroke === '#ABE67E'))) {
       path.classList.add('leaflet-measure-path');
-      path.style.stroke = '#0066CC';
-      path.setAttribute('stroke', '#0066CC');
+      path.style.stroke = '#ABE67E'; // Green for measurements (PR #288)
+      path.setAttribute('stroke', '#ABE67E');
     }
   });
 }
 
 // Style capture markers to match active measurement color (without breaking click functionality)
 var captureMarkerObserver = new MutationObserver(function(mutations) {
-  forceBlueCaptureMarkers();
+  forceGreenCaptureMarkers(); // Updated to green theme (PR #288)
 });
 
 // Start observing the map container for changes
@@ -2168,7 +2175,7 @@ captureMarkerObserver.observe(map.getContainer(), {
 // Also check periodically when measurement is active
 setInterval(function() {
   if (measure && measure._measuring) {
-    forceBlueCaptureMarkers();
+    forceGreenCaptureMarkers(); // Updated to green theme (PR #288)
   }
 }, 100);
 
@@ -2177,22 +2184,22 @@ map.on('layeradd', function(e) {
     var icon = e.layer._icon;
     // Check if this is a capture marker by looking for the large divIcon
     if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
-      // Force blue color on any SVG elements inside
+      // Force green color on any SVG elements inside (PR #288 theme)
       setTimeout(function() {
         var circles = icon.querySelectorAll('circle, path');
         circles.forEach(function(circle) {
-          circle.setAttribute('stroke', '#0066CC');
+          circle.setAttribute('stroke', '#ABE67E');
           circle.setAttribute('fill', 'none');
-          circle.style.stroke = '#0066CC';
+          circle.style.stroke = '#ABE67E';
           circle.style.fill = 'none';
         });
         
-        // Also add a blue dot if no SVG exists
+        // Also add a green dot if no SVG exists (PR #288 theme)
         var existingDot = icon.querySelector('.measure-capture-dot');
         if (!existingDot && circles.length === 0) {
           var dot = document.createElement('div');
           dot.className = 'measure-capture-dot';
-          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #0066CC; box-shadow: 0 0 0 1px white, 0 0 0 3px #0066CC; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
+          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #ABE67E; box-shadow: 0 0 0 1px white, 0 0 0 3px #ABE67E; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
           icon.appendChild(dot);
         }
       }, 50);
