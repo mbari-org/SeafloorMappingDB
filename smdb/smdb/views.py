@@ -716,9 +716,9 @@ class MissionExportAPIView(View):
             else:
                 return HttpResponse('Invalid format. Use csv or excel.', status=400)
                 
-        except Exception as e:
-            logging.error(f"Error in MissionExportAPIView: {str(e)}")
-            return HttpResponse(f'Error: {str(e)}', status=500)
+        except Exception:
+            logging.exception("Error in MissionExportAPIView")
+            return HttpResponse('An internal error occurred. Please try again later.', status=500)
     
     def export_csv(self, missions):
         response = HttpResponse(content_type='text/csv')
