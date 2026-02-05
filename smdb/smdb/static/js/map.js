@@ -1640,6 +1640,31 @@ var controlLayers = L.control
   .addTo(map);
 /////////////////////////////////////////////////////////////////////////
 
+// Track basemap changes and add CSS class to map container
+// This allows CSS to style track lines differently per basemap (rust for GMRT, orange for Google Hybrid)
+function updateBasemapClass(layerName) {
+  var mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  
+  // Remove all basemap classes
+  mapContainer.classList.remove('smdb-baselayer-gmrt', 'smdb-baselayer-google-hybrid');
+  
+  // Add the appropriate class based on active basemap
+  if (layerName && layerName.toLowerCase().includes('gmrt')) {
+    mapContainer.classList.add('smdb-baselayer-gmrt');
+  } else if (layerName && layerName.toLowerCase().includes('google')) {
+    mapContainer.classList.add('smdb-baselayer-google-hybrid');
+  }
+}
+
+// Set initial basemap class (GMRT is default)
+updateBasemapClass('GMRT (Hi-Res)');
+
+// Update basemap class when user changes basemap
+map.on('baselayerchange', function(e) {
+  updateBasemapClass(e.name);
+});
+
 // Add Measure Control on Map
 var measure = L.control
   .measure({
