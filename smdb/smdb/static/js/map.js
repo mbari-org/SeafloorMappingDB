@@ -1647,6 +1647,30 @@ var measure = L.control
   })
   .addTo(map);
 
+// Prevent #close from being added to URL when closing measure control
+// Use capture phase to intercept before the default action
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  // Check if click is on a link with #close or within measure control
+  if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
+    e.preventDefault();
+    return false;
+  }
+  // Also check parent elements
+  var parent = target.closest('a[href="#close"]');
+  if (parent) {
+    e.preventDefault();
+    return false;
+  }
+}, true);
+
+// Also watch for hash changes and remove #close if it appears
+window.addEventListener('hashchange', function() {
+  if (window.location.hash === '#close') {
+    history.replaceState(null, null, window.location.pathname + window.location.search);
+  }
+});
+
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
