@@ -26,9 +26,9 @@ django-cors-headers==3.13.0 # https://github.com/adamchainz/django-cors-headers
 
 # smdb
 # ------------------------------------------------------------------------------
-# NOTE: Docker build uses osgeo/gdal base image with Python 3.8. The following
-# scientific packages are pinned to versions that have wheels for Python 3.8.
-# Do not upgrade past these without upgrading the Docker base image Python version:
+# NOTE: Docker build uses osgeo/gdal:ubuntu-small-3.6.2 base image (Ubuntu 22.04)
+# with Python 3.10. The following scientific packages are pinned to stable versions
+# that were tested to work correctly with the Docker build (added Feb 2026):
 #   netCDF4, numpy, pandas, dask, xarray
 django-extensions==3.2.1  # https://github.com/django-extensions/django-extensions
 graphene-django==3.0.0 # https://docs.graphene-python.org/projects/django/en/latest/installation/
