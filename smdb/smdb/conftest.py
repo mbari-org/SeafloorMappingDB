@@ -26,14 +26,6 @@ def django_db_setup(django_db_setup, django_db_blocker):
         call_command("loaddata", "missions_notes_5.json")
 
 
-@pytest.fixture
-def missions_notes_5():
-    """Marker fixture: DB is preloaded with missions_notes_5.json via session-scoped django_db_setup.
-    Request this in tests that need the 5-mission fixture data (e.g. func_tests/test_ui.py).
-    """
-    return None
-
-
 @pytest.fixture(autouse=True)
 def media_storage(settings, tmpdir):
     settings.MEDIA_ROOT = tmpdir.strpath
