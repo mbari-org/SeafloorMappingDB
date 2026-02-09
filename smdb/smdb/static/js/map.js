@@ -1277,8 +1277,23 @@ var hasMissions = missions && missions.features && missions.features.length > 0;
 
 // Add SMDB Missions to Base Map
 let feature = L.geoJSON(missions, {
-  style: function () { },
+  style: function () {
+    return {
+      color: 'rgb(139, 64, 0)',  // rust - GMRT default
+      weight: 3.5,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+      fill: false
+    };
+  },
   hover: function () { },
+  onEachFeature: function(feature, layer) {
+    // Add classes to track line paths so CSS and JS can identify them
+    if (layer._path) {
+      layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
+    }
+  }
 })
   // Popup Thumbnail Images of Missions
   .bindPopup(
@@ -1633,6 +1648,30 @@ var controlLayers = L.control
   .groupedLayers(baseLayers, groupedOverlays, options)
   .addTo(map);
 /////////////////////////////////////////////////////////////////////////
+
+// Track basemap changes for CSS styling (rust for GMRT, orange for Google Hybrid)
+function updateBasemapClass(layerName) {
+  var mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  
+  // Remove all basemap classes
+  mapContainer.classList.remove('smdb-baselayer-gmrt', 'smdb-baselayer-google-hybrid');
+  
+  // Add the appropriate class based on active basemap
+  if (layerName && layerName.toLowerCase().includes('gmrt')) {
+    mapContainer.classList.add('smdb-baselayer-gmrt');
+  } else if (layerName && layerName.toLowerCase().includes('google')) {
+    mapContainer.classList.add('smdb-baselayer-google-hybrid');
+  }
+}
+
+// Set initial basemap class (GMRT is default)
+updateBasemapClass('GMRT (Hi-Res)');
+
+// Update basemap class when user changes basemap
+map.on('baselayerchange', function(e) {
+  updateBasemapClass(e.name);
+});
 
 // Add Measure Control on Map
 var measure = L.control
@@ -2079,6 +2118,11 @@ function forceBlueCaptureMarkers() {
   
   // Also style any measurement paths that are being drawn
   document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Skip track lines - they should remain rust/orange based on basemap
+    if (path.classList.contains('smdb-track-line')) {
+      return;
+    }
+    
     // Check if this is part of a measurement (not a track)
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
