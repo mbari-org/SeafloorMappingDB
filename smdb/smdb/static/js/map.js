@@ -2123,6 +2123,11 @@ function forceBlueCaptureMarkers() {
       return;
     }
     
+    // Skip paths that user has recolored via the measure popup color picker
+    if (path.closest('.smdb-measure-user-color')) {
+      return;
+    }
+    
     // Check if this is part of a measurement (not a track)
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
@@ -2317,22 +2322,32 @@ function applyColorToLayer(layer, color) {
   
   // Update layer style
   if (layer.setStyle) {
-    // For paths (lines/polygons)
     layer.setStyle({
       color: rgbString,
       fillColor: layer.options.fillColor || rgbString,
-      fillOpacity: layer.options.fillOpacity || 0.2
+      fillOpacity: layer.options.fillOpacity !== undefined ? layer.options.fillOpacity : 0.2
     });
-  } else if (layer._path) {
-    // Direct DOM manipulation as fallback
-    layer._path.setAttribute('stroke', rgbString);
+  }
+  
+  // Our CSS uses !important on measure result paths, so we must set inline style with
+  // !important for the user's color to win. Also mark layer so forceBlueCaptureMarkers skips it.
+  if (layer._path) {
+    layer._path.style.setProperty('stroke', rgbString, 'important');
+    layer._path.style.setProperty('stroke-width', '3.5', 'important');
     if (layer._path.getAttribute('fill') !== 'none') {
-      layer._path.setAttribute('fill', rgbString);
+      layer._path.style.setProperty('fill', rgbString, 'important');
+      layer._path.style.setProperty('fill-opacity', '0.2', 'important');
+    } else {
+      layer._path.style.setProperty('fill', 'none', 'important');
     }
-  } else if (layer._icon) {
-    // For markers/points
-    if (layer._icon.style) {
-      layer._icon.style.backgroundColor = rgbString;
+  }
+  if (layer._container) {
+    layer._container.classList.add('smdb-measure-user-color');
+  }
+  if (layer._path && layer._path.closest) {
+    var container = layer._path.closest('.leaflet-overlay-pane, .leaflet-pane');
+    if (container) {
+      container.classList.add('smdb-measure-user-color');
     }
   }
   
