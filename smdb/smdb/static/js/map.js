@@ -1289,8 +1289,10 @@ let feature = L.geoJSON(missions, {
   },
   hover: function () { },
   onEachFeature: function(feature, layer) {
-    // Mark this layer as a track so we can identify it when path is created
-    layer._isTrackLine = true;
+    // Add classes to track line paths so CSS and JS can identify them
+    if (layer._path) {
+      layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
+    }
   }
 })
   // Popup Thumbnail Images of Missions
@@ -1647,8 +1649,7 @@ var controlLayers = L.control
   .addTo(map);
 /////////////////////////////////////////////////////////////////////////
 
-// Track basemap changes and add CSS class to map container
-// This allows CSS to style track lines differently per basemap (rust for GMRT, orange for Google Hybrid)
+// Track basemap changes for CSS styling (rust for GMRT, orange for Google Hybrid)
 function updateBasemapClass(layerName) {
   var mapContainer = document.getElementById('map');
   if (!mapContainer) return;
@@ -1708,61 +1709,6 @@ window.addEventListener('hashchange', function() {
     history.replaceState(null, null, window.location.pathname + window.location.search);
   }
 });
-
-// Predictive closing line: dotted green segment from last vertex back to first (after 3rd click)
-// so the user sees how the polygon would close; updates on each new vertex until Finish/Cancel.
-var measurePredictiveClosingLine = null;
-var MEASURE_PREDICTIVE_OPTIONS = {
-  color: '#ABE67E',
-  weight: 2,
-  opacity: 0.9,
-  dashArray: '6, 8',
-  className: 'smdb-measure-predictive-closing',
-  interactive: false
-};
-function updateMeasurePredictiveClosingLine() {
-  if (!measure || !measure._layer) return;
-  var latlngs = measure._latlngs;
-  if (latlngs && latlngs.length >= 3) {
-    var first = latlngs[0];
-    var last = latlngs[latlngs.length - 1];
-    if (!measurePredictiveClosingLine) {
-      measurePredictiveClosingLine = L.polyline([last, first], MEASURE_PREDICTIVE_OPTIONS).addTo(measure._layer);
-    } else {
-      measurePredictiveClosingLine.setLatLngs([last, first]);
-    }
-    /* Ensure dotted closing line draws above the plugin's solid area stroke, then vertices on top */
-    measurePredictiveClosingLine.bringToFront();
-    if (measure._measureBoundary) measure._measureBoundary.bringToFront();
-    if (measure._measureVertexes) measure._measureVertexes.bringToFront();
-  } else {
-    if (measurePredictiveClosingLine) {
-      measure._layer.removeLayer(measurePredictiveClosingLine);
-      measurePredictiveClosingLine = null;
-    }
-  }
-}
-function removeMeasurePredictiveClosingLine() {
-  if (measurePredictiveClosingLine && measure && measure._layer) {
-    measure._layer.removeLayer(measurePredictiveClosingLine);
-    measurePredictiveClosingLine = null;
-  }
-}
-var _origHandleMeasureClick = measure._handleMeasureClick.bind(measure);
-measure._handleMeasureClick = function(e) {
-  _origHandleMeasureClick(e);
-  updateMeasurePredictiveClosingLine();
-};
-var _origFinishMeasure = measure._finishMeasure.bind(measure);
-measure._finishMeasure = function() {
-  removeMeasurePredictiveClosingLine();
-  _origFinishMeasure();
-};
-var _origClearMeasure = measure._clearMeasure.bind(measure);
-measure._clearMeasure = function() {
-  removeMeasurePredictiveClosingLine();
-  _origClearMeasure();
-};
 
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
@@ -2146,61 +2092,58 @@ L.Control.Measure.include({
   },
 });
 
-// Function to force green color on capture markers and measurement paths (PR #288 green theme)
-function forceGreenCaptureMarkers() {
+// Function to force blue color on capture markers and measurement paths
+function forceBlueCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
-  var container = document.getElementById('map');
-  if (!container) return;
-  container.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
+  document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
-      // This is likely a capture marker - force green with !important so plugin cannot overwrite
+      // This is likely a capture marker - force blue
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        element.setAttribute('stroke', '#ABE67E');
-        element.setAttribute('fill', '#ABE67E');
-        element.setAttribute('fill-opacity', '0.5');
-        element.style.setProperty('stroke', '#ABE67E', 'important');
-        element.style.setProperty('fill', '#ABE67E', 'important');
-        element.style.setProperty('fill-opacity', '0.5', 'important');
-        element.style.setProperty('stroke-width', '2', 'important');
-        if (parent) {
-          parent.classList.add('smdb-capture-marker');
-          parent.classList.add('leaflet-measure-capture');
-        }
+        element.setAttribute('stroke', '#0066CC');
+        element.setAttribute('fill', 'none');
+        element.style.stroke = '#0066CC';
+        element.style.fill = 'none';
+        element.style.strokeWidth = '2';
+        // Add class to parent for CSS targeting
+        parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        element.classList.add('smdb-measurement-path');
+        element.setAttribute('stroke', '#0066CC');
+        element.style.stroke = '#0066CC';
+        // Add measurement class to path
         element.classList.add('leaflet-measure-path');
       }
     }
   });
   
-  // Also style measurement paths, but EXCLUDE track lines and user-colored paths
-  var mapEl = document.getElementById('map');
-  if (!mapEl) return;
-  mapEl.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
-    // Skip paths that user has recolored via the measure popup color picker
-    if (path.closest('.smdb-measure-user-color')) return;
-    
-    // EXCLUDE track lines - they should keep their rust/orange color
+  // Also style any measurement paths that are being drawn
+  document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Skip track lines - they should remain rust/orange based on basemap
     if (path.classList.contains('smdb-track-line')) {
-      return; // Skip track lines completely
+      return;
     }
     
-    // Check if this is part of a measurement
+    // Check if this is part of a measurement (not a track)
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
-                       path.closest('.leaflet-measure-layer');
+                       path.closest('.leaflet-measure') !== null ||
+                       (path._leaflet_id && map.hasLayer && map.hasLayer(path));
     
-    if (isMeasurement) {
+    if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
+                         !path.classList.contains('leaflet-measure-resultarea') &&
+                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
+                         path.style.stroke === 'rgb(0, 102, 204)' ||
+                         path.style.stroke === '#0066CC')) {
       path.classList.add('leaflet-measure-path');
-      path.classList.add('smdb-measurement-path');
+      path.style.stroke = '#0066CC';
+      path.setAttribute('stroke', '#0066CC');
     }
   });
 }
 
 // Style capture markers to match active measurement color (without breaking click functionality)
 var captureMarkerObserver = new MutationObserver(function(mutations) {
-  forceGreenCaptureMarkers(); // Updated to green theme (PR #288)
+  forceBlueCaptureMarkers();
 });
 
 // Start observing the map container for changes
@@ -2214,36 +2157,31 @@ captureMarkerObserver.observe(map.getContainer(), {
 // Also check periodically when measurement is active
 setInterval(function() {
   if (measure && measure._measuring) {
-    forceGreenCaptureMarkers(); // Updated to green theme (PR #288)
+    forceBlueCaptureMarkers();
   }
 }, 100);
 
 map.on('layeradd', function(e) {
-  // Add classes to track line paths when they're created
-  if (e.layer && e.layer._isTrackLine && e.layer._path) {
-    e.layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
-  }
-  
   if (e.layer && e.layer._icon) {
     var icon = e.layer._icon;
     // Check if this is a capture marker by looking for the large divIcon
     if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
-      // Force green color on any SVG elements inside (PR #288 theme)
+      // Force blue color on any SVG elements inside
       setTimeout(function() {
         var circles = icon.querySelectorAll('circle, path');
         circles.forEach(function(circle) {
-          circle.setAttribute('stroke', '#ABE67E');
+          circle.setAttribute('stroke', '#0066CC');
           circle.setAttribute('fill', 'none');
-          circle.style.stroke = '#ABE67E';
+          circle.style.stroke = '#0066CC';
           circle.style.fill = 'none';
         });
         
-        // Also add a green dot if no SVG exists (PR #288 theme)
+        // Also add a blue dot if no SVG exists
         var existingDot = icon.querySelector('.measure-capture-dot');
         if (!existingDot && circles.length === 0) {
           var dot = document.createElement('div');
           dot.className = 'measure-capture-dot';
-          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #ABE67E; box-shadow: 0 0 0 1px white, 0 0 0 3px #ABE67E; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
+          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #0066CC; box-shadow: 0 0 0 1px white, 0 0 0 3px #0066CC; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
           icon.appendChild(dot);
         }
       }, 50);
@@ -2379,36 +2317,30 @@ function applyColorToLayer(layer, color) {
   
   // Update layer style
   if (layer.setStyle) {
+    // For paths (lines/polygons)
     layer.setStyle({
       color: rgbString,
       fillColor: layer.options.fillColor || rgbString,
-      fillOpacity: layer.options.fillOpacity !== undefined ? layer.options.fillOpacity : 0.2
+      fillOpacity: layer.options.fillOpacity || 0.2
     });
-  }
-  
-  // Our CSS uses !important on measure result paths, so we must set inline style with
-  // !important for the user's color to win. Also mark layer so forceGreenCaptureMarkers skips it.
-  if (layer._path) {
-    layer._path.style.setProperty('stroke', rgbString, 'important');
-    layer._path.style.setProperty('stroke-width', '3.5', 'important');
+  } else if (layer._path) {
+    // Direct DOM manipulation as fallback
+    layer._path.setAttribute('stroke', rgbString);
     if (layer._path.getAttribute('fill') !== 'none') {
-      layer._path.style.setProperty('fill', rgbString, 'important');
-      layer._path.style.setProperty('fill-opacity', '0.2', 'important');
-    } else {
-      layer._path.style.setProperty('fill', 'none', 'important');
+      layer._path.setAttribute('fill', rgbString);
     }
-  }
-  if (layer._container) {
-    layer._container.classList.add('smdb-measure-user-color');
-  }
-  if (layer._icon) {
-    layer._icon.style.setProperty('background-color', rgbString, 'important');
-    if (layer._container) layer._container.classList.add('smdb-measure-user-color');
+  } else if (layer._icon) {
+    // For markers/points
+    if (layer._icon.style) {
+      layer._icon.style.backgroundColor = rgbString;
+    }
   }
   
   // Store color in layer options for persistence
   layer.options.color = rgbString;
-  layer.options.fillColor = rgbString;
+  if (layer.options.fillColor) {
+    layer.options.fillColor = rgbString;
+  }
 }
 
 // Try and determine the active overlay - Currently not working.
