@@ -828,3 +828,8 @@ svg.svg-inline--fa,
 .center {
   text-align: center;
 }
+
+/* Draw Square cursor marker - hide the dot, keep only crosshair cursor */
+.leaflet-mouse-marker {
+  display: none !important; /* Remove confusing cursor dot */
+}
