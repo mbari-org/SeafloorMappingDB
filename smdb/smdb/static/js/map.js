@@ -1717,8 +1717,8 @@ map.addLayer(drawnItems);
 // Create rectangle drawing handler (without toolbar UI)
 var rectangleDrawer = new L.Draw.Rectangle(map, {
   shapeOptions: {
-    color: "#3388ff",
-    fillColor: "#3388ff",
+    color: "#FFFF00", // yellow for drawing square
+    fillColor: "#FFFF00", // yellow fill
     fillOpacity: 0.2,
     weight: 2,
   },
