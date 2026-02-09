@@ -83,6 +83,16 @@ Load some sample data (5 Missions) with:
 docker-compose run --rm django scripts/load.py -v --limit 5
 ```
 
+#### Running tests
+
+From the repo root (with `COMPOSE_FILE` set to e.g. `$SMDB_HOME/smdb/local.yml`):
+
+```
+docker-compose run --rm django pytest smdb/smdb/tests/test_views.py -v
+```
+
+Ensure PostgreSQL is running (e.g. `docker-compose up -d`) before running tests, since the django container waits for it. Use the same compose file you use to start the stack (e.g. `local.yml` or `production.yml`).
+
 ### Work on the code with VS Code
 
 1. Perform the [First time](https://github.com/mbari-org/SeafloorMappingDB#first-time)
