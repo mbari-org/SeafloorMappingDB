@@ -166,7 +166,7 @@ class MissionFilter(FilterSet):
             queryset=queryset,
             request=getattr(self, "request", None),
         )
-        qs = FilterSet.filter_queryset(base_filterset, queryset)
+        qs = base_filterset.filter_queryset(queryset)
         
         # Apply vehicle_name filter manually to handle None/empty values (PR5)
         if vehicle_name_values:
