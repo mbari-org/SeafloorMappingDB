@@ -160,13 +160,15 @@ class MissionFilter(FilterSet):
             if key not in ['name', 'expedition__name', 'vehicle_name']:
                 filtered_data.setlist(key, value_list)
         
-        # Use a separate FilterSet instance with filtered data to avoid mutating self.data
-        base_filterset = type(self)(
-            data=filtered_data,
-            queryset=queryset,
-            request=getattr(self, "request", None),
-        )
-        qs = FilterSet.filter_queryset(base_filterset, queryset)
+        # Temporarily replace data to exclude name, expedition__name, and vehicle_name fields from base filtering
+        original_data = self.data
+        self.data = filtered_data
+        
+        # Get the base filtered queryset with AND logic for other fields
+        qs = super().filter_queryset(queryset)
+        
+        # Restore original data
+        self.data = original_data
         
         # Apply vehicle_name filter manually to handle None/empty values (PR5)
         if vehicle_name_values:

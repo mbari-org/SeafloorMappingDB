@@ -527,17 +527,22 @@ class MissionSelectAPIView(View):
             missions = Mission.objects.all()
             
             # Apply spatial filter (missions that intersect with the rectangle)
-            # Check both grid_bounds and nav_track
+            # Include grid_bounds, nav_track, or start_point so missions with only a start point are included
             missions = missions.filter(
-                Q(grid_bounds__intersects=search_geom) | Q(nav_track__intersects=search_geom)
+                Q(grid_bounds__intersects=search_geom)
+                | Q(nav_track__intersects=search_geom)
+                | Q(start_point__within=search_geom)
             ).distinct()
             
-            # Apply other filters if present
-            filter_type = filter_params.get('filter_type', 'mission')
+            # Apply other filters if present (only when request has those filter keys)
+            filter_type = filter_params.get('filter_type', '')
+            mission_filter_keys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            has_mission_filters = any(key in filter_params for key in mission_filter_keys)
             
-            # Apply mission filter
-            if filter_type == 'mission' or (filter_type == '' and any(key in filter_params for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name'])):
-                mission_filter = MissionFilter(filter_params, queryset=missions)
+            # Apply mission filter only when we have mission filter params (skip when only bbox/tmin/tmax)
+            if has_mission_filters and (filter_type == 'mission' or filter_type == ''):
+                # Pass request.GET so FilterSet form gets a proper QueryDict and validates
+                mission_filter = MissionFilter(request.GET, queryset=missions)
                 missions = mission_filter.qs
             
             # Apply expedition filter
@@ -657,16 +662,19 @@ class MissionExportAPIView(View):
             # Start with base queryset
             missions = Mission.objects.all()
             
-            # Apply spatial filter
+            # Apply spatial filter (same as MissionSelectAPIView: bounds, track, or start_point)
             missions = missions.filter(
-                Q(grid_bounds__intersects=search_geom) | Q(nav_track__intersects=search_geom)
+                Q(grid_bounds__intersects=search_geom)
+                | Q(nav_track__intersects=search_geom)
+                | Q(start_point__within=search_geom)
             ).distinct()
             
             # Apply other filters (same logic as MissionSelectAPIView)
-            filter_type = filter_params.get('filter_type', 'mission')
-            
-            if filter_type == 'mission' or (filter_type == '' and any(key in filter_params for key in ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name'])):
-                mission_filter = MissionFilter(filter_params, queryset=missions)
+            filter_type = filter_params.get('filter_type', '')
+            mission_filter_keys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            has_mission_filters = any(key in filter_params for key in mission_filter_keys)
+            if has_mission_filters and (filter_type == 'mission' or filter_type == ''):
+                mission_filter = MissionFilter(request.GET, queryset=missions)
                 missions = mission_filter.qs
             elif filter_type == 'expedition' and filter_params.get('name'):
                 expedition_filter = ExpeditionFilter(filter_params, queryset=Expedition.objects.all())
@@ -708,9 +716,9 @@ class MissionExportAPIView(View):
             else:
                 return HttpResponse('Invalid format. Use csv or excel.', status=400)
                 
-        except Exception as e:
-            logging.error(f"Error in MissionExportAPIView: {str(e)}")
-            return HttpResponse(f'Error: {str(e)}', status=500)
+        except Exception:
+            logging.exception("Error in MissionExportAPIView")
+            return HttpResponse('An internal error occurred. Please try again later.', status=500)
     
     def export_csv(self, missions):
         response = HttpResponse(content_type='text/csv')
