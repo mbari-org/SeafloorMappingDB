@@ -2098,18 +2098,18 @@ function forceBlueCaptureMarkers() {
   document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
-      // This is likely a capture marker - force blue
+      // This is likely a capture marker - force green (matching leaflet-measure theme)
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        element.setAttribute('stroke', '#0066CC');
+        element.setAttribute('stroke', '#ABE67E');
         element.setAttribute('fill', 'none');
-        element.style.stroke = '#0066CC';
+        element.style.stroke = '#ABE67E';
         element.style.fill = 'none';
         element.style.strokeWidth = '2';
         // Add class to parent for CSS targeting
         parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        element.setAttribute('stroke', '#0066CC');
-        element.style.stroke = '#0066CC';
+        element.setAttribute('stroke', '#ABE67E');
+        element.style.stroke = '#ABE67E';
         // Add measurement class to path
         element.classList.add('leaflet-measure-path');
       }
@@ -2171,22 +2171,22 @@ map.on('layeradd', function(e) {
     var icon = e.layer._icon;
     // Check if this is a capture marker by looking for the large divIcon
     if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
-      // Force blue color on any SVG elements inside
+      // Force green color (matching leaflet-measure theme) on any SVG elements inside
       setTimeout(function() {
         var circles = icon.querySelectorAll('circle, path');
         circles.forEach(function(circle) {
-          circle.setAttribute('stroke', '#0066CC');
+          circle.setAttribute('stroke', '#ABE67E');
           circle.setAttribute('fill', 'none');
-          circle.style.stroke = '#0066CC';
+          circle.style.stroke = '#ABE67E';
           circle.style.fill = 'none';
         });
         
-        // Also add a blue dot if no SVG exists
+        // Also add a green dot if no SVG exists
         var existingDot = icon.querySelector('.measure-capture-dot');
         if (!existingDot && circles.length === 0) {
           var dot = document.createElement('div');
           dot.className = 'measure-capture-dot';
-          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #0066CC; box-shadow: 0 0 0 1px white, 0 0 0 3px #0066CC; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
+          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #ABE67E; box-shadow: 0 0 0 1px white, 0 0 0 3px #ABE67E; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
           icon.appendChild(dot);
         }
       }, 50);
