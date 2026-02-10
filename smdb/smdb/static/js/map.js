@@ -1688,27 +1688,32 @@ var measure = L.control
 
 // Prevent #close from being added to URL when closing measure control
 // Use capture phase to intercept before the default action
-document.addEventListener('click', function(e) {
-  var target = e.target;
-  // Check if click is on a link with #close or within measure control
-  if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
-    e.preventDefault();
-    return false;
-  }
-  // Also check parent elements
-  var parent = target.closest('a[href="#close"]');
-  if (parent) {
-    e.preventDefault();
-    return false;
-  }
-}, true);
+// Guard flag prevents duplicate listeners if script loads multiple times
+if (!window.__smdbMeasureListenersAdded) {
+  document.addEventListener('click', function(e) {
+    var target = e.target;
+    // Check if click is on a link with #close or within measure control
+    if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
+      e.preventDefault();
+      return false;
+    }
+    // Also check parent elements
+    var parent = target.closest('a[href="#close"]');
+    if (parent) {
+      e.preventDefault();
+      return false;
+    }
+  }, true);
 
-// Also watch for hash changes and remove #close if it appears
-window.addEventListener('hashchange', function() {
-  if (window.location.hash === '#close') {
-    history.replaceState(null, null, window.location.pathname + window.location.search);
-  }
-});
+  // Also watch for hash changes and remove #close if it appears
+  window.addEventListener('hashchange', function() {
+    if (window.location.hash === '#close') {
+      history.replaceState(null, null, window.location.pathname + window.location.search);
+    }
+  });
+
+  window.__smdbMeasureListenersAdded = true;
+}
 
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
@@ -2094,7 +2099,7 @@ L.Control.Measure.include({
 });
 
 // Function to force blue color on capture markers and measurement paths
-function forceBlueCaptureMarkers() {
+function forceGreenCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
   document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
@@ -2137,9 +2142,9 @@ function forceBlueCaptureMarkers() {
     
     if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
                          !path.classList.contains('leaflet-measure-resultarea') &&
-                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
-                         path.style.stroke === 'rgb(0, 102, 204)' ||
-                         path.style.stroke === '#0066CC')) {
+                         (path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
+                          path.style.stroke === 'rgb(0, 102, 204)' ||
+                          path.style.stroke === '#0066CC'))) {
       path.classList.add('leaflet-measure-path');
       path.style.stroke = '#ABE67E';  // Green - matching leaflet-measure theme
       path.setAttribute('stroke', '#ABE67E');
@@ -2149,7 +2154,7 @@ function forceBlueCaptureMarkers() {
 
 // Style capture markers to match active measurement color (without breaking click functionality)
 var captureMarkerObserver = new MutationObserver(function(mutations) {
-  forceBlueCaptureMarkers();
+  forceGreenCaptureMarkers();
 });
 
 // Start observing the map container for changes
@@ -2163,7 +2168,7 @@ captureMarkerObserver.observe(map.getContainer(), {
 // Also check periodically when measurement is active
 setInterval(function() {
   if (measure && measure._measuring) {
-    forceBlueCaptureMarkers();
+    forceGreenCaptureMarkers();
   }
 }, 100);
 
@@ -2331,7 +2336,7 @@ function applyColorToLayer(layer, color) {
   }
   
   // Our CSS uses !important on measure result paths, so we must set inline style with
-  // !important for the user's color to win. Also mark layer so forceBlueCaptureMarkers skips it.
+  // !important for the user's color to win. Also mark layer so forceGreenCaptureMarkers skips it.
   if (layer._path) {
     layer._path.style.setProperty('stroke', rgbString, 'important');
     layer._path.style.setProperty('stroke-width', '3.5', 'important');
