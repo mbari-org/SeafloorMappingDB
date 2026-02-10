@@ -2140,8 +2140,8 @@ function forceBlueCaptureMarkers() {
                          path.style.stroke === 'rgb(0, 102, 204)' ||
                          path.style.stroke === '#0066CC')) {
       path.classList.add('leaflet-measure-path');
-      path.style.stroke = '#0066CC';
-      path.setAttribute('stroke', '#0066CC');
+      path.style.stroke = '#ABE67E';  // Green - matching leaflet-measure theme
+      path.setAttribute('stroke', '#ABE67E');
     }
   });
 }
