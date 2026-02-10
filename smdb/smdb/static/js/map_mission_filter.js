@@ -112,7 +112,7 @@ if (hasMissions && missions.features) {
       mission.geometry.coordinates[0][0]
     );
   } catch (err) {
-    console.log(mission.properties.slug + ": " + err.message);
+    // console.log(mission.properties.slug + ": " + err.message);
     continue;
   }
   var marker = L.marker(latlng, {

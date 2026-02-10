@@ -33,6 +33,8 @@
   {% compress css %}
   {#  These files store project-specific CSS  #}
   <link href="{% static 'css/project.css' %}" rel="stylesheet">
+  {#  Custom leaflet-measure overrides - load after project.css so measure (green) wins over baselayer track colors. On map page (home) it is also linked after CDN leaflet-measure.  #}
+  <link href="{% static 'css/leaflet-measure.css' %}" rel="stylesheet">
   <link href="{% static 'css/map.css' %}" rel="stylesheet">
   <link href="{% static 'css/navbar-nav.css' %}" rel="stylesheet">
    <link href="{% static 'css/filters.css' %}" rel="stylesheet">

@@ -1277,8 +1277,23 @@ var hasMissions = missions && missions.features && missions.features.length > 0;
 
 // Add SMDB Missions to Base Map
 let feature = L.geoJSON(missions, {
-  style: function () { },
+  style: function () {
+    return {
+      color: 'rgb(139, 64, 0)',  // rust - GMRT default
+      weight: 3.5,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+      fill: false
+    };
+  },
   hover: function () { },
+  onEachFeature: function(feature, layer) {
+    // Add classes to track line paths so CSS and JS can identify them
+    if (layer._path) {
+      layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
+    }
+  }
 })
   // Popup Thumbnail Images of Missions
   .bindPopup(
@@ -1634,6 +1649,30 @@ var controlLayers = L.control
   .addTo(map);
 /////////////////////////////////////////////////////////////////////////
 
+// Track basemap changes for CSS styling (rust for GMRT, orange for Google Hybrid)
+function updateBasemapClass(layerName) {
+  var mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  
+  // Remove all basemap classes
+  mapContainer.classList.remove('smdb-baselayer-gmrt', 'smdb-baselayer-google-hybrid');
+  
+  // Add the appropriate class based on active basemap
+  if (layerName && layerName.toLowerCase().includes('gmrt')) {
+    mapContainer.classList.add('smdb-baselayer-gmrt');
+  } else if (layerName && layerName.toLowerCase().includes('google')) {
+    mapContainer.classList.add('smdb-baselayer-google-hybrid');
+  }
+}
+
+// Set initial basemap class (GMRT is default)
+updateBasemapClass('GMRT (Hi-Res)');
+
+// Update basemap class when user changes basemap
+map.on('baselayerchange', function(e) {
+  updateBasemapClass(e.name);
+});
+
 // Add Measure Control on Map
 var measure = L.control
   .measure({
@@ -1641,11 +1680,40 @@ var measure = L.control
     secondaryLengthUnit: "feet",
     primaryAreaUnit: "sqmeters",
     secondaryAreaUnit: "sqmiles",
-    activeColor: "#0066CC", // darker blue for active measurement (while drawing)
-    completedColor: "#0000FF", // lighter blue for completed measurement (matches GMRT map)
+    activeColor: "#ABE67E", // green for active measurement (PR #288 theme)
+    completedColor: "#ABE67E", // green for completed measurement (PR #288 theme)
     captureZIndex: 5000,
   })
   .addTo(map);
+
+// Prevent #close from being added to URL when closing measure control
+// Use capture phase to intercept before the default action
+// Guard flag prevents duplicate listeners if script loads multiple times
+if (!window.__smdbMeasureListenersAdded) {
+  document.addEventListener('click', function(e) {
+    var target = e.target;
+    // Check if click is on a link with #close or within measure control
+    if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
+      e.preventDefault();
+      return false;
+    }
+    // Also check parent elements
+    var parent = target.closest('a[href="#close"]');
+    if (parent) {
+      e.preventDefault();
+      return false;
+    }
+  }, true);
+
+  // Also watch for hash changes and remove #close if it appears
+  window.addEventListener('hashchange', function() {
+    if (window.location.hash === '#close') {
+      history.replaceState(null, null, window.location.pathname + window.location.search);
+    }
+  });
+
+  window.__smdbMeasureListenersAdded = true;
+}
 
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
@@ -1654,10 +1722,11 @@ map.addLayer(drawnItems);
 // Create rectangle drawing handler (without toolbar UI)
 var rectangleDrawer = new L.Draw.Rectangle(map, {
   shapeOptions: {
-    color: "#3388ff",
-    fillColor: "#3388ff",
+    color: "#FFFF00", // very bright, pure yellow border
+    opacity: 1.0, // fully opaque border
+    fillColor: "#FFFFCC", // muted, pale yellow fill
     fillOpacity: 0.2,
-    weight: 2,
+    weight: 4,
   },
 });
 
@@ -2030,23 +2099,23 @@ L.Control.Measure.include({
 });
 
 // Function to force blue color on capture markers and measurement paths
-function forceBlueCaptureMarkers() {
+function forceGreenCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
   document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
     if (parent && parent.style && parent.style.width && parseFloat(parent.style.width) > 100) {
-      // This is likely a capture marker - force blue
+      // This is likely a capture marker - force green (matching leaflet-measure theme)
       if (element.tagName === 'circle' || element.tagName.toLowerCase() === 'circle') {
-        element.setAttribute('stroke', '#0066CC');
+        element.setAttribute('stroke', '#ABE67E');
         element.setAttribute('fill', 'none');
-        element.style.stroke = '#0066CC';
+        element.style.stroke = '#ABE67E';
         element.style.fill = 'none';
         element.style.strokeWidth = '2';
         // Add class to parent for CSS targeting
         parent.classList.add('leaflet-measure-capture');
       } else if (element.tagName === 'path' || element.tagName.toLowerCase() === 'path') {
-        element.setAttribute('stroke', '#0066CC');
-        element.style.stroke = '#0066CC';
+        element.setAttribute('stroke', '#ABE67E');
+        element.style.stroke = '#ABE67E';
         // Add measurement class to path
         element.classList.add('leaflet-measure-path');
       }
@@ -2055,6 +2124,16 @@ function forceBlueCaptureMarkers() {
   
   // Also style any measurement paths that are being drawn
   document.querySelectorAll('path.leaflet-interactive').forEach(function(path) {
+    // Skip track lines - they should remain rust/orange based on basemap
+    if (path.classList.contains('smdb-track-line')) {
+      return;
+    }
+    
+    // Skip paths that user has recolored via the measure popup color picker
+    if (path.closest('.smdb-measure-user-color')) {
+      return;
+    }
+    
     // Check if this is part of a measurement (not a track)
     var isMeasurement = path.classList.contains('leaflet-measure-resultline') || 
                        path.classList.contains('leaflet-measure-resultarea') ||
@@ -2063,19 +2142,19 @@ function forceBlueCaptureMarkers() {
     
     if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
                          !path.classList.contains('leaflet-measure-resultarea') &&
-                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
-                         path.style.stroke === 'rgb(0, 102, 204)' ||
-                         path.style.stroke === '#0066CC')) {
+                         (path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
+                          path.style.stroke === 'rgb(0, 102, 204)' ||
+                          path.style.stroke === '#0066CC'))) {
       path.classList.add('leaflet-measure-path');
-      path.style.stroke = '#0066CC';
-      path.setAttribute('stroke', '#0066CC');
+      path.style.stroke = '#ABE67E';  // Green - matching leaflet-measure theme
+      path.setAttribute('stroke', '#ABE67E');
     }
   });
 }
 
 // Style capture markers to match active measurement color (without breaking click functionality)
 var captureMarkerObserver = new MutationObserver(function(mutations) {
-  forceBlueCaptureMarkers();
+  forceGreenCaptureMarkers();
 });
 
 // Start observing the map container for changes
@@ -2089,7 +2168,7 @@ captureMarkerObserver.observe(map.getContainer(), {
 // Also check periodically when measurement is active
 setInterval(function() {
   if (measure && measure._measuring) {
-    forceBlueCaptureMarkers();
+    forceGreenCaptureMarkers();
   }
 }, 100);
 
@@ -2098,22 +2177,22 @@ map.on('layeradd', function(e) {
     var icon = e.layer._icon;
     // Check if this is a capture marker by looking for the large divIcon
     if (icon.style && icon.style.width && parseFloat(icon.style.width) > 100) {
-      // Force blue color on any SVG elements inside
+      // Force green color (matching leaflet-measure theme) on any SVG elements inside
       setTimeout(function() {
         var circles = icon.querySelectorAll('circle, path');
         circles.forEach(function(circle) {
-          circle.setAttribute('stroke', '#0066CC');
+          circle.setAttribute('stroke', '#ABE67E');
           circle.setAttribute('fill', 'none');
-          circle.style.stroke = '#0066CC';
+          circle.style.stroke = '#ABE67E';
           circle.style.fill = 'none';
         });
         
-        // Also add a blue dot if no SVG exists
+        // Also add a green dot if no SVG exists
         var existingDot = icon.querySelector('.measure-capture-dot');
         if (!existingDot && circles.length === 0) {
           var dot = document.createElement('div');
           dot.className = 'measure-capture-dot';
-          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #0066CC; box-shadow: 0 0 0 1px white, 0 0 0 3px #0066CC; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
+          dot.style.cssText = 'position: absolute; width: 12px; height: 12px; border-radius: 50%; background-color: transparent; border: 2px solid #ABE67E; box-shadow: 0 0 0 1px white, 0 0 0 3px #ABE67E; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001;';
           icon.appendChild(dot);
         }
       }, 50);
@@ -2249,22 +2328,32 @@ function applyColorToLayer(layer, color) {
   
   // Update layer style
   if (layer.setStyle) {
-    // For paths (lines/polygons)
     layer.setStyle({
       color: rgbString,
       fillColor: layer.options.fillColor || rgbString,
-      fillOpacity: layer.options.fillOpacity || 0.2
+      fillOpacity: layer.options.fillOpacity !== undefined ? layer.options.fillOpacity : 0.2
     });
-  } else if (layer._path) {
-    // Direct DOM manipulation as fallback
-    layer._path.setAttribute('stroke', rgbString);
+  }
+  
+  // Our CSS uses !important on measure result paths, so we must set inline style with
+  // !important for the user's color to win. Also mark layer so forceGreenCaptureMarkers skips it.
+  if (layer._path) {
+    layer._path.style.setProperty('stroke', rgbString, 'important');
+    layer._path.style.setProperty('stroke-width', '3.5', 'important');
     if (layer._path.getAttribute('fill') !== 'none') {
-      layer._path.setAttribute('fill', rgbString);
+      layer._path.style.setProperty('fill', rgbString, 'important');
+      layer._path.style.setProperty('fill-opacity', '0.2', 'important');
+    } else {
+      layer._path.style.setProperty('fill', 'none', 'important');
     }
-  } else if (layer._icon) {
-    // For markers/points
-    if (layer._icon.style) {
-      layer._icon.style.backgroundColor = rgbString;
+  }
+  if (layer._container) {
+    layer._container.classList.add('smdb-measure-user-color');
+  }
+  if (layer._path && layer._path.closest) {
+    var container = layer._path.closest('.leaflet-overlay-pane, .leaflet-pane');
+    if (container) {
+      container.classList.add('smdb-measure-user-color');
     }
   }
   

@@ -1,21 +1,215 @@
-path.leaflet-interactive {
-  /* rust */
-  stroke: rgb(139, 64, 0); 
-  /* orange */
-  /* stroke: rgb(218, 135, 29); */
-  /* standard green */
-  /*stroke: #ABE67E; */
-  stroke-opacity: 100;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
+/* =============================================================================
+   LEAFLET-MEASURE (plugin) - how it works:
+   - Plugin uses getSymbol(key) returning { color, fillColor, className, ... }.
+   - activeColor = active measurement (cursor, vertices, boundary, area-in-progress).
+   - completedColor = finished measurement (resultLine, resultArea, resultPoint).
+   - className is set on the LAYER CONTAINER (the div wrapping the SVG), not on the
+     path/circle. So DOM is: div.<className> > svg > path or circle.
+   - Plugin class names: layer-measuredrag (cursor circle), layer-measurevertex,
+     layer-measurevertex.active, layer-measurearea, layer-measureboundary,
+     layer-measure-resultline, layer-measure-resultarea, layer-measure-resultpoint.
+   We want all measure UI green (#ABE67E); final lines/areas green; closing line dotted.
+   Load AFTER CDN leaflet-measure.css so these overrides win.
+   NOTE: The plugin sets inline styles via Leaflet setStyle(); stylesheet !important
+   does NOT override inline style. map.js uses element.style.setProperty(..., 'important')
+   so our green always wins.
+   ============================================================================= */
+
+/* ----- PLUGIN LAYER CLASSES: active cursor + vertices (the moving dot) = green ----- */
+/* These are the class names the plugin puts on the layer container (parent of svg). */
+#map .layer-measuredrag path,
+#map .layer-measuredrag circle,
+#map .layer-measurevertex path,
+#map .layer-measurevertex circle,
+#map .layer-measurevertex.active path,
+#map .layer-measurevertex.active circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
 }
 
-path.leaflet-interactive:hover {
-  /*stroke: lightgoldenrodyellow;*/
-  stroke: yellow;
+/* ----- Moving measure dot (cursor) when under Leaflet drag/grab classes = green ----- */
+#map.smdb-measure-active .leaflet-dragging .leaflet-grab path,
+#map.smdb-measure-active .leaflet-dragging .leaflet-grab circle,
+#map.smdb-measure-active .leaflet-dragging .leaflet-marker-draggable path,
+#map.smdb-measure-active .leaflet-dragging .leaflet-marker-draggable circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
 }
+
+/* ----- Override project.css track-line rule: measure paths/circles must stay green even if they have .smdb-track-line ----- */
+#map .layer-measuredrag path.smdb-track-line,
+#map .layer-measuredrag circle.smdb-track-line,
+#map .layer-measurevertex path.smdb-track-line,
+#map .layer-measurevertex circle.smdb-track-line,
+#map .layer-measurearea path.smdb-track-line,
+#map .layer-measureboundary path.smdb-track-line,
+#map .layer-measure-resultline path.smdb-track-line,
+#map .layer-measure-resultarea path.smdb-track-line,
+#map .layer-measure-resultpoint path.smdb-track-line,
+#map .layer-measure-resultpoint circle.smdb-track-line,
+#map .leaflet-measure-layer path.smdb-track-line,
+#map .leaflet-measure-layer circle.smdb-track-line,
+#map.smdb-measure-active path.smdb-track-line,
+#map.smdb-measure-active circle.smdb-track-line {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+#map .layer-measure-resultline path.smdb-track-line,
+#map .layer-measure-resultarea path.smdb-track-line,
+#map .leaflet-measure-layer path.smdb-track-line.smdb-measurement-path,
+#map.smdb-measure-active path.smdb-measurement-path.smdb-track-line {
+  stroke-width: 3.5 !important;
+  fill: none !important;
+}
+
+/* ----- PLUGIN LAYER CLASSES: active area fill + boundary (while drawing) = green ----- */
+#map .layer-measurearea path,
+#map .layer-measurearea circle,
+#map .layer-measureboundary path {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.2 !important;
+}
+#map .layer-measureboundary path {
+  fill: none !important;
+}
+
+/* ----- In-progress area: dotted stroke so closing segment (last→first) is dotted until confirm ----- */
+/* Boundary (1→2→3…) is solid and on top; only the closing edge is area stroke, so this makes that line dotted. */
+#map .layer-measurearea path {
+  stroke-dasharray: 6 8 !important;
+}
+/* ----- Our predictive closing line (backup): dotted green, shown after 3rd click until Finish ----- */
+#map .smdb-measure-predictive-closing path {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 6 8 !important;
+  fill: none !important;
+}
+
+/* ----- WHEN MEASURE IS ACTIVE: our classes + capture marker = green ----- */
+#map.smdb-measure-active path.leaflet-interactive:not(.smdb-track-line),
+#map.smdb-measure-active path.smdb-capture-path,
+#map.smdb-measure-active circle.leaflet-interactive,
+#map.smdb-measure-active .smdb-capture-marker path,
+#map.smdb-measure-active .smdb-capture-marker circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+
+/* ----- WHEN MEASURE IS ACTIVE: lines/polygons (measurement result) = green ----- */
+#map.smdb-measure-active path.leaflet-interactive.smdb-measurement-path {
+  stroke: #ABE67E !important;  /* green - final measure line/area */
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+/* ----- WHEN MEASURE IS ACTIVE: polygon suggestion/closing line (3rd+ click) = dotted ----- */
+#map.smdb-measure-active path.leaflet-interactive.smdb-measure-closing-line {
+  stroke: #ABE67E !important;
+  stroke-opacity: 0.9 !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: 6 4 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+/* ----- NOT MEASURING: points (capture cursor) + capture path = green ----- */
+#map .leaflet-measure-layer path.leaflet-interactive:not(.smdb-measurement-path),
+#map .leaflet-measure-layer circle.leaflet-interactive,
+#map .leaflet-measure-layer path.smdb-capture-path,
+#map path.smdb-capture-path,
+#map .smdb-capture-marker path,
+#map .smdb-capture-marker circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+
+/* ----- PLUGIN RESULT LAYERS: completed line/area/point = green ----- */
+#map .layer-measure-resultline path,
+#map .layer-measure-resultarea path,
+#map .layer-measure-resultpoint path,
+#map .layer-measure-resultpoint circle {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+#map .layer-measure-resultline path,
+#map .layer-measure-resultarea path {
+  stroke-width: 3.5 !important;
+  fill: none !important;
+}
+
+/* ----- Result layers: yellow on hover ----- */
+#map .layer-measure-resultline path:hover,
+#map .layer-measure-resultarea path:hover,
+#map .layer-measure-resultpoint path:hover {
+  stroke: yellow !important;
+  fill: none !important;
+}
+#map .layer-measure-resultarea path:hover {
+  fill: yellow !important;
+  fill-opacity: 0.25 !important;
+}
+#map .layer-measure-resultpoint circle:hover {
+  stroke: yellow !important;
+  fill: yellow !important;
+  fill-opacity: 0.5 !important;
+}
+
+/* ----- NOT MEASURING: our classes (measurement result) = green ----- */
+#map .leaflet-measure-layer path.leaflet-interactive.smdb-measurement-path,
+#map path.leaflet-interactive.smdb-measurement-path {
+  stroke: #ABE67E !important;  /* green - final measure line/area */
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+#map path.leaflet-interactive.smdb-measurement-path:hover {
+  stroke: #8BC34A !important;  /* slightly darker green on hover */
+}
+
+/* ----- Polygon suggestion/closing line (when not measuring) = dotted ----- */
+#map path.leaflet-interactive.smdb-measure-closing-line {
+  stroke: #ABE67E !important;
+  stroke-opacity: 0.9 !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: 6 4 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+}
+
+/* Fallback for dynamically created circles (plugin default blue) */
+#map circle[stroke="#0066CC"],
+#map circle[fill="#0066CC"],
+#map circle[stroke="rgb(0, 102, 204)"],
+#map circle[fill="rgb(0, 102, 204)"] {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+
 
 /* .leaflet-control-measure a.finish {
   text-align: center;
@@ -37,3 +231,255 @@ path.leaflet-interactive:hover {
 
 /*     activeColor: '#ABE67E', // base color for map features while actively measuring
     completedColor: '#C8F2BE', // base color for permenant features generated from completed measure */
+
+/* ==========================================
+   INITIAL POPUP STYLING (using custom class)
+   ========================================== */
+
+/* Override Bootstrap .h3, h3 { font-size: 1.75rem; } for ALL leaflet-measure popups */
+.leaflet-control-measure .startprompt h3,
+.leaflet-control-measure h3 {
+    font-size: 16px !important;  /* Override Bootstrap 1.75rem (28px) */
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-weight: 700 !important;
+}
+
+/* Backup rule with custom class if JS adds it */
+.smdb-initial-measure-popup h3 {
+    font-size: 16px !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-weight: 700 !important;
+}
+
+/* RESET result popup to use original CDN sizing (undo our override above) */
+.leaflet-measure-resultpopup h3 {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    /* font-size: unset !important;
+    font-family: unset !important; */
+    color: #00008b !important;
+}
+
+/* Font size and text styling for initial popups ONLY */
+.smdb-initial-measure-popup .startprompt p,
+.smdb-initial-measure-popup .startprompt {
+    /* font-size: 0.75rem !important;  12px - much smaller text */
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-weight: 700 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Paragraph styling for leaflet-control-measure - Direct targeting */
+.leaflet-control-measure .group p,
+.leaflet-control-measure p {
+    max-width: 270px !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Backup with custom class */
+.smdb-initial-measure-popup .leaflet-control-measure p {
+    max-width: 270px !important;
+    width: 280px !important;
+    font-size: 0.75rem !important;  /* 12px - match header size */
+    word-break: break-word !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    margin: 10px 0 0 !important;
+    line-height: 1.5em !important;
+}
+
+/* Allow result popups to use natural width */
+.leaflet-measure-resultpopup p {
+    max-width: none !important;
+    width: auto !important;
+}
+
+/* Force line breaks after measurement headings (Path distance, Area) - Direct targeting */
+.leaflet-control-measure .group p span.heading,
+.leaflet-control-measure span.heading {
+    display: block !important;
+    margin-bottom: 4px !important;
+    font-weight: bold !important;
+}
+
+/* Backup with custom class */
+.smdb-initial-measure-popup .group p span.heading,
+.smdb-initial-measure-popup span.heading {
+    display: block !important;
+    margin-bottom: 4px !important;
+    font-weight: bold !important;
+}
+
+/* Ensure result popups keep headings inline */
+.leaflet-measure-resultpopup span.heading {
+    display: inline !important;
+    margin-bottom: 0 !important;
+}
+
+/* Specific rule for startprompt paragraph text in initial popups */
+.smdb-initial-measure-popup .startprompt p {
+    max-width: 280px !important;
+    width: 280px !important;
+    min-width: 0 !important;
+    font-size: 0.75rem !important;  /* 12px - ensure consistency */
+    word-break: break-word !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+leaflet-control-measure .results .heading {
+    margin-right: 5px;
+    /* color: #999; */
+}
+
+/* h3 styling moved to top of initial popup section for consistency */
+
+/* ==========================================
+   REMOVED - CAUSED ISSUES
+   Button styling overrides that broke layout
+   ========================================== */
+/*
+.leaflet-control-measure .leaflet-control-measure-interaction a,
+.leaflet-control-measure .leaflet-control-measure-interaction .tasks a,
+.leaflet-control-measure a.cancel,
+.leaflet-control-measure a.finish {
+  background-image: none !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  min-width: 80px !important;
+  padding: 6px 12px !important;
+  display: inline-block !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+*/
+
+/* ==========================================
+   REMOVED - CAUSED ISSUES  
+   Tasks layout with flexbox - created 280px margin issue
+   ========================================== */
+/*
+.leaflet-control-measure .leaflet-control-measure-interaction .tasks,
+.leaflet-control-measure .tasks,
+.leaflet-measure-resultpopup .tasks {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 15px !important;
+  padding: 10px 0 0 !important;
+  margin: 12px 0 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  text-align: center !important;
+  list-style: none !important;
+  list-style-image: none !important;
+}
+
+.leaflet-control-measure .leaflet-control-measure-interaction .tasks li,
+.leaflet-control-measure .tasks li,
+.leaflet-measure-resultpopup .tasks li {
+  display: inline-block !important;
+  margin: 0 !important;
+}
+*/
+
+/* ==========================================
+   REMOVED - CAUSED ISSUES
+   Typography and text overflow fixes
+   ========================================== */
+/*
+.leaflet-control-measure h3,
+.leaflet-measure-resultpopup h3 {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 1em !important;
+  font-weight: 700;
+}
+  */
+
+/* .leaflet-control-measure .startprompt h3,
+.leaflet-control-measure .startprompt p,
+.leaflet-control-measure .startprompt {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 1em !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+} */
+
+/*
+p #js-starthelp {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.5em !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 280px !important;
+}
+
+.leaflet-control-measure .startprompt {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.leaflet-control-measure p,
+.leaflet-measure-resultpopup p {
+  font-family: Arial, Helvetica, sans-serif !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.leaflet-control-measure {
+  max-width: 280px !important;
+  width: 280px !important;
+  background: #fff !important;
+  box-sizing: border-box !important;
+}
+
+.leaflet-control-measure .leaflet-control-measure-interaction {
+  padding: 10px 12px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+*/
+.layer-measure-resultline {
+  stroke: #ABE67E;
+}
+
+.layer-measure-resultarea {
+  stroke: #ABE67E;
+}
+
+
+/* ==========================================
+   CUSTOM MEASURE BUTTON ICON - ACTIVE
+   ========================================== */
+
+/* Leaflet Measure Image - Retina */
+.leaflet-retina .leaflet-control-measure .leaflet-control-measure-toggle,
+.leaflet-retina .leaflet-control-measure .leaflet-control-measure-toggle:hover {
+  width: 40px !important;
+  height: 40px !important;
+  background-size: 22px 22px !important;
+  background-position: 7px center !important;
+  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pjxzdmcgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjQgNjQ7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA2NCA2NCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojRkZFRUE5O30KCS5zdDF7ZmlsbDojRDMyNDM2O30KCS5zdDJ7ZmlsbDojOEREMUQzO30KCS5zdDN7ZmlsbDojMzMwRDAwO30KCS5zdDR7ZmlsbDpub25lO3N0cm9rZTojMzMwRDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9Cjwvc3R5bGU+PGcgaWQ9Il94MzRfMC1JZF9DYXJkIi8+PGcgaWQ9Il94MzNfOS1Gb3JtdWxhIi8+PGcgaWQ9Il94MzNfOC1FbGJvdyIvPjxnIGlkPSJfeDMzXzctRGlwbG9tYSIvPjxnIGlkPSJfeDMzXzYtTGFwdG9wIi8+PGcgaWQ9Il94MzNfNS1CcnVzaCIvPjxnIGlkPSJfeDMzXzQtQmFzZWJhbGwiLz48ZyBpZD0iX3gzM18zLVN0dWRlbnQiLz48ZyBpZD0iX3gzM18yLUhpZ2hsaWdodGVyIi8+PGcgaWQ9Il94MzNfMS1SdWxlciIvPjxnIGlkPSJfeDMzXzAtQ2FsaXBlciIvPjxnIGlkPSJfeDMyXzktUnVsZXJfRWxib3ciPjxnPjxnPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0xLjEsNjIuOWg2MS44VjEuMUwxLjEsNjIuOXogTTU0LjEsNTQuMUgyMi41bDMxLjUtMzEuNVY1NC4xeiIvPjwvZz48Zz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNjMuMywwLjFjLTAuNC0wLjItMC45LTAuMS0xLjIsMC4yTDAuMyw2Mi4xYy0wLjMsMC4zLTAuNCwwLjgtMC4yLDEuMnMwLjYsMC43LDEsMC43aDYxLjggICAgICBjMC42LDAsMS4xLTAuNSwxLjEtMS4xVjEuMUM2NCwwLjcsNjMuNywwLjMsNjMuMywwLjF6IE01NS4yLDYxLjh2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNCAgICAgIHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMWMtMC42LDAtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjNjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuMyAgICAgIGMwLTAuNi0wLjUtMS4xLTEuMS0xLjFzLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMXMtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjMgICAgICBjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNIMy44bDU4LTU4djkuNSAgICAgIGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFzMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuM2MtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXMwLjUsMS4xLDEuMSwxLjFoMy4zdjQuNGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFjMCwwLjYsMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuMyAgICAgIGMtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjNjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zVjUzaC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zdjYuNkg1NS4yeiIvPjwvZz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNTQuNSwyMS41Yy0wLjQtMC4yLTAuOS0wLjEtMS4yLDAuMkwyMS44LDUzLjNjLTAuMywwLjMtMC40LDAuOC0wLjIsMS4yczAuNiwwLjcsMSwwLjdoMzEuNSAgICAgIGMwLjYsMCwxLjEtMC41LDEuMS0xLjFWMjIuNUM1NS4yLDIyLjEsNTQuOSwyMS43LDU0LjUsMjEuNXogTTUzLDUzSDI1LjJMNTMsMjUuMlY1M3oiLz48L2c+PC9nPjwvZz48L2c+PGcgaWQ9Il94MzJfOC1BYmFjdXMiLz48ZyBpZD0iX3gzMl83LUlkX0NhcmQiLz48ZyBpZD0iX3gzMl82LUVyYXNlciIvPjxnIGlkPSJfeDMyXzUtUGVuY2lsIi8+PGcgaWQ9Il94MzJfNC1JbmsiLz48ZyBpZD0iX3gzMl8zLUdyYWR1YXRpb25fQ2FwIi8+PGcgaWQ9Il94MzJfMi1fU2xpbmdfQmFnIi8+PGcgaWQ9Il94MzJfMS1SdWdieV9CYWxsIi8+PGcgaWQ9Il94MzJfMC1DbG9jayIvPjxnIGlkPSJfeDMxXzktQ2VydGlmaWNhdGUiLz48ZyBpZD0iX3gzMV84LUlkZWEiLz48ZyBpZD0iX3gzMV83LUJvb2tzaGVsZiIvPjxnIGlkPSJfeDMxXzYtRm9ybXVsYSIvPjxnIGlkPSJfeDMxXzUtQmVsbCIvPjxnIGlkPSJfeDMxXzQtTWFnbmlmeWluZ19HbGFzcyIvPjxnIGlkPSJfeDMxXzMtQ2FsY3VsYXRvciIvPjxnIGlkPSJfeDMxXzItRXllZ2xhc3NlcyIvPjxnIGlkPSJfeDMxXzEtQnVzIi8+PGcgaWQ9Il94MzFfMC1Ucm9waHkiLz48ZyBpZD0iX3gzOV8tR2xvYmUiLz48ZyBpZD0iX3gzOF8tQmFza2V0X0JhbGwiLz48ZyBpZD0iX3gzN18tUGVuIi8+PGcgaWQ9Il94MzZfLUJvYXJkIi8+PGcgaWQ9Il94MzVfLUJhZyIvPjxnIGlkPSJfeDM0Xy1FeGFtIi8+PGcgaWQ9Il94MzNfLUJvb2siLz48ZyBpZD0iX3gzMl8tUnVsZXIiLz48ZyBpZD0iX3gzMV8tQnVpbGRpbmciLz48L3N2Zz4=) !important;
+}
+
+/* Leaflet Measure Image - Non Retina */
+.leaflet-control-measure .leaflet-control-measure-toggle,
+.leaflet-control-measure .leaflet-control-measure-toggle:hover {
+  width: 40px !important;
+  height: 40px !important;
+  background-size: 22px 22px !important;
+  background-position: 7px center !important;
+  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pjxzdmcgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjQgNjQ7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA2NCA2NCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojRkZFRUE5O30KCS5zdDF7ZmlsbDojRDMyNDM2O30KCS5zdDJ7ZmlsbDojOEREMUQzO30KCS5zdDN7ZmlsbDojMzMwRDAwO30KCS5zdDR7ZmlsbDpub25lO3N0cm9rZTojMzMwRDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9Cjwvc3R5bGU+PGcgaWQ9Il94MzRfMC1JZF9DYXJkIi8+PGcgaWQ9Il94MzNfOS1Gb3JtdWxhIi8+PGcgaWQ9Il94MzNfOC1FbGJvdyIvPjxnIGlkPSJfeDMzXzctRGlwbG9tYSIvPjxnIGlkPSJfeDMzXzYtTGFwdG9wIi8+PGcgaWQ9Il94MzNfNS1CcnVzaCIvPjxnIGlkPSJfeDMzXzQtQmFzZWJhbGwiLz48ZyBpZD0iX3gzM18zLVN0dWRlbnQiLz48ZyBpZD0iX3gzM18yLUhpZ2hsaWdodGVyIi8+PGcgaWQ9Il94MzNfMS1SdWxlciIvPjxnIGlkPSJfeDMzXzAtQ2FsaXBlciIvPjxnIGlkPSJfeDMyXzktUnVsZXJfRWxib3ciPjxnPjxnPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0xLjEsNjIuOWg2MS44VjEuMUwxLjEsNjIuOXogTTU0LjEsNTQuMUgyMi41bDMxLjUtMzEuNVY1NC4xeiIvPjwvZz48Zz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNjMuMywwLjFjLTAuNC0wLjItMC45LTAuMS0xLjIsMC4yTDAuMyw2Mi4xYy0wLjMsMC4zLTAuNCwwLjgtMC4yLDEuMnMwLjYsMC43LDEsMC43aDYxLjggICAgICBjMC42LDAsMS4xLTAuNSwxLjEtMS4xVjEuMUM2NCwwLjcsNjMuNywwLjMsNjMuMywwLjF6IE01NS4yLDYxLjh2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNCAgICAgIHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMWMtMC42LDAtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjNjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuMyAgICAgIGMwLTAuNi0wLjUtMS4xLTEuMS0xLjFzLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMXMtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjMgICAgICBjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNIMy44bDU4LTU4djkuNSAgICAgIGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFzMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuM2MtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXMwLjUsMS4xLDEuMSwxLjFoMy4zdjQuNGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFjMCwwLjYsMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuMyAgICAgIGMtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjNjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zVjUzaC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zdjYuNkg1NS4yeiIvPjwvZz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNTQuNSwyMS41Yy0wLjQtMC4yLTAuOS0wLjEtMS4yLDAuMkwyMS44LDUzLjNjLTAuMywwLjMtMC40LDAuOC0wLjIsMS4yczAuNiwwLjcsMSwwLjdoMzEuNSAgICAgIGMwLjYsMCwxLjEtMC41LDEuMS0xLjFWMjIuNUM1NS4yLDIyLjEsNTQuOSwyMS43LDU0LjUsMjEuNXogTTUzLDUzSDI1LjJMNTMsMjUuMlY1M3oiLz48L2c+PC9nPjwvZz48L2c+PGcgaWQ9Il94MzJfOC1BYmFjdXMiLz48ZyBpZD0iX3gzMl83LUlkX0NhcmQiLz48ZyBpZD0iX3gzMl82LUVyYXNlciIvPjxnIGlkPSJfeDMyXzUtUGVuY2lsIi8+PGcgaWQ9Il94MzJfNC1JbmsiLz48ZyBpZD0iX3gzMl8zLUdyYWR1YXRpb25fQ2FwIi8+PGcgaWQ9Il94MzJfMi1fU2xpbmdfQmFnIi8+PGcgaWQ9Il94MzJfMS1SdWdieV9CYWxsIi8+PGcgaWQ9Il94MzJfMC1DbG9jayIvPjxnIGlkPSJfeDMxXzktQ2VydGlmaWNhdGUiLz48ZyBpZD0iX3gzMV84LUlkZWEiLz48ZyBpZD0iX3gzMV83LUJvb2tzaGVsZiIvPjxnIGlkPSJfeDMxXzYtRm9ybXVsYSIvPjxnIGlkPSJfeDMxXzUtQmVsbCIvPjxnIGlkPSJfeDMxXzQtTWFnbmlmeWluZ19HbGFzcyIvPjxnIGlkPSJfeDMxXzMtQ2FsY3VsYXRvciIvPjxnIGlkPSJfeDMxXzItRXllZ2xhc3NlcyIvPjxnIGlkPSJfeDMxXzEtQnVzIi8+PGcgaWQ9Il94MzFfMC1Ucm9waHkiLz48ZyBpZD0iX3gzOV8tR2xvYmUiLz48ZyBpZD0iX3gzOF8tQmFza2V0X0JhbGwiLz48ZyBpZD0iX3gzN18tUGVuIi8+PGcgaWQ9Il94MzZfLUJvYXJkIi8+PGcgaWQ9Il94MzVfLUJhZyIvPjxnIGlkPSJfeDM0Xy1FeGFtIi8+PGcgaWQ9Il94MzNfLUJvb2siLz48ZyBpZD0iX3gzMl8tUnVsZXIiLz48ZyBpZD0iX3gzMV8tQnVpbGRpbmciLz48L3N2Zz4=) !important;
+}
