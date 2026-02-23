@@ -569,7 +569,7 @@ div,
 }
 
 #map path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
-  stroke: yellow;
+  stroke: yellow !important;
 }
 
 /* ----- LEAFLET-MEASURE: cursor, vertices, lines, result = green ----- */

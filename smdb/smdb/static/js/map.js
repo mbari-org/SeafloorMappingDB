@@ -9,9 +9,6 @@
 // /lib/easybutton.js
 // include project.js
 
-// L.mapbox.accessToken =
-//   "pk.eyJ1Ijoic2FsYW15IiwiYSI6ImNsNTl6ODAyeTF5aTYzZHBvc3ZjeWJqeHMifQ.8qQduUOn78kIp6gHtoC-Ag";
-
 const apiKey =
   "AAPK4f2bc64881714cb2b03b1b5798dd2b740wn2YfXp7EZuoC_GggsJw92b06Ou-ZhL1i0CU-haX0JwKr9Ve9ned4wNTOYlGu1x";
 const basemapEnum = "ArcGIS:Oceans";
@@ -1289,10 +1286,13 @@ let feature = L.geoJSON(missions, {
   },
   hover: function () { },
   onEachFeature: function(feature, layer) {
-    // Add classes to track line paths so CSS and JS can identify them
-    if (layer._path) {
-      layer._path.classList.add('smdb-track-line', 'smdb-geometry-line');
-    }
+    // layer._path is null here (path not created until layer is added to map).
+    // Use the 'add' event, which fires after onAdd() has created _path.
+    layer.on('add', function() {
+      if (this._path) {
+        this._path.classList.add('smdb-track-line', 'smdb-geometry-line');
+      }
+    });
   }
 })
   // Popup Thumbnail Images of Missions
