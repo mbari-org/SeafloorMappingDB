@@ -6,6 +6,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.pointer_input import PointerInput
+
+# CSS selector for rendered AUV nav-track paths.
+# Classes are assigned via layer.on('add') in map.js (issues #291, #290).
+_TRACK_CSS = "path.leaflet-interactive.smdb-track-line.smdb-geometry-line"
 
 
 @pytest.mark.django_db
@@ -181,4 +187,102 @@ def test_leaflet_measure_color_persists(chrome, live_server_url_for_selenium, mi
             """)
             
             assert has_user_color, "User-chosen red color should persist on the measurement"
+
+
+# ---------------------------------------------------------------------------
+# Nav-track hover tests — GitHub issues #291 / #290
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+@pytest.mark.selenium
+def test_nav_track_classes_assigned(chrome, live_server_url_for_selenium, missions_notes_5):
+    """Track paths carry smdb-track-line and smdb-geometry-line classes after the map loads.
+
+    Regression guard for the layer.on('add') fix in map.js (issues #291, #290):
+    onEachFeature used to check layer._path directly, which is always null before
+    the layer is added to the map.  The fix defers class assignment to the Leaflet
+    'add' event so _path exists.  If this test fails, the classes are missing and
+    the yellow-hover CSS rule will never match.
+    """
+    chrome.get(live_server_url_for_selenium)
+
+    # Wait up to 15 s for at least one fully-classed track path to appear in the DOM.
+    WebDriverWait(chrome, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, _TRACK_CSS))
+    )
+
+    track_count = chrome.execute_script(
+        "return document.querySelectorAll(arguments[0]).length;", _TRACK_CSS
+    )
+    assert track_count > 0, (
+        f"Expected track paths with selector '{_TRACK_CSS}' but found none. "
+        "Check the layer.on('add') class-assignment in map.js (issue #291)."
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.selenium
+def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_selenium, missions_notes_5):
+    """Nav track stroke becomes yellow when the mouse hovers over it (issues #291, #290).
+
+    Verifies the complete chain:
+      1. smdb-track-line / smdb-geometry-line classes exist on SVG paths.
+      2. The CSS :hover rule (stroke: yellow !important) fires when hovered.
+
+    Uses SVG getPointAtLength() + getScreenCTM() to compute the exact viewport
+    coordinates of the path midpoint, then moves the mouse there via a
+    viewport-origin W3C pointer action (ActionBuilder).  This is more reliable
+    than move_to_element_with_offset for thin SVG paths routed through a remote
+    Selenium Hub, where element-centre calculations can miss the 3.5 px stroke.
+    """
+    chrome.get(live_server_url_for_selenium)
+
+    # Wait for a track path with the correct classes to be present.
+    track = WebDriverWait(chrome, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, _TRACK_CSS))
+    )
+
+    # Record the resting (non-hover) stroke color before moving the mouse.
+    resting_color = chrome.execute_script(
+        "return window.getComputedStyle(arguments[0]).stroke;", track
+    )
+
+    # Find the viewport (CSS-pixel) coordinates of the midpoint of the path stroke.
+    # getPointAtLength() gives a point in SVG user space; getScreenCTM() converts it
+    # to viewport coordinates accounting for any CSS transforms on the SVG element.
+    coords = chrome.execute_script("""
+        var path = document.querySelector(arguments[0]);
+        if (!path) return null;
+        var svg  = path.ownerSVGElement;
+        var pt   = path.getPointAtLength(path.getTotalLength() / 2);
+        var svgPt = svg.createSVGPoint();
+        svgPt.x = pt.x;
+        svgPt.y = pt.y;
+        var screen = svgPt.matrixTransform(svg.getScreenCTM());
+        return {pathX: screen.x, pathY: screen.y};
+    """, _TRACK_CSS)
+
+    assert coords, "Could not compute path screen coordinates."
+
+    # Use viewport-absolute coordinates (origin="viewport") so the pointer move
+    # bypasses element-centre calculations and goes exactly to the path stroke pixel.
+    # This is more reliable than move_to_element_with_offset for thin SVG paths
+    # routed through a remote Selenium Hub.
+    mouse = PointerInput("mouse", "mouse")
+    builder = ActionBuilder(chrome, mouse=mouse)
+    builder.pointer_action.move_to_location(int(coords["pathX"]), int(coords["pathY"]))
+    builder.perform()
+    time.sleep(0.3)
+
+    # Read computed stroke while the mouse is still positioned over the path.
+    hover_color = chrome.execute_script(
+        "return window.getComputedStyle(arguments[0]).stroke;", track
+    )
+
+    assert hover_color is not None, "Could not read computed stroke on track element."
+    assert "255, 255, 0" in hover_color or hover_color.lower() == "yellow", (
+        f"Track stroke should be yellow (rgb(255, 255, 0)) when hovered, "
+        f"got '{hover_color}' (resting was '{resting_color}'). "
+        "Check the :hover rule in project.css and class assignment in map.js (issue #291)."
+    )
 
