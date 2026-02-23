@@ -1710,6 +1710,7 @@ window.addEventListener('hashchange', function() {
   }
 });
 
+
 // Add Draw Control for Rectangle Selection
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);

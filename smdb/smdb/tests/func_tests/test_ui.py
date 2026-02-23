@@ -285,4 +285,3 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
         f"got '{hover_color}' (resting was '{resting_color}'). "
         "Check the :hover rule in project.css and class assignment in map.js (issue #291)."
     )
-
