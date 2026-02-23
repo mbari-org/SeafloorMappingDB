@@ -272,11 +272,15 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
     builder = ActionBuilder(chrome, mouse=mouse)
     builder.pointer_action.move_to_location(int(coords["pathX"]), int(coords["pathY"]))
     builder.perform()
-    time.sleep(0.3)
 
-    # Read computed stroke while the mouse is still positioned over the path.
-    hover_color = chrome.execute_script(
-        "return window.getComputedStyle(arguments[0]).stroke;", track
+    # Poll until the computed stroke changes from the resting color, up to 10 s.
+    # This is more reliable than a fixed sleep in slower CI environments.
+    hover_color = WebDriverWait(chrome, 10).until(
+        lambda d: (
+            lambda c: c if c and c != resting_color and (
+                "255, 255, 0" in c or c.lower() == "yellow"
+            ) else None
+        )(d.execute_script("return window.getComputedStyle(arguments[0]).stroke;", track))
     )
 
     assert hover_color is not None, "Could not read computed stroke on track element."

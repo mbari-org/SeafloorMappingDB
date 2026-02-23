@@ -569,8 +569,8 @@ div,
 }
 
 /* Hover highlight for nav tracks — three selectors match every basemap state,
-   giving enough specificity to override the SVG presentation attribute without
-   needing !important (which CSS minifiers may strip at build time). */
+   giving enough specificity to override the SVG presentation attribute
+   without relying on !important. */
 #map path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover,
 #map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover,
 #map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {

@@ -26,7 +26,6 @@ function updateMap() {
       }
     } catch (err) {
       // Catch degenerate case when checkboxes aren't on the page and continue
-      // console.log(err.message);
     }
 
     if (document.getElementById("searchbar") != null) {
