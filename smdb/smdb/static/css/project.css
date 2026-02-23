@@ -568,8 +568,13 @@ div,
   fill: none;
 }
 
-#map path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
-  stroke: yellow !important;
+/* Hover highlight for nav tracks — three selectors match every basemap state,
+   giving enough specificity to override the SVG presentation attribute without
+   needing !important (which CSS minifiers may strip at build time). */
+#map path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover,
+#map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover,
+#map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
+  stroke: yellow;
 }
 
 /* ----- LEAFLET-MEASURE: cursor, vertices, lines, result = green ----- */
