@@ -9,7 +9,7 @@ from django_filters import (
 )
 from django.db.utils import ProgrammingError
 from django.db.models import Q
-from smdb.models import Mission, Expedition, Compilation, Quality_Category
+from smdb.models import Mission, Expedition, Compilation, Quality_Category, Platformtype
 
 from django.forms.widgets import TextInput
 
@@ -43,34 +43,37 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
-    vehicle_name = MultipleChoiceFilter(
-        field_name="vehicle_name",
-        choices=[
-            # Vehicle options
-            ("MAUV1", "MAUV1"),
-            ("LASS", "LASS"),
-            ("MAUV2", "MAUV2"),
-            ("Sentry", "Sentry"),
-            ("ABE", "ABE"),
-            # Platform options
-            ("R/V David Packard", "R/V David Packard"),
-            ("Paragon", "R/V Paragon"),
-            ("Iceberg", "Iceberg"),
-            ("", "None"),  # Use empty string for None/null values
-        ],
-        label="",
-        widget=forms.SelectMultiple(
-            attrs={"class": "form-control", "size": 2, "style": "font-size: x-small;"}
-        ),
-    )
+    try:
+        vehicle_name = MultipleChoiceFilter(
+            field_name="vehicle_name",
+            choices=[
+                (m, m)
+                for m in Mission.objects.exclude(vehicle_name__isnull=True)
+                .exclude(vehicle_name="")
+                .values_list("vehicle_name", flat=True)
+                .distinct()
+                .order_by("vehicle_name")
+            ],
+            label="- Vehicle Name -",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
+    try:
+        platformtype = ModelMultipleChoiceFilter(
+            field_name="platform__platformtype",
+            queryset=Platformtype.objects.all().order_by("name"),
+            label="- Platform Type -",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
     quality_categories = ModelMultipleChoiceFilter(
         field_name="quality_categories__name",
         queryset=Quality_Category.objects.all(),
         to_field_name="name",
-        label="",
-        widget=forms.SelectMultiple(
-            attrs={"class": "form-control", "size": 2, "style": "font-size: x-small;"}
-        ),
+        label="- Survey Quality -",
+        widget=forms.CheckboxSelectMultiple(),
     )
     patch_test = ChoiceFilter(
         field_name="patch_test",
@@ -131,6 +134,7 @@ class MissionFilter(FilterSet):
             "name",
             "region_name",
             "vehicle_name",
+            "platformtype",
             "quality_categories",
             "patch_test",
             "repeat_survey",

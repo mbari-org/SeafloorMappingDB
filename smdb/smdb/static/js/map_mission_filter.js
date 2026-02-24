@@ -204,7 +204,7 @@ const FilterControl = L.Control.extend({
     body.style.cssText =
       "padding:0.5rem 0.5rem 0.25rem 0.5rem;overflow-y:auto;overflow-x:hidden;" +
       "padding-bottom:0.25rem;flex:1;min-height:200px;" +
-      "max-height:calc(80vh - 60px);";
+      "max-height:calc(50vh - 60px);";
 
     // ------------------------------------------------------------------
     // copyForm — clone the hidden crispy form into the sidebar body
@@ -212,6 +212,135 @@ const FilterControl = L.Control.extend({
     // Guard flag: the body "Clear" listener must only be added once even
     // if copyForm() is retried multiple times by the retry loop below.
     var clearListenerAdded = false;
+
+    // -----------------------------------------------------------------------
+    // recalcSidebarHeight — recompute sidebar height after a dropdown opens
+    // or closes (CheckboxSelectMultiple accordion).
+    // -----------------------------------------------------------------------
+    function recalcSidebarHeight() {
+      if (!sidebar) return;
+      var mapEl = document.getElementById("map_mission_filter");
+      var mapH  = mapEl ? mapEl.clientHeight : Math.round(window.innerHeight * 0.5);
+      var b = document.getElementById("filter-sidebar-body");
+      if (!b) return;
+      var hdrH = sidebar.querySelector(".filter-sidebar-header")
+        ? sidebar.querySelector(".filter-sidebar-header").offsetHeight
+        : 50;
+      var pad =
+        parseFloat(window.getComputedStyle(b).paddingTop) +
+        parseFloat(window.getComputedStyle(b).paddingBottom);
+      sidebar.style.height =
+        Math.min(b.scrollHeight + hdrH + pad, mapH) + "px";
+    }
+
+    // -----------------------------------------------------------------------
+    // setupCheckboxDropdowns — turn each CheckboxSelectMultiple group into a
+    // collapsible accordion.
+    //
+    // crispy-forms + Bootstrap 5 renders CheckboxSelectMultiple as:
+    //   <div id="div_id_FIELD[-sidebar]" class="mb-3">   ← field wrapper
+    //     <fieldset>
+    //       <legend class="form-label">LABEL</legend>    ← toggle target
+    //       <div>                                        ← checkbox panel
+    //         <div class="form-check">
+    //           <input type="checkbox" ...>
+    //           <label class="form-check-label">...</label>
+    //         </div>
+    //         ...
+    //       </div>
+    //     </fieldset>
+    //   </div>
+    // -----------------------------------------------------------------------
+    function setupCheckboxDropdowns(formEl) {
+      formEl.querySelectorAll('[id^="div_id_"]').forEach(function (outerDiv) {
+        var checks = outerDiv.querySelectorAll(".form-check");
+        if (checks.length === 0) return;  // not a checkbox group
+
+        // The legend (or label) is the field-level heading element.
+        var toggleEl = outerDiv.querySelector("legend") ||
+                       outerDiv.querySelector("label.form-label");
+        if (!toggleEl) return;
+
+        // The checkbox panel is the direct parent of the .form-check items.
+        var panel = checks[0].parentElement;
+        if (!panel) return;
+
+        // Style the legend as a clickable dropdown toggle — identical to the
+        // <select> elements in the sidebar (background #1e1e1e, white text).
+        var TOGGLE_BG     = "#1e1e1e";
+        var TOGGLE_BORDER = "#555";
+
+        toggleEl.style.cssText =
+          "display:flex;justify-content:space-between;align-items:center;" +
+          "width:100%;max-width:230px;padding:0.3rem;box-sizing:border-box;" +
+          "background:" + TOGGLE_BG + ";border:1px solid " + TOGGLE_BORDER + ";" +
+          "border-radius:4px;cursor:pointer;color:#e0e0e0;font-size:0.8rem;" +
+          "margin-bottom:0;user-select:none;display:flex;" +
+          "justify-content:space-between;align-items:center;";
+
+        // Use the same Bootstrap 5 chevron SVG that <select> uses, white-tinted.
+        var caret = document.createElement("span");
+        caret.innerHTML = "&#8964;";   // ⌄ downward chevron
+        caret.style.cssText =
+          "font-size:0.9rem;font-weight:bold;line-height:1;" +
+          "transition:transform 0.2s;flex-shrink:0;color:#e0e0e0;";
+        toggleEl.appendChild(caret);
+
+        // Hover: match project.css .form-control:hover exactly —
+        //   box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px cornflowerblue
+        // The sidebar <select> elements get this via the CSS rule; we apply it
+        // inline here so the legend toggle is pixel-identical.
+        toggleEl.addEventListener("mouseenter", function () {
+          toggleEl.style.boxShadow =
+            "inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px cornflowerblue";
+        });
+        toggleEl.addEventListener("mouseleave", function () {
+          toggleEl.style.boxShadow = "none";
+        });
+
+        // Remove <fieldset> browser-default border and padding so the toggle
+        // and panel sit flush with each other.
+        var fieldset = outerDiv.querySelector("fieldset");
+        if (fieldset) {
+          fieldset.style.cssText = "border:none;padding:0;margin:0;min-width:0;";
+        }
+
+        // Style the checkbox panel.
+        panel.style.cssText =
+          "padding:0.15rem 0 0.15rem 10px;margin:0;" +
+          "background:#2a2a2a;border:1px solid #555;border-top:none;" +
+          "border-radius:0 0 4px 4px;";
+        panel.querySelectorAll(".form-check").forEach(function (chk) {
+          // Only override vertical spacing — Bootstrap 5 needs padding-left:1.5em
+          // to position the floated checkbox input correctly; touching it moves
+          // the checkboxes hard-left outside their labels.
+          chk.style.marginBottom = "0";
+          chk.style.paddingTop = "0.15rem";
+          chk.style.paddingBottom = "0.15rem";
+          chk.style.minHeight = "unset";
+        });
+        panel.querySelectorAll(".form-check-label").forEach(function (lbl) {
+          lbl.style.color = "#e0e0e0";
+          lbl.style.fontSize = "0.8rem";
+          lbl.style.cursor = "pointer";
+          lbl.style.margin = "0";
+        });
+
+        // Start collapsed; auto-open if any item is already checked.
+        var hasChecked = !!panel.querySelector("input[type='checkbox']:checked");
+        panel.style.display = hasChecked ? "block" : "none";
+        if (hasChecked) caret.style.transform = "rotate(180deg)";
+
+        // Toggle open/close on legend click.
+        toggleEl.addEventListener("click", function (e) {
+          e.preventDefault();
+          var open = panel.style.display !== "none";
+          panel.style.display = open ? "none" : "block";
+          caret.style.transform = open ? "" : "rotate(180deg)";
+          setTimeout(recalcSidebarHeight, 50);
+        });
+      });
+    }
 
     const copyForm = function () {
       const formContainer = document.getElementById("filter-form-container");
@@ -319,7 +448,8 @@ const FilterControl = L.Control.extend({
             sessionStorage.setItem("sidebarOpen", "true");
             var url = new URL(window.location.href);
             [
-              "name", "region_name", "quality_categories", "patch_test",
+              "name", "region_name", "vehicle_name", "platformtype",
+              "quality_categories", "patch_test",
               "repeat_survey", "mgds_compilation", "expedition__name",
               "filter_type", "q", "xmin", "xmax", "ymin", "ymax",
               "tmin", "tmax",
@@ -338,13 +468,15 @@ const FilterControl = L.Control.extend({
         var params = new URLSearchParams(new FormData(clonedForm));
         var url = new URL(window.location.href);
         [
-          "name", "region_name", "quality_categories", "patch_test",
+          "name", "region_name", "vehicle_name", "platformtype",
+          "quality_categories", "patch_test",
           "repeat_survey", "mgds_compilation", "expedition__name",
           "filter_type",
         ].forEach(function (k) { url.searchParams.delete(k); });
-        for (var pair of params.entries()) {
-          if (pair[1]) url.searchParams.set(pair[0], pair[1]);
-        }
+        // Use append (not set) to preserve all checkbox values for multi-select fields.
+        params.forEach(function (val, key) {
+          if (val) url.searchParams.append(key, val);
+        });
         window.location.href = url.toString();
       });
 
@@ -413,6 +545,9 @@ const FilterControl = L.Control.extend({
         formInBody.style.paddingRight = "0";
       }
 
+      // Convert CheckboxSelectMultiple groups into collapsible accordions.
+      setupCheckboxDropdowns(clonedForm);
+
       // Auto-adjust sidebar height.
       setTimeout(function () {
         if (sidebar) {
@@ -479,8 +614,9 @@ const FilterControl = L.Control.extend({
         var pad =
           parseFloat(window.getComputedStyle(b).paddingTop) +
           parseFloat(window.getComputedStyle(b).paddingBottom);
-        sidebar.style.height =
-          Math.min(bodyH + hdrH + pad, window.innerHeight * 0.8) + "px";
+        var mapEl2 = document.getElementById("map_mission_filter");
+        var mapH2  = mapEl2 ? mapEl2.clientHeight : Math.round(window.innerHeight * 0.5);
+        sidebar.style.height = Math.min(bodyH + hdrH + pad, mapH2) + "px";
       }
     }
 
@@ -913,6 +1049,62 @@ function _styleBtn(btn, borderColor) {
   btn.style.setProperty("flex", "1 1 auto", "important");
   btn.style.setProperty("align-self", "center", "important");
 }
+
+// ---------------------------------------------------------------------------
+// initTableLayout — pins #mission-table-wrapper to the viewport as a fixed
+// element that starts exactly at the map's visual bottom edge and extends to
+// the top of the footer.  Using position:fixed means the wrapper is completely
+// independent of document-flow quirks (top:150px CSS on the map, Leaflet's
+// inline position:relative, etc.) — the layout is driven purely by the
+// viewport-relative coordinates returned by getBoundingClientRect().
+//
+// Side-effects:
+//   • The footer is also fixed to the viewport bottom so it stays visible.
+//   • The table body is the only thing that scrolls (overflow-y:auto).
+// ---------------------------------------------------------------------------
+function initTableLayout() {
+  var mapEl        = document.getElementById("map_mission_filter");
+  var tableWrapper = document.getElementById("mission-table-wrapper");
+  if (!tableWrapper || !mapEl) return;
+
+  // 1. Pin the footer to the viewport bottom so it sits above the table.
+  var footerEl = document.getElementById("footer");
+  var footerH  = 0;
+  if (footerEl) {
+    footerH = footerEl.offsetHeight;
+    footerEl.style.position        = "fixed";
+    footerEl.style.bottom          = "0";
+    footerEl.style.left            = "0";
+    footerEl.style.right           = "0";
+    footerEl.style.zIndex          = "2";
+    footerEl.style.backgroundColor = "#fff";
+  }
+
+  // 2. Fix the table wrapper between the map's visual bottom and the footer.
+  //    getBoundingClientRect().bottom already accounts for the CSS top:150px
+  //    visual offset (if it's active), scroll position, and viewport geometry.
+  var mapBottom = Math.round(mapEl.getBoundingClientRect().bottom);
+  tableWrapper.style.position        = "fixed";
+  tableWrapper.style.top             = mapBottom + "px";
+  tableWrapper.style.left            = "0";
+  tableWrapper.style.right           = "0";
+  tableWrapper.style.bottom          = footerH + "px";
+  tableWrapper.style.overflowY       = "auto";
+  tableWrapper.style.overflowX       = "auto";
+  tableWrapper.style.backgroundColor = "#fff";
+  tableWrapper.style.zIndex          = "1";
+  // Clear any legacy margin/height set by the old approach.
+  tableWrapper.style.marginTop = "";
+  tableWrapper.style.height    = "";
+}
+
+// Run once after the page settles (map needs a moment to render its final
+// geometry), then keep in sync with viewport resizes.
+setTimeout(initTableLayout, 150);
+window.addEventListener("resize", function () {
+  if (map) { map.invalidateSize(); }
+  setTimeout(initTableLayout, 50);
+});
 
 function _attachResizeHandles(panel) {
   var handles = panel.querySelectorAll(".resize-handle");

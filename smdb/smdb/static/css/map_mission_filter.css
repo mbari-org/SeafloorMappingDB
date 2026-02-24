@@ -20,6 +20,24 @@ html {
   margin: 0;
 }
 
+/* ── Mission table scroll wrapper ───────────────────────────────────────── */
+/* Position and height are set dynamically by initTableLayout() in          */
+/* map_mission_filter.js (position:fixed, top=map-bottom, bottom=footer).   */
+#mission-table-wrapper {
+  overflow-y: auto;
+  overflow-x: auto;
+  min-height: 100px;
+}
+
+/* filters.css sets "div#tableContainers4 { position:absolute; top:700px }"
+   which was designed for the old static layout.  Override it here so the
+   table starts flush at the top of the fixed wrapper. */
+#mission-table-wrapper #tableContainers4 {
+  position: relative;
+  top: 0;
+  width: 100%;
+}
+
 /* ── Table chrome ───────────────────────────────────────────────────────── */
 th,
 td {

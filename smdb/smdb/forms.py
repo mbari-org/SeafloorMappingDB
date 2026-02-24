@@ -8,6 +8,8 @@ class MissionFilterFormHelper(FormHelper):
         Row(
             Column("name", css_class="form-group col-md mb-0"),
             Column("region_name", css_class="form-group col-md mb-0"),
+            Column("vehicle_name", css_class="form-group col-md mb-0"),
+            Column("platformtype", css_class="form-group col-md mb-0"),
             Column("quality_categories", css_class="form-group col-md mb-0"),
             Column("patch_test", css_class="form-group col-md mb-0"),
             Column("repeat_survey", css_class="form-group col-md mb-0"),
@@ -86,6 +88,8 @@ class MissionFilterSidebarHelper(FormHelper):
     layout = Layout(
         Div("name", css_class="mb-3"),
         Div("region_name", css_class="mb-3"),
+        Div("vehicle_name", css_class="mb-3"),
+        Div("platformtype", css_class="mb-3"),
         Div("quality_categories", css_class="mb-3"),
         Div("patch_test", css_class="mb-3"),
         Div("repeat_survey", css_class="mb-3"),

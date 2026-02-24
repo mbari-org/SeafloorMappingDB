@@ -232,6 +232,101 @@ const FilterControl = L.Control.extend({
     body.style.minHeight = "200px";
     body.style.maxHeight = "calc(80vh - 60px)"; // Account for header height
 
+    // -----------------------------------------------------------------------
+    // recalcSidebarHeight — recompute sidebar height after a dropdown opens
+    // or closes so the sidebar expands/contracts smoothly.
+    // -----------------------------------------------------------------------
+    function recalcSidebarHeight() {
+      if (!sidebar) return;
+      var b = document.getElementById("filter-sidebar-body");
+      if (!b) return;
+      var hdrH = sidebar.querySelector(".filter-sidebar-header")
+        ? sidebar.querySelector(".filter-sidebar-header").offsetHeight : 50;
+      var pad = parseFloat(window.getComputedStyle(b).paddingTop)
+              + parseFloat(window.getComputedStyle(b).paddingBottom);
+      var totalH = b.scrollHeight + hdrH + pad;
+      sidebar.style.height = Math.min(totalH, window.innerHeight * 0.8) + "px";
+    }
+
+    // -----------------------------------------------------------------------
+    // setupCheckboxDropdowns — identical to map_mission_filter.js; turns each
+    // CheckboxSelectMultiple fieldset into a collapsible dark accordion so the
+    // home-page sidebar looks identical to the Missions-page sidebar.
+    // -----------------------------------------------------------------------
+    function setupCheckboxDropdowns(formEl) {
+      formEl.querySelectorAll('[id^="div_id_"]').forEach(function (outerDiv) {
+        var checks = outerDiv.querySelectorAll(".form-check");
+        if (checks.length === 0) return;
+
+        var toggleEl = outerDiv.querySelector("legend") ||
+                       outerDiv.querySelector("label.form-label");
+        if (!toggleEl) return;
+
+        var panel = checks[0].parentElement;
+        if (!panel) return;
+
+        // Avoid double-initialising if copyForm is retried.
+        if (toggleEl.dataset.dropdownInit) return;
+        toggleEl.dataset.dropdownInit = "1";
+
+        toggleEl.style.cssText =
+          "display:flex;justify-content:space-between;align-items:center;" +
+          "width:100%;max-width:230px;padding:0.3rem;box-sizing:border-box;" +
+          "background:#1e1e1e;border:1px solid #555;" +
+          "border-radius:4px;cursor:pointer;color:#e0e0e0;font-size:0.8rem;" +
+          "margin-bottom:0;user-select:none;";
+
+        var caret = document.createElement("span");
+        caret.innerHTML = "&#8964;";
+        caret.style.cssText =
+          "font-size:0.9rem;font-weight:bold;line-height:1;" +
+          "transition:transform 0.2s;flex-shrink:0;color:#e0e0e0;";
+        toggleEl.appendChild(caret);
+
+        toggleEl.addEventListener("mouseenter", function () {
+          toggleEl.style.boxShadow =
+            "inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px cornflowerblue";
+        });
+        toggleEl.addEventListener("mouseleave", function () {
+          toggleEl.style.boxShadow = "none";
+        });
+
+        var fieldset = outerDiv.querySelector("fieldset");
+        if (fieldset) {
+          fieldset.style.cssText = "border:none;padding:0;margin:0;min-width:0;";
+        }
+
+        panel.style.cssText =
+          "padding:0.15rem 0 0.15rem 10px;margin:0;" +
+          "background:#2a2a2a;border:1px solid #555;border-top:none;" +
+          "border-radius:0 0 4px 4px;";
+        panel.querySelectorAll(".form-check").forEach(function (chk) {
+          chk.style.marginBottom = "0";
+          chk.style.paddingTop = "0.15rem";
+          chk.style.paddingBottom = "0.15rem";
+          chk.style.minHeight = "unset";
+        });
+        panel.querySelectorAll(".form-check-label").forEach(function (lbl) {
+          lbl.style.color = "#e0e0e0";
+          lbl.style.fontSize = "0.8rem";
+          lbl.style.cursor = "pointer";
+          lbl.style.margin = "0";
+        });
+
+        var hasChecked = !!panel.querySelector("input[type='checkbox']:checked");
+        panel.style.display = hasChecked ? "block" : "none";
+        if (hasChecked) caret.style.transform = "rotate(180deg)";
+
+        toggleEl.addEventListener("click", function (e) {
+          e.preventDefault();
+          var open = panel.style.display !== "none";
+          panel.style.display = open ? "none" : "block";
+          caret.style.transform = open ? "" : "rotate(180deg)";
+          setTimeout(recalcSidebarHeight, 50);
+        });
+      });
+    }
+
     // Function to copy and style form based on selected filter type
     const copyForm = function (filterType = "mission") {
       const formContainer = document.getElementById("filter-form-container");
@@ -414,7 +509,7 @@ const FilterControl = L.Control.extend({
             
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
-            const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+            const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             window.location.href = currentUrl.toString();
             return false;
@@ -431,12 +526,13 @@ const FilterControl = L.Control.extend({
         // Preserve current URL path and add filter parameters
         const currentUrl = new URL(window.location.href);
         // Clear existing filter params to avoid conflicts
-        const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type'];
+        const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type'];
         filterKeys.forEach(key => currentUrl.searchParams.delete(key));
-        // Add new filter params from form
+        // Add new filter params from form — use append() so that multi-value
+        // fields (e.g. several quality_categories checkboxes) are preserved.
         for (const [key, value] of params.entries()) {
           if (value) { // Only add non-empty values
-            currentUrl.searchParams.set(key, value);
+            currentUrl.searchParams.append(key, value);
           }
         }
         // Reload page with filter parameters
@@ -865,7 +961,7 @@ const FilterControl = L.Control.extend({
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             // Remove all filter-related query parameters
-            const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+            const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             // Reload page without filter parameters (stay on home/map page)
             window.location.href = currentUrl.toString();
@@ -965,6 +1061,11 @@ const FilterControl = L.Control.extend({
         }
       });
 
+      // Transform CheckboxSelectMultiple fieldsets into collapsible dark dropdowns
+      // (vehicle_name, platformtype, quality_categories) — must run last so it
+      // wins over any earlier display:block applied to .form-label elements.
+      setupCheckboxDropdowns(clonedForm);
+
       // Auto-adjust sidebar height after form is copied
       setTimeout(function () {
         if (sidebar) {
@@ -1046,7 +1147,7 @@ const FilterControl = L.Control.extend({
                 // Clear all filter parameters and reload current page
                 const currentUrl = new URL(window.location.href);
                 // Remove all filter-related query parameters
-                const filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+                const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
                 filterKeys.forEach(key => currentUrl.searchParams.delete(key));
                 // Reload page without filter parameters (stay on home/map page)
                 window.location.href = currentUrl.toString();
@@ -1077,6 +1178,11 @@ const FilterControl = L.Control.extend({
             lbl.style.display = "block";
             lbl.style.color = "#e0e0e0";
           });
+
+          // Re-apply collapsible dropdown transforms after form-label styling
+          // (which would have overridden display:flex on the legend toggles).
+          const switchedForm = body.querySelector("form");
+          if (switchedForm) setupCheckboxDropdowns(switchedForm);
         }, 100);
       }
     };
@@ -1890,7 +1996,7 @@ map.on(L.Draw.Event.CREATED, function (e) {
     // Get current filter parameters from URL
     var urlParams = new URLSearchParams(window.location.search);
     var filterParams = {};
-    var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
+    var filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
     filterKeys.forEach(function(key) {
       if (urlParams.has(key)) {
         filterParams[key] = urlParams.get(key);
@@ -2918,7 +3024,7 @@ function exportMissions(format) {
   // Build query string from current filter params
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
-  var filterKeys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
+  var filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
   filterKeys.forEach(function(key) {
     if (urlParams.has(key)) {
       filterParams[key] = urlParams.get(key);

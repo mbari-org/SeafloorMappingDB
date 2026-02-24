@@ -48,6 +48,17 @@
         {{ mission.region_name|default_if_none:"" }}
       </div>
       <div>
+        <span class="font-weight-bold">Vehicle name:</span>
+        {{ mission.vehicle_name|default_if_none:"" }}
+      </div>
+      {% if mission.mgds_compilation %}
+      <div>
+        <span class="font-weight-bold">MGDS compilation:</span>
+        <a href="https://www.marine-geo.org/tools/new_search/search_map.php?dataset_name={{ mission.mgds_compilation }}"
+           target="_blank" rel="noopener noreferrer">{{ mission.mgds_compilation }}</a>
+      </div>
+      {% endif %}
+      <div>
         <span class="font-weight-bold">Quality categories:</span>
         {% for qc in mission.quality_categories.all %}
           {{ qc.name }},
