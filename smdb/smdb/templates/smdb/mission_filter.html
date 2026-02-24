@@ -7,12 +7,17 @@
   {{ block.super }}
   <link rel="stylesheet" type="text/css" href="{% static 'css/map_mission_filter.css' %}">
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+  {# Leaflet.draw for Draw Rectangle (box search) control #}
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+    integrity="sha384-NZLkVuBRMEeB4VeZz27WwTRvlhec30biQ8Xx7zG7JJnkvEKRg5qi6BNbEXo9ydwv"
+    crossorigin="anonymous">
 {% endblock %}
 
 {% block javascript %}
     {{ block.super }}
     <!-- Load Leaflet from CDN -->
-    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" 
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
     integrity="sha384-4Dmmo81xejNChaqLOci80VhUcuEAD5pXpCtqtizmdgWEzdETh3zrJvzOhU4T79cN"
     crossorigin="anonymous"></script>
 
@@ -24,19 +29,45 @@
     <!-- Load Esri Leaflet Vector from CDN -->
     <script src="https://unpkg.com/esri-leaflet-vector@3.1.1/dist/esri-leaflet-vector.js"
     integrity="sha512-7rLAors9em7cR3/583gZSvu1mxwPBUjWjdFJ000pc4Wpu+fq84lXF1l4dbG4ShiPQ4pSBUTb4e9xaO6xtMZIlA=="
-    crossorigin=""></script> 
+    crossorigin=""></script>
+
+    <!-- Leaflet.draw for Draw Rectangle (box search) control -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
+    integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN"
+    crossorigin="anonymous"></script>
+
+    <!-- Font Awesome for filter funnel and square icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"
+    integrity="sha384-xBXmu0dk1bEoiwd71wOonQLyH+VpgR1XcDH3rtxrLww5ajNTuMvBdL5SOiFZnNdp"
+    crossorigin="anonymous" data-observe-mutations></script>
 {% endblock %}
 
 {% block content %}
     <h2 id="mission_h2">Missions</h2>
-    {% if filter %}
-    {% crispy filter.form filter.form.helper %}
-    {% endif %}
+
+    {# Hidden container: the crispy form is cloned into the sidebar by map_mission_filter.js #}
+    <div id="filter-form-container" style="display:none;">
+      {% if filter %}
+        <div id="filter-form-mission">
+          {% crispy filter.form filter.form.helper %}
+        </div>
+      {% endif %}
+    </div>
+
+    {# Fallback form rendered when JavaScript is disabled #}
+    <noscript>
+      {% if filter %}
+        <div class="mb-3">
+          {% crispy filter.form filter.form.helper %}
+        </div>
+      {% endif %}
+    </noscript>
+
     {{ missions|json_script:"missions-data" }}
     <div id="map_mission_filter" style="height: 500px;"></div>
     <script src="{% static 'js/map_mission_filter.js' %}"></script>
+
     {% if table %}
         {% render_table table "smdb_tables2_bootstrap4.html" %}
     {% endif %}
 {% endblock %}
-

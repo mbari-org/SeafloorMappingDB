@@ -320,7 +320,47 @@ class MissionTableView(FilterView, SingleTableView):
     table_class = MissionTable
     queryset = Mission.objects.all().order_by("name")
     filterset_class = MissionFilter
-    formhelper_class = MissionFilterFormHelper
+    formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
+
+    def _get_bbox_geom(self):
+        """Parse xmin/xmax/ymin/ymax from request into a Polygon, or return None."""
+        if not self.request.GET.get("xmin"):
+            return None
+        try:
+            min_lon = float(self.request.GET["xmin"])
+            max_lon = float(self.request.GET["xmax"])
+            min_lat = float(self.request.GET["ymin"])
+            max_lat = float(self.request.GET["ymax"])
+            return Polygon(
+                (
+                    (min_lon, min_lat),
+                    (min_lon, max_lat),
+                    (max_lon, max_lat),
+                    (max_lon, min_lat),
+                    (min_lon, min_lat),
+                ),
+                srid=4326,
+            )
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    def get_queryset(self):
+        """Return base queryset with optional bbox pre-filter applied.
+
+        Applying the bbox here ensures both the rendered table (via FilterView)
+        and the map serializer in get_context_data() operate on the same rows.
+        """
+        qs = Mission.objects.select_related("expedition").all().order_by("name")
+        search_geom = self._get_bbox_geom()
+        if search_geom:
+            # Use the same predicates as the select/export API endpoints so that
+            # the table rows and the API results agree for the same bbox.
+            qs = qs.filter(
+                Q(nav_track__intersects=search_geom)
+                | Q(grid_bounds__intersects=search_geom)
+                | Q(start_point__within=search_geom)
+            )
+        return qs
 
     def get_filterset(self, filterset_class):
         kwargs = self.get_filterset_kwargs(filterset_class)
@@ -329,25 +369,28 @@ class MissionTableView(FilterView, SingleTableView):
         return filterset
 
     def get_context_data(self, *args, **kwargs):
-        # Call the base implementation first to get a context - then add filtered Missions
         context = super().get_context_data(**kwargs)
-        missions = MissionFilter(
-            self.request.GET,
-            queryset=Mission.objects.select_related("expedition").all(),
-        ).qs
+
+        # self.object_list is the filterset-filtered queryset set by FilterView
+        # before get_context_data() is called; it already incorporates both the
+        # MissionFilter fields and the bbox pre-filter from get_queryset().
+        missions = self.object_list
+
         sort = self.request.GET.get("sort")
         if sort:
             missions = missions.order_by(sort)
-        
-        # Filter to only missions with nav_track before pagination (for map display)
-        # This ensures the map shows track lines, not just bounding boxes
-        # Missions without nav_track will be filtered out by the serializer anyway
-        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
-        
+
+        # Only pass missions with track lines to the map serializer.
+        missions_for_map = missions.filter(
+            nav_track__isnull=False
+        ).exclude(nav_track__isempty=True)
+
         per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
-        missions = missions[slice((page - 1) * per_page, page * per_page)]
-        context["missions"] = MissionSerializer(missions, many=True).data
+        missions_for_map = missions_for_map[
+            slice((page - 1) * per_page, page * per_page)
+        ]
+        context["missions"] = MissionSerializer(missions_for_map, many=True).data
         return context
 
 

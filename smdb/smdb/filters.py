@@ -26,7 +26,10 @@ class MissionFilter(FilterSet):
             field_name="region_name",
             choices=[
                 (m, m)
-                for m in Mission.objects.values_list("region_name", flat=True).distinct()
+                for m in Mission.objects.exclude(region_name="")
+                .values_list("region_name", flat=True)
+                .distinct()
+                .order_by("region_name")
             ],
             label="",
             empty_label="- region -",
@@ -98,9 +101,10 @@ class MissionFilter(FilterSet):
             field_name="mgds_compilation",
             choices=[
                 (m, m)
-                for m in Mission.objects.values_list(
-                    "mgds_compilation", flat=True
-                ).distinct()
+                for m in Mission.objects.exclude(mgds_compilation="")
+                .values_list("mgds_compilation", flat=True)
+                .distinct()
+                .order_by("mgds_compilation")
             ],
             label="",
             empty_label="- MGDS_compilation -",
