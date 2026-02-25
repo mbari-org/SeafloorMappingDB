@@ -1288,6 +1288,9 @@ let feature = L.geoJSON(missions, {
   onEachFeature: function(feature, layer) {
     // layer._path is null here (path not created until layer is added to map).
     // Use the 'add' event, which fires after onAdd() has created _path.
+    // smdb-track-line  — enables the :hover yellow-stroke rule in project.css.
+    // smdb-geometry-line — marks this as a line geometry for baselayer-specific
+    //                      stroke-color rules (GMRT rust, Google Hybrid white).
     layer.on('add', function() {
       if (this._path) {
         this._path.classList.add('smdb-track-line', 'smdb-geometry-line');
