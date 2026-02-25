@@ -373,17 +373,22 @@ class MissionTableView(FilterView, SingleTableView):
 
         Applying the bbox here ensures both the rendered table (via FilterView)
         and the map serializer in get_context_data() operate on the same rows.
+
+        If xmin is present but the bbox is invalid (e.g. inverted coords),
+        return an empty queryset so the user sees no results rather than all.
         """
         qs = Mission.objects.select_related("expedition").all().order_by("name")
-        search_geom = self._get_bbox_geom()
-        if search_geom:
-            # Use the same predicates as the select/export API endpoints so that
-            # the table rows and the API results agree for the same bbox.
-            qs = qs.filter(
-                Q(nav_track__intersects=search_geom)
-                | Q(grid_bounds__intersects=search_geom)
-                | Q(start_point__within=search_geom)
-            )
+        if self.request.GET.get("xmin"):
+            search_geom = self._get_bbox_geom()
+            if search_geom:
+                qs = qs.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(grid_bounds__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+            else:
+                # xmin was supplied but coords are invalid — return nothing.
+                qs = qs.none()
         return qs
 
     def get_filterset(self, filterset_class):
@@ -409,8 +414,18 @@ class MissionTableView(FilterView, SingleTableView):
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
-        per_page = int(self.request.GET.get("per_page", 10))
-        page = int(self.request.GET.get("page", 1))
+        try:
+            per_page = int(self.request.GET.get("per_page", 10))
+        except (TypeError, ValueError):
+            per_page = 10
+        per_page = max(1, min(per_page, 100))
+
+        try:
+            page = int(self.request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        page = max(1, page)
+
         missions = missions[slice((page - 1) * per_page, page * per_page)]
         context["missions"] = MissionSerializer(missions, many=True).data
         return context

@@ -2015,64 +2015,11 @@ function fnBrowserDetect() {
   console.log("You are using " + browserName + " browser");
   return browserName;
 }
-/////////////////////////////////////////////////////////////////////////////////
-// Determine which BaseMap is selected and if the Google Hybrid Map, change the
-// stroke color to orange in order to visually see the tracks better
-// Hovering over these orange track lines will also produce a yellow focus color change
-////////////////////////////////////////////////////////////////////////////////
-
-var radios = document.querySelectorAll(
-  "input[type=radio][name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector"
-);
-[].forEach.call(radios, function (radio) {
-  radio.onchange = function () {
-    var radioButton = $(
-      "input[name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector:checked"
-    );
-    var label_value = radioButton.closest("label").find("span").html();
-    // console.log(
-    //   "BaseMap Label: " +
-    //     label_value +
-    //     "\nradioButton: " +
-    //     radioButton +
-    //     "\nradios: " +
-    //     radios
-    // );
-    for (var i = 0; i < radioButton.length; i++) {
-      if (radioButton[i].checked) {
-        if (label_value == "  Google Hybrid Layer ") {
-          $("path.leaflet-interactive").css("stroke", "");
-          $("path.leaflet-interactive").css("stroke", "orange");
-          $(document).ready(function () {
-            $("path.leaflet-interactive").hover(
-              function () {
-                $(this).css("stroke", "yellow");
-              },
-              function () {
-                $(this).css("stroke", "orange");
-              }
-            );
-          });
-        } else {
-          if (label_value !== "  Google Hybrid Layer ") {
-            $(document).ready(function () {
-              $("path.leaflet-interactive").css("stroke", "");
-              $("path.leaflet-interactive").css("stroke", "rust");
-              $("path.leaflet-interactive").hover(
-                function () {
-                  $(this).css("stroke", "yellow");
-                },
-                function () {
-                  $(this).css("stroke", "");
-                }
-              );
-            });
-          }
-        }
-      }
-    }
-  };
-});
+// Basemap-dependent stroke colours and hover highlighting are now handled
+// entirely via CSS using the smdb-baselayer-* classes set by updateBasemapClass()
+// (see project.css and the baselayerchange listener above).
+// The legacy jQuery radio.onchange block that applied inline stroke styles has
+// been removed — inline styles override CSS class rules and broke hover styling.
 
 /////////////////////////////////////////////////////////////////////////////
 // Enable L.Control.Measure to be compatible with new Leaflet 1.8.0 release

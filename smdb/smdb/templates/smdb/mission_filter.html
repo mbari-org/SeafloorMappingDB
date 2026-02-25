@@ -5,8 +5,8 @@
 
 {% block css %}
   {{ block.super }}
+  {# base.html already loads Leaflet 1.8.0 CSS — no need to repeat it here #}
   <link rel="stylesheet" type="text/css" href="{% static 'css/map_mission_filter.css' %}">
-  <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css">
   {# Leaflet.draw for Draw Rectangle (box search) control #}
   <link rel="stylesheet" type="text/css"
     href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
@@ -36,10 +36,7 @@
     integrity="sha384-JP5UPxIO2Tm2o79Fb0tGYMa44jkWar53aBoCbd8ah0+LcCDoohTIYr+zIXyfGIJN"
     crossorigin="anonymous"></script>
 
-    <!-- Font Awesome for filter funnel and square icons -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"
-    integrity="sha384-xBXmu0dk1bEoiwd71wOonQLyH+VpgR1XcDH3rtxrLww5ajNTuMvBdL5SOiFZnNdp"
-    crossorigin="anonymous" data-observe-mutations></script>
+    {# Font Awesome 5.15.1 is already loaded by base.html — no separate FA include needed #}
 {% endblock %}
 
 {% block content %}

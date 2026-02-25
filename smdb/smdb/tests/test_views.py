@@ -176,12 +176,23 @@ def test_mission_table_view_bbox_invalid_coords(client):
 
 
 def test_mission_table_view_bbox_inverted_coords(client):
-    """MissionTableView rejects inverted bbox (xmin > xmax) — no 500, no results."""
+    """MissionTableView rejects inverted bbox (xmin > xmax) — no 500, zero results."""
     url = reverse("missions")
     response = client.get(url, {
         "xmin": "180", "xmax": "-180", "ymin": "-90", "ymax": "90",
     })
     assert response.status_code == 200
+
+    table_missions = response.context.get("object_list", [])
+    assert len(table_missions) == 0, (
+        "Inverted bbox (xmin > xmax) should yield no table results."
+    )
+
+    missions_geojson = response.context.get("missions", {})
+    features = missions_geojson.get("features", []) if isinstance(missions_geojson, dict) else []
+    assert len(features) == 0, (
+        "Inverted bbox (xmin > xmax) should yield no map GeoJSON results."
+    )
 
 
 def test_mission_table_view_bbox_and_map_context_consistent(client):
