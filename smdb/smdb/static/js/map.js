@@ -1290,7 +1290,7 @@ let feature = L.geoJSON(missions, {
     // Use the 'add' event, which fires after onAdd() has created _path.
     // smdb-track-line  — enables the :hover yellow-stroke rule in project.css.
     // smdb-geometry-line — marks this as a line geometry for baselayer-specific
-    //                      stroke-color rules (GMRT rust, Google Hybrid white).
+    //                      stroke-color rules (GMRT rust, Google Hybrid orange).
     layer.on('add', function() {
       if (this._path) {
         this._path.classList.add('smdb-track-line', 'smdb-geometry-line');
@@ -2015,11 +2015,24 @@ function fnBrowserDetect() {
   console.log("You are using " + browserName + " browser");
   return browserName;
 }
-// Basemap-dependent stroke colours and hover highlighting are now handled
-// entirely via CSS using the smdb-baselayer-* classes set by updateBasemapClass()
-// (see project.css and the baselayerchange listener above).
-// The legacy jQuery radio.onchange block that applied inline stroke styles has
-// been removed — inline styles override CSS class rules and broke hover styling.
+// The grouped-layer control (L.control.groupedLayers) does not always fire the
+// standard Leaflet baselayerchange event, so we also watch the radio inputs
+// directly.  We only call updateBasemapClass() here — no inline styles.
+var radios = document.querySelectorAll(
+  "input[type=radio][name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector"
+);
+[].forEach.call(radios, function (radio) {
+  radio.onchange = function () {
+    var checked = document.querySelector(
+      "input[name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector:checked"
+    );
+    if (checked) {
+      var label = checked.closest("label");
+      var span = label ? label.querySelector("span") : null;
+      updateBasemapClass(span ? span.textContent : "");
+    }
+  };
+});
 
 /////////////////////////////////////////////////////////////////////////////
 // Enable L.Control.Measure to be compatible with new Leaflet 1.8.0 release
