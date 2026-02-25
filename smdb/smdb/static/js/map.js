@@ -1686,20 +1686,15 @@ var measure = L.control
   })
   .addTo(map);
 
-// Prevent #close from being added to URL when closing measure control
-// Use capture phase to intercept before the default action
+// Prevent #close from being added to URL when closing measure control.
+// Scoped to .leaflet-control-measure to avoid interfering with other components.
 document.addEventListener('click', function(e) {
   var target = e.target;
-  // Check if click is on a link with #close or within measure control
-  if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
+  var link = (target.tagName === 'A' && target.getAttribute('href') === '#close')
+    ? target
+    : target.closest('a[href="#close"]');
+  if (link && link.closest('.leaflet-control-measure')) {
     e.preventDefault();
-    return false;
-  }
-  // Also check parent elements
-  var parent = target.closest('a[href="#close"]');
-  if (parent) {
-    e.preventDefault();
-    return false;
   }
 }, true);
 
