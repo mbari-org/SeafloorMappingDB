@@ -334,7 +334,11 @@ class MissionTableView(FilterView, SingleTableView):
     formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
 
     def _get_bbox_geom(self):
-        """Parse xmin/xmax/ymin/ymax from request into a Polygon, or return None."""
+        """Parse xmin/xmax/ymin/ymax from request into a Polygon, or return None.
+
+        Returns None if any parameter is missing, non-numeric, out of the valid
+        geographic range (-180≤lon≤180, -90≤lat≤90), or inverted (min > max).
+        """
         if not self.request.GET.get("xmin"):
             return None
         try:
@@ -342,18 +346,27 @@ class MissionTableView(FilterView, SingleTableView):
             max_lon = float(self.request.GET["xmax"])
             min_lat = float(self.request.GET["ymin"])
             max_lat = float(self.request.GET["ymax"])
-            return Polygon(
-                (
-                    (min_lon, min_lat),
-                    (min_lon, max_lat),
-                    (max_lon, max_lat),
-                    (max_lon, min_lat),
-                    (min_lon, min_lat),
-                ),
-                srid=4326,
-            )
         except (KeyError, TypeError, ValueError):
             return None
+        if not (
+            -180.0 <= min_lon <= 180.0
+            and -180.0 <= max_lon <= 180.0
+            and -90.0 <= min_lat <= 90.0
+            and -90.0 <= max_lat <= 90.0
+            and min_lon <= max_lon
+            and min_lat <= max_lat
+        ):
+            return None
+        return Polygon(
+            (
+                (min_lon, min_lat),
+                (min_lon, max_lat),
+                (max_lon, max_lat),
+                (max_lon, min_lat),
+                (min_lon, min_lat),
+            ),
+            srid=4326,
+        )
 
     def get_queryset(self):
         """Return base queryset with optional bbox pre-filter applied.
