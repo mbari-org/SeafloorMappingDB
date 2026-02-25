@@ -392,16 +392,14 @@ class MissionTableView(FilterView, SingleTableView):
             missions = missions.order_by(sort)
 
         # Only pass missions with track lines to the map serializer.
-        missions_for_map = missions.filter(
+        missions = missions.filter(
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
         per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
-        missions_for_map = missions_for_map[
-            slice((page - 1) * per_page, page * per_page)
-        ]
-        context["missions"] = MissionSerializer(missions_for_map, many=True).data
+        missions = missions[slice((page - 1) * per_page, page * per_page)]
+        context["missions"] = MissionSerializer(missions, many=True).data
         return context
 
 
