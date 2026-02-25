@@ -2012,7 +2012,7 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  console.log("You are using " + browserName + " browser");
+  // console.log("You are using " + browserName + " browser");
   return browserName;
 }
 // The grouped-layer control (L.control.groupedLayers) does not always fire the

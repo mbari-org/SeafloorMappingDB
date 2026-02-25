@@ -75,6 +75,42 @@ class MissionSerializer(GeoFeatureModelSerializer):
         return super().to_representation(instance)
 
 
+def _parse_bbox_geom(request):
+    """Parse xmin/xmax/ymin/ymax from a request's GET params into a Polygon.
+
+    Returns None if any parameter is absent, non-numeric, out of valid
+    geographic range (-180≤lon≤180, -90≤lat≤90), or inverted (min > max).
+    """
+    if not request.GET.get("xmin"):
+        return None
+    try:
+        min_lon = float(request.GET["xmin"])
+        max_lon = float(request.GET["xmax"])
+        min_lat = float(request.GET["ymin"])
+        max_lat = float(request.GET["ymax"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not (
+        -180.0 <= min_lon <= 180.0
+        and -180.0 <= max_lon <= 180.0
+        and -90.0 <= min_lat <= 90.0
+        and -90.0 <= max_lat <= 90.0
+        and min_lon <= max_lon
+        and min_lat <= max_lat
+    ):
+        return None
+    return Polygon(
+        (
+            (min_lon, min_lat),
+            (min_lon, max_lat),
+            (max_lon, max_lat),
+            (max_lon, min_lat),
+            (min_lon, min_lat),
+        ),
+        srid=4326,
+    )
+
+
 class MissionOverView(TemplateView):
     logger = logging.getLogger(__name__)
     template_name = "pages/home.html"
@@ -104,33 +140,7 @@ class MissionOverView(TemplateView):
         context["filter"] = mission_filter
         
         search_string = context["view"].request.GET.get("q")
-        search_geom = None
-        if context["view"].request.GET.get("xmin"):
-            try:
-                min_lon = float(context["view"].request.GET.get("xmin"))
-                max_lon = float(context["view"].request.GET.get("xmax"))
-                min_lat = float(context["view"].request.GET.get("ymin"))
-                max_lat = float(context["view"].request.GET.get("ymax"))
-                if (
-                    -180.0 <= min_lon <= 180.0
-                    and -180.0 <= max_lon <= 180.0
-                    and -90.0 <= min_lat <= 90.0
-                    and -90.0 <= max_lat <= 90.0
-                    and min_lon <= max_lon
-                    and min_lat <= max_lat
-                ):
-                    search_geom = Polygon(
-                        (
-                            (min_lon, min_lat),
-                            (min_lon, max_lat),
-                            (max_lon, max_lat),
-                            (max_lon, min_lat),
-                            (min_lon, min_lat),
-                        ),
-                        srid=4326,
-                    )
-            except (TypeError, ValueError):
-                pass
+        search_geom = _parse_bbox_geom(context["view"].request)
         # Check which filter type is active based on filter_type parameter or field presence
         filter_type = self.request.GET.get('filter_type', '')
         
@@ -334,39 +344,8 @@ class MissionTableView(FilterView, SingleTableView):
     formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
 
     def _get_bbox_geom(self):
-        """Parse xmin/xmax/ymin/ymax from request into a Polygon, or return None.
-
-        Returns None if any parameter is missing, non-numeric, out of the valid
-        geographic range (-180≤lon≤180, -90≤lat≤90), or inverted (min > max).
-        """
-        if not self.request.GET.get("xmin"):
-            return None
-        try:
-            min_lon = float(self.request.GET["xmin"])
-            max_lon = float(self.request.GET["xmax"])
-            min_lat = float(self.request.GET["ymin"])
-            max_lat = float(self.request.GET["ymax"])
-        except (KeyError, TypeError, ValueError):
-            return None
-        if not (
-            -180.0 <= min_lon <= 180.0
-            and -180.0 <= max_lon <= 180.0
-            and -90.0 <= min_lat <= 90.0
-            and -90.0 <= max_lat <= 90.0
-            and min_lon <= max_lon
-            and min_lat <= max_lat
-        ):
-            return None
-        return Polygon(
-            (
-                (min_lon, min_lat),
-                (min_lon, max_lat),
-                (max_lon, max_lat),
-                (max_lon, min_lat),
-                (min_lon, min_lat),
-            ),
-            srid=4326,
-        )
+        """Delegate to the module-level _parse_bbox_geom helper."""
+        return _parse_bbox_geom(self.request)
 
     def get_queryset(self):
         """Return base queryset with optional bbox pre-filter applied.
