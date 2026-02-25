@@ -106,20 +106,31 @@ class MissionOverView(TemplateView):
         search_string = context["view"].request.GET.get("q")
         search_geom = None
         if context["view"].request.GET.get("xmin"):
-            min_lon = context["view"].request.GET.get("xmin")
-            max_lon = context["view"].request.GET.get("xmax")
-            min_lat = context["view"].request.GET.get("ymin")
-            max_lat = context["view"].request.GET.get("ymax")
-            search_geom = Polygon(
-                (
-                    (float(min_lon), float(min_lat)),
-                    (float(min_lon), float(max_lat)),
-                    (float(max_lon), float(max_lat)),
-                    (float(max_lon), float(min_lat)),
-                    (float(min_lon), float(min_lat)),
-                ),
-                srid=4326,
-            )
+            try:
+                min_lon = float(context["view"].request.GET.get("xmin"))
+                max_lon = float(context["view"].request.GET.get("xmax"))
+                min_lat = float(context["view"].request.GET.get("ymin"))
+                max_lat = float(context["view"].request.GET.get("ymax"))
+                if (
+                    -180.0 <= min_lon <= 180.0
+                    and -180.0 <= max_lon <= 180.0
+                    and -90.0 <= min_lat <= 90.0
+                    and -90.0 <= max_lat <= 90.0
+                    and min_lon <= max_lon
+                    and min_lat <= max_lat
+                ):
+                    search_geom = Polygon(
+                        (
+                            (min_lon, min_lat),
+                            (min_lon, max_lat),
+                            (max_lon, max_lat),
+                            (max_lon, min_lat),
+                            (min_lon, min_lat),
+                        ),
+                        srid=4326,
+                    )
+            except (TypeError, ValueError):
+                pass
         # Check which filter type is active based on filter_type parameter or field presence
         filter_type = self.request.GET.get('filter_type', '')
         
