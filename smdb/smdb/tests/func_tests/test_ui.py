@@ -227,13 +227,19 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
 
     Verifies the complete chain:
       1. smdb-track-line / smdb-geometry-line classes exist on SVG paths.
-      2. The CSS :hover rule (stroke: yellow !important) fires when hovered.
+      2. The CSS :hover rule (stroke: yellow) is present in the loaded stylesheet.
+      3. Moving the mouse over the path triggers the yellow stroke.
 
-    Uses SVG getPointAtLength() + getScreenCTM() to compute the exact viewport
-    coordinates of the path midpoint, then moves the mouse there via a
-    viewport-origin W3C pointer action (ActionBuilder).  This is more reliable
-    than move_to_element_with_offset for thin SVG paths routed through a remote
-    Selenium Hub, where element-centre calculations can miss the 3.5 px stroke.
+    Two hover strategies are attempted in sequence so the test is robust across
+    different Selenium/Chromium builds:
+      - Attempt 1: precise viewport coordinates via getPointAtLength()+getScreenCTM()
+        and ActionBuilder.move_to_location().  Best for thin SVG strokes; a
+        WebDriverWait polling loop is intentionally avoided because repeated
+        execute_script() calls can reset the browser pointer-hit state in some
+        headless Chromium builds, causing the :hover pseudo-class to be lost.
+      - Attempt 2: ActionChains.move_to_element() fallback.  Less precise for thin
+        lines but uses Selenium's built-in element-centre calculation and works in
+        environments where the coordinate approach misses the stroke.
     """
     chrome.get(live_server_url_for_selenium)
 
@@ -242,14 +248,37 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
         EC.presence_of_element_located((By.CSS_SELECTOR, _TRACK_CSS))
     )
 
+    # Verify the CSS hover rule is present in the loaded stylesheets.
+    # This fast, environment-independent check catches missing/broken CSS rules
+    # before attempting the slower Selenium hover interaction.
+    hover_rule_stroke = chrome.execute_script("""
+        for (var i = 0; i < document.styleSheets.length; i++) {
+            try {
+                var rules = document.styleSheets[i].cssRules || [];
+                for (var j = 0; j < rules.length; j++) {
+                    var r = rules[j];
+                    if (r.selectorText
+                            && r.selectorText.indexOf('smdb-track-line') > -1
+                            && r.selectorText.indexOf(':hover') > -1) {
+                        return r.style.stroke;
+                    }
+                }
+            } catch (e) {}
+        }
+        return null;
+    """)
+    assert hover_rule_stroke in ("yellow", "rgb(255, 255, 0)"), (
+        f"CSS :hover rule for smdb-track-line not found or not yellow "
+        f"(got: '{hover_rule_stroke}'). Check project.css (issue #291)."
+    )
+
     # Record the resting (non-hover) stroke color before moving the mouse.
     resting_color = chrome.execute_script(
         "return window.getComputedStyle(arguments[0]).stroke;", track
     )
 
-    # Find the viewport (CSS-pixel) coordinates of the midpoint of the path stroke.
-    # getPointAtLength() gives a point in SVG user space; getScreenCTM() converts it
-    # to viewport coordinates accounting for any CSS transforms on the SVG element.
+    # Compute the viewport (CSS-pixel) coordinates of the path midpoint so the
+    # mouse lands on the actual stroke, not an empty corner of the bounding box.
     coords = chrome.execute_script("""
         var path = document.querySelector(arguments[0]);
         if (!path) return null;
@@ -264,23 +293,28 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
 
     assert coords, "Could not compute path screen coordinates."
 
-    # Use viewport-absolute coordinates (origin="viewport") so the pointer move
-    # bypasses element-centre calculations and goes exactly to the path stroke pixel.
-    # This is more reliable than move_to_element_with_offset for thin SVG paths
-    # routed through a remote Selenium Hub.
+    def _is_yellow():
+        c = chrome.execute_script(
+            "return window.getComputedStyle(arguments[0]).stroke;", track
+        )
+        return c and ("255, 255, 0" in c or c.lower() == "yellow")
+
+    # Attempt 1: precise viewport-coordinate move — avoids WebDriverWait polling
+    # which can reset :hover state in some headless Chromium builds.
     mouse = PointerInput("mouse", "mouse")
     builder = ActionBuilder(chrome, mouse=mouse)
     builder.pointer_action.move_to_location(int(coords["pathX"]), int(coords["pathY"]))
     builder.perform()
+    time.sleep(0.5)
 
-    # Poll until the computed stroke changes from the resting color, up to 10 s.
-    # This is more reliable than a fixed sleep in slower CI environments.
-    hover_color = WebDriverWait(chrome, 10).until(
-        lambda d: (
-            lambda c: c if c and c != resting_color and (
-                "255, 255, 0" in c or c.lower() == "yellow"
-            ) else None
-        )(d.execute_script("return window.getComputedStyle(arguments[0]).stroke;", track))
+    # Attempt 2: element-centre fallback for environments where the coordinate
+    # approach misses the stroke (e.g. different window size or DPR scaling).
+    if not _is_yellow():
+        ActionChains(chrome).move_to_element(track).perform()
+        time.sleep(0.5)
+
+    hover_color = chrome.execute_script(
+        "return window.getComputedStyle(arguments[0]).stroke;", track
     )
 
     assert hover_color is not None, "Could not read computed stroke on track element."
