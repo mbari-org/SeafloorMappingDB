@@ -71,6 +71,19 @@ td {
   color: yellow;
 }
 
+/* Hover link (issue #293): label + track + row highlight together; hovered label on top. */
+.label-mission-name.smdb-hover {
+  z-index: 1000;
+  background: rgba(255, 255, 0, 0.35);
+  border-radius: 3px;
+  padding: 2px 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.label-mission-name.smdb-hover a {
+  color: #333;
+  font-weight: 600;
+}
+
 /* ── Utility ────────────────────────────────────────────────────────────── */
 .align-items-center {
   -ms-flex-align: center !important;

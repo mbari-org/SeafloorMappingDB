@@ -54,11 +54,13 @@ let feature = L.geoJSON(missions, {
           this.classList.add("smdb-hover");
           var sel = 'tr[data-mission-slug="' + CSS.escape(slug) + '"]';
           document.querySelectorAll(sel).forEach(function (tr) { tr.classList.add("smdb-hover"); });
+          document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (lbl) { lbl.classList.add("smdb-hover"); });
         });
         this._path.addEventListener("mouseout", function () {
           this.classList.remove("smdb-hover");
           var sel = 'tr[data-mission-slug="' + CSS.escape(slug) + '"]';
           document.querySelectorAll(sel).forEach(function (tr) { tr.classList.remove("smdb-hover"); });
+          document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (lbl) { lbl.classList.remove("smdb-hover"); });
         });
       }
     });
@@ -126,30 +128,64 @@ map.whenReady(function () {
   }, 100);
 });
 
-// Mission name labels (markers at start of each track)
+// Mission name labels (markers beside start of each track — issue #293: offset + hover link)
 if (hasMissions && missions.features) {
+  var labelOffsetDeg = 0.0012;
   for (var i = 0; i < missions.features.length; i++) {
     var mission = missions.features[i];
+    var coords = mission.geometry.coordinates;
+    var slug = (mission.properties && mission.properties.slug) ? mission.properties.slug : "";
+    var lat0, lng0, latlng;
     try {
-      var latlng = L.latLng(
-        mission.geometry.coordinates[0][1],
-        mission.geometry.coordinates[0][0]
-      );
+      lat0 = coords[0][1];
+      lng0 = coords[0][0];
+      latlng = L.latLng(lat0, lng0);
     } catch (err) {
-      // console.log(mission.properties.slug + ": " + err.message);
       continue;
     }
-    L.marker(latlng, {
+    // Offset label perpendicular to first segment so it sits beside the track, not on it.
+    if (coords.length >= 2) {
+      var lat1 = coords[1][1];
+      var lng1 = coords[1][0];
+      var dlat = lat1 - lat0;
+      var dlng = lng1 - lng0;
+      var len = Math.sqrt(dlat * dlat + dlng * dlng) || 1;
+      var perpLat = (-dlng / len) * labelOffsetDeg;
+      var perpLng = (dlat / len) * labelOffsetDeg;
+      latlng = L.latLng(lat0 + perpLat, lng0 + perpLng);
+    }
+    var marker = L.marker(latlng, {
       icon: L.divIcon({
         className: "label-mission-name",
         html:
           "<a target='_blank' href='/missions/" +
-          mission.properties.slug +
+          (mission.properties.slug ? mission.properties.slug : "") +
           "'>" +
-          mission.properties.slug +
+          (mission.properties.slug ? mission.properties.slug : "") +
           "</a>",
       }),
-    }).addTo(map);
+    });
+    (function (missionSlug) {
+      marker.on("add", function () {
+        var el = this._icon;
+        if (!el || !missionSlug) return;
+        el.setAttribute("data-mission-slug", missionSlug);
+        el.addEventListener("mouseover", function () {
+          el.classList.add("smdb-hover");
+          var sel = 'path[data-mission-slug="' + CSS.escape(missionSlug) + '"]';
+          var mapEl = document.getElementById("map_mission_filter");
+          if (mapEl) mapEl.querySelectorAll(sel).forEach(function (p) { p.classList.add("smdb-hover"); });
+          document.querySelectorAll('tr[data-mission-slug="' + CSS.escape(missionSlug) + '"]').forEach(function (tr) { tr.classList.add("smdb-hover"); });
+        });
+        el.addEventListener("mouseout", function () {
+          el.classList.remove("smdb-hover");
+          var mapEl = document.getElementById("map_mission_filter");
+          if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(missionSlug) + '"]').forEach(function (p) { p.classList.remove("smdb-hover"); });
+          document.querySelectorAll('tr[data-mission-slug="' + CSS.escape(missionSlug) + '"]').forEach(function (tr) { tr.classList.remove("smdb-hover"); });
+        });
+      });
+    })(slug);
+    marker.addTo(map);
   }
 }
 
@@ -969,11 +1005,13 @@ function updateResultsPanel(message, missions) {
       tr.classList.add("smdb-hover");
       var mapEl = document.getElementById("map_mission_filter");
       if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.add("smdb-hover"); });
+      document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (lbl) { lbl.classList.add("smdb-hover"); });
     });
     tr.addEventListener("mouseout", function () {
       tr.classList.remove("smdb-hover");
       var mapEl = document.getElementById("map_mission_filter");
       if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.remove("smdb-hover"); });
+      document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (lbl) { lbl.classList.remove("smdb-hover"); });
     });
   });
 
@@ -1185,10 +1223,12 @@ function attachMissionTableRowHover() {
     tr.addEventListener("mouseover", function () {
       tr.classList.add("smdb-hover");
       mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.add("smdb-hover"); });
+      document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (lbl) { lbl.classList.add("smdb-hover"); });
     });
     tr.addEventListener("mouseout", function () {
       tr.classList.remove("smdb-hover");
       mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.remove("smdb-hover"); });
+      document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (lbl) { lbl.classList.remove("smdb-hover"); });
     });
   });
 }
