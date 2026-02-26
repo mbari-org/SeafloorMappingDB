@@ -131,3 +131,20 @@ dmypy.json
 # Certificate files
 smdb.crt
 smdb.key
+
+# Local / do not commit
+debug.yml
+BULLETPROOF_TEST_PLAN.md
+CONFTEST_CORRECTION.md
+DEPLOYMENT_WORKFLOW.md
+FIXTURE_EXPLANATION.md
+ISSUE_290_3D_CITATIONS_PLAN.md
+LOCALHOST_BUILD_SUMMARY.md
+PR286_ANALYSIS.md
+PR286_COMPLETE_FINDINGS.md
+PR286_FIX_SUMMARY.md
+PR286_FIX_SUMMARY_CORRECTED.md
+PYTHON_VERSION_CORRECTION.md
+QUICK_BUILD_TEST_GUIDE.md
+smdb/run_pytest_on_dev_server.md
+smdb/tests_leaflet_measure.md
