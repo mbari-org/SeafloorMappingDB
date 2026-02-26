@@ -379,12 +379,13 @@ span:hover {
 /* =============================================================================
    PATH.LEAFLET-INTERACTIVE CLASS TAXONOMY (map.js + project.css + leaflet-measure.css)
    -----------------------------------------------------------------------------
-   Control path stroke, point, line and polygon separately by baselayer and by
-   source (track, measure, draw, future). JS adds:
-   - Source: .smdb-track-line | .smdb-measurement-path | .smdb-capture-path | .smdb-draw-polygon
-   - Geometry: .smdb-geometry-point (circles) | .smdb-geometry-line | .smdb-geometry-polygon
+   Control path stroke and line styling by baselayer and source. Currently, JS adds:
+   - Source:   .smdb-track-line
+   - Geometry: .smdb-geometry-line
    Map container: #map.smdb-baselayer-gmrt | #map.smdb-baselayer-google-hybrid
-   Measure active: #map.smdb-measure-active (leaflet-measure.css wins for measure elements)
+
+   Note: Additional source/geometry classes for points and polygons may be introduced
+   in the future; this comment reflects only the classes implemented at present.
    ============================================================================= */
 
 /* General Typography - OVERRIDES leaflet.css*/

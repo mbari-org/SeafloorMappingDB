@@ -107,17 +107,23 @@ def test_leaflet_measure_completes_measurement(chrome, live_server_url_for_selen
         };
     """)
     
+    # Derive click offsets from the map size so the test adapts to viewport changes.
+    offset1_x = int(map_rect["width"] * 0.25)
+    offset1_y = int(map_rect["height"] * 0.25)
+    offset2_x = int(map_rect["width"] * 0.50)
+    offset2_y = offset1_y
+
     # Click on map to add points (2 points to create a line)
     actions = ActionChains(chrome)
-    actions.move_to_element_with_offset(map_element, 100, 100).click().perform()
+    actions.move_to_element_with_offset(map_element, offset1_x, offset1_y).click().perform()
     time.sleep(0.3)
-    actions.move_to_element_with_offset(map_element, 200, 100).click().perform()
+    actions.move_to_element_with_offset(map_element, offset2_x, offset2_y).click().perform()
     time.sleep(0.3)
-    
+
     # Finish the measurement (click Finish button or double-click)
-    actions.move_to_element_with_offset(map_element, 200, 100).double_click().perform()
+    actions.move_to_element_with_offset(map_element, offset2_x, offset2_y).double_click().perform()
     time.sleep(1)
-    
+
     # Verify measurement result appears (popup with measurement data)
     measurement_results = chrome.find_elements(By.CSS_SELECTOR, ".leaflet-popup-content")
     assert len(measurement_results) > 0, "Measurement result popup should appear"
@@ -156,37 +162,36 @@ def test_leaflet_measure_color_persists(chrome, live_server_url_for_selenium, mi
     
     # Open color picker and change color to red
     paintbrush = chrome.find_elements(By.CSS_SELECTOR, ".measure-color-picker-btn")
-    if paintbrush:
-        paintbrush[0].click()
-        time.sleep(0.5)
-        
-        # Click red preset button
-        red_preset = chrome.find_elements(By.CSS_SELECTOR, '.color-preset[data-color="#ff0000"]')
-        if red_preset:
-            red_preset[0].click()
-            time.sleep(0.3)
-            
-            # Click Apply button
-            apply_button = chrome.find_element(By.ID, "applyColorBtn")
-            apply_button.click()
-            time.sleep(1)
-            
-            # Verify the measurement path has red color and user-color marker
-            has_user_color = chrome.execute_script("""
-                const paths = document.querySelectorAll('path.leaflet-interactive');
-                for (let path of paths) {
-                    const container = path.closest('.smdb-measure-user-color');
-                    if (container) {
-                        const stroke = path.style.stroke || path.getAttribute('stroke');
-                        if (stroke && (stroke.includes('255, 0, 0') || stroke.includes('#ff0000') || stroke.includes('rgb(255, 0, 0)'))) {
-                            return true;
-                        }
-                    }
+    assert paintbrush, "Measure color paintbrush button should be present after completing a measurement"
+    paintbrush[0].click()
+    time.sleep(0.5)
+
+    # Click red preset button
+    red_preset = chrome.find_elements(By.CSS_SELECTOR, '.color-preset[data-color="#ff0000"]')
+    assert red_preset, "Red color preset (#ff0000) should be present in the color picker"
+    red_preset[0].click()
+    time.sleep(0.3)
+
+    # Click Apply button
+    apply_button = chrome.find_element(By.ID, "applyColorBtn")
+    apply_button.click()
+    time.sleep(1)
+
+    # Verify the measurement path has red color and user-color marker
+    has_user_color = chrome.execute_script("""
+        const paths = document.querySelectorAll('path.leaflet-interactive');
+        for (let path of paths) {
+            const container = path.closest('.smdb-measure-user-color');
+            if (container) {
+                const stroke = path.style.stroke || path.getAttribute('stroke');
+                if (stroke && (stroke.includes('255, 0, 0') || stroke.includes('#ff0000') || stroke.includes('rgb(255, 0, 0)'))) {
+                    return true;
                 }
-                return false;
-            """)
-            
-            assert has_user_color, "User-chosen red color should persist on the measurement"
+            }
+        }
+        return false;
+    """)
+    assert has_user_color, "User-chosen red color should persist on the measurement"
 
 
 # ---------------------------------------------------------------------------

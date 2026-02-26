@@ -105,6 +105,7 @@ class MissionFilter(FilterSet):
             choices=[
                 (m, m)
                 for m in Mission.objects.exclude(mgds_compilation="")
+                .exclude(mgds_compilation__isnull=True)
                 .values_list("mgds_compilation", flat=True)
                 .distinct()
                 .order_by("mgds_compilation")

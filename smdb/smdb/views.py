@@ -75,6 +75,42 @@ class MissionSerializer(GeoFeatureModelSerializer):
         return super().to_representation(instance)
 
 
+def _parse_bbox_geom(request):
+    """Parse xmin/xmax/ymin/ymax from a request's GET params into a Polygon.
+
+    Returns None if any parameter is absent, non-numeric, out of valid
+    geographic range (-180≤lon≤180, -90≤lat≤90), or inverted (min > max).
+    """
+    if not request.GET.get("xmin"):
+        return None
+    try:
+        min_lon = float(request.GET["xmin"])
+        max_lon = float(request.GET["xmax"])
+        min_lat = float(request.GET["ymin"])
+        max_lat = float(request.GET["ymax"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not (
+        -180.0 <= min_lon <= 180.0
+        and -180.0 <= max_lon <= 180.0
+        and -90.0 <= min_lat <= 90.0
+        and -90.0 <= max_lat <= 90.0
+        and min_lon <= max_lon
+        and min_lat <= max_lat
+    ):
+        return None
+    return Polygon(
+        (
+            (min_lon, min_lat),
+            (min_lon, max_lat),
+            (max_lon, max_lat),
+            (max_lon, min_lat),
+            (min_lon, min_lat),
+        ),
+        srid=4326,
+    )
+
+
 class MissionOverView(TemplateView):
     logger = logging.getLogger(__name__)
     template_name = "pages/home.html"
@@ -104,22 +140,7 @@ class MissionOverView(TemplateView):
         context["filter"] = mission_filter
         
         search_string = context["view"].request.GET.get("q")
-        search_geom = None
-        if context["view"].request.GET.get("xmin"):
-            min_lon = context["view"].request.GET.get("xmin")
-            max_lon = context["view"].request.GET.get("xmax")
-            min_lat = context["view"].request.GET.get("ymin")
-            max_lat = context["view"].request.GET.get("ymax")
-            search_geom = Polygon(
-                (
-                    (float(min_lon), float(min_lat)),
-                    (float(min_lon), float(max_lat)),
-                    (float(max_lon), float(max_lat)),
-                    (float(max_lon), float(min_lat)),
-                    (float(min_lon), float(min_lat)),
-                ),
-                srid=4326,
-            )
+        search_geom = _parse_bbox_geom(context["view"].request)
         # Check which filter type is active based on filter_type parameter or field presence
         filter_type = self.request.GET.get('filter_type', '')
         
@@ -327,43 +348,30 @@ class MissionTableView(FilterView, SingleTableView):
     formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
 
     def _get_bbox_geom(self):
-        """Parse xmin/xmax/ymin/ymax from request into a Polygon, or return None."""
-        if not self.request.GET.get("xmin"):
-            return None
-        try:
-            min_lon = float(self.request.GET["xmin"])
-            max_lon = float(self.request.GET["xmax"])
-            min_lat = float(self.request.GET["ymin"])
-            max_lat = float(self.request.GET["ymax"])
-            return Polygon(
-                (
-                    (min_lon, min_lat),
-                    (min_lon, max_lat),
-                    (max_lon, max_lat),
-                    (max_lon, min_lat),
-                    (min_lon, min_lat),
-                ),
-                srid=4326,
-            )
-        except (KeyError, TypeError, ValueError):
-            return None
+        """Delegate to the module-level _parse_bbox_geom helper."""
+        return _parse_bbox_geom(self.request)
 
     def get_queryset(self):
         """Return base queryset with optional bbox pre-filter applied.
 
         Applying the bbox here ensures both the rendered table (via FilterView)
         and the map serializer in get_context_data() operate on the same rows.
+
+        If xmin is present but the bbox is invalid (e.g. inverted coords),
+        return an empty queryset so the user sees no results rather than all.
         """
         qs = Mission.objects.select_related("expedition").all().order_by("name")
-        search_geom = self._get_bbox_geom()
-        if search_geom:
-            # Use the same predicates as the select/export API endpoints so that
-            # the table rows and the API results agree for the same bbox.
-            qs = qs.filter(
-                Q(nav_track__intersects=search_geom)
-                | Q(grid_bounds__intersects=search_geom)
-                | Q(start_point__within=search_geom)
-            )
+        if self.request.GET.get("xmin"):
+            search_geom = self._get_bbox_geom()
+            if search_geom:
+                qs = qs.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(grid_bounds__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+            else:
+                # xmin was supplied but coords are invalid — return nothing.
+                qs = qs.none()
         return qs
 
     def get_filterset(self, filterset_class):
@@ -385,16 +393,24 @@ class MissionTableView(FilterView, SingleTableView):
             missions = missions.order_by(sort)
 
         # Only pass missions with track lines to the map serializer.
-        missions_for_map = missions.filter(
+        missions = missions.filter(
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
-        per_page = int(self.request.GET.get("per_page", 10))
-        page = int(self.request.GET.get("page", 1))
-        missions_for_map = missions_for_map[
-            slice((page - 1) * per_page, page * per_page)
-        ]
-        context["missions"] = MissionSerializer(missions_for_map, many=True).data
+        try:
+            per_page = int(self.request.GET.get("per_page", 10))
+        except (TypeError, ValueError):
+            per_page = 10
+        per_page = max(1, min(per_page, 100))
+
+        try:
+            page = int(self.request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        page = max(1, page)
+
+        missions = missions[slice((page - 1) * per_page, page * per_page)]
+        context["missions"] = MissionSerializer(missions, many=True).data
         return context
 
 

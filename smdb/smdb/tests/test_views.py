@@ -140,19 +140,34 @@ def test_mission_export_api_with_empty_dates(client):
 
 
 def test_mission_table_view_with_bbox(client):
-    """MissionTableView returns 200 and filters missions when bbox params are present."""
+    """MissionTableView applies bbox filtering — tight box excludes all Monterey fixtures."""
     url = reverse("missions")
-    response = client.get(url, {
-        "xmin": "-180", "xmax": "180", "ymin": "-90", "ymax": "90",
+
+    # All 5 fixture missions are near Monterey Bay (~-122, 36); get full unfiltered count.
+    response_all = client.get(url)
+    assert response_all.status_code == 200
+    missions_all = response_all.context["missions"]
+    assert isinstance(missions_all, dict) and "features" in missions_all
+    all_count = len(missions_all["features"])
+    assert all_count > 0, "Expected fixture missions to be present"
+
+    # A bbox around the equatorial Atlantic excludes all Monterey missions.
+    response_bbox = client.get(url, {
+        "xmin": "-10", "xmax": "10", "ymin": "-10", "ymax": "10",
     })
-    assert response.status_code == 200
-    # context["missions"] is the serialized GeoJSON used by the map
-    missions_geojson = response.context["missions"]
-    assert isinstance(missions_geojson, (list, dict))
+    assert response_bbox.status_code == 200
+    missions_bbox = response_bbox.context["missions"]
+    assert isinstance(missions_bbox, dict) and "features" in missions_bbox
+    bbox_count = len(missions_bbox["features"])
+
+    assert bbox_count < all_count, (
+        f"Bbox filter should exclude Monterey missions but got {bbox_count}/{all_count}. "
+        "Check MissionTableView bbox filtering in views.py."
+    )
 
 
 def test_mission_table_view_bbox_invalid_coords(client):
-    """MissionTableView handles non-numeric bbox params gracefully (no 500)."""
+    """MissionTableView handles non-numeric bbox params gracefully — no 500."""
     url = reverse("missions")
     response = client.get(url, {
         "xmin": "not-a-number", "xmax": "180", "ymin": "-90", "ymax": "90",
@@ -160,17 +175,57 @@ def test_mission_table_view_bbox_invalid_coords(client):
     assert response.status_code == 200
 
 
+def test_mission_table_view_bbox_inverted_coords(client):
+    """MissionTableView rejects inverted bbox (xmin > xmax) — no 500, zero results."""
+    url = reverse("missions")
+    response = client.get(url, {
+        "xmin": "180", "xmax": "-180", "ymin": "-90", "ymax": "90",
+    })
+    assert response.status_code == 200
+
+    table_missions = response.context.get("object_list", [])
+    assert len(table_missions) == 0, (
+        "Inverted bbox (xmin > xmax) should yield no table results."
+    )
+
+    missions_geojson = response.context.get("missions", {})
+    features = missions_geojson.get("features", []) if isinstance(missions_geojson, dict) else []
+    assert len(features) == 0, (
+        "Inverted bbox (xmin > xmax) should yield no map GeoJSON results."
+    )
+
+
 def test_mission_table_view_bbox_and_map_context_consistent(client):
-    """Table queryset and map context missions agree when bbox filtering is applied."""
+    """Map GeoJSON context is a subset of the table queryset for the same bbox."""
     url = reverse("missions")
     response = client.get(url, {
         "xmin": "-180", "xmax": "180", "ymin": "-90", "ymax": "90",
     })
     assert response.status_code == 200
-    # The map serializer only includes missions with nav_track; the table may
-    # include more (missions without nav_track are valid table rows).  Assert
-    # that the map context is a subset of the table queryset rather than
-    # containing missions that weren't matched by the bbox filter at all.
+
     missions_geojson = response.context["missions"]
-    # GeoJSON FeatureCollection or list — just confirm it is present and valid.
     assert missions_geojson is not None
+
+    # Collect IDs from the table queryset (object_list from ListView).
+    table_ids = {
+        m.id for m in response.context.get("object_list", []) if hasattr(m, "id")
+    }
+
+    # Collect IDs from the GeoJSON used by the map.
+    if isinstance(missions_geojson, dict):
+        features = missions_geojson.get("features", [])
+    elif isinstance(missions_geojson, list):
+        features = missions_geojson
+    else:
+        features = []
+    map_ids = {
+        f.get("properties", {}).get("id")
+        for f in features
+        if isinstance(f, dict) and f.get("properties", {}).get("id") is not None
+    }
+
+    # Every mission on the map must also appear in the table queryset.
+    assert map_ids.issubset(table_ids), (
+        f"Map missions {map_ids - table_ids} are not in the table queryset. "
+        "Check MissionTableView bbox filtering logic."
+    )

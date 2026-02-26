@@ -334,7 +334,7 @@
     overflow-wrap: break-word !important;
 }
 
-leaflet-control-measure .results .heading {
+.leaflet-control-measure .results .heading {
     margin-right: 5px;
     /* color: #999; */
 }

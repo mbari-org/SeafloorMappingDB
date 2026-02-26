@@ -7,6 +7,25 @@
  */
 
 // ---------------------------------------------------------------------------
+// Filter parameter key lists — single source of truth for URL param names.
+// ---------------------------------------------------------------------------
+
+// Core form fields (from MissionFilter / MissionFilterSidebarHelper).
+var MISSION_FILTER_KEYS = [
+  "name", "region_name", "vehicle_name", "platformtype",
+  "quality_categories", "patch_test",
+  "repeat_survey", "mgds_compilation", "expedition__name", "filter_type",
+];
+
+// Non-spatial URL params: form fields + free-text search + temporal range.
+// Used when collecting existing filter state before adding a new bbox draw.
+var NON_SPATIAL_FILTER_KEYS = MISSION_FILTER_KEYS.concat(["q", "tmin", "tmax"]);
+
+// All managed URL params including spatial bounds.
+// Used when clearing all filter state (Cancel / Clear button).
+var ALL_FILTER_KEYS = NON_SPATIAL_FILTER_KEYS.concat(["xmin", "xmax", "ymin", "ymax"]);
+
+// ---------------------------------------------------------------------------
 // Map and base tile layer
 // ---------------------------------------------------------------------------
 const map = L.map("map_mission_filter");
@@ -372,14 +391,11 @@ const FilterControl = L.Control.extend({
         lbl.setAttribute("for", lbl.getAttribute("for") + "-sidebar");
       });
 
-      // Remove any onclick attributes left by crispy forms Clear buttons
+      // Neutralise any Clear/Reset buttons in the cloned form so they don't
+      // navigate away.  Buttons created by this JS carry data-smdb-clear="true";
+      // type="reset" catches any form-native reset buttons.
       clonedForm.querySelectorAll("button").forEach(function (btn) {
-        var onclick = btn.getAttribute("onclick");
-        var isClearBtn =
-          btn.type === "reset" ||
-          (btn.id && (btn.id.includes("Cancel") || btn.id.includes("clear"))) ||
-          (onclick && onclick.includes("window.location"));
-        if (isClearBtn) {
+        if (btn.getAttribute("data-smdb-clear") === "true" || btn.type === "reset") {
           btn.removeAttribute("onclick");
           btn.onclick = null;
         }
@@ -413,6 +429,7 @@ const FilterControl = L.Control.extend({
       clearBtn.id = "missionFilterCancel";
       clearBtn.className = "btn btn-secondary";
       clearBtn.textContent = "Clear";
+      clearBtn.setAttribute("data-smdb-clear", "true");
       _styleBtn(clearBtn, "#6c757d");
 
       buttonRow.appendChild(filterBtn);
@@ -438,22 +455,15 @@ const FilterControl = L.Control.extend({
           function (e) {
           var tgt = e.target;
           var isClear =
-            tgt.type === "reset" ||
-            (tgt.id &&
-              (tgt.id.includes("Cancel") || tgt.id.includes("clear")));
+            tgt.getAttribute("data-smdb-clear") === "true" ||
+            tgt.type === "reset";
           if (isClear && tgt.closest("#filter-sidebar-body")) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
             sessionStorage.setItem("sidebarOpen", "true");
             var url = new URL(window.location.href);
-            [
-              "name", "region_name", "vehicle_name", "platformtype",
-              "quality_categories", "patch_test",
-              "repeat_survey", "mgds_compilation", "expedition__name",
-              "filter_type", "q", "xmin", "xmax", "ymin", "ymax",
-              "tmin", "tmax",
-            ].forEach(function (k) { url.searchParams.delete(k); });
+            ALL_FILTER_KEYS.forEach(function (k) { url.searchParams.delete(k); });
             window.location.href = url.toString();
             return false;
           }
@@ -467,12 +477,7 @@ const FilterControl = L.Control.extend({
         e.preventDefault();
         var params = new URLSearchParams(new FormData(clonedForm));
         var url = new URL(window.location.href);
-        [
-          "name", "region_name", "vehicle_name", "platformtype",
-          "quality_categories", "patch_test",
-          "repeat_survey", "mgds_compilation", "expedition__name",
-          "filter_type",
-        ].forEach(function (k) { url.searchParams.delete(k); });
+        MISSION_FILTER_KEYS.forEach(function (k) { url.searchParams.delete(k); });
         // Use append (not set) to preserve all checkbox values for multi-select fields.
         params.forEach(function (val, key) {
           if (val) url.searchParams.append(key, val);
@@ -788,11 +793,7 @@ map.on(L.Draw.Event.CREATED, function (e) {
   // Collect any active filter params from the current URL.
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
-  [
-    "name", "region_name", "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "expedition__name",
-    "filter_type", "q", "tmin", "tmax",
-  ].forEach(function (k) {
+  NON_SPATIAL_FILTER_KEYS.forEach(function (k) {
     if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
   });
   filterParams.xmin = bbox.xmin;
@@ -1000,11 +1001,7 @@ function exportMissions(format) {
 
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
-  [
-    "name", "region_name", "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "expedition__name",
-    "filter_type", "q", "tmin", "tmax",
-  ].forEach(function (k) {
+  NON_SPATIAL_FILTER_KEYS.forEach(function (k) {
     if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
   });
   filterParams.xmin = bbox.xmin;

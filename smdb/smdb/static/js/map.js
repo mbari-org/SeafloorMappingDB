@@ -1394,6 +1394,9 @@ let feature = L.geoJSON(missions, {
   onEachFeature: function(feature, layer) {
     // layer._path is null here (path not created until layer is added to map).
     // Use the 'add' event, which fires after onAdd() has created _path.
+    // smdb-track-line  — enables the :hover yellow-stroke rule in project.css.
+    // smdb-geometry-line — marks this as a line geometry for baselayer-specific
+    //                      stroke-color rules (GMRT rust, Google Hybrid orange).
     layer.on('add', function() {
       if (this._path) {
         this._path.classList.add('smdb-track-line', 'smdb-geometry-line');
@@ -1792,20 +1795,15 @@ var measure = L.control
   })
   .addTo(map);
 
-// Prevent #close from being added to URL when closing measure control
-// Use capture phase to intercept before the default action
+// Prevent #close from being added to URL when closing measure control.
+// Scoped to .leaflet-control-measure to avoid interfering with other components.
 document.addEventListener('click', function(e) {
   var target = e.target;
-  // Check if click is on a link with #close or within measure control
-  if (target.tagName === 'A' && target.getAttribute('href') === '#close') {
+  var link = (target.tagName === 'A' && target.getAttribute('href') === '#close')
+    ? target
+    : target.closest('a[href="#close"]');
+  if (link && link.closest('.leaflet-control-measure')) {
     e.preventDefault();
-    return false;
-  }
-  // Also check parent elements
-  var parent = target.closest('a[href="#close"]');
-  if (parent) {
-    e.preventDefault();
-    return false;
   }
 }, true);
 
@@ -2120,64 +2118,24 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  console.log("You are using " + browserName + " browser");
+  // console.log("You are using " + browserName + " browser");
   return browserName;
 }
-/////////////////////////////////////////////////////////////////////////////////
-// Determine which BaseMap is selected and if the Google Hybrid Map, change the
-// stroke color to orange in order to visually see the tracks better
-// Hovering over these orange track lines will also produce a yellow focus color change
-////////////////////////////////////////////////////////////////////////////////
-
+// The grouped-layer control (L.control.groupedLayers) does not always fire the
+// standard Leaflet baselayerchange event, so we also watch the radio inputs
+// directly.  We only call updateBasemapClass() here — no inline styles.
 var radios = document.querySelectorAll(
   "input[type=radio][name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector"
 );
 [].forEach.call(radios, function (radio) {
   radio.onchange = function () {
-    var radioButton = $(
+    var checked = document.querySelector(
       "input[name=leaflet-exclusive-group-layer-0].leaflet-control-layers-selector:checked"
     );
-    var label_value = radioButton.closest("label").find("span").html();
-    // console.log(
-    //   "BaseMap Label: " +
-    //     label_value +
-    //     "\nradioButton: " +
-    //     radioButton +
-    //     "\nradios: " +
-    //     radios
-    // );
-    for (var i = 0; i < radioButton.length; i++) {
-      if (radioButton[i].checked) {
-        if (label_value == "  Google Hybrid Layer ") {
-          $("path.leaflet-interactive").css("stroke", "");
-          $("path.leaflet-interactive").css("stroke", "orange");
-          $(document).ready(function () {
-            $("path.leaflet-interactive").hover(
-              function () {
-                $(this).css("stroke", "yellow");
-              },
-              function () {
-                $(this).css("stroke", "orange");
-              }
-            );
-          });
-        } else {
-          if (label_value !== "  Google Hybrid Layer ") {
-            $(document).ready(function () {
-              $("path.leaflet-interactive").css("stroke", "");
-              $("path.leaflet-interactive").css("stroke", "rust");
-              $("path.leaflet-interactive").hover(
-                function () {
-                  $(this).css("stroke", "yellow");
-                },
-                function () {
-                  $(this).css("stroke", "");
-                }
-              );
-            });
-          }
-        }
-      }
+    if (checked) {
+      var label = checked.closest("label");
+      var span = label ? label.querySelector("span") : null;
+      updateBasemapClass(span ? span.textContent : "");
     }
   };
 });
