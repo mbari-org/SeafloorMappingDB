@@ -578,6 +578,16 @@ div,
   stroke: yellow;
 }
 
+/* Programmatic hover link (issue #293): track and row highlight together. */
+#map path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover,
+#map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover,
+#map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover {
+  stroke: yellow;
+}
+#selection-results-panel tbody tr.smdb-hover {
+  background-color: rgba(255, 255, 0, 0.25);
+}
+
 /* ----- LEAFLET-MEASURE: cursor, vertices, lines, result = green ----- */
 #map path.layer-measuredrag,
 #map circle.layer-measuredrag,

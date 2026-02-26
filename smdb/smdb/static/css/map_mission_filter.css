@@ -86,6 +86,15 @@ path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
   stroke: yellow;
 }
 
+/* Programmatic hover link (issue #293): track and row highlight together. */
+#map_mission_filter path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover {
+  stroke: yellow;
+}
+.selection-results-panel tbody tr.smdb-hover,
+tbody tr.smdb-hover {
+  background-color: rgba(255, 255, 0, 0.25);
+}
+
 /* ── Selection Results Panel ────────────────────────────────────────────── */
 .selection-results-panel {
   position: fixed;

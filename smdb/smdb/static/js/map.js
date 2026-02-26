@@ -1397,9 +1397,21 @@ let feature = L.geoJSON(missions, {
     // smdb-track-line  — enables the :hover yellow-stroke rule in project.css.
     // smdb-geometry-line — marks this as a line geometry for baselayer-specific
     //                      stroke-color rules (GMRT rust, Google Hybrid orange).
+    var slug = (feature.properties && feature.properties.slug) ? feature.properties.slug : '';
     layer.on('add', function() {
       if (this._path) {
         this._path.classList.add('smdb-track-line', 'smdb-geometry-line');
+        if (slug) this._path.setAttribute('data-mission-slug', slug);
+        this._path.addEventListener('mouseover', function() {
+          this.classList.add('smdb-hover');
+          var sel = '#selection-results-content tr[data-mission-slug="' + CSS.escape(slug) + '"]';
+          document.querySelectorAll(sel).forEach(function(tr) { tr.classList.add('smdb-hover'); });
+        });
+        this._path.addEventListener('mouseout', function() {
+          this.classList.remove('smdb-hover');
+          var sel = '#selection-results-content tr[data-mission-slug="' + CSS.escape(slug) + '"]';
+          document.querySelectorAll(sel).forEach(function(tr) { tr.classList.remove('smdb-hover'); });
+        });
       }
     });
   }
@@ -2888,7 +2900,8 @@ function updateResultsPanel(message, missions) {
   html += '<tbody>';
   
   missions.forEach(function(mission) {
-    html += '<tr>';
+    var missionSlug = mission.slug ? String(mission.slug) : '';
+    html += '<tr' + (missionSlug ? ' data-mission-slug="' + escapeHtml(missionSlug) + '"' : '') + '>';
     html += '<td><a href="/missions/' + (mission.slug ? encodeURIComponent(mission.slug) : '') + '/">' + escapeHtml(mission.name) + '</a></td>';
     html += '<td>' + (mission.start_date || '-') + '</td>';
     html += '<td>' + (mission.region_name || '-') + '</td>';
@@ -2904,6 +2917,22 @@ function updateResultsPanel(message, missions) {
   html += '</div>';
   
   content.innerHTML = html;
+
+  // Bidirectional hover: row hover highlights track (issue #293).
+  content.querySelectorAll('tr[data-mission-slug]').forEach(function(tr) {
+    var slug = tr.getAttribute('data-mission-slug');
+    if (!slug) return;
+    tr.addEventListener('mouseover', function() {
+      tr.classList.add('smdb-hover');
+      var mapEl = document.getElementById('map');
+      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function(p) { p.classList.add('smdb-hover'); });
+    });
+    tr.addEventListener('mouseout', function() {
+      tr.classList.remove('smdb-hover');
+      var mapEl = document.getElementById('map');
+      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function(p) { p.classList.remove('smdb-hover'); });
+    });
+  });
   
   // Store missions for export
   window.selectedMissions = missions;

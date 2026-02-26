@@ -45,10 +45,21 @@ let feature = L.geoJSON(missions, {
     };
   },
   onEachFeature: function (feat, layer) {
-    // Assign CSS classes after the SVG path is created (not before).
+    var slug = (feat.properties && feat.properties.slug) ? feat.properties.slug : "";
     layer.on("add", function () {
       if (this._path) {
         this._path.classList.add("smdb-track-line", "smdb-geometry-line");
+        if (slug) this._path.setAttribute("data-mission-slug", slug);
+        this._path.addEventListener("mouseover", function () {
+          this.classList.add("smdb-hover");
+          var sel = 'tr[data-mission-slug="' + CSS.escape(slug) + '"]';
+          document.querySelectorAll(sel).forEach(function (tr) { tr.classList.add("smdb-hover"); });
+        });
+        this._path.addEventListener("mouseout", function () {
+          this.classList.remove("smdb-hover");
+          var sel = 'tr[data-mission-slug="' + CSS.escape(slug) + '"]';
+          document.querySelectorAll(sel).forEach(function (tr) { tr.classList.remove("smdb-hover"); });
+        });
       }
     });
   },
@@ -930,8 +941,9 @@ function updateResultsPanel(message, missions) {
     "</tr></thead><tbody>";
 
   missions.forEach(function (m) {
+    var missionSlug = m.slug ? String(m.slug) : "";
     html +=
-      "<tr>" +
+      "<tr" + (missionSlug ? ' data-mission-slug="' + _escapeHtml(missionSlug) + '"' : "") + ">" +
       '<td><a href="/missions/' +
       (m.slug ? encodeURIComponent(m.slug) : "") +
       '/">' +
@@ -948,6 +960,23 @@ function updateResultsPanel(message, missions) {
 
   html += "</tbody></table></div>";
   content.innerHTML = html;
+
+  // Bidirectional hover: row hover highlights track (issue #293).
+  content.querySelectorAll("tr[data-mission-slug]").forEach(function (tr) {
+    var slug = tr.getAttribute("data-mission-slug");
+    if (!slug) return;
+    tr.addEventListener("mouseover", function () {
+      tr.classList.add("smdb-hover");
+      var mapEl = document.getElementById("map_mission_filter");
+      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.add("smdb-hover"); });
+    });
+    tr.addEventListener("mouseout", function () {
+      tr.classList.remove("smdb-hover");
+      var mapEl = document.getElementById("map_mission_filter");
+      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.remove("smdb-hover"); });
+    });
+  });
+
   window.selectedMissions = missions;
 }
 
@@ -1143,4 +1172,28 @@ function _attachResizeHandles(panel) {
       document.addEventListener("mouseup", onUp);
     });
   });
+}
+
+// Attach bidirectional hover to main mission table rows (django_tables2) — issue #293.
+function attachMissionTableRowHover() {
+  var mapEl = document.getElementById("map_mission_filter");
+  if (!mapEl) return;
+  document.querySelectorAll("tr[data-mission-slug]").forEach(function (tr) {
+    if (tr.closest("#selection-results-content")) return;
+    var slug = tr.getAttribute("data-mission-slug");
+    if (!slug) return;
+    tr.addEventListener("mouseover", function () {
+      tr.classList.add("smdb-hover");
+      mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.add("smdb-hover"); });
+    });
+    tr.addEventListener("mouseout", function () {
+      tr.classList.remove("smdb-hover");
+      mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.remove("smdb-hover"); });
+    });
+  });
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", attachMissionTableRowHover);
+} else {
+  attachMissionTableRowHover();
 }

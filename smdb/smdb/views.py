@@ -54,6 +54,7 @@ class MissionSerializer(GeoFeatureModelSerializer):
         geo_field = "nav_track"  # Use nav_track to display track lines, not bounding boxes
         fields = (
             "slug",
+            "name",
             "thumbnail_image",
             "start_date",
             "start_ems",

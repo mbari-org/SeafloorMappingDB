@@ -328,3 +328,107 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
         f"got '{hover_color}' (resting was '{resting_color}'). "
         "Check the :hover rule in project.css and class assignment in map.js (issue #291)."
     )
+
+
+# ---------------------------------------------------------------------------
+# Bidirectional track–name hover link — GitHub issue #293
+# ---------------------------------------------------------------------------
+
+_TRACK_MISSION_CSS = "path.leaflet-interactive.smdb-track-line.smdb-geometry-line[data-mission-slug]"
+
+
+@pytest.mark.django_db
+@pytest.mark.selenium
+def test_track_and_mission_name_highlight_together_on_hover(
+    chrome, live_server_url_for_selenium, missions_notes_5
+):
+    """Hovering a nav track highlights the matching mission row and vice versa; mouse away clears both (issue #293).
+
+    Runs on the Missions page where the map and mission table are both visible.
+    """
+    chrome.get(live_server_url_for_selenium + "/missions/")
+
+    # Wait for at least one track path with data-mission-slug and one table row with same.
+    WebDriverWait(chrome, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, _TRACK_MISSION_CSS))
+    )
+    track = chrome.find_element(By.CSS_SELECTOR, _TRACK_MISSION_CSS)
+    slug = track.get_attribute("data-mission-slug")
+    assert slug, "Track path must have data-mission-slug (issue #293)."
+
+    row_selector = 'tr[data-mission-slug="' + slug + '"]'
+    row = WebDriverWait(chrome, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, row_selector))
+    )
+
+    # Move mouse away first so we start from a clean state.
+    ActionChains(chrome).move_to_element_with_offset(
+        chrome.find_element(By.TAG_NAME, "body"), 0, 0
+    ).perform()
+    time.sleep(0.3)
+
+    # 1) Hover track -> track and row should get .smdb-hover
+    coords = chrome.execute_script(
+        """
+        var path = arguments[0];
+        var svg = path.ownerSVGElement;
+        var pt = path.getPointAtLength(path.getTotalLength() / 2);
+        var sp = svg.createSVGPoint();
+        sp.x = pt.x; sp.y = pt.y;
+        var s = sp.matrixTransform(svg.getScreenCTM());
+        return { x: s.x, y: s.y };
+        """,
+        track,
+    )
+    if coords:
+        mouse = PointerInput("mouse", "mouse")
+        builder = ActionBuilder(chrome, mouse=mouse)
+        builder.pointer_action.move_to_location(int(coords["x"]), int(coords["y"]))
+        builder.perform()
+    else:
+        ActionChains(chrome).move_to_element(track).perform()
+    time.sleep(0.4)
+
+    assert "smdb-hover" in (track.get_attribute("class") or ""), (
+        "Hovering track should add smdb-hover to the path (issue #293)."
+    )
+    assert "smdb-hover" in (row.get_attribute("class") or ""), (
+        "Hovering track should add smdb-hover to the matching mission row (issue #293)."
+    )
+
+    # 2) Mouse away -> both should lose .smdb-hover
+    ActionChains(chrome).move_to_element_with_offset(
+        chrome.find_element(By.TAG_NAME, "body"), 0, 0
+    ).perform()
+    time.sleep(0.4)
+
+    assert "smdb-hover" not in (track.get_attribute("class") or ""), (
+        "Moving mouse away should remove smdb-hover from the track (issue #293)."
+    )
+    assert "smdb-hover" not in (row.get_attribute("class") or ""), (
+        "Moving mouse away should remove smdb-hover from the row (issue #293)."
+    )
+
+    # 3) Hover row -> row and track should get .smdb-hover
+    ActionChains(chrome).move_to_element(row).perform()
+    time.sleep(0.4)
+
+    assert "smdb-hover" in (row.get_attribute("class") or ""), (
+        "Hovering row should add smdb-hover to the row (issue #293)."
+    )
+    assert "smdb-hover" in (track.get_attribute("class") or ""), (
+        "Hovering row should add smdb-hover to the matching track (issue #293)."
+    )
+
+    # 4) Mouse away -> both should clear again
+    ActionChains(chrome).move_to_element_with_offset(
+        chrome.find_element(By.TAG_NAME, "body"), 0, 0
+    ).perform()
+    time.sleep(0.4)
+
+    assert "smdb-hover" not in (track.get_attribute("class") or ""), (
+        "Moving mouse away should clear track highlight (issue #293)."
+    )
+    assert "smdb-hover" not in (row.get_attribute("class") or ""), (
+        "Moving mouse away should clear row highlight (issue #293)."
+    )
