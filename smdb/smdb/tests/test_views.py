@@ -229,3 +229,79 @@ def test_mission_table_view_bbox_and_map_context_consistent(client):
         f"Map missions {map_ids - table_ids} are not in the table queryset. "
         "Check MissionTableView bbox filtering logic."
     )
+
+
+# -------- Issue #290: 3D Citations -------------------------------------------
+
+
+def test_mission_detail_citations(client, missions_notes_5):
+    """Mission detail page shows Citations section when mission has citations."""
+    from smdb.models import Mission, Citation
+
+    mission = Mission.objects.get(name="2019/20190124m1")
+    citation = Citation.objects.create(doi="10.1234/test", full_reference="Test 2020")
+    mission.citations.add(citation)
+
+    url = reverse("mission-detail", kwargs={"slug": mission.slug})
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode("utf-8")
+    assert "Citations:" in content
+    assert "10.1234/test" in content
+    assert "Test 2020" in content
+
+
+def test_mission_filter_by_citation(client, missions_notes_5):
+    """Missions map filter by citation returns missions that have that citation."""
+    from smdb.models import Mission, Citation
+
+    mission = Mission.objects.get(name="2019/20190124m1")
+    citation = Citation.objects.create(doi="10.5678/filter-test", full_reference="")
+    mission.citations.add(citation)
+
+    url = reverse("missions")
+    response = client.get(url, {"citation": citation.pk})
+    assert response.status_code == 200
+    object_list = list(response.context["object_list"])
+    assert mission in object_list
+
+
+def test_survey_tally_load_citations(missions_notes_5):
+    """SurveyTally.update_db_from_df populates mission.citations from Citations column."""
+    import pandas as pd
+
+    from smdb.models import Mission, Citation
+
+    try:
+        from scripts.load import SurveyTally
+    except ImportError:
+        import pytest
+        pytest.skip("SurveyTally not importable (run pytest from smdb directory)")
+
+    mission = Mission.objects.get(name="2019/20190124m1")
+    assert mission.citations.count() == 0
+
+    df = pd.DataFrame(
+        [
+            {
+                "Mission": "2019/20190124m1",
+                "Route": "",
+                "Location": "",
+                "Vehicle": "",
+                "Quality_comment": "",
+                "Patch_test": "",
+                "Repeat_survey": "",
+                "MGDS_compilation": "",
+                "Quality_category*": "",
+                "Citations": "10.1234/abc;10.5678/def|A reference",
+            }
+        ]
+    )
+
+    st = SurveyTally()
+    st.update_db_from_df(df, "2019")
+
+    mission.refresh_from_db()
+    assert mission.citations.count() == 2
+    with_ref = Citation.objects.get(doi="10.5678/def")
+    assert with_ref.full_reference == "A reference"

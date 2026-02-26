@@ -450,7 +450,7 @@ const FilterControl = L.Control.extend({
             [
               "name", "region_name", "vehicle_name", "platformtype",
               "quality_categories", "patch_test",
-              "repeat_survey", "mgds_compilation", "expedition__name",
+              "repeat_survey", "mgds_compilation", "citation", "expedition__name",
               "filter_type", "q", "xmin", "xmax", "ymin", "ymax",
               "tmin", "tmax",
             ].forEach(function (k) { url.searchParams.delete(k); });
@@ -470,7 +470,7 @@ const FilterControl = L.Control.extend({
         [
           "name", "region_name", "vehicle_name", "platformtype",
           "quality_categories", "patch_test",
-          "repeat_survey", "mgds_compilation", "expedition__name",
+          "repeat_survey", "mgds_compilation", "citation", "expedition__name",
           "filter_type",
         ].forEach(function (k) { url.searchParams.delete(k); });
         // Use append (not set) to preserve all checkbox values for multi-select fields.
@@ -790,7 +790,7 @@ map.on(L.Draw.Event.CREATED, function (e) {
   var filterParams = {};
   [
     "name", "region_name", "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "expedition__name",
+    "repeat_survey", "mgds_compilation", "citation", "expedition__name",
     "filter_type", "q", "tmin", "tmax",
   ].forEach(function (k) {
     if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
@@ -1002,7 +1002,7 @@ function exportMissions(format) {
   var filterParams = {};
   [
     "name", "region_name", "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "expedition__name",
+    "repeat_survey", "mgds_compilation", "citation", "expedition__name",
     "filter_type", "q", "tmin", "tmax",
   ].forEach(function (k) {
     if (urlParams.has(k)) filterParams[k] = urlParams.get(k);

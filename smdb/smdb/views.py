@@ -416,7 +416,7 @@ class MissionTableView(FilterView, SingleTableView):
 
 class MissionDetailView(DetailView):
     model = Mission
-    queryset = Mission.objects.all()
+    queryset = Mission.objects.prefetch_related("citations").all()
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -451,7 +451,11 @@ class MissionDetailView(DetailView):
         try:
             obj = super().get_object()
         except Mission.MultipleObjectsReturned:
-            obj = Mission.objects.filter(slug=self.kwargs["slug"]).first()
+            obj = (
+                Mission.objects.prefetch_related("citations")
+                .filter(slug=self.kwargs["slug"])
+                .first()
+            )
             messages.warning(
                 self.request,
                 f"Multiple Missions with slug '{self.kwargs['slug']}'. Using first one.",

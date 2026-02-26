@@ -9,7 +9,14 @@ from django_filters import (
 )
 from django.db.utils import ProgrammingError
 from django.db.models import Q
-from smdb.models import Mission, Expedition, Compilation, Quality_Category, Platformtype
+from smdb.models import (
+    Citation,
+    Mission,
+    Expedition,
+    Compilation,
+    Quality_Category,
+    Platformtype,
+)
 
 from django.forms.widgets import TextInput
 
@@ -122,6 +129,15 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
+    try:
+        citation = ModelMultipleChoiceFilter(
+            field_name="citations",
+            queryset=Citation.objects.all().order_by("doi"),
+            label="Citation",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
     expedition__name = CharFilter(
         field_name="expedition__name",
         lookup_expr="icontains",
@@ -140,6 +156,7 @@ class MissionFilter(FilterSet):
             "patch_test",
             "repeat_survey",
             "mgds_compilation",
+            "citation",
             "expedition__name",
         ]
     
