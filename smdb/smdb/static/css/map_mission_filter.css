@@ -56,32 +56,104 @@ td {
 }
 
 /* ── Mission name label markers ─────────────────────────────────────────── */
-.label-mission-name {
-  font-size: 1.3em;
+/* Scoped to map so we override Leaflet’s .leaflet-div-icon (transparent background). */
+#map_mission_filter .label-mission-name {
+  display: inline-block;
+  font-size: 1.1em;
   text-align: left;
   white-space: nowrap;
-  padding-left: 20px;
+  padding: 1px 6px 1px 8px;
+  position: relative;
+  box-sizing: border-box;
+  background: transparent;
+  outline: none;
+}
+#map_mission_filter .label-mission-name:focus,
+#map_mission_filter .label-mission-name:focus-visible {
+  outline: none;
+}
+/* Right-anchored: label extends left from marker so background stays off the track. */
+#map_mission_filter .label-mission-name.label-anchor-right {
+  text-align: right;
+  padding: 1px 14px 1px 6px;
 }
 
-.label-mission-name a:link {
+#map_mission_filter .label-mission-name a:link {
   color: black;
 }
 
-.label-mission-name a:hover {
-  color: yellow;
+#map_mission_filter .label-mission-name a:hover,
+#map_mission_filter .label-mission-name a:focus,
+#map_mission_filter .label-mission-name a:focus-visible {
+  color: #0066aa;
+  outline: none;
+  box-shadow: none;
 }
 
-/* Hover link (issue #293): label + track + row highlight together; hovered label on top. */
-.label-mission-name.smdb-hover {
+/* Hover: larger label; semi-transparent box is on the link so it wraps the text exactly (no caret). */
+#map_mission_filter .label-mission-name.smdb-hover {
   z-index: 1000;
-  background: rgba(255, 255, 0, 0.35);
-  border-radius: 3px;
-  padding: 2px 6px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  font-size: 1.5em;
+  padding: 1px 4px 1px 6px;
+  outline: none;
 }
-.label-mission-name.smdb-hover a {
-  color: #333;
-  font-weight: 600;
+#map_mission_filter .label-mission-name.smdb-hover:focus,
+#map_mission_filter .label-mission-name.smdb-hover:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+#map_mission_filter .label-mission-name.label-anchor-right.smdb-hover {
+  padding: 1px 6px 1px 4px;
+}
+#map_mission_filter .label-mission-name.smdb-hover[data-track-side="left"] {
+  transform-origin: left center;
+  transform: scale(1.12);
+}
+#map_mission_filter .label-mission-name.smdb-hover[data-track-side="right"] {
+  transform-origin: right center;
+  transform: scale(1.12);
+}
+#map_mission_filter .label-mission-name.smdb-hover a {
+  display: inline-block;
+  color: #0066aa;
+  font-weight: 700;
+  padding: 2px 6px 2px 8px;
+  background: rgba(255, 255, 255, 0.62);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+  outline: none;
+}
+#map_mission_filter .label-mission-name.smdb-hover a:hover,
+#map_mission_filter .label-mission-name.smdb-hover a:focus,
+#map_mission_filter .label-mission-name.smdb-hover a:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+#map_mission_filter .label-mission-name.label-anchor-right.smdb-hover a {
+  padding: 2px 8px 2px 6px;
+}
+
+/* Override project.css .leaflet-interactive:hover (cornflowerblue) only for mission labels — nowhere else. */
+#map_mission_filter .label-mission-name.leaflet-interactive:hover,
+#map_mission_filter .label-mission-name.leaflet-interactive:focus,
+#map_mission_filter .label-mission-name .leaflet-interactive:hover,
+#map_mission_filter .label-mission-name .leaflet-interactive:focus {
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+}
+
+#map_mission_filter .leaflet-marker-icon.label-mission-name {
+  outline: none;
+  margin: 0;
+  line-height: 1;
+}
+#map_mission_filter .leaflet-marker-icon.label-mission-name a,
+#map_mission_filter .leaflet-marker-icon.label-mission-name a:focus,
+#map_mission_filter .leaflet-marker-icon.label-mission-name.smdb-hover a:focus,
+#map_mission_filter .leaflet-marker-icon.label-mission-name.smdb-hover a:focus-visible {
+  outline: none;
 }
 
 /* ── Utility ────────────────────────────────────────────────────────────── */

@@ -7,6 +7,16 @@ set -o nounset
 
 echo "Executing start script..."
 python smdb/manage.py migrate
+
+# Rebuild static files so CSS/JS changes are picked up (e.g. map_mission_filter.css / .js)
+echo "Collecting and compressing static files..."
+python smdb/manage.py collectstatic --noinput --clear
+if python smdb/manage.py compress --force 2>/dev/null; then
+  echo "Compressed static assets updated."
+else
+  echo "Compress skipped (e.g. COMPRESS_ENABLED=False or no compress blocks)."
+fi
+
 # https://stackoverflow.com/a/72206748/1281657
 echo "Starting development server listening on port 8001..."
 python smdb/manage.py runserver_plus --keep-meta-shutdown 0.0.0.0:8001
