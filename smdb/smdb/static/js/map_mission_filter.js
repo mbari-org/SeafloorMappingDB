@@ -46,7 +46,11 @@ function highlightMission(slug) {
   document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (l) { l.classList.add("smdb-hover"); });
   var mapEl = document.getElementById("map_mission_filter");
   if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.add("smdb-hover"); });
-  document.querySelectorAll('tr[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (tr) { tr.classList.add("smdb-hover"); });
+  var rows = document.querySelectorAll('tr[data-mission-slug="' + CSS.escape(slug) + '"]');
+  rows.forEach(function (tr) { tr.classList.add("smdb-hover"); });
+  // Scroll the Crispy mission table row into view so the user sees the highlighted mission (issue #293).
+  var mainTableRow = document.querySelector("#mission-table-wrapper tr[data-mission-slug=\"" + CSS.escape(slug) + "\"]");
+  if (mainTableRow) mainTableRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 let feature = L.geoJSON(missions, {
@@ -134,7 +138,8 @@ map.whenReady(function () {
   }, 100);
 });
 
-// Mission name labels: at the northernmost point of each nav-track; offset by pixels so placement looks the same at all zoom levels.
+// Mission name labels: one per mission at the northernmost point of each nav-track; offset by pixels so placement looks the same at all zoom levels.
+// Labels are allowed to overlap at zoomed-out views (no collision avoidance) so they stay next to their tracks (issue #293).
 if (hasMissions && missions.features) {
   var labelPixelOffsetEast = 8;
   var labelPixelOffsetNorth = 8;

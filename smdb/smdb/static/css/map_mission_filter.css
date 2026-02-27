@@ -57,16 +57,22 @@ td {
 
 /* ── Mission name label markers ─────────────────────────────────────────── */
 /* Scoped to map so we override Leaflet’s .leaflet-div-icon (transparent background). */
+/* Default: plain black text (no box, no scale). #293 styles apply ONLY on hover via .smdb-hover. */
+/* Labels may overlap at zoomed-out views; no collision avoidance (issue #293). */
 #map_mission_filter .label-mission-name {
   display: inline-block;
-  font-size: 1.1em;
+  font-size: 1em;
+  font-weight: normal;
   text-align: left;
   white-space: nowrap;
-  padding: 1px 6px 1px 8px;
+  padding: 0 4px;
   position: relative;
   box-sizing: border-box;
   background: transparent;
   outline: none;
+  z-index: 500;
+  border: none;
+  box-shadow: none;
 }
 #map_mission_filter .label-mission-name:focus,
 #map_mission_filter .label-mission-name:focus-visible {
@@ -75,11 +81,15 @@ td {
 /* Right-anchored: label extends left from marker so background stays off the track. */
 #map_mission_filter .label-mission-name.label-anchor-right {
   text-align: right;
-  padding: 1px 14px 1px 6px;
+  padding: 0 4px;
 }
 
 #map_mission_filter .label-mission-name a:link {
   color: black;
+  font-weight: normal;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 #map_mission_filter .label-mission-name a:hover,
@@ -90,7 +100,7 @@ td {
   box-shadow: none;
 }
 
-/* Hover: larger label; semi-transparent box is on the link so it wraps the text exactly (no caret). */
+/* #293: Only when label or track is hovered (JS adds .smdb-hover): larger label, semi-transparent box, scale. */
 #map_mission_filter .label-mission-name.smdb-hover {
   z-index: 1000;
   font-size: 1.5em;

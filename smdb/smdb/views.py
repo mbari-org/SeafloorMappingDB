@@ -382,6 +382,12 @@ class MissionTableView(FilterView, SingleTableView):
         return filterset
 
     def get_context_data(self, *args, **kwargs):
+        # Default per_page to 500 so map labels and table show many missions on load (issue #293).
+        # Must run before super() so the table is built with this default.
+        if "per_page" not in self.request.GET:
+            self.request.GET = self.request.GET.copy()
+            self.request.GET._mutable = True
+            self.request.GET["per_page"] = "500"
         context = super().get_context_data(**kwargs)
 
         # self.object_list is the filterset-filtered queryset set by FilterView
@@ -399,10 +405,10 @@ class MissionTableView(FilterView, SingleTableView):
         ).exclude(nav_track__isempty=True)
 
         try:
-            per_page = int(self.request.GET.get("per_page", 10))
+            per_page = int(self.request.GET.get("per_page", 500))
         except (TypeError, ValueError):
-            per_page = 10
-        per_page = max(1, min(per_page, 100))
+            per_page = 500
+        per_page = max(1, min(per_page, 2000))
 
         try:
             page = int(self.request.GET.get("page", 1))
