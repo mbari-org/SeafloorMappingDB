@@ -43,9 +43,17 @@ function clearAllMissionHighlights() {
 function highlightMission(slug) {
   if (!slug) return;
   clearAllMissionHighlights();
-  document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (l) { l.classList.add("smdb-hover"); });
+  document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (l) {
+    l.classList.add("smdb-hover");
+    var pane = l.closest(".leaflet-marker-pane");
+    if (pane) pane.appendChild(l);
+  });
   var mapEl = document.getElementById("map_mission_filter");
-  if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) { p.classList.add("smdb-hover"); });
+  if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) {
+    p.classList.add("smdb-hover");
+    var parent = p.parentNode;
+    if (parent) parent.appendChild(p);
+  });
   var rows = document.querySelectorAll('tr[data-mission-slug="' + CSS.escape(slug) + '"]');
   rows.forEach(function (tr) { tr.classList.add("smdb-hover"); });
   // Scroll the Crispy mission table row into view so the user sees the highlighted mission (issue #293).
@@ -143,8 +151,6 @@ map.whenReady(function () {
 if (hasMissions && missions.features) {
   var labelPixelOffsetEast = 8;
   var labelPixelOffsetNorth = 8;
-  var labelIconHeight = 36;
-  var labelIconWidth = 280;
   var labelMissionEntries = [];
   /* Flatten to points [lng, lat]: support LineString or MultiLineString. */
   function flattenCoords(geometry) {
@@ -186,8 +192,6 @@ if (hasMissions && missions.features) {
     var marker = L.marker(anchor, {
       icon: L.divIcon({
         className: "label-mission-name",
-        iconSize: [labelIconWidth, labelIconHeight],
-        iconAnchor: [0, labelIconHeight],
         html:
           "<a target='_blank' href='/missions/" +
           (mission.properties.slug ? mission.properties.slug : "") +

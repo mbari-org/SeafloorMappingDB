@@ -61,7 +61,7 @@ td {
 /* Labels may overlap at zoomed-out views; no collision avoidance (issue #293). */
 #map_mission_filter .label-mission-name {
   display: inline-block;
-  font-size: 1em;
+  font-size: 1.3em;
   font-weight: normal;
   text-align: left;
   white-space: nowrap;
@@ -83,8 +83,8 @@ td {
   text-align: right;
   padding: 0 4px;
 }
-
-#map_mission_filter .label-mission-name a:link {
+#map_mission_filter .label-mission-name a:link,
+#map_mission_filter .label-mission-name a:visited {
   color: black;
   font-weight: normal;
   background: transparent;
@@ -115,20 +115,13 @@ td {
 #map_mission_filter .label-mission-name.label-anchor-right.smdb-hover {
   padding: 1px 6px 1px 4px;
 }
-#map_mission_filter .label-mission-name.smdb-hover[data-track-side="left"] {
-  transform-origin: left center;
-  transform: scale(1.12);
-}
-#map_mission_filter .label-mission-name.smdb-hover[data-track-side="right"] {
-  transform-origin: right center;
-  transform: scale(1.12);
-}
+/* No transform/scale — causes zoom bug (issue #293). Background box only. */
 #map_mission_filter .label-mission-name.smdb-hover a {
   display: inline-block;
   color: #0066aa;
   font-weight: 700;
   padding: 2px 6px 2px 8px;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: none;
@@ -150,7 +143,7 @@ td {
 #map_mission_filter .label-mission-name.leaflet-interactive:focus,
 #map_mission_filter .label-mission-name .leaflet-interactive:hover,
 #map_mission_filter .label-mission-name .leaflet-interactive:focus {
-  border-color: rgba(0, 0, 0, 0.08);
+  border: none;
   box-shadow: none;
 }
 
@@ -164,6 +157,15 @@ td {
 #map_mission_filter .leaflet-marker-icon.label-mission-name.smdb-hover a:focus,
 #map_mission_filter .leaflet-marker-icon.label-mission-name.smdb-hover a:focus-visible {
   outline: none;
+}
+
+/* Override project.css .leaflet-interactive:hover (cornflowerblue) for mission labels only. */
+#map_mission_filter .label-mission-name.leaflet-interactive:hover,
+#map_mission_filter .label-mission-name.leaflet-interactive:focus,
+#map_mission_filter .leaflet-marker-icon.label-mission-name:hover,
+#map_mission_filter .leaflet-marker-icon.label-mission-name:focus {
+  border: none;
+  box-shadow: none;
 }
 
 /* ── Utility ────────────────────────────────────────────────────────────── */
@@ -184,6 +186,7 @@ path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
 /* Programmatic hover link (issue #293): track and row highlight together. */
 #map_mission_filter path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover {
   stroke: yellow;
+  stroke-width: 5;
 }
 .selection-results-panel tbody tr.smdb-hover,
 tbody tr.smdb-hover {
