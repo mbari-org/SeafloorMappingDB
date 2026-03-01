@@ -59,64 +59,28 @@ td {
 /* Scoped to map so we override Leaflet’s .leaflet-div-icon (transparent background). */
 /* Default: plain black text (no box, no scale). #293 styles apply ONLY on hover via .smdb-hover. */
 /* Labels may overlap at zoomed-out views; no collision avoidance (issue #293). */
-#map_mission_filter .label-mission-name {
-  display: inline-block;
+/* Test A: pre-#293 styling — padding-left 20px offsets label beside track; no iconSize/iconAnchor. */
+.label-mission-name {
   font-size: 1.3em;
-  font-weight: normal;
   text-align: left;
   white-space: nowrap;
-  padding: 0 4px;
-  position: relative;
-  box-sizing: border-box;
-  background: transparent;
-  outline: none;
-  z-index: 500;
-  border: none;
-  box-shadow: none;
+  padding-left: 20px;
 }
-#map_mission_filter .label-mission-name:focus,
-#map_mission_filter .label-mission-name:focus-visible {
-  outline: none;
-}
-/* Right-anchored: label extends left from marker so background stays off the track. */
-#map_mission_filter .label-mission-name.label-anchor-right {
-  text-align: right;
-  padding: 0 4px;
-}
-#map_mission_filter .label-mission-name a:link,
-#map_mission_filter .label-mission-name a:visited {
+.label-mission-name a:link,
+.label-mission-name a:visited {
   color: black;
-  font-weight: normal;
-  background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
-#map_mission_filter .label-mission-name a:hover,
-#map_mission_filter .label-mission-name a:focus,
-#map_mission_filter .label-mission-name a:focus-visible {
-  color: #0066aa;
-  outline: none;
-  box-shadow: none;
+.label-mission-name a:hover {
+  color: yellow;
 }
 
-/* #293: Only when label or track is hovered (JS adds .smdb-hover): larger label, semi-transparent box, scale. */
-#map_mission_filter .label-mission-name.smdb-hover {
+/* Bidirectional hover (issue #293): when track/row hovered, label gets .smdb-hover. */
+/* Add background box only (no transform/scale) — Test A + follow-up. */
+.label-mission-name.smdb-hover {
   z-index: 1000;
-  font-size: 1.5em;
-  padding: 1px 4px 1px 6px;
-  outline: none;
 }
-#map_mission_filter .label-mission-name.smdb-hover:focus,
-#map_mission_filter .label-mission-name.smdb-hover:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-#map_mission_filter .label-mission-name.label-anchor-right.smdb-hover {
-  padding: 1px 6px 1px 4px;
-}
-/* No transform/scale — causes zoom bug (issue #293). Background box only. */
-#map_mission_filter .label-mission-name.smdb-hover a {
+.label-mission-name.smdb-hover a {
   display: inline-block;
   color: #0066aa;
   font-weight: 700;
@@ -124,39 +88,6 @@ td {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: none;
-  outline: none;
-}
-#map_mission_filter .label-mission-name.smdb-hover a:hover,
-#map_mission_filter .label-mission-name.smdb-hover a:focus,
-#map_mission_filter .label-mission-name.smdb-hover a:focus-visible {
-  outline: none;
-  box-shadow: none;
-  border-color: rgba(0, 0, 0, 0.08);
-}
-#map_mission_filter .label-mission-name.label-anchor-right.smdb-hover a {
-  padding: 2px 8px 2px 6px;
-}
-
-/* Override project.css .leaflet-interactive:hover (cornflowerblue) only for mission labels — nowhere else. */
-#map_mission_filter .label-mission-name.leaflet-interactive:hover,
-#map_mission_filter .label-mission-name.leaflet-interactive:focus,
-#map_mission_filter .label-mission-name .leaflet-interactive:hover,
-#map_mission_filter .label-mission-name .leaflet-interactive:focus {
-  border: none;
-  box-shadow: none;
-}
-
-#map_mission_filter .leaflet-marker-icon.label-mission-name {
-  outline: none;
-  margin: 0;
-  line-height: 1;
-}
-#map_mission_filter .leaflet-marker-icon.label-mission-name a,
-#map_mission_filter .leaflet-marker-icon.label-mission-name a:focus,
-#map_mission_filter .leaflet-marker-icon.label-mission-name.smdb-hover a:focus,
-#map_mission_filter .leaflet-marker-icon.label-mission-name.smdb-hover a:focus-visible {
-  outline: none;
 }
 
 /* Override project.css .leaflet-interactive:hover (cornflowerblue) for mission labels only. */
