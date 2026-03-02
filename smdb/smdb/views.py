@@ -573,10 +573,15 @@ class MissionSelectAPIView(View):
             except (ValueError, TypeError):
                 return JsonResponse({'error': 'Invalid spatial bounds coordinates'}, status=400)
             
-            # Validate coordinate ranges (longitude: -180..180, latitude: -90..90)
-            if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
-                    -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
+            # Clamp to valid WGS84 range (handles floating-point precision from Leaflet
+            # when drawing boxes with many missions). Reject only if wildly out of range.
+            if (abs(xmin_float) > 360 or abs(xmax_float) > 360 or
+                    not (-90 <= ymin_float <= 90) or not (-90 <= ymax_float <= 90)):
                 return JsonResponse({'error': 'Coordinates out of valid range'}, status=400)
+            xmin_float = max(-180, min(180, xmin_float))
+            xmax_float = max(-180, min(180, xmax_float))
+            ymin_float = max(-90, min(90, ymin_float))
+            ymax_float = max(-90, min(90, ymax_float))
             
             # Validate bounding box ordering: xmin <= xmax and ymin <= ymax
             if xmin_float > xmax_float or ymin_float > ymax_float:
@@ -709,10 +714,14 @@ class MissionExportAPIView(View):
             except (ValueError, TypeError):
                 return HttpResponse('Invalid spatial bounds coordinates', status=400)
             
-            # Validate coordinate ranges (longitude: -180..180, latitude: -90..90)
-            if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
-                    -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
+            # Clamp to valid WGS84 range (handles floating-point precision from Leaflet).
+            if (abs(xmin_float) > 360 or abs(xmax_float) > 360 or
+                    not (-90 <= ymin_float <= 90) or not (-90 <= ymax_float <= 90)):
                 return HttpResponse('Coordinates out of valid range', status=400)
+            xmin_float = max(-180, min(180, xmin_float))
+            xmax_float = max(-180, min(180, xmax_float))
+            ymin_float = max(-90, min(90, ymin_float))
+            ymax_float = max(-90, min(90, ymax_float))
             
             # Validate bounding box ordering: xmin <= xmax and ymin <= ymax
             if xmin_float > xmax_float or ymin_float > ymax_float:
