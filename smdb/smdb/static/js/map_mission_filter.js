@@ -845,12 +845,9 @@ setTimeout(styleDrawSquareControl, 500);
 // Store drawn-rectangle bounds globally for use by exportMissions().
 window.drawnRectangleBounds = null;
 
-// When user finishes drawing a rectangle: show the results panel.
+// When user finishes drawing a rectangle: navigate so map and table show missions in box (Option A).
 map.on(L.Draw.Event.CREATED, function (e) {
   if (e.layerType !== "rectangle") return;
-  drawnItems.clearLayers();
-  drawnItems.addLayer(e.layer);
-
   var bounds = e.layer.getBounds();
   var bbox = {
     xmin: bounds.getWest(),
@@ -858,32 +855,30 @@ map.on(L.Draw.Event.CREATED, function (e) {
     xmax: bounds.getEast(),
     ymax: bounds.getNorth(),
   };
-  window.drawnRectangleBounds = bbox;
 
-  // Collect any active filter params from the current URL.
   var urlParams = new URLSearchParams(window.location.search);
-  var filterParams = {};
-  [
-    "name", "region_name", "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "citation", "expedition__name",
-    "filter_type", "q", "tmin", "tmax",
-  ].forEach(function (k) {
-    if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
-  });
-  filterParams.xmin = bbox.xmin;
-  filterParams.xmax = bbox.xmax;
-  filterParams.ymin = bbox.ymin;
-  filterParams.ymax = bbox.ymax;
-
-  showResultsPanel(true);
-  updateResultsPanel("Loading missions...", []);
-  fetchFilteredMissions(filterParams);
+  urlParams.set("xmin", bbox.xmin);
+  urlParams.set("xmax", bbox.xmax);
+  urlParams.set("ymin", bbox.ymin);
+  urlParams.set("ymax", bbox.ymax);
+  urlParams.set("per_page", "2000");
+  urlParams.set("page", "1");
+  var qs = urlParams.toString();
+  window.location.href = window.location.pathname + (qs ? "?" + qs : "");
 });
 
-// When the drawn layer is deleted: clear bounds but keep panel open.
+// When the drawn layer is deleted: navigate to clear bbox from URL.
 map.on(L.Draw.Event.DELETED, function () {
   drawnItems.clearLayers();
   window.drawnRectangleBounds = null;
+  var urlParams = new URLSearchParams(window.location.search);
+  urlParams.delete("xmin");
+  urlParams.delete("xmax");
+  urlParams.delete("ymin");
+  urlParams.delete("ymax");
+  urlParams.delete("page");
+  var qs = urlParams.toString();
+  window.location.href = window.location.pathname + (qs ? "?" + qs : "");
 });
 
 // ---------------------------------------------------------------------------
@@ -1079,6 +1074,17 @@ function exportMissions(format) {
     }
   }
   if (!bbox) {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("xmin") && urlParams.has("xmax") && urlParams.has("ymin") && urlParams.has("ymax")) {
+      bbox = {
+        xmin: parseFloat(urlParams.get("xmin")),
+        xmax: parseFloat(urlParams.get("xmax")),
+        ymin: parseFloat(urlParams.get("ymin")),
+        ymax: parseFloat(urlParams.get("ymax")),
+      };
+    }
+  }
+  if (!bbox) {
     alert("No selection area found. Please draw a rectangle first.");
     return;
   }
@@ -1247,3 +1253,32 @@ if (document.readyState === "loading") {
 } else {
   attachMissionTableRowHover();
 }
+
+// On load with bbox in URL: draw rectangle, show panel, fetch missions (Option A).
+(function initBboxFromUrl() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var xmin = urlParams.get("xmin");
+  var xmax = urlParams.get("xmax");
+  var ymin = urlParams.get("ymin");
+  var ymax = urlParams.get("ymax");
+  if (!xmin || !xmax || !ymin || !ymax) return;
+  var xminF = parseFloat(xmin), xmaxF = parseFloat(xmax), yminF = parseFloat(ymin), ymaxF = parseFloat(ymax);
+  if (isNaN(xminF) || isNaN(xmaxF) || isNaN(yminF) || isNaN(ymaxF)) return;
+  var bbox = { xmin: xminF, xmax: xmaxF, ymin: yminF, ymax: ymaxF };
+  window.drawnRectangleBounds = bbox;
+  var bounds = L.latLngBounds(L.latLng(yminF, xminF), L.latLng(ymaxF, xmaxF));
+  var rect = L.rectangle(bounds, { color: "#FFFF00", fillColor: "#FFFF00", fillOpacity: 0.2, weight: 2 });
+  drawnItems.clearLayers();
+  drawnItems.addLayer(rect);
+  showResultsPanel(true);
+  updateResultsPanel("Loading missions...", []);
+  var filterParams = {};
+  ["name", "region_name", "quality_categories", "patch_test", "repeat_survey", "mgds_compilation", "citation", "expedition__name", "filter_type", "q", "tmin", "tmax"].forEach(function (k) {
+    if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
+  });
+  filterParams.xmin = bbox.xmin;
+  filterParams.xmax = bbox.xmax;
+  filterParams.ymin = bbox.ymin;
+  filterParams.ymax = bbox.ymax;
+  fetchFilteredMissions(filterParams);
+})();
