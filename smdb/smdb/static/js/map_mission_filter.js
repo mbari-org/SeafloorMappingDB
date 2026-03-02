@@ -538,6 +538,7 @@ const FilterControl = L.Control.extend({
       } // end if (!clearListenerAdded)
 
       // Form submit: reload Missions page with filter params in URL.
+      // Clear bbox (xmin/xmax/ymin/ymax) so filter applies to full dataset, not just drawn box.
       clonedForm.addEventListener("submit", function (e) {
         e.preventDefault();
         var params = new URLSearchParams(new FormData(clonedForm));
@@ -546,7 +547,7 @@ const FilterControl = L.Control.extend({
           "name", "region_name", "vehicle_name", "platformtype",
           "quality_categories", "patch_test",
           "repeat_survey", "mgds_compilation", "citation", "expedition__name",
-          "filter_type",
+          "filter_type", "xmin", "xmax", "ymin", "ymax", "page",
         ].forEach(function (k) { url.searchParams.delete(k); });
         // Use append (not set) to preserve all checkbox values for multi-select fields.
         params.forEach(function (val, key) {
