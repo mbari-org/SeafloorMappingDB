@@ -40,10 +40,12 @@ services:
       - "8001:8001"
     command: /start
 
+  # Use production postgres Dockerfile for CI: debug one uses ARM64-only image (imresamu/postgis-arm64),
+  # which causes "exec format error" on GitHub Actions amd64 runners.
   postgres:
     build:
       context: .
-      dockerfile: ./compose/debug/postgres/Dockerfile
+      dockerfile: ./compose/production/postgres/Dockerfile
     image: smdb_ci_postgres
     container_name: postgres
     volumes:
