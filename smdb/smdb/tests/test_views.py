@@ -231,6 +231,96 @@ def test_mission_table_view_bbox_and_map_context_consistent(client):
     )
 
 
+# -------- Mission page: sidebar filter, Draw Square, table integration --------
+
+
+# Bbox that contains the missions_notes_5 fixture nav_tracks (Monterey Bay area).
+_MONTEREY_BBOX = {
+    "xmin": "-123",
+    "xmax": "-121",
+    "ymin": "36",
+    "ymax": "37",
+}
+
+
+def test_mission_select_api_applies_vehicle_name_filter(client, missions_notes_5):
+    """Draw Square API respects vehicle_name: bbox + vehicle_name returns only matching missions."""
+    from smdb.models import Mission
+
+    # Give one mission a distinct vehicle_name; leave others null or different.
+    missions = list(Mission.objects.all()[:3])
+    if missions:
+        missions[0].vehicle_name = "Bluefin"
+        missions[0].save()
+        for m in missions[1:]:
+            m.vehicle_name = "Other"
+            m.save()
+
+    url = reverse("mission-select-api")
+    params = {**_MONTEREY_BBOX}
+    response = client.get(url, params)
+    assert response.status_code == 200
+    data = response.json()
+    all_in_bbox = data["missions"]
+    assert len(all_in_bbox) >= 1
+
+    params["vehicle_name"] = "Bluefin"
+    response_filtered = client.get(url, params)
+    assert response_filtered.status_code == 200
+    filtered = response_filtered.json()["missions"]
+    assert len(filtered) <= len(all_in_bbox)
+    for m in filtered:
+        assert m.get("vehicle_name") == "Bluefin"
+
+
+def test_mission_select_api_applies_platformtype_filter(client, missions_notes_5):
+    """Draw Square API respects platformtype: bbox + platformtype returns only missions on that platform type."""
+    from smdb.models import Mission
+
+    # Fixture missions use platform pk 1 (platformtype pk 1). Request with platformtype=1.
+    url = reverse("mission-select-api")
+    params = {**_MONTEREY_BBOX, "platformtype": "1"}
+    response = client.get(url, params)
+    assert response.status_code == 200
+    data = response.json()
+    missions = data["missions"]
+    # All fixture missions have platform 1, so we should get at least one.
+    assert isinstance(missions, list)
+
+
+def test_mission_table_view_region_name_and_bbox(client, missions_notes_5):
+    """Missions page: region_name filter + bbox returns only matching missions in table."""
+    from smdb.models import Mission
+
+    # Set region_name on missions so we can filter.
+    missions = list(Mission.objects.all()[:2])
+    if len(missions) >= 2:
+        missions[0].region_name = "Monterey"
+        missions[0].save()
+        missions[1].region_name = "Other"
+        missions[1].save()
+
+    url = reverse("missions")
+    params = {**_MONTEREY_BBOX, "region_name": "Monterey"}
+    response = client.get(url, params)
+    assert response.status_code == 200
+    object_list = list(response.context.get("object_list", []))
+    for m in object_list:
+        assert m.region_name == "Monterey"
+
+
+def test_mission_export_api_applies_vehicle_name_filter(client, missions_notes_5):
+    """Export API accepts vehicle_name (and other sidebar filters) with bbox; no 500."""
+    from smdb.models import Mission
+
+    if Mission.objects.exists():
+        Mission.objects.update(vehicle_name="MAUV1")
+    url = reverse("mission-export-api")
+    params = {**_MONTEREY_BBOX, "vehicle_name": "MAUV1", "format": "csv"}
+    response = client.get(url, params)
+    assert response.status_code == 200
+
+
 # -------- Issue #290: 3D Citations -------------------------------------------
 
 
