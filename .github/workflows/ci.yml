@@ -36,13 +36,14 @@ jobs:
   ##      uses: pre-commit/action@v2.0.0
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
+  # Run on ubuntu-latest: Docker is pre-installed there; macos-14 runners do not have Docker.
   pytest:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
 
     steps:
       # https://stackoverflow.com/a/65346817/1281657
       - name: Checkout Code Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # Attempts to get Github runner configured - seems to be missing important tools
       # https://github.com/actions/runner/issues/1456#issuecomment-1819392344
