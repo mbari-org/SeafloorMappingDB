@@ -367,7 +367,6 @@ class MissionTableView(FilterView, SingleTableView):
             if search_geom:
                 qs = qs.filter(
                     Q(nav_track__intersects=search_geom)
-                    | Q(grid_bounds__intersects=search_geom)
                     | Q(start_point__within=search_geom)
                 )
             else:
@@ -605,11 +604,11 @@ class MissionSelectAPIView(View):
             # Start with base queryset
             missions = Mission.objects.all()
             
-            # Apply spatial filter (missions that intersect with the rectangle)
-            # Include grid_bounds, nav_track, or start_point so missions with only a start point are included
+            # Apply spatial filter: only missions whose nav_track or start_point is in the box.
+            # Exclude grid_bounds — it can be larger than the track (full grid extent) and would
+            # return missions whose tracks don't actually pass through the drawn box.
             missions = missions.filter(
-                Q(grid_bounds__intersects=search_geom)
-                | Q(nav_track__intersects=search_geom)
+                Q(nav_track__intersects=search_geom)
                 | Q(start_point__within=search_geom)
             ).distinct()
             
@@ -745,10 +744,9 @@ class MissionExportAPIView(View):
             # Start with base queryset
             missions = Mission.objects.all()
             
-            # Apply spatial filter (same as MissionSelectAPIView: bounds, track, or start_point)
+            # Apply spatial filter (same as MissionSelectAPIView: nav_track or start_point only)
             missions = missions.filter(
-                Q(grid_bounds__intersects=search_geom)
-                | Q(nav_track__intersects=search_geom)
+                Q(nav_track__intersects=search_geom)
                 | Q(start_point__within=search_geom)
             ).distinct()
             
