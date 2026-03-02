@@ -863,11 +863,14 @@ map.on(L.Draw.Event.CREATED, function (e) {
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
   [
-    "name", "region_name", "quality_categories", "patch_test",
+    "name", "region_name", "vehicle_name", "platformtype",
+    "quality_categories", "patch_test",
     "repeat_survey", "mgds_compilation", "citation", "expedition__name",
     "filter_type", "q", "tmin", "tmax",
   ].forEach(function (k) {
-    if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
+    if (!urlParams.has(k)) return;
+    var vals = urlParams.getAll(k);
+    filterParams[k] = vals.length > 1 ? vals : vals[0];
   });
   filterParams.xmin = bbox.xmin;
   filterParams.xmax = bbox.xmax;
@@ -1036,12 +1039,18 @@ function updateResultsPanel(message, missions) {
 }
 
 function fetchFilteredMissions(filterParams) {
-  var qs = Object.keys(filterParams)
-    .map(function (k) {
-      var v = filterParams[k];
-      return encodeURIComponent(k) + "=" + encodeURIComponent(v != null ? String(v) : "");
-    })
-    .join("&");
+  var parts = [];
+  Object.keys(filterParams).forEach(function (k) {
+    var v = filterParams[k];
+    if (Array.isArray(v)) {
+      v.forEach(function (val) {
+        parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(val != null ? String(val) : ""));
+      });
+    } else {
+      parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(v != null ? String(v) : ""));
+    }
+  });
+  var qs = parts.join("&");
 
   fetch("/api/v1/missions/select?" + qs)
     .then(function (resp) {
@@ -1085,11 +1094,14 @@ function exportMissions(format) {
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
   [
-    "name", "region_name", "quality_categories", "patch_test",
+    "name", "region_name", "vehicle_name", "platformtype",
+    "quality_categories", "patch_test",
     "repeat_survey", "mgds_compilation", "citation", "expedition__name",
     "filter_type", "q", "tmin", "tmax",
   ].forEach(function (k) {
-    if (urlParams.has(k)) filterParams[k] = urlParams.get(k);
+    if (!urlParams.has(k)) return;
+    var vals = urlParams.getAll(k);
+    filterParams[k] = vals.length > 1 ? vals : vals[0];
   });
   filterParams.xmin = bbox.xmin;
   filterParams.xmax = bbox.xmax;
@@ -1097,14 +1109,18 @@ function exportMissions(format) {
   filterParams.ymax = bbox.ymax;
   filterParams.format = format;
 
-  var qs = Object.keys(filterParams)
-    .map(function (k) {
-      var v = filterParams[k];
-      var vStr = v != null ? String(v) : "";
-      return encodeURIComponent(k) + "=" + encodeURIComponent(vStr);
-    })
-    .join("&");
-
+  var parts = [];
+  Object.keys(filterParams).forEach(function (k) {
+    var v = filterParams[k];
+    if (Array.isArray(v)) {
+      v.forEach(function (val) {
+        parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(val != null ? String(val) : ""));
+      });
+    } else {
+      parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(v != null ? String(v) : ""));
+    }
+  });
+  var qs = parts.join("&");
   window.location.href = "/api/v1/missions/export?" + qs;
 }
 
