@@ -37,8 +37,8 @@ class CitationAdmin(admin.ModelAdmin):
     list_display = ("doi", "full_reference")
     list_filter = ()
     search_fields = ("doi", "full_reference")
-    filter_horizontal = ("missions",)
-    fields = ("doi", "full_reference", "missions")
+    filter_horizontal = ()
+    fields = ("doi", "full_reference")
 
 
 @register(Compilation)
