@@ -129,11 +129,22 @@ const FilterControl = L.Control.extend({
     sidebar.style.pointerEvents = "auto";
     sidebar.style.minHeight = "50px"; // At least button height
 
-    // Filter button - initially standalone, moves to right edge of sidebar when sidebar opens
-    // Don't use leaflet-bar/leaflet-control classes to avoid default Leaflet styling that creates borders
-    const container = L.DomUtil.create("div", "filter-control", wrapper);
+    // Filter button - wrapped so custom tooltip matches Mission page (same class/styling)
+    const buttonWrapper = L.DomUtil.create("div", "filter-button-wrapper", wrapper);
+    buttonWrapper.style.position = "absolute";
+    buttonWrapper.style.top = "5px";
+    buttonWrapper.style.left = "20px";
+    buttonWrapper.style.zIndex = "1001";
+    buttonWrapper.style.width = "40px";
+    buttonWrapper.style.height = "40px";
+
+    const container = L.DomUtil.create("div", "filter-control", buttonWrapper);
     container.id = "filter-button";
-    container.title = "Filter Map View"; // Tooltip on hover
+    container.setAttribute("aria-label", "Filter Map View");
+    const filterTooltip = L.DomUtil.create("span", "map-control-tooltip", buttonWrapper);
+    filterTooltip.textContent = "Filter Map View";
+    filterTooltip.setAttribute("role", "tooltip");
+
     container.style.width = "40px";
     container.style.height = "40px";
     container.style.backgroundColor = "hsla(0, 0%, 100%, 0.75)"; // Semi-transparent white like other controls
@@ -144,9 +155,7 @@ const FilterControl = L.Control.extend({
     container.style.alignItems = "center";
     container.style.justifyContent = "center";
     container.style.boxShadow = "0 1px 5px rgba(0,0,0,0.4)";
-    container.style.position = "absolute";
-    container.style.top = "5px";
-    container.style.left = "20px"; // 20px from left edge of map when closed
+    container.style.position = "relative";
     container.style.zIndex = "1001"; // Above sidebar
     container.style.transition = "left 0.3s ease, all 0.2s ease"; // Smooth transitions for all properties
     container.style.border = "1px solid rgba(0, 0, 0, 0.3)"; // More obvious border
@@ -1150,10 +1159,7 @@ const FilterControl = L.Control.extend({
     // Helper function to show sidebar (slide out from left, button moves to right edge)
     function showSidebar() {
       sidebar.style.left = "0px"; // Slide sidebar out - left edge aligns with map edge (no gap)
-      // Button is 20px from map edge when closed, sidebar is 250px wide starting at 0px
-      // So button should be at 250px (right edge of sidebar)
-      container.style.left = "250px"; // Move button to right edge of sidebar
-      // Button stays on right edge - positioned relative to wrapper
+      buttonWrapper.style.left = "250px"; // Move button to right edge of sidebar
 
       // Auto-adjust sidebar height to fit content
       const body = document.getElementById("filter-sidebar-body");
@@ -1188,7 +1194,7 @@ const FilterControl = L.Control.extend({
     function hideSidebar() {
       if (!sidebarOpen) {
         sidebar.style.left = "-250px"; // Hide sidebar
-        container.style.left = "20px"; // Return button to 20px from left edge
+        buttonWrapper.style.left = "20px"; // Return button to 20px from left edge
         // Icon change is handled in click handler with animation
       }
     }
@@ -1327,13 +1333,19 @@ let feature = L.geoJSON(missions, {
         if (slug) this._path.setAttribute('data-mission-slug', slug);
         this._path.addEventListener('mouseover', function() {
           this.classList.add('smdb-hover');
-          var sel = '#selection-results-content tr[data-mission-slug="' + CSS.escape(slug) + '"]';
-          document.querySelectorAll(sel).forEach(function(tr) { tr.classList.add('smdb-hover'); });
+          document.querySelectorAll('#selection-results-content tr').forEach(function(tr) {
+            if (tr.getAttribute('data-mission-slug') === slug) {
+              tr.classList.add('smdb-hover');
+            }
+          });
         });
         this._path.addEventListener('mouseout', function() {
           this.classList.remove('smdb-hover');
-          var sel = '#selection-results-content tr[data-mission-slug="' + CSS.escape(slug) + '"]';
-          document.querySelectorAll(sel).forEach(function(tr) { tr.classList.remove('smdb-hover'); });
+          document.querySelectorAll('#selection-results-content tr').forEach(function(tr) {
+            if (tr.getAttribute('data-mission-slug') === slug) {
+              tr.classList.remove('smdb-hover');
+            }
+          });
         });
       }
     });
@@ -1777,7 +1789,11 @@ var DrawSquareButton = L.Control.extend({
     // Draw Square button - same settings as filter button
     const container = L.DomUtil.create("div", "draw-square-control", wrapper);
     container.id = "drawSquare-button";
-    container.title = "Draw a square around missions to create an exportable list.";
+    container.setAttribute("aria-label", "Draw a square around missions to create an exportable list.");
+    // Custom tooltip (same class as Filter so both use identical styling)
+    const tooltipEl = L.DomUtil.create("span", "map-control-tooltip", wrapper);
+    tooltipEl.textContent = "Draw a square around missions to create an exportable list";
+    tooltipEl.setAttribute("role", "tooltip");
     container.style.width = "40px";
     container.style.height = "40px";
     container.style.backgroundColor = "hsla(0, 0%, 100%, 0.75)"; // Semi-transparent white like other controls

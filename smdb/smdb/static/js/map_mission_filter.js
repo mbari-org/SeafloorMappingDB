@@ -72,7 +72,9 @@ function highlightMission(slug) {
   clearAllMissionHighlights();
   currentHighlightedSlug = slug;
 
-  var escapedSlug = CSS.escape(slug);
+  // Escape for use inside double-quoted CSS attribute selector [attr="..."]:
+  // only \ and " need escaping (CSS.escape is for unquoted identifiers and breaks slugs with /).
+  var escapedSlug = slug.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 
   highlightedLabelEls = Array.prototype.slice.call(
     document.querySelectorAll('.label-mission-name[data-mission-slug="' + escapedSlug + '"]')
@@ -289,15 +291,23 @@ const FilterControl = L.Control.extend({
       "border-radius:0 4px 4px 0;color:#e0e0e0;transition:left 0.3s ease,height 0.3s ease;" +
       "overflow:hidden;display:flex;flex-direction:column;z-index:999;pointer-events:auto;";
 
-    // Toggle button.
-    const container = L.DomUtil.create("div", "filter-control", wrapper);
+    // Toggle button (wrapped so custom tooltip can sit next to it, same as Draw Square).
+    const buttonWrapper = L.DomUtil.create("div", "filter-button-wrapper", wrapper);
+    buttonWrapper.style.cssText =
+      "position:absolute;top:5px;left:20px;z-index:1001;width:40px;height:40px;";
+
+    const container = L.DomUtil.create("div", "filter-control", buttonWrapper);
     container.id = "filter-button";
-    container.title = "Filter Missions";
+    container.setAttribute("aria-label", "Filter Missions");
+    const filterTooltip = L.DomUtil.create("span", "map-control-tooltip", buttonWrapper);
+    filterTooltip.textContent = "Filter Missions";
+    filterTooltip.setAttribute("role", "tooltip");
+
     container.style.cssText =
       "width:40px;height:40px;background:hsla(0,0%,100%,0.75);border-radius:4px;" +
       "cursor:pointer;display:flex;flex-direction:column;align-items:center;" +
-      "justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,0.4);position:absolute;" +
-      "top:5px;left:20px;z-index:1001;transition:left 0.3s ease,all 0.2s ease;" +
+      "justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,0.4);position:relative;" +
+      "z-index:1001;transition:left 0.3s ease,all 0.2s ease;" +
       "border:1px solid rgba(0,0,0,0.3);outline:none;margin:0;padding:0;";
 
     const icon = L.DomUtil.create("i", "fas fa-filter", container);
@@ -615,7 +625,7 @@ const FilterControl = L.Control.extend({
 
     function showSidebar() {
       sidebar.style.left = "0px";
-      container.style.left = "250px";
+      buttonWrapper.style.left = "250px";
       var b = document.getElementById("filter-sidebar-body");
       if (b) {
         var formEl = b.querySelector("form");
@@ -642,7 +652,7 @@ const FilterControl = L.Control.extend({
 
     function hideSidebar() {
       sidebar.style.left = "-250px";
-      container.style.left = "20px";
+      buttonWrapper.style.left = "20px";
     }
 
     // Re-open sidebar after Clear button reloads the page.
@@ -725,7 +735,11 @@ var DrawSquareButton = L.Control.extend({
 
     var btn = L.DomUtil.create("div", "draw-square-control", wrapper);
     btn.id = "drawSquare-button";
-    btn.title = "Draw a rectangle to search for missions in that area.";
+    btn.setAttribute("aria-label", "Draw a square around missions to create an exportable list.");
+    // Custom tooltip (same class as Filter button so both use identical styling)
+    var tooltipEl = L.DomUtil.create("span", "map-control-tooltip", wrapper);
+    tooltipEl.textContent = "Draw a square around missions to create an exportable list";
+    tooltipEl.setAttribute("role", "tooltip");
     btn.style.cssText =
       "width:40px;height:40px;background:hsla(0,0%,100%,0.75);border-radius:4px;" +
       "cursor:pointer;display:flex;flex-direction:column;align-items:center;" +
