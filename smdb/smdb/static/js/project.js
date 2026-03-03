@@ -119,7 +119,14 @@ function setupCheckboxDropdowns(formEl, recalcCallback) {
       var open = panel.style.display !== "none";
       panel.style.display = open ? "none" : "block";
       caret.style.transform = open ? "" : "rotate(180deg)";
-      setTimeout(typeof recalcCallback === "function" ? recalcCallback : function () {}, 50);
+      // Recalc after layout so body.scrollHeight reflects collapsed/expanded content.
+      if (typeof recalcCallback === "function") {
+        var runRecalc = function () { recalcCallback(); };
+        requestAnimationFrame(function () {
+          requestAnimationFrame(runRecalc);
+        });
+        setTimeout(runRecalc, 120);
+      }
     });
   });
 }
