@@ -58,11 +58,12 @@
            target="_blank" rel="noopener noreferrer">{{ mission.mgds_compilation }}</a>
       </div>
       {% endif %}
-      {% if mission.citations.all %}
+      {% with citations=mission.citations.all %}
+      {% if citations %}
       <div>
         <span class="font-weight-bold">Citations:</span>
         <ul class="mb-0">
-          {% for citation in mission.citations.all %}
+          {% for citation in citations %}
           <li>
             {% if citation.doi %}
             <a href="https://doi.org/{{ citation.doi }}" target="_blank" rel="noopener noreferrer">{{ citation.doi }}</a>
@@ -73,6 +74,7 @@
         </ul>
       </div>
       {% endif %}
+      {% endwith %}
       <div>
         <span class="font-weight-bold">Quality categories:</span>
         {% for qc in mission.quality_categories.all %}

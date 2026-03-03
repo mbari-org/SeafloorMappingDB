@@ -220,6 +220,15 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
         except TimeoutException:
             pass
 
+    # If neither strategy landed the hover on the path, fail with a clear message
+    # so CI logs show "hover missed" rather than "wrong color" (avoids false negatives).
+    if not _is_yellow():
+        pytest.fail(
+            "Hover did not land on track after both strategies (coordinate move and "
+            "move_to_element). The track may be too thin or DPR/window size may differ. "
+            "Highlight behavior may still be correct; this can be flaky in headless CI."
+        )
+
     hover_color = chrome.execute_script(
         "return window.getComputedStyle(arguments[0]).stroke;", track
     )

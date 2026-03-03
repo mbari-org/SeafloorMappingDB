@@ -158,7 +158,7 @@ class MissionOverView(TemplateView):
             for key in [
                 'region_name', 'vehicle_name', 'platformtype',
                 'quality_categories', 'patch_test', 'repeat_survey',
-                'mgds_compilation', 'expedition__name',
+                'mgds_compilation', 'expedition__name', 'citation', 'citation_search',
             ]
         ) or (filter_type == 'mission' and 'name' in self.request.GET and self.request.GET.get('name'))
         
@@ -410,8 +410,11 @@ class MissionTableView(FilterView, SingleTableView):
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
-        # Default per_page to 500 so map labels and table show many missions on load (issue #293).
-        # Read from GET with default; do not mutate request.GET (avoids relying on QueryDict._mutable).
+        # Map GeoJSON pagination: default 500, cap 2000 (issue #293). Read from GET with default;
+        # do not mutate request.GET (avoids relying on QueryDict._mutable).
+        # Note: the table is paginated separately by django_tables2 (e.g. 25 per page). The map
+        # intentionally shows a larger slice (up to per_page missions) so many tracks are visible
+        # at once; table pages beyond this slice will show rows that have no track on the map.
         try:
             per_page = int(self.request.GET.get("per_page", 500))
         except (TypeError, ValueError):

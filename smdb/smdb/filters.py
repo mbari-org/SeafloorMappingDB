@@ -157,14 +157,10 @@ class MissionFilter(FilterSet):
             "name",
             "region_name",
             "vehicle_name",
-            "platformtype",
             "quality_categories",
             "patch_test",
             "repeat_survey",
             "mgds_compilation",
-            "citation",
-            "citation_search",
-            "expedition__name",
         ]
 
     @staticmethod
