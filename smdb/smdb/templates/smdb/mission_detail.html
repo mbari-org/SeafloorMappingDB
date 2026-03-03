@@ -54,7 +54,7 @@
       {% if mission.mgds_compilation %}
       <div>
         <span class="font-weight-bold">MGDS compilation:</span>
-        <a href="https://www.marine-geo.org/tools/new_search/search_map.php?dataset_name={{ mission.mgds_compilation }}"
+        <a href="https://www.marine-geo.org/tools/new_search/search_map.php?dataset_name={{ mission.mgds_compilation|urlencode }}"
            target="_blank" rel="noopener noreferrer">{{ mission.mgds_compilation }}</a>
       </div>
       {% endif %}
