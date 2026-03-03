@@ -88,14 +88,15 @@ def _parse_bbox_geom(request):
     and intentionally uses strict bounds so invalid/wrapped coords yield no
     results rather than potentially confusing clamped results.
     """
-    if not request.GET.get("xmin"):
+    # Require all four bbox parameters to be present before parsing.
+    if not all(request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
         return None
     try:
         min_lon = float(request.GET["xmin"])
         max_lon = float(request.GET["xmax"])
         min_lat = float(request.GET["ymin"])
         max_lat = float(request.GET["ymax"])
-    except (KeyError, TypeError, ValueError):
+    except (TypeError, ValueError):
         return None
     # Strict WGS84 bounds: reject lon/lat outside ±180/±90 (see docstring).
     if not (
@@ -371,11 +372,12 @@ class MissionTableView(FilterView, SingleTableView):
         Applying the bbox here ensures both the rendered table (via FilterView)
         and the map serializer in get_context_data() operate on the same rows.
 
-        If xmin is present but the bbox is invalid (e.g. inverted coords),
-        return an empty queryset so the user sees no results rather than all.
+        If all four bbox params are present but the bbox is invalid (e.g. inverted
+        coords), return an empty queryset. Partial bbox (e.g. only xmin) is
+        ignored so the table is not emptied by mistake.
         """
         qs = Mission.objects.select_related("expedition").all().order_by("name")
-        if self.request.GET.get("xmin"):
+        if all(self.request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
             search_geom = self._get_bbox_geom()
             if search_geom:
                 qs = qs.filter(
