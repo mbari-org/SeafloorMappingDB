@@ -81,6 +81,12 @@ def _parse_bbox_geom(request):
 
     Returns None if any parameter is absent, non-numeric, out of valid
     geographic range (-180≤lon≤180, -90≤lat≤90), or inverted (min > max).
+
+    Uses strict ±180 longitude (WGS84) and rejects out-of-range values instead
+    of clamping. MissionSelectAPIView/MissionExportAPIView accept up to ±360
+    then clamp to ±180; this path is used by MissionTableView (sidebar bbox)
+    and intentionally uses strict bounds so invalid/wrapped coords yield no
+    results rather than potentially confusing clamped results.
     """
     if not request.GET.get("xmin"):
         return None
@@ -91,6 +97,7 @@ def _parse_bbox_geom(request):
         max_lat = float(request.GET["ymax"])
     except (KeyError, TypeError, ValueError):
         return None
+    # Strict WGS84 bounds: reject lon/lat outside ±180/±90 (see docstring).
     if not (
         -180.0 <= min_lon <= 180.0
         and -180.0 <= max_lon <= 180.0
@@ -381,12 +388,6 @@ class MissionTableView(FilterView, SingleTableView):
         return filterset
 
     def get_context_data(self, *args, **kwargs):
-        # Default per_page to 500 so map labels and table show many missions on load (issue #293).
-        # Must run before super() so the table is built with this default.
-        if "per_page" not in self.request.GET:
-            self.request.GET = self.request.GET.copy()
-            self.request.GET._mutable = True
-            self.request.GET["per_page"] = "500"
         context = super().get_context_data(**kwargs)
 
         # self.object_list is the filterset-filtered queryset set by FilterView
@@ -403,6 +404,8 @@ class MissionTableView(FilterView, SingleTableView):
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
+        # Default per_page to 500 so map labels and table show many missions on load (issue #293).
+        # Read from GET with default; do not mutate request.GET (avoids relying on QueryDict._mutable).
         try:
             per_page = int(self.request.GET.get("per_page", 500))
         except (TypeError, ValueError):

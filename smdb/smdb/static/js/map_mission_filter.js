@@ -85,15 +85,19 @@ let feature = L.geoJSON(missions, {
   },
 })
   .bindPopup(function (layer) {
+    var p = layer.feature.properties;
+    var slug = (p && p.slug) ? p.slug : "";
+    var expName = (p && p.expedition && p.expedition.name) ? p.expedition.name : "";
+    var routeFile = (p && p.route_file) ? p.route_file : "";
     return (
       "<a target='_blank' href='/missions/" +
-      layer.feature.properties.slug +
+      encodeURIComponent(slug) +
       "'>" +
-      layer.feature.properties.slug +
+      _escapeHtml(slug) +
       "</a>: " +
-      layer.feature.properties.expedition.name +
+      _escapeHtml(expName) +
       "<br>Route: " +
-      layer.feature.properties.route_file
+      _escapeHtml(routeFile)
     );
   })
   .addTo(map);
@@ -194,9 +198,9 @@ if (hasMissions && missions.features) {
         className: "label-mission-name",
         html:
           "<a target='_blank' href='/missions/" +
-          (mission.properties.slug ? mission.properties.slug : "") +
+          (mission.properties.slug ? encodeURIComponent(mission.properties.slug) : "") +
           "'>" +
-          (mission.properties.slug ? mission.properties.slug : "") +
+          (mission.properties.slug ? _escapeHtml(mission.properties.slug) : "") +
           "</a>",
       }),
     });

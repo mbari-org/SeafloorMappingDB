@@ -110,7 +110,7 @@ td {
 }
 
 /* ── Yellow hover on nav-track SVG paths (matches home page) ────────────── */
-path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
+#map_mission_filter path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
   stroke: yellow;
 }
 

@@ -206,27 +206,29 @@ def test_mission_table_view_bbox_and_map_context_consistent(client):
     missions_geojson = response.context["missions"]
     assert missions_geojson is not None
 
-    # Collect IDs from the table queryset (object_list from ListView).
-    table_ids = {
-        m.id for m in response.context.get("object_list", []) if hasattr(m, "id")
+    # Collect slugs from the table queryset (object_list from ListView).
+    table_slugs = {
+        m.slug
+        for m in response.context.get("object_list", [])
+        if hasattr(m, "slug") and m.slug is not None
     }
 
-    # Collect IDs from the GeoJSON used by the map.
+    # Collect slugs from the GeoJSON used by the map.
     if isinstance(missions_geojson, dict):
         features = missions_geojson.get("features", [])
     elif isinstance(missions_geojson, list):
         features = missions_geojson
     else:
         features = []
-    map_ids = {
-        f.get("properties", {}).get("id")
+    map_slugs = {
+        f.get("properties", {}).get("slug")
         for f in features
-        if isinstance(f, dict) and f.get("properties", {}).get("id") is not None
+        if isinstance(f, dict) and f.get("properties", {}).get("slug") is not None
     }
 
     # Every mission on the map must also appear in the table queryset.
-    assert map_ids.issubset(table_ids), (
-        f"Map missions {map_ids - table_ids} are not in the table queryset. "
+    assert map_slugs.issubset(table_slugs), (
+        f"Map missions {map_slugs - table_slugs} are not in the table queryset. "
         "Check MissionTableView bbox filtering logic."
     )
 
@@ -275,17 +277,23 @@ def test_mission_select_api_applies_vehicle_name_filter(client, missions_notes_5
 
 def test_mission_select_api_applies_platformtype_filter(client, missions_notes_5):
     """Draw Square API respects platformtype: bbox + platformtype returns only missions on that platform type."""
-    from smdb.models import Mission
-
-    # Fixture missions use platform pk 1 (platformtype pk 1). Request with platformtype=1.
+    # First, get all missions in the bbox without platformtype filter.
     url = reverse("mission-select-api")
-    params = {**_MONTEREY_BBOX, "platformtype": "1"}
+    params = {**_MONTEREY_BBOX}
     response = client.get(url, params)
     assert response.status_code == 200
     data = response.json()
-    missions = data["missions"]
-    # All fixture missions have platform 1, so we should get at least one.
-    assert isinstance(missions, list)
+    all_in_bbox = data["missions"]
+
+    # Now apply platformtype filter; fixture missions use platform pk 1 (platformtype pk 1).
+    params["platformtype"] = "1"
+    response_filtered = client.get(url, params)
+    assert response_filtered.status_code == 200
+    filtered = response_filtered.json()["missions"]
+
+    # Applying a filter should not increase the number of missions, and should return at least one.
+    assert len(filtered) <= len(all_in_bbox)
+    assert len(filtered) >= 1
 
 
 def test_mission_table_view_region_name_and_bbox(client, missions_notes_5):
