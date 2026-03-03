@@ -133,7 +133,7 @@ class MissionFilter(FilterSet):
         citation = ModelMultipleChoiceFilter(
             field_name="citations",
             queryset=Citation.objects.all().order_by("doi"),
-            label="Citation",
+            label="",
             widget=forms.CheckboxSelectMultiple(),
         )
     except ProgrammingError:
@@ -143,6 +143,12 @@ class MissionFilter(FilterSet):
         lookup_expr="icontains",
         label="",
         widget=TextInput(attrs={"placeholder": "Expedition name contains..."}),
+    )
+
+    citation_search = CharFilter(
+        method="filter_citation_search",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Citation (DOI or reference) contains..."}),
     )
 
     class Meta:
@@ -157,9 +163,19 @@ class MissionFilter(FilterSet):
             "repeat_survey",
             "mgds_compilation",
             "citation",
+            "citation_search",
             "expedition__name",
         ]
-    
+
+    @staticmethod
+    def filter_citation_search(queryset, name, value):
+        """Filter missions that have at least one citation matching DOI or full_reference (icontains)."""
+        if not value or not value.strip():
+            return queryset
+        return queryset.filter(
+            Q(citations__doi__icontains=value) | Q(citations__full_reference__icontains=value)
+        ).distinct()
+
     def filter_queryset(self, queryset):
         """
         Override to use OR logic for name and expedition__name text search fields.

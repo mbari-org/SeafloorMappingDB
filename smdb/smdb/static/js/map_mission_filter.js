@@ -33,31 +33,80 @@ const hasMissions =
 // Set an initial world view; whenReady() will zoom to mission bounds.
 map.setView([39.8423, -26.8945], 3, { animate: false });
 
+// Track the currently highlighted mission to avoid full DOM scans on every hover.
+var currentHighlightedSlug = null;
+var highlightedLabelEls = [];
+var highlightedPathEls = [];
+var highlightedRowEls = [];
+
 // Clear all mission hover state so only one mission is highlighted at a time (issue #293).
 function clearAllMissionHighlights() {
-  document.querySelectorAll(".label-mission-name[data-mission-slug]").forEach(function (el) { el.classList.remove("smdb-hover"); });
-  var mapEl = document.getElementById("map_mission_filter");
-  if (mapEl) mapEl.querySelectorAll("path[data-mission-slug]").forEach(function (p) { p.classList.remove("smdb-hover"); });
-  document.querySelectorAll("tr[data-mission-slug]").forEach(function (tr) { tr.classList.remove("smdb-hover"); });
+  if (!currentHighlightedSlug) {
+    return;
+  }
+
+  highlightedLabelEls.forEach(function (el) {
+    el.classList.remove("smdb-hover");
+  });
+  highlightedPathEls.forEach(function (p) {
+    p.classList.remove("smdb-hover");
+  });
+  highlightedRowEls.forEach(function (tr) {
+    tr.classList.remove("smdb-hover");
+  });
+
+  highlightedLabelEls = [];
+  highlightedPathEls = [];
+  highlightedRowEls = [];
+  currentHighlightedSlug = null;
 }
+
 function highlightMission(slug) {
   if (!slug) return;
+
+  // If this mission is already highlighted, avoid redundant DOM work.
+  if (slug === currentHighlightedSlug) {
+    return;
+  }
+
   clearAllMissionHighlights();
-  document.querySelectorAll('.label-mission-name[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (l) {
+  currentHighlightedSlug = slug;
+
+  var escapedSlug = CSS.escape(slug);
+
+  highlightedLabelEls = Array.prototype.slice.call(
+    document.querySelectorAll('.label-mission-name[data-mission-slug="' + escapedSlug + '"]')
+  );
+  highlightedLabelEls.forEach(function (l) {
     l.classList.add("smdb-hover");
     var pane = l.closest(".leaflet-marker-pane");
     if (pane) pane.appendChild(l);
   });
+
   var mapEl = document.getElementById("map_mission_filter");
-  if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function (p) {
-    p.classList.add("smdb-hover");
-    var parent = p.parentNode;
-    if (parent) parent.appendChild(p);
+  highlightedPathEls = [];
+  if (mapEl) {
+    highlightedPathEls = Array.prototype.slice.call(
+      mapEl.querySelectorAll('path[data-mission-slug="' + escapedSlug + '"]')
+    );
+    highlightedPathEls.forEach(function (p) {
+      p.classList.add("smdb-hover");
+      var parent = p.parentNode;
+      if (parent) parent.appendChild(p);
+    });
+  }
+
+  highlightedRowEls = Array.prototype.slice.call(
+    document.querySelectorAll('tr[data-mission-slug="' + escapedSlug + '"]')
+  );
+  highlightedRowEls.forEach(function (tr) {
+    tr.classList.add("smdb-hover");
   });
-  var rows = document.querySelectorAll('tr[data-mission-slug="' + CSS.escape(slug) + '"]');
-  rows.forEach(function (tr) { tr.classList.add("smdb-hover"); });
+
   // Scroll the Crispy mission table row into view so the user sees the highlighted mission (issue #293).
-  var mainTableRow = document.querySelector("#mission-table-wrapper tr[data-mission-slug=\"" + CSS.escape(slug) + "\"]");
+  var mainTableRow = document.querySelector(
+    '#mission-table-wrapper tr[data-mission-slug="' + escapedSlug + '"]'
+  );
   if (mainTableRow) mainTableRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
@@ -422,7 +471,7 @@ const FilterControl = L.Control.extend({
             [
               "name", "region_name", "vehicle_name", "platformtype",
               "quality_categories", "patch_test",
-              "repeat_survey", "mgds_compilation", "citation", "expedition__name",
+              "repeat_survey", "mgds_compilation", "citation", "citation_search", "expedition__name",
               "filter_type", "q", "xmin", "xmax", "ymin", "ymax",
               "tmin", "tmax",
             ].forEach(function (k) { url.searchParams.delete(k); });
@@ -442,7 +491,7 @@ const FilterControl = L.Control.extend({
         [
           "name", "region_name", "vehicle_name", "platformtype",
           "quality_categories", "patch_test",
-          "repeat_survey", "mgds_compilation", "citation", "expedition__name",
+          "repeat_survey", "mgds_compilation", "citation", "citation_search", "expedition__name",
           "filter_type",
         ].forEach(function (k) { url.searchParams.delete(k); });
         // Use append (not set) to preserve all checkbox values for multi-select fields.
@@ -762,7 +811,7 @@ map.on(L.Draw.Event.CREATED, function (e) {
   [
     "name", "region_name", "vehicle_name", "platformtype",
     "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "citation", "expedition__name",
+    "repeat_survey", "mgds_compilation", "citation", "citation_search", "expedition__name",
     "filter_type", "q", "tmin", "tmax",
   ].forEach(function (k) {
     if (!urlParams.has(k)) return;
@@ -993,7 +1042,7 @@ function exportMissions(format) {
   [
     "name", "region_name", "vehicle_name", "platformtype",
     "quality_categories", "patch_test",
-    "repeat_survey", "mgds_compilation", "citation", "expedition__name",
+    "repeat_survey", "mgds_compilation", "citation", "citation_search", "expedition__name",
     "filter_type", "q", "tmin", "tmax",
   ].forEach(function (k) {
     if (!urlParams.has(k)) return;
@@ -1102,6 +1151,21 @@ window.addEventListener("resize", function () {
   if (map) { map.invalidateSize(); }
   setTimeout(initTableLayout, 50);
 });
+
+// Re-run layout when the map element's size changes (e.g. tiles loading, CSS
+// settling) so the table wrapper stays under the map's visual bottom.
+var mapElForObserver = document.getElementById("map_mission_filter");
+if (mapElForObserver && typeof ResizeObserver !== "undefined") {
+  var layoutTimeout = null;
+  var resizeObserver = new ResizeObserver(function () {
+    if (layoutTimeout) clearTimeout(layoutTimeout);
+    layoutTimeout = setTimeout(function () {
+      layoutTimeout = null;
+      initTableLayout();
+    }, 50);
+  });
+  resizeObserver.observe(mapElForObserver);
+}
 
 function _attachResizeHandles(panel) {
   var handles = panel.querySelectorAll(".resize-handle");

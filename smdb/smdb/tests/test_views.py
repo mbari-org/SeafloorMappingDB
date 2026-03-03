@@ -139,7 +139,7 @@ def test_mission_export_api_with_empty_dates(client):
     assert response.status_code != 500
 
 
-def test_mission_table_view_with_bbox(client):
+def test_mission_table_view_with_bbox(client, missions_notes_5):
     """MissionTableView applies bbox filtering — tight box excludes all Monterey fixtures."""
     url = reverse("missions")
 
@@ -195,7 +195,7 @@ def test_mission_table_view_bbox_inverted_coords(client):
     )
 
 
-def test_mission_table_view_bbox_and_map_context_consistent(client):
+def test_mission_table_view_bbox_and_map_context_consistent(client, missions_notes_5):
     """Map GeoJSON context is a subset of the table queryset for the same bbox."""
     url = reverse("missions")
     response = client.get(url, {

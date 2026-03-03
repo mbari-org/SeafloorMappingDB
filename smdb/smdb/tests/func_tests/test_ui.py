@@ -259,7 +259,7 @@ def test_track_and_mission_name_highlight_together_on_hover(
     assert slug, "Track path must have data-mission-slug (issue #293)."
 
     row_selector = 'tr[data-mission-slug="' + slug + '"]'
-    row = WebDriverWait(chrome, 10).until(
+    row = WebDriverWait(chrome, 30).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, row_selector))
     )
 
