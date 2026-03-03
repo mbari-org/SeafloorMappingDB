@@ -2,6 +2,7 @@
 
 import pytest
 import time
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -200,19 +201,24 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
         )
         return c and ("255, 255, 0" in c or c.lower() == "yellow")
 
-    # Attempt 1: precise viewport-coordinate move — avoids WebDriverWait polling
-    # which can reset :hover state in some headless Chromium builds.
+    # Attempt 1: precise viewport-coordinate move.
     mouse = PointerInput("mouse", "mouse")
     builder = ActionBuilder(chrome, mouse=mouse)
     builder.pointer_action.move_to_location(int(coords["pathX"]), int(coords["pathY"]))
     builder.perform()
-    time.sleep(0.5)
+    try:
+        WebDriverWait(chrome, 2, poll_frequency=0.2).until(lambda d: _is_yellow())
+    except TimeoutException:
+        pass
 
     # Attempt 2: element-centre fallback for environments where the coordinate
     # approach misses the stroke (e.g. different window size or DPR scaling).
     if not _is_yellow():
         ActionChains(chrome).move_to_element(track).perform()
-        time.sleep(0.5)
+        try:
+            WebDriverWait(chrome, 2, poll_frequency=0.2).until(lambda d: _is_yellow())
+        except TimeoutException:
+            pass
 
     hover_color = chrome.execute_script(
         "return window.getComputedStyle(arguments[0]).stroke;", track

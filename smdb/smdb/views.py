@@ -200,7 +200,13 @@ class MissionOverView(TemplateView):
                 | Q(expedition__name__icontains=search_string)
             )
         if search_geom:
-            missions = missions.filter(grid_bounds__contained=search_geom)
+            # Same spatial logic as MissionTableView/API: nav_track or start_point in bbox
+            # (exclude grid_bounds — it can be larger than the track and would return missions
+            # whose tracks don't actually pass through the drawn box).
+            missions = missions.filter(
+                Q(nav_track__intersects=search_geom)
+                | Q(start_point__within=search_geom)
+            )
         if context["view"].request.GET.get("tmin"):
             min_date_str = context["view"].request.GET.get("tmin")
             max_date_str = context["view"].request.GET.get("tmax")

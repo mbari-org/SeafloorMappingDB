@@ -248,84 +248,7 @@ const FilterControl = L.Control.extend({
       sidebar.style.height = Math.min(totalH, window.innerHeight * 0.8) + "px";
     }
 
-    // -----------------------------------------------------------------------
-    // setupCheckboxDropdowns — identical to map_mission_filter.js; turns each
-    // CheckboxSelectMultiple fieldset into a collapsible dark accordion so the
-    // home-page sidebar looks identical to the Missions-page sidebar.
-    // -----------------------------------------------------------------------
-    function setupCheckboxDropdowns(formEl) {
-      formEl.querySelectorAll('[id^="div_id_"]').forEach(function (outerDiv) {
-        var checks = outerDiv.querySelectorAll(".form-check");
-        if (checks.length === 0) return;
-
-        var toggleEl = outerDiv.querySelector("legend") ||
-                       outerDiv.querySelector("label.form-label");
-        if (!toggleEl) return;
-
-        var panel = checks[0].parentElement;
-        if (!panel) return;
-
-        // Avoid double-initialising if copyForm is retried.
-        if (toggleEl.dataset.dropdownInit) return;
-        toggleEl.dataset.dropdownInit = "1";
-
-        toggleEl.style.cssText =
-          "display:flex;justify-content:space-between;align-items:center;" +
-          "width:100%;max-width:230px;padding:0.3rem;box-sizing:border-box;" +
-          "background:#1e1e1e;border:1px solid #555;" +
-          "border-radius:4px;cursor:pointer;color:#e0e0e0;font-size:0.8rem;" +
-          "margin-bottom:0;user-select:none;";
-
-        var caret = document.createElement("span");
-        caret.innerHTML = "&#8964;";
-        caret.style.cssText =
-          "font-size:0.9rem;font-weight:bold;line-height:1;" +
-          "transition:transform 0.2s;flex-shrink:0;color:#e0e0e0;";
-        toggleEl.appendChild(caret);
-
-        toggleEl.addEventListener("mouseenter", function () {
-          toggleEl.style.boxShadow =
-            "inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px cornflowerblue";
-        });
-        toggleEl.addEventListener("mouseleave", function () {
-          toggleEl.style.boxShadow = "none";
-        });
-
-        var fieldset = outerDiv.querySelector("fieldset");
-        if (fieldset) {
-          fieldset.style.cssText = "border:none;padding:0;margin:0;min-width:0;";
-        }
-
-        panel.style.cssText =
-          "padding:0.15rem 0 0.15rem 10px;margin:0;" +
-          "background:#2a2a2a;border:1px solid #555;border-top:none;" +
-          "border-radius:0 0 4px 4px;";
-        panel.querySelectorAll(".form-check").forEach(function (chk) {
-          chk.style.marginBottom = "0";
-          chk.style.paddingTop = "0.15rem";
-          chk.style.paddingBottom = "0.15rem";
-          chk.style.minHeight = "unset";
-        });
-        panel.querySelectorAll(".form-check-label").forEach(function (lbl) {
-          lbl.style.color = "#e0e0e0";
-          lbl.style.fontSize = "0.8rem";
-          lbl.style.cursor = "pointer";
-          lbl.style.margin = "0";
-        });
-
-        var hasChecked = !!panel.querySelector("input[type='checkbox']:checked");
-        panel.style.display = hasChecked ? "block" : "none";
-        if (hasChecked) caret.style.transform = "rotate(180deg)";
-
-        toggleEl.addEventListener("click", function (e) {
-          e.preventDefault();
-          var open = panel.style.display !== "none";
-          panel.style.display = open ? "none" : "block";
-          caret.style.transform = open ? "" : "rotate(180deg)";
-          setTimeout(recalcSidebarHeight, 50);
-        });
-      });
-    }
+    // setupCheckboxDropdowns is in project.js (shared with map_mission_filter.js).
 
     // Function to copy and style form based on selected filter type
     const copyForm = function (filterType = "mission") {
@@ -1064,7 +987,7 @@ const FilterControl = L.Control.extend({
       // Transform CheckboxSelectMultiple fieldsets into collapsible dark dropdowns
       // (vehicle_name, platformtype, quality_categories) — must run last so it
       // wins over any earlier display:block applied to .form-label elements.
-      setupCheckboxDropdowns(clonedForm);
+      setupCheckboxDropdowns(clonedForm, recalcSidebarHeight);
 
       // Auto-adjust sidebar height after form is copied
       setTimeout(function () {
@@ -1182,7 +1105,7 @@ const FilterControl = L.Control.extend({
           // Re-apply collapsible dropdown transforms after form-label styling
           // (which would have overridden display:flex on the legend toggles).
           const switchedForm = body.querySelector("form");
-          if (switchedForm) setupCheckboxDropdowns(switchedForm);
+          if (switchedForm) setupCheckboxDropdowns(switchedForm, recalcSidebarHeight);
         }, 100);
       }
     };

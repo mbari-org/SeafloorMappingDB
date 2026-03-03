@@ -312,114 +312,7 @@ const FilterControl = L.Control.extend({
         Math.min(b.scrollHeight + hdrH + pad, mapH) + "px";
     }
 
-    // -----------------------------------------------------------------------
-    // setupCheckboxDropdowns — turn each CheckboxSelectMultiple group into a
-    // collapsible accordion.
-    //
-    // crispy-forms + Bootstrap 5 renders CheckboxSelectMultiple as:
-    //   <div id="div_id_FIELD[-sidebar]" class="mb-3">   ← field wrapper
-    //     <fieldset>
-    //       <legend class="form-label">LABEL</legend>    ← toggle target
-    //       <div>                                        ← checkbox panel
-    //         <div class="form-check">
-    //           <input type="checkbox" ...>
-    //           <label class="form-check-label">...</label>
-    //         </div>
-    //         ...
-    //       </div>
-    //     </fieldset>
-    //   </div>
-    // -----------------------------------------------------------------------
-    function setupCheckboxDropdowns(formEl) {
-      formEl.querySelectorAll('[id^="div_id_"]').forEach(function (outerDiv) {
-        var checks = outerDiv.querySelectorAll(".form-check");
-        if (checks.length === 0) return;  // not a checkbox group
-
-        // The legend (or label) is the field-level heading element.
-        var toggleEl = outerDiv.querySelector("legend") ||
-                       outerDiv.querySelector("label.form-label");
-        if (!toggleEl) return;
-
-        // The checkbox panel is the direct parent of the .form-check items.
-        var panel = checks[0].parentElement;
-        if (!panel) return;
-
-        // Style the legend as a clickable dropdown toggle — identical to the
-        // <select> elements in the sidebar (background #1e1e1e, white text).
-        var TOGGLE_BG     = "#1e1e1e";
-        var TOGGLE_BORDER = "#555";
-
-        toggleEl.style.cssText =
-          "display:flex;justify-content:space-between;align-items:center;" +
-          "width:100%;max-width:230px;padding:0.3rem;box-sizing:border-box;" +
-          "background:" + TOGGLE_BG + ";border:1px solid " + TOGGLE_BORDER + ";" +
-          "border-radius:4px;cursor:pointer;color:#e0e0e0;font-size:0.8rem;" +
-          "margin-bottom:0;user-select:none;display:flex;" +
-          "justify-content:space-between;align-items:center;";
-
-        // Use the same Bootstrap 5 chevron SVG that <select> uses, white-tinted.
-        var caret = document.createElement("span");
-        caret.innerHTML = "&#8964;";   // ⌄ downward chevron
-        caret.style.cssText =
-          "font-size:0.9rem;font-weight:bold;line-height:1;" +
-          "transition:transform 0.2s;flex-shrink:0;color:#e0e0e0;";
-        toggleEl.appendChild(caret);
-
-        // Hover: match project.css .form-control:hover exactly —
-        //   box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px cornflowerblue
-        // The sidebar <select> elements get this via the CSS rule; we apply it
-        // inline here so the legend toggle is pixel-identical.
-        toggleEl.addEventListener("mouseenter", function () {
-          toggleEl.style.boxShadow =
-            "inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px cornflowerblue";
-        });
-        toggleEl.addEventListener("mouseleave", function () {
-          toggleEl.style.boxShadow = "none";
-        });
-
-        // Remove <fieldset> browser-default border and padding so the toggle
-        // and panel sit flush with each other.
-        var fieldset = outerDiv.querySelector("fieldset");
-        if (fieldset) {
-          fieldset.style.cssText = "border:none;padding:0;margin:0;min-width:0;";
-        }
-
-        // Style the checkbox panel.
-        panel.style.cssText =
-          "padding:0.15rem 0 0.15rem 10px;margin:0;" +
-          "background:#2a2a2a;border:1px solid #555;border-top:none;" +
-          "border-radius:0 0 4px 4px;";
-        panel.querySelectorAll(".form-check").forEach(function (chk) {
-          // Only override vertical spacing — Bootstrap 5 needs padding-left:1.5em
-          // to position the floated checkbox input correctly; touching it moves
-          // the checkboxes hard-left outside their labels.
-          chk.style.marginBottom = "0";
-          chk.style.paddingTop = "0.15rem";
-          chk.style.paddingBottom = "0.15rem";
-          chk.style.minHeight = "unset";
-        });
-        panel.querySelectorAll(".form-check-label").forEach(function (lbl) {
-          lbl.style.color = "#e0e0e0";
-          lbl.style.fontSize = "0.8rem";
-          lbl.style.cursor = "pointer";
-          lbl.style.margin = "0";
-        });
-
-        // Start collapsed; auto-open if any item is already checked.
-        var hasChecked = !!panel.querySelector("input[type='checkbox']:checked");
-        panel.style.display = hasChecked ? "block" : "none";
-        if (hasChecked) caret.style.transform = "rotate(180deg)";
-
-        // Toggle open/close on legend click.
-        toggleEl.addEventListener("click", function (e) {
-          e.preventDefault();
-          var open = panel.style.display !== "none";
-          panel.style.display = open ? "none" : "block";
-          caret.style.transform = open ? "" : "rotate(180deg)";
-          setTimeout(recalcSidebarHeight, 50);
-        });
-      });
-    }
+    // setupCheckboxDropdowns is in project.js (shared with map.js).
 
     const copyForm = function () {
       const formContainer = document.getElementById("filter-form-container");
@@ -625,7 +518,7 @@ const FilterControl = L.Control.extend({
       }
 
       // Convert CheckboxSelectMultiple groups into collapsible accordions.
-      setupCheckboxDropdowns(clonedForm);
+      setupCheckboxDropdowns(clonedForm, recalcSidebarHeight);
 
       // Auto-adjust sidebar height.
       setTimeout(function () {
