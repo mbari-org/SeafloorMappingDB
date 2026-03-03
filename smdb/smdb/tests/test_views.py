@@ -175,7 +175,7 @@ def test_mission_table_view_bbox_invalid_coords(client):
     assert response.status_code == 200
 
 
-def test_mission_table_view_bbox_inverted_coords(client):
+def test_mission_table_view_bbox_inverted_coords(client, missions_notes_5):
     """MissionTableView rejects inverted bbox (xmin > xmax) — no 500, zero results."""
     url = reverse("missions")
     response = client.get(url, {
@@ -277,7 +277,13 @@ def test_mission_select_api_applies_vehicle_name_filter(client, missions_notes_5
 
 def test_mission_select_api_applies_platformtype_filter(client, missions_notes_5):
     """Draw Square API respects platformtype: bbox + platformtype returns only missions on that platform type."""
-    # First, get all missions in the bbox without platformtype filter.
+    from smdb.models import Mission
+
+    # Use the platformtype that fixture missions actually have (mission -> platform -> platformtype).
+    mission = Mission.objects.select_related("platform__platformtype").filter(platform__isnull=False).first()
+    assert mission is not None, "missions_notes_5 fixture must include at least one mission with a platform."
+    platformtype_pk = mission.platform.platformtype_id
+
     url = reverse("mission-select-api")
     params = {**_MONTEREY_BBOX}
     response = client.get(url, params)
@@ -285,8 +291,7 @@ def test_mission_select_api_applies_platformtype_filter(client, missions_notes_5
     data = response.json()
     all_in_bbox = data["missions"]
 
-    # Now apply platformtype filter; fixture missions use platform pk 1 (platformtype pk 1).
-    params["platformtype"] = "1"
+    params["platformtype"] = str(platformtype_pk)
     response_filtered = client.get(url, params)
     assert response_filtered.status_code == 200
     filtered = response_filtered.json()["missions"]

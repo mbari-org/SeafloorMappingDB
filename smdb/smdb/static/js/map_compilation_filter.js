@@ -85,7 +85,6 @@ map.whenReady(function() {
       // Valid bounds - fit to bounds with padding
       map.fitBounds(bounds, { padding: [100, 100] });
     } catch (err) {
-      // console.log(err.message);
       // On any error, set to default zoom level 3 and center
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
@@ -103,7 +102,6 @@ if (hasMissions && missions.features) {
       mission.geometry.coordinates[0][0]
     );
   } catch (err) {
-    // console.log(mission.properties.slug + ": " + err.message);
     continue;
   }
   var marker = L.marker(latlng, {

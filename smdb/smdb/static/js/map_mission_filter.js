@@ -193,7 +193,6 @@ map.whenReady(function () {
       }
       map.fitBounds(bounds, { padding: [100, 100] });
     } catch (err) {
-      // console.log(err.message);
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
   }, 100);

@@ -1650,10 +1650,8 @@ bounds.addTo(map);
 function getBoundsStatus() {
   var boundsStatus;
   if (document.getElementById("use_bounds").checked) {
-    // console.log("Bounds checkbox CHECKED!");
     boundsStatus = true;
   } else {
-    // console.log("Bounds checkbox UNCHECKED!");
     boundsStatus = false;
   }
   return boundsStatus;
@@ -1663,10 +1661,8 @@ function getBoundsStatus() {
 function getSliderStatus() {
   var sliderStatus;
   if (document.getElementById("use_time").checked) {
-    // console.log("SliderControl Time checkbox CHECKED!");
     sliderStatus = true;
   } else {
-    // console.log("SliderControl Time checkbox UNCHECKED!");
     sliderStatus = false;
   }
   return sliderStatus;
@@ -2053,7 +2049,6 @@ function fnBrowserDetect() {
   } else {
     browserName = "No browser detection";
   }
-  // console.log("You are using " + browserName + " browser");
   return browserName;
 }
 // The grouped-layer control (L.control.groupedLayers) does not always fire the
@@ -2093,7 +2088,7 @@ L.Control.Measure.include({
 });
 
 // Function to force blue color on capture markers and measurement paths
-function forceBlueCaptureMarkers() {
+function forceGreenCaptureMarkers() {
   // Find ALL circles and paths in the map and check if they're capture markers
   document.querySelectorAll('svg circle, svg path, circle, path').forEach(function(element) {
     var parent = element.closest('.leaflet-marker-icon, .leaflet-div-icon');
@@ -2148,7 +2143,7 @@ function forceBlueCaptureMarkers() {
 
 // Style capture markers to match active measurement color (without breaking click functionality)
 var captureMarkerObserver = new MutationObserver(function(mutations) {
-  forceBlueCaptureMarkers();
+  forceGreenCaptureMarkers();
 });
 
 // Start observing the map container for changes
@@ -2162,7 +2157,7 @@ captureMarkerObserver.observe(map.getContainer(), {
 // Also check periodically when measurement is active
 setInterval(function() {
   if (measure && measure._measuring) {
-    forceBlueCaptureMarkers();
+    forceGreenCaptureMarkers();
   }
 }, 100);
 
@@ -2330,7 +2325,7 @@ function applyColorToLayer(layer, color) {
   }
   
   // Our CSS uses !important on measure result paths, so we must set inline style with
-  // !important for the user's color to win. Also mark layer so forceBlueCaptureMarkers skips it.
+  // !important for the user's color to win. Also mark layer so forceGreenCaptureMarkers skips it.
   if (layer._path) {
     layer._path.style.setProperty('stroke', rgbString, 'important');
     layer._path.style.setProperty('stroke-width', '3.5', 'important');

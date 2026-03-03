@@ -421,13 +421,15 @@ class MissionTableView(FilterView, SingleTableView):
             per_page = 500
         per_page = max(1, min(per_page, 2000))
 
+        # Use a dedicated query parameter for map pagination to avoid conflicts with
+        # django_tables2's `page` parameter used for table pagination.
         try:
-            page = int(self.request.GET.get("page", 1))
+            map_page = int(self.request.GET.get("map_page", 1))
         except (TypeError, ValueError):
-            page = 1
-        page = max(1, page)
+            map_page = 1
+        map_page = max(1, map_page)
 
-        missions = missions[slice((page - 1) * per_page, page * per_page)]
+        missions = missions[slice((map_page - 1) * per_page, map_page * per_page)]
         context["missions"] = MissionSerializer(missions, many=True).data
         return context
 
