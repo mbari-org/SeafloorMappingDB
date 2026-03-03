@@ -352,7 +352,8 @@ const FilterControl = L.Control.extend({
 
     // -----------------------------------------------------------------------
     // recalcSidebarHeight — recompute sidebar height after a dropdown opens
-    // or closes (CheckboxSelectMultiple accordion).
+    // or closes. Use natural height (auto) so collapsed content is measured
+    // correctly; body has flex:1 so scrollHeight can stay large after collapse.
     // -----------------------------------------------------------------------
     function recalcSidebarHeight() {
       if (!sidebar) return;
@@ -360,14 +361,17 @@ const FilterControl = L.Control.extend({
       var mapH  = mapEl ? mapEl.clientHeight : Math.round(window.innerHeight * 0.5);
       var b = document.getElementById("filter-sidebar-body");
       if (!b) return;
-      var hdrH = sidebar.querySelector(".filter-sidebar-header")
-        ? sidebar.querySelector(".filter-sidebar-header").offsetHeight
-        : 50;
-      var pad =
-        parseFloat(window.getComputedStyle(b).paddingTop) +
-        parseFloat(window.getComputedStyle(b).paddingBottom);
-      sidebar.style.height =
-        Math.min(b.scrollHeight + hdrH + pad, mapH) + "px";
+      var bodyFlex = b.style.flex;
+      b.style.flex = "0 0 auto";
+      sidebar.style.height = "auto";
+      // Let layout settle, then read natural height and restore fixed height + flex
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          var natural = sidebar.offsetHeight;
+          sidebar.style.height = Math.min(natural, mapH) + "px";
+          b.style.flex = bodyFlex || "1";
+        });
+      });
     }
 
     // setupCheckboxDropdowns is in project.js (shared with map.js).

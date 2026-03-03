@@ -1,5 +1,3 @@
-version: "3"
-
 volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
@@ -25,6 +23,8 @@ services:
       - ./.envs/.production/.postgres
     command: /start
     restart: always
+    ports:
+      - "5000:5000"
     volumes:
       - /Users/mccann/.ssh:/home/docker_user/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z

@@ -243,18 +243,24 @@ const FilterControl = L.Control.extend({
 
     // -----------------------------------------------------------------------
     // recalcSidebarHeight — recompute sidebar height after a dropdown opens
-    // or closes so the sidebar expands/contracts smoothly.
+    // or closes. Use natural height (auto) so collapsed content is measured
+    // correctly; body has flex:1 so scrollHeight can stay large after collapse.
     // -----------------------------------------------------------------------
     function recalcSidebarHeight() {
       if (!sidebar) return;
       var b = document.getElementById("filter-sidebar-body");
       if (!b) return;
-      var hdrH = sidebar.querySelector(".filter-sidebar-header")
-        ? sidebar.querySelector(".filter-sidebar-header").offsetHeight : 50;
-      var pad = parseFloat(window.getComputedStyle(b).paddingTop)
-              + parseFloat(window.getComputedStyle(b).paddingBottom);
-      var totalH = b.scrollHeight + hdrH + pad;
-      sidebar.style.height = Math.min(totalH, window.innerHeight * 0.8) + "px";
+      var maxH = window.innerHeight * 0.8;
+      var bodyFlex = b.style.flex;
+      b.style.flex = "0 0 auto";
+      sidebar.style.height = "auto";
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          var natural = sidebar.offsetHeight;
+          sidebar.style.height = Math.min(natural, maxH) + "px";
+          b.style.flex = bodyFlex || "1";
+        });
+      });
     }
 
     // setupCheckboxDropdowns is in project.js (shared with map_mission_filter.js).
