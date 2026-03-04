@@ -2150,11 +2150,11 @@ function forceGreenCaptureMarkers() {
                        path.closest('.leaflet-measure') !== null ||
                        (path._leaflet_id && map.hasLayer && map.hasLayer(path));
     
-    if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') && 
+    if (isMeasurement || (!path.classList.contains('leaflet-measure-resultline') &&
                          !path.classList.contains('leaflet-measure-resultarea') &&
-                         path.getAttribute('stroke') === 'rgb(0, 102, 204)' || 
-                         path.style.stroke === 'rgb(0, 102, 204)' ||
-                         path.style.stroke === '#0066CC')) {
+                         (path.getAttribute('stroke') === 'rgb(0, 102, 204)' ||
+                          path.style.stroke === 'rgb(0, 102, 204)' ||
+                          path.style.stroke === '#0066CC'))) {
       path.classList.add('leaflet-measure-path');
       path.style.stroke = '#ABE67E';  // Green - matching leaflet-measure theme
       path.setAttribute('stroke', '#ABE67E');

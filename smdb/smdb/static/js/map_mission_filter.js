@@ -155,7 +155,7 @@ let feature = L.geoJSON(missions, {
     var routeFile = (p && p.route_file) ? p.route_file : "";
     return (
       "<a target='_blank' href='/missions/" +
-      encodeURIComponent(slug) +
+      _escapeHtml(slug) +
       "'>" +
       _escapeHtml(slug) +
       "</a>: " +
@@ -261,7 +261,7 @@ if (hasMissions && missions.features) {
         className: "label-mission-name",
         html:
           "<a target='_blank' href='/missions/" +
-          (mission.properties.slug ? encodeURIComponent(mission.properties.slug) : "") +
+          (mission.properties.slug ? _escapeHtml(mission.properties.slug) : "") +
           "'>" +
           (mission.properties.slug ? _escapeHtml(mission.properties.slug) : "") +
           "</a>",
@@ -993,7 +993,7 @@ function updateResultsPanel(message, missions) {
     html +=
       "<tr" + (missionSlug ? ' data-mission-slug="' + _escapeHtml(missionSlug) + '"' : "") + ">" +
       '<td><a href="/missions/' +
-      (m.slug ? encodeURIComponent(m.slug) : "") +
+      (m.slug ? _escapeHtml(m.slug) : "") +
       '/">' +
       _escapeHtml(m.name) +
       "</a></td>" +
