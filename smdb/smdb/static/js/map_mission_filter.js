@@ -275,7 +275,13 @@ if (hasMissions && missions.features) {
         el.setAttribute("data-mission-slug", missionSlug);
         el.setAttribute("data-track-side", "left");
         el.addEventListener("mouseover", function () { highlightMission(missionSlug); });
-        el.addEventListener("mouseout", function () { clearAllMissionHighlights(); });
+        el.addEventListener("mouseout", function () {
+          if (clearHighlightsTimeout) clearTimeout(clearHighlightsTimeout);
+          clearHighlightsTimeout = setTimeout(function () {
+            clearHighlightsTimeout = null;
+            clearAllMissionHighlights();
+          }, CLEAR_DEBOUNCE_MS);
+        });
       });
     })(slug);
     marker.addTo(map);
