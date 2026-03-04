@@ -54,13 +54,13 @@
       {% endif %}
     </div>
 
-    {# Fallback form rendered when JavaScript is disabled #}
+    {# Fallback styling when JavaScript is disabled: show the existing form container #}
     <noscript>
-      {% if filter %}
-        <div class="mb-3">
-          {% crispy filter.form filter.form.helper %}
-        </div>
-      {% endif %}
+      <style>
+        #filter-form-container {
+          display: block !important;
+        }
+      </style>
     </noscript>
 
     {{ missions|json_script:"missions-data" }}

@@ -416,6 +416,9 @@ class MissionTableView(FilterView, SingleTableView):
         # not conflict with django_tables2's per_page (table pagination, e.g. 25 per page). The map
         # intentionally shows a larger slice so many tracks are visible; table pages beyond this
         # slice may show rows that have no track on the map.
+        # Known limitation: the map slice uses the same ordered queryset (including user sort). If
+        # the user sets sort and map_page > 1, the map and table can show different missions
+        # because django_tables2 paginates the table independently (page/per_page).
         try:
             map_per_page = int(self.request.GET.get("map_per_page", 500))
         except (TypeError, ValueError):

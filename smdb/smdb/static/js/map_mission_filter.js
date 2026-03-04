@@ -1014,7 +1014,13 @@ function updateResultsPanel(message, missions) {
     var slug = tr.getAttribute("data-mission-slug");
     if (!slug) return;
     tr.addEventListener("mouseover", function () { highlightMission(slug); });
-    tr.addEventListener("mouseout", function () { clearAllMissionHighlights(); });
+    tr.addEventListener("mouseout", function () {
+      if (clearHighlightsTimeout) clearTimeout(clearHighlightsTimeout);
+      clearHighlightsTimeout = setTimeout(function () {
+        clearHighlightsTimeout = null;
+        clearAllMissionHighlights();
+      }, CLEAR_DEBOUNCE_MS);
+    });
   });
 
   window.selectedMissions = missions;
@@ -1242,7 +1248,13 @@ function attachMissionTableRowHover() {
     var slug = tr.getAttribute("data-mission-slug");
     if (!slug) return;
     tr.addEventListener("mouseover", function () { highlightMission(slug); });
-    tr.addEventListener("mouseout", function () { clearAllMissionHighlights(); });
+    tr.addEventListener("mouseout", function () {
+      if (clearHighlightsTimeout) clearTimeout(clearHighlightsTimeout);
+      clearHighlightsTimeout = setTimeout(function () {
+        clearHighlightsTimeout = null;
+        clearAllMissionHighlights();
+      }, CLEAR_DEBOUNCE_MS);
+    });
   });
 }
 if (document.readyState === "loading") {
