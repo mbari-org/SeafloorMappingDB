@@ -66,7 +66,7 @@
           {% for citation in citations %}
           <li>
             {% if citation.doi %}
-            <a href="https://doi.org/{{ citation.doi }}" target="_blank" rel="noopener noreferrer">{{ citation.doi }}</a>
+            <a href="https://doi.org/{{ citation.doi|urlencode }}" target="_blank" rel="noopener noreferrer">{{ citation.doi }}</a>
             {% endif %}
             {% if citation.full_reference %} — {{ citation.full_reference }}{% endif %}
           </li>

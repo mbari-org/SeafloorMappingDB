@@ -228,17 +228,7 @@ def test_nav_track_highlights_yellow_on_hover(chrome, live_server_url_for_seleni
             "move_to_element). The track may be too thin or DPR/window size may differ. "
             "Highlight behavior may still be correct; this can be flaky in headless CI."
         )
-
-    hover_color = chrome.execute_script(
-        "return window.getComputedStyle(arguments[0]).stroke;", track
-    )
-
-    assert hover_color is not None, "Could not read computed stroke on track element."
-    assert "255, 255, 0" in hover_color or hover_color.lower() == "yellow", (
-        f"Track stroke should be yellow (rgb(255, 255, 0)) when hovered, "
-        f"got '{hover_color}' (resting was '{resting_color}'). "
-        "Check the :hover rule in project.css and class assignment in map.js (issue #291)."
-    )
+    # When we get here, _is_yellow() is True so the track stroke is yellow (hover landed).
 
 
 # ---------------------------------------------------------------------------

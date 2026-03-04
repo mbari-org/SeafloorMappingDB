@@ -482,6 +482,8 @@ const FilterControl = L.Control.extend({
       }, 100);
 
       // Clear button: stay on Missions page, strip filter params.
+      // Listener is on the sidebar body element (body), not document.body, so it
+      // is scoped to the sidebar and is removed when the sidebar is removed from the DOM.
       // Only attach once — copyForm() may be retried and would otherwise
       // register duplicate handlers on each attempt.
       if (!clearListenerAdded) {
@@ -822,12 +824,13 @@ function styleDrawSquareControl() {
   }
 }
 setTimeout(styleDrawSquareControl, 100);
-setTimeout(styleDrawSquareControl, 500);
 
 // Store drawn-rectangle bounds globally for use by exportMissions().
 window.drawnRectangleBounds = null;
 
-// When user finishes drawing a rectangle: show the results panel.
+// When user finishes drawing a rectangle: show the results panel and fetch missions
+// via API. The panel is updated in place; the main django-tables2 table below the map
+// is not updated until a full page reload with bbox in the URL (e.g. Submit filter).
 map.on(L.Draw.Event.CREATED, function (e) {
   if (e.layerType !== "rectangle") return;
   drawnItems.clearLayers();
