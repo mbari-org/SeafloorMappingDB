@@ -2418,376 +2418,111 @@ L.Control.Layers.include({
   },
 });
 
-// Results Panel Functions
+// Results panel: same behavior as Missions page (map_mission_filter.js).
 function showResultsPanel(loading) {
   var panel = document.getElementById("selection-results-panel");
   if (!panel) {
-    // Create results panel if it doesn't exist
     panel = document.createElement("div");
     panel.id = "selection-results-panel";
     panel.className = "selection-results-panel";
-    panel.innerHTML = `
-      <div class="selection-results-header">
-        <h5>Selected Missions</h5>
-        <button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close">×</button>
-      </div>
-      <div class="selection-results-body">
-        <div id="selection-results-content"></div>
-      </div>
-      <div class="resize-handle resize-handle-n"></div>
-      <div class="resize-handle resize-handle-e"></div>
-      <div class="resize-handle resize-handle-s"></div>
-      <div class="resize-handle resize-handle-w"></div>
-      <div class="resize-handle resize-handle-ne"></div>
-      <div class="resize-handle resize-handle-nw"></div>
-      <div class="resize-handle resize-handle-se"></div>
-      <div class="resize-handle resize-handle-sw"></div>
-    `;
+    panel.innerHTML =
+      '<div class="selection-results-header">' +
+        '<h5>Selected Missions</h5>' +
+        '<button type="button" class="btn-close" onclick="hideResultsPanel()" aria-label="Close">\xd7</button>' +
+      "</div>" +
+      '<div class="selection-results-body">' +
+        '<div id="selection-results-content"></div>' +
+      "</div>" +
+      '<div class="resize-handle resize-handle-n"></div>' +
+      '<div class="resize-handle resize-handle-e"></div>' +
+      '<div class="resize-handle resize-handle-s"></div>' +
+      '<div class="resize-handle resize-handle-w"></div>' +
+      '<div class="resize-handle resize-handle-ne"></div>' +
+      '<div class="resize-handle resize-handle-nw"></div>' +
+      '<div class="resize-handle resize-handle-se"></div>' +
+      '<div class="resize-handle resize-handle-sw"></div>';
     document.body.appendChild(panel);
-    
-    // Prevent clicks on panel from propagating to map (prevents accidental closing)
-    panel.addEventListener('click', function(e) {
+
+    panel.addEventListener("click", function (e) { e.stopPropagation(); });
+    panel.addEventListener("mousedown", function (e) { e.stopPropagation(); });
+    panel.addEventListener("wheel", function (e) {
       e.stopPropagation();
-    });
-    
-    // Prevent mousedown events from propagating to map
-    panel.addEventListener('mousedown', function(e) {
-      e.stopPropagation();
-    });
-    
-    // Prevent wheel events from propagating to map (allows panel to scroll)
-    panel.addEventListener('wheel', function(e) {
-      e.stopPropagation();
-      
-      // Find the scrollable container (selection-results-body)
-      var body = panel.querySelector('.selection-results-body');
-      if (body) {
-        var scrollHeight = body.scrollHeight;
-        var clientHeight = body.clientHeight;
-        
-        // Check if we can scroll
-        if (scrollHeight > clientHeight) {
-          // Prevent default map zoom/pan behavior
-          e.preventDefault();
-          
-          // Scroll the body
-          var delta = e.deltaY;
-          body.scrollTop += delta;
-          
-          // Prevent further propagation
-          e.stopImmediatePropagation();
-        }
+      var b = panel.querySelector(".selection-results-body");
+      if (b && b.scrollHeight > b.clientHeight) {
+        e.preventDefault();
+        b.scrollTop += e.deltaY;
+        e.stopImmediatePropagation();
       }
     }, { passive: false });
-    
-    // Detect when mouse is over scrollbar area and disable resize handles
-    var body = panel.querySelector('.selection-results-body');
-    if (body) {
-      body.addEventListener('mousemove', function(e) {
-        var rect = body.getBoundingClientRect();
-        var scrollbarWidth = 17; // Typical scrollbar width
-        var scrollbarHeight = 17; // Typical scrollbar height
-        
-        // Check if mouse is in scrollbar area (right edge for vertical, bottom for horizontal)
-        var isOverVerticalScrollbar = (e.clientX >= rect.right - scrollbarWidth && e.clientX <= rect.right);
-        var isOverHorizontalScrollbar = (e.clientY >= rect.bottom - scrollbarHeight && e.clientY <= rect.bottom);
-        // Check if mouse is in the scrollbar intersection (bottom-right corner where scrollbars meet)
-        var isOverScrollbarIntersection = isOverVerticalScrollbar && isOverHorizontalScrollbar;
-        
-        // Get resize handles
-        var handleE = panel.querySelector('.resize-handle-e');
-        var handleS = panel.querySelector('.resize-handle-s');
-        var handleSE = panel.querySelector('.resize-handle-se');
-        
-        // Disable right edge handle when over vertical scrollbar (but not intersection)
-        if (handleE) {
-          if (isOverVerticalScrollbar && !isOverScrollbarIntersection) {
-            handleE.classList.add('scrollbar-active');
-          } else {
-            handleE.classList.remove('scrollbar-active');
-          }
-        }
-        
-        // Disable bottom handle when over horizontal scrollbar (but not intersection)
-        if (handleS) {
-          if (isOverHorizontalScrollbar && !isOverScrollbarIntersection) {
-            handleS.classList.add('scrollbar-active');
-          } else {
-            handleS.classList.remove('scrollbar-active');
-          }
-        }
-        
-        // Bottom-right corner handle is always active (never disabled)
-        // The reserved space prevents scrollbars from overlapping it
-        if (handleSE) {
-          handleSE.classList.remove('scrollbar-active');
-        }
-      });
-      
-      body.addEventListener('mouseleave', function() {
-        // Remove scrollbar-active when mouse leaves body
-        var handleE = panel.querySelector('.resize-handle-e');
-        var handleS = panel.querySelector('.resize-handle-s');
-        var handleSE = panel.querySelector('.resize-handle-se');
-        if (handleE) handleE.classList.remove('scrollbar-active');
-        if (handleS) handleS.classList.remove('scrollbar-active');
-        if (handleSE) handleSE.classList.remove('scrollbar-active');
+
+    var isDragging = false, dragOffX = 0, dragOffY = 0;
+    var panelHeader = panel.querySelector(".selection-results-header");
+    if (panelHeader) {
+      panelHeader.addEventListener("mousedown", function (e) {
+        if (e.target.classList.contains("btn-close")) return;
+        isDragging = true;
+        var rect = panel.getBoundingClientRect();
+        dragOffX = e.clientX - rect.left;
+        dragOffY = e.clientY - rect.top;
+        panel.style.transform = "none";
+        e.preventDefault();
       });
     }
-    
-    // Initialize drag functionality
-    initializePanelDrag(panel);
-    
-    // Initialize resize functionality
-    initializePanelResize(panel);
+    document.addEventListener("mousemove", function (e) {
+      if (!isDragging) return;
+      panel.style.left = e.clientX - dragOffX + "px";
+      panel.style.top  = e.clientY - dragOffY + "px";
+    });
+    document.addEventListener("mouseup", function () { isDragging = false; });
+
+    attachResizeHandles(panel);
   }
+
   panel.style.display = "flex";
-  
-  // Force a synchronous layout calculation to ensure panel is rendered
-  panel.offsetHeight;
-  
-  // Convert CSS percentage transform to pixel transform immediately
-  // This must happen synchronously before any user interaction
-  var currentTransform = panel.style.transform || '';
-  if (!currentTransform || currentTransform.indexOf('%') !== -1) {
-    var rect = panel.getBoundingClientRect();
-    var currentCenterX = rect.left + rect.width / 2;
-    var currentCenterY = rect.top + rect.height / 2;
-    var viewportCenterX = window.innerWidth / 2;
-    var viewportCenterY = window.innerHeight / 2;
-    var pixelOffsetX = currentCenterX - viewportCenterX;
-    var pixelOffsetY = currentCenterY - viewportCenterY;
-    
-    panel.style.transform = 'translate(' + pixelOffsetX + 'px, ' + pixelOffsetY + 'px)';
-    
-    // Force reflow
-    panel.offsetHeight;
-    
-    // Mark as converted so dragStart doesn't convert again
-    panel._transformConverted = true;
-  } else {
-    panel._transformConverted = true;
-  }
-  
   if (loading) {
-    document.getElementById("selection-results-content").innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    var content = document.getElementById("selection-results-content");
+    if (content)
+      content.innerHTML =
+        '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
   }
 }
 
-// Initialize drag functionality for panel
-function initializePanelDrag(panel) {
-  var header = panel.querySelector('.selection-results-header');
-  var isDragging = false;
-  var startX = 0;
-  var startY = 0;
-  var startLeft = 0;
-  var startTop = 0;
-
-  header.addEventListener('mousedown', dragStart);
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', dragEnd);
-
-  function dragStart(e) {
-    // Don't start drag if clicking the close button
-    if (e.target.classList.contains('btn-close') || e.target.closest('.btn-close')) {
-      return;
-    }
-    
-    if (e.target === header || header.contains(e.target)) {
+function attachResizeHandles(panel) {
+  var handles = panel.querySelectorAll(".resize-handle");
+  handles.forEach(function (handle) {
+    handle.addEventListener("mousedown", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      
-      // Get current mouse position
-      startX = e.clientX;
-      startY = e.clientY;
-      
-      // Get current panel position - use getBoundingClientRect for actual rendered position
-      // This gives us the true visual position regardless of transform type
+      var startX = e.clientX, startY = e.clientY;
       var rect = panel.getBoundingClientRect();
-      startLeft = rect.left;
-      startTop = rect.top;
-      
-      isDragging = true;
-      header.style.cursor = 'move';
-    }
-  }
+      var startW = rect.width, startH = rect.height;
+      var startL = rect.left, startT = rect.top;
+      var isN  = handle.classList.contains("resize-handle-n");
+      var isS  = handle.classList.contains("resize-handle-s");
+      var isE  = handle.classList.contains("resize-handle-e");
+      var isW  = handle.classList.contains("resize-handle-w");
+      var isNE = handle.classList.contains("resize-handle-ne");
+      var isNW = handle.classList.contains("resize-handle-nw");
+      var isSE = handle.classList.contains("resize-handle-se");
+      var isSW = handle.classList.contains("resize-handle-sw");
 
-  function drag(e) {
-    if (isDragging) {
-      e.preventDefault();
-      
-      // On first drag movement, ensure transform is in pixels
-      if (!panel._dragTransformConverted) {
-        var currentTransform = panel.style.transform || '';
-        
-        if (!currentTransform || currentTransform.indexOf('%') !== -1) {
-          // Convert to pixels using current position BEFORE any movement
-          // Use the startLeft/startTop we captured in dragStart
-          var panelWidth = panel.offsetWidth;
-          var panelHeight = panel.offsetHeight;
-          var panelCenterX = startLeft + panelWidth / 2;
-          var panelCenterY = startTop + panelHeight / 2;
-          var viewportCenterX = window.innerWidth / 2;
-          var viewportCenterY = window.innerHeight / 2;
-          var pixelOffsetX = panelCenterX - viewportCenterX;
-          var pixelOffsetY = panelCenterY - viewportCenterY;
-          
-          panel.style.transform = 'translate(' + pixelOffsetX + 'px, ' + pixelOffsetY + 'px)';
-          
-          // Force reflow
-          panel.offsetHeight;
-          
-          // Get position AFTER transform change
-          var rectAfter = panel.getBoundingClientRect();
-          
-          // Update start positions if panel moved
-          if (Math.abs(rectAfter.left - startLeft) > 0.1 || Math.abs(rectAfter.top - startTop) > 0.1) {
-            startLeft = rectAfter.left;
-            startTop = rectAfter.top;
-          }
-        }
-        panel._dragTransformConverted = true;
+      panel.style.transform = "none";
+
+      function onMove(ev) {
+        var dx = ev.clientX - startX, dy = ev.clientY - startY;
+        if (isE  || isNE || isSE) panel.style.width  = Math.max(300, startW + dx) + "px";
+        if (isW  || isNW || isSW) { panel.style.width = Math.max(300, startW - dx) + "px"; panel.style.left = startL + dx + "px"; }
+        if (isS  || isSE || isSW) panel.style.height = Math.max(200, startH + dy) + "px";
+        if (isN  || isNE || isNW) { panel.style.height = Math.max(200, startH - dy) + "px"; panel.style.top = startT + dy + "px"; }
       }
-      
-      // Calculate how far mouse has moved
-      var deltaX = e.clientX - startX;
-      var deltaY = e.clientY - startY;
-      
-      // Calculate new panel position (top-left corner)
-      var newLeft = startLeft + deltaX;
-      var newTop = startTop + deltaY;
-      
-      // IMPORTANT: Panel has left: 50% and top: 50%, which means its top-left corner is at viewport center
-      // When we apply transform: translate(Xpx, Ypx), the top-left corner ends up at:
-      // (viewportCenterX + X, viewportCenterY + Y)
-      // So to get the top-left at newLeft, newTop:
-      // newLeft = viewportCenterX + transformX
-      // newTop = viewportCenterY + transformY
-      // Therefore:
-      var viewportCenterX = window.innerWidth / 2;
-      var viewportCenterY = window.innerHeight / 2;
-      
-      // Calculate transform needed to position top-left at newLeft, newTop
-      var transformX = newLeft - viewportCenterX;
-      var transformY = newTop - viewportCenterY;
-      
-      panel.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
-    }
-  }
-  
-  function dragEnd(e) {
-    if (isDragging) {
-      isDragging = false;
-      header.style.cursor = 'default';
-      panel._dragTransformConverted = false;
-    }
-  }
-}
-
-// Initialize resize functionality for panel
-function initializePanelResize(panel) {
-  if (!panel) return;
-  
-  var resizeHandles = panel.querySelectorAll('.resize-handle');
-  if (!resizeHandles || resizeHandles.length === 0) {
-    return; // No resize handles found, skip initialization
-  }
-  
-  var isResizing = false;
-  var currentHandle = null;
-  var startX, startY, startWidth, startHeight, startLeft, startTop, startTransformX, startTransformY;
-
-  resizeHandles.forEach(function(handle) {
-    handle.addEventListener('mousedown', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      isResizing = true;
-      currentHandle = handle;
-      startX = e.clientX;
-      startY = e.clientY;
-      startWidth = parseInt(document.defaultView.getComputedStyle(panel).width, 10);
-      startHeight = parseInt(document.defaultView.getComputedStyle(panel).height, 10);
-      
-      // Get current position accounting for transform
-      var rect = panel.getBoundingClientRect();
-      startLeft = rect.left;
-      startTop = rect.top;
-      
-      // Parse current transform
-      var transform = panel.style.transform || '';
-      var match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-      startTransformX = match ? parseFloat(match[1]) : 0;
-      startTransformY = match ? parseFloat(match[2]) : 0;
-      
-      document.addEventListener('mousemove', doResize);
-      document.addEventListener('mouseup', stopResize);
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
     });
   });
-
-  function doResize(e) {
-    if (!isResizing) return;
-    
-    var deltaX = e.clientX - startX;
-    var deltaY = e.clientY - startY;
-    
-    var width = startWidth;
-    var height = startHeight;
-    var transformX = startTransformX;
-    var transformY = startTransformY;
-    
-    if (currentHandle.classList.contains('resize-handle-e')) {
-      width = startWidth + deltaX;
-    } else if (currentHandle.classList.contains('resize-handle-w')) {
-      width = startWidth - deltaX;
-      transformX = startTransformX + deltaX;
-    } else if (currentHandle.classList.contains('resize-handle-s')) {
-      height = startHeight + deltaY;
-    } else if (currentHandle.classList.contains('resize-handle-n')) {
-      height = startHeight - deltaY;
-      transformY = startTransformY + deltaY;
-    } else if (currentHandle.classList.contains('resize-handle-se')) {
-      width = startWidth + deltaX;
-      height = startHeight + deltaY;
-    } else if (currentHandle.classList.contains('resize-handle-sw')) {
-      width = startWidth - deltaX;
-      height = startHeight + deltaY;
-      transformX = startTransformX + deltaX;
-    } else if (currentHandle.classList.contains('resize-handle-ne')) {
-      width = startWidth + deltaX;
-      height = startHeight - deltaY;
-      transformY = startTransformY + deltaY;
-    } else if (currentHandle.classList.contains('resize-handle-nw')) {
-      width = startWidth - deltaX;
-      height = startHeight - deltaY;
-      transformX = startTransformX + deltaX;
-      transformY = startTransformY + deltaY;
-    }
-    
-    // Apply min/max constraints
-    var minWidth = 400;
-    var minHeight = 300;
-    var maxWidth = window.innerWidth - 20;
-    var maxHeight = window.innerHeight - 20;
-    
-    width = Math.max(minWidth, Math.min(maxWidth, width));
-    height = Math.max(minHeight, Math.min(maxHeight, height));
-    
-    // Set width and height with box-sizing
-    panel.style.width = width + 'px';
-    panel.style.height = height + 'px';
-    panel.style.boxSizing = 'border-box';
-    panel.style.transform = 'translate(' + transformX + 'px, ' + transformY + 'px)';
-    
-    // Force reflow to ensure content adjusts
-    panel.offsetHeight;
-  }
-
-  function stopResize() {
-    isResizing = false;
-    currentHandle = null;
-    document.removeEventListener('mousemove', doResize);
-    document.removeEventListener('mouseup', stopResize);
-  }
 }
 
 function hideResultsPanel() {
