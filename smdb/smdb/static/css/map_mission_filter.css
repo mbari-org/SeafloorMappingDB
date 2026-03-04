@@ -21,6 +21,17 @@ body.missions-page {
   overflow: hidden;
 }
 
+/* Pin footer to viewport bottom on Missions page so table wrapper can sit above it.
+   Done in CSS (not JS) to avoid layout shift and to keep footer styling scoped here. */
+body.missions-page #footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  background-color: #fff;
+}
+
 /* Reset Leaflet's default margin on control wrappers (mirrors map.css) */
 .leaflet-control {
   margin: 0;

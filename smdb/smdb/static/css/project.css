@@ -845,7 +845,7 @@ svg.svg-inline--fa,
   text-align: center;
 }
 
-/* Draw Square cursor marker - hide the dot, keep only crosshair cursor */
-.leaflet-mouse-marker {
+/* Draw Square cursor marker on main map - hide the dot, keep only crosshair cursor */
+#map .leaflet-mouse-marker {
   display: none !important; /* Remove confusing cursor dot */
 }

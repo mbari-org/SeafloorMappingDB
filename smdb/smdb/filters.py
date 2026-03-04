@@ -153,6 +153,8 @@ class MissionFilter(FilterSet):
 
     class Meta:
         model = Mission
+        # expedition__name and citation_search are explicit filters (declared above) and
+        # do not need to be in fields; django-filter includes them automatically.
         fields = [
             "name",
             "region_name",

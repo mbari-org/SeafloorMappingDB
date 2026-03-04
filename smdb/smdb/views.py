@@ -412,16 +412,15 @@ class MissionTableView(FilterView, SingleTableView):
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
-        # Map GeoJSON pagination: default 500, cap 2000 (issue #293). Read from GET with default;
-        # do not mutate request.GET (avoids relying on QueryDict._mutable).
-        # Note: the table is paginated separately by django_tables2 (e.g. 25 per page). The map
-        # intentionally shows a larger slice (up to per_page missions) so many tracks are visible
-        # at once; table pages beyond this slice will show rows that have no track on the map.
+        # Map GeoJSON pagination: default 500, cap 2000 (issue #293). Use map_per_page so it does
+        # not conflict with django_tables2's per_page (table pagination, e.g. 25 per page). The map
+        # intentionally shows a larger slice so many tracks are visible; table pages beyond this
+        # slice may show rows that have no track on the map.
         try:
-            per_page = int(self.request.GET.get("per_page", 500))
+            map_per_page = int(self.request.GET.get("map_per_page", 500))
         except (TypeError, ValueError):
-            per_page = 500
-        per_page = max(1, min(per_page, 2000))
+            map_per_page = 500
+        map_per_page = max(1, min(map_per_page, 2000))
 
         # Use a dedicated query parameter for map pagination to avoid conflicts with
         # django_tables2's `page` parameter used for table pagination.
@@ -431,7 +430,7 @@ class MissionTableView(FilterView, SingleTableView):
             map_page = 1
         map_page = max(1, map_page)
 
-        missions = missions[slice((map_page - 1) * per_page, map_page * per_page)]
+        missions = missions[slice((map_page - 1) * map_per_page, map_page * map_per_page)]
         context["missions"] = MissionSerializer(missions, many=True).data
         return context
 

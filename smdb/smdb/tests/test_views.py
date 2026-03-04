@@ -271,6 +271,7 @@ def test_mission_select_api_applies_vehicle_name_filter(client, missions_notes_5
     assert response_filtered.status_code == 200
     filtered = response_filtered.json()["missions"]
     assert len(filtered) <= len(all_in_bbox)
+    assert len(filtered) >= 1
     for m in filtered:
         assert m.get("vehicle_name") == "Bluefin"
 

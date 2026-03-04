@@ -1325,7 +1325,6 @@ let feature = L.geoJSON(missions, {
       fill: false
     };
   },
-  hover: function () { },
   onEachFeature: function(feature, layer) {
     // layer._path is null here (path not created until layer is added to map).
     // Use the 'add' event, which fires after onAdd() has created _path.

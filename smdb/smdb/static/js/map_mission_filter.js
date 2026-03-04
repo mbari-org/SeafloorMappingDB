@@ -38,6 +38,9 @@ var currentHighlightedSlug = null;
 var highlightedLabelEls = [];
 var highlightedPathEls = [];
 var highlightedRowEls = [];
+// Debounce: pending clear timeout so moving from path to row doesn't flicker (cancel on re-highlight).
+var clearHighlightsTimeout = null;
+var CLEAR_DEBOUNCE_MS = 80;
 
 // Clear all mission hover state so only one mission is highlighted at a time (issue #293).
 function clearAllMissionHighlights() {
@@ -63,7 +66,10 @@ function clearAllMissionHighlights() {
 
 function highlightMission(slug) {
   if (!slug) return;
-
+  if (clearHighlightsTimeout) {
+    clearTimeout(clearHighlightsTimeout);
+    clearHighlightsTimeout = null;
+  }
   // If this mission is already highlighted, avoid redundant DOM work.
   if (slug === currentHighlightedSlug) {
     return;
@@ -130,7 +136,14 @@ let feature = L.geoJSON(missions, {
         this._path.classList.add("smdb-track-line", "smdb-geometry-line");
         if (slug) this._path.setAttribute("data-mission-slug", slug);
         this._path.addEventListener("mouseover", function () { highlightMission(slug); });
-        this._path.addEventListener("mouseout", function () { clearAllMissionHighlights(); });
+        this._path.addEventListener("mouseout", function () {
+          // Debounce clear so moving from path to row doesn't flicker; highlightMission cancels this.
+          if (clearHighlightsTimeout) clearTimeout(clearHighlightsTimeout);
+          clearHighlightsTimeout = setTimeout(function () {
+            clearHighlightsTimeout = null;
+            clearAllMissionHighlights();
+          }, CLEAR_DEBOUNCE_MS);
+        });
       }
     });
   },
@@ -1122,7 +1135,7 @@ function _styleBtn(btn, borderColor) {
 // viewport-relative coordinates returned by getBoundingClientRect().
 //
 // Side-effects:
-//   • The footer is also fixed to the viewport bottom so it stays visible.
+//   • Footer is fixed by CSS (body.missions-page #footer) so it stays visible; we only read its height.
 //   • The table body is the only thing that scrolls (overflow-y:auto).
 // ---------------------------------------------------------------------------
 function initTableLayout() {
@@ -1130,18 +1143,9 @@ function initTableLayout() {
   var tableWrapper = document.getElementById("mission-table-wrapper");
   if (!tableWrapper || !mapEl) return;
 
-  // 1. Pin the footer to the viewport bottom so it sits above the table.
+  // 1. Footer is fixed by CSS (body.missions-page #footer in map_mission_filter.css).
   var footerEl = document.getElementById("footer");
-  var footerH  = 0;
-  if (footerEl) {
-    footerH = footerEl.offsetHeight;
-    footerEl.style.position        = "fixed";
-    footerEl.style.bottom          = "0";
-    footerEl.style.left            = "0";
-    footerEl.style.right           = "0";
-    footerEl.style.zIndex          = "2";
-    footerEl.style.backgroundColor = "#fff";
-  }
+  var footerH  = footerEl ? footerEl.offsetHeight : 0;
 
   // 2. Fix the table wrapper between the map's visual bottom and the footer.
   //    getBoundingClientRect().bottom already accounts for the CSS top:150px
