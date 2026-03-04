@@ -9,7 +9,8 @@
 // ---------------------------------------------------------------------------
 // Map and base tile layer
 // ---------------------------------------------------------------------------
-const map = L.map("map_mission_filter");
+// minZoom: 2 keeps at least one-world view (no multiple wraps); matches home page behavior.
+const map = L.map("map_mission_filter", { minZoom: 2, maxZoom: 18 });
 
 // Move the default zoom control out of topleft so the filter button sits there cleanly.
 map.zoomControl.setPosition("bottomright");
@@ -30,8 +31,8 @@ const missions = JSON.parse(
 const hasMissions =
   missions && missions.features && missions.features.length > 0;
 
-// Set an initial world view; whenReady() will zoom to mission bounds.
-map.setView([39.8423, -26.8945], 3, { animate: false });
+// One-world initial view (same as home page fitWorld); whenReady() may then fit to mission bounds.
+map.fitWorld();
 
 // Track the currently highlighted mission to avoid full DOM scans on every hover.
 var currentHighlightedSlug = null;
@@ -172,23 +173,23 @@ map.whenReady(function () {
   setTimeout(function () {
     try {
       if (!hasMissions) {
-        map.setView([39.8423, -26.8945], 3, { animate: false });
+        map.fitWorld();
         return;
       }
       var featureLayers = feature.getLayers();
       if (!featureLayers || featureLayers.length === 0) {
-        map.setView([39.8423, -26.8945], 3, { animate: false });
+        map.fitWorld();
         return;
       }
       var bounds;
       try {
         bounds = feature.getBounds();
       } catch (e) {
-        map.setView([39.8423, -26.8945], 3, { animate: false });
+        map.fitWorld();
         return;
       }
       if (!bounds || !bounds.isValid || !bounds.isValid()) {
-        map.setView([39.8423, -26.8945], 3, { animate: false });
+        map.fitWorld();
         return;
       }
       var sw = bounds.getSouthWest();
@@ -203,12 +204,16 @@ map.whenReady(function () {
         lngSpan > 350 ||
         latSpan > 170
       ) {
-        map.setView([39.8423, -26.8945], 3, { animate: false });
+        map.fitWorld();
         return;
       }
       map.fitBounds(bounds, { padding: [100, 100] });
+      // Never zoom out past one-world view (minZoom is 2; clamp in case fitBounds went lower).
+      if (map.getZoom() < 2) {
+        map.setZoom(2);
+      }
     } catch (err) {
-      map.setView([39.8423, -26.8945], 3, { animate: false });
+      map.fitWorld();
     }
   }, 100);
 });
