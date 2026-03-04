@@ -447,7 +447,7 @@ const FilterControl = L.Control.extend({
             
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
-            const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+            const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             window.location.href = currentUrl.toString();
             return false;
@@ -464,7 +464,7 @@ const FilterControl = L.Control.extend({
         // Preserve current URL path and add filter parameters
         const currentUrl = new URL(window.location.href);
         // Clear existing filter params to avoid conflicts
-        const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type'];
+        const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type'];
         filterKeys.forEach(key => currentUrl.searchParams.delete(key));
         // Add new filter params from form — use append() so that multi-value
         // fields (e.g. several quality_categories checkboxes) are preserved.
@@ -899,7 +899,7 @@ const FilterControl = L.Control.extend({
             // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             // Remove all filter-related query parameters
-            const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+            const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             // Reload page without filter parameters (stay on home/map page)
             window.location.href = currentUrl.toString();
@@ -1085,7 +1085,7 @@ const FilterControl = L.Control.extend({
                 // Clear all filter parameters and reload current page
                 const currentUrl = new URL(window.location.href);
                 // Remove all filter-related query parameters
-                const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
+                const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
                 filterKeys.forEach(key => currentUrl.searchParams.delete(key));
                 // Reload page without filter parameters (stay on home/map page)
                 window.location.href = currentUrl.toString();
@@ -1947,7 +1947,7 @@ map.on(L.Draw.Event.CREATED, function (e) {
     // Get current filter parameters from URL
     var urlParams = new URLSearchParams(window.location.search);
     var filterParams = {};
-    var filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
+    var filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'tmin', 'tmax'];
     filterKeys.forEach(function(key) {
       if (urlParams.has(key)) {
         filterParams[key] = urlParams.get(key);
@@ -2862,15 +2862,17 @@ function updateResultsPanel(message, missions) {
   content.querySelectorAll('tr[data-mission-slug]').forEach(function(tr) {
     var slug = tr.getAttribute('data-mission-slug');
     if (!slug) return;
+    // Escape for use inside double-quoted attribute selector (same as map_mission_filter.js).
+    var escapedSlug = slug.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
     tr.addEventListener('mouseover', function() {
       tr.classList.add('smdb-hover');
       var mapEl = document.getElementById('map');
-      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function(p) { p.classList.add('smdb-hover'); });
+      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + escapedSlug + '"]').forEach(function(p) { p.classList.add('smdb-hover'); });
     });
     tr.addEventListener('mouseout', function() {
       tr.classList.remove('smdb-hover');
       var mapEl = document.getElementById('map');
-      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + CSS.escape(slug) + '"]').forEach(function(p) { p.classList.remove('smdb-hover'); });
+      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + escapedSlug + '"]').forEach(function(p) { p.classList.remove('smdb-hover'); });
     });
   });
   
@@ -2951,7 +2953,7 @@ function exportMissions(format) {
   // Build query string from current filter params
   var urlParams = new URLSearchParams(window.location.search);
   var filterParams = {};
-  var filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'filter_type', 'q', 'tmin', 'tmax'];
+  var filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'tmin', 'tmax'];
   filterKeys.forEach(function(key) {
     if (urlParams.has(key)) {
       filterParams[key] = urlParams.get(key);

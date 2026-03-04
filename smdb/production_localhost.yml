@@ -23,8 +23,6 @@ services:
       - ./.envs/.production/.postgres
     command: /start
     restart: always
-    ports:
-      - "5000:5000"
     volumes:
       - /Users/mccann/.ssh:/home/docker_user/.ssh:z
       - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
@@ -48,6 +46,8 @@ services:
     restart: always
 
   mb-system:
+    profiles:
+      - full
     build:
       # Build image that has user docker_user already added - needed before volume mount
       # Make sure DOCKER_USER_ID is set in the environment before build - see README.md
@@ -66,6 +66,8 @@ services:
     command: /usr/sbin/sshd -D
 
   nginx:
+    profiles:
+      - full
     image: smdb_production_nginx
     build:
       context: .

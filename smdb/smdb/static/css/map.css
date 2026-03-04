@@ -414,7 +414,7 @@ body {
   width: max-content;
   color: #495057;
   text-align: center;
-  border-radius: 1;
+  border-radius: 1px;
   border: 1.5px solid #ced4da;
   position: absolute;
   top: 50%;
