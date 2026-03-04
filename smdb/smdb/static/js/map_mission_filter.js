@@ -305,7 +305,7 @@ const FilterControl = L.Control.extend({
     const sidebar = L.DomUtil.create("div", "filter-sidebar", wrapper);
     sidebar.id = "filter-sidebar";
     sidebar.style.cssText =
-      "position:absolute;left:-250px;top:0;width:250px;max-height:250vh;" +
+      "position:absolute;left:-250px;top:0;width:250px;max-height:calc(100vh - 60px);" +
       "height:auto;min-height:50px;background:#2d2d2d;box-shadow:2px 0 12px rgba(0,0,0,0.5);" +
       "border-radius:0 4px 4px 0;color:#e0e0e0;transition:left 0.3s ease,height 0.3s ease;" +
       "overflow:hidden;display:flex;flex-direction:column;z-index:999;pointer-events:auto;";

@@ -36,6 +36,21 @@ from smdb.forms import (
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
 
+# Allowlist for sort query parameter to avoid invalid/unindexed fields (Copilot security).
+VALID_MISSION_SORT = frozenset([
+    "name", "-name", "start_date", "-start_date", "region_name", "-region_name",
+    "track_length", "-track_length", "area", "-area", "start_depth", "-start_depth",
+    "vehicle_name", "-vehicle_name", "mgds_compilation", "-mgds_compilation",
+    "expedition__name", "-expedition__name",
+])
+VALID_EXPEDITION_SORT = frozenset([
+    "name", "-name", "expd_db_id", "-expd_db_id", "start_date", "-start_date",
+])
+VALID_COMPILATION_SORT = frozenset([
+    "name", "-name", "creation_date", "-creation_date",
+    "thumbnail_filename", "-thumbnail_filename",
+])
+
 
 class ExpeditionSerializer(HyperlinkedModelSerializer):
     class Meta:
@@ -74,6 +89,14 @@ class MissionSerializer(GeoFeatureModelSerializer):
         
         # Use nav_track for track lines
         return super().to_representation(instance)
+
+
+def _missions_geojson_list(queryset):
+    """Serialize missions for map GeoJSON; drop None from features so JS never sees null (issue #293)."""
+    data = MissionSerializer(queryset, many=True).data
+    if "features" in data:
+        data["features"] = [f for f in data["features"] if f is not None]
+    return data
 
 
 def _parse_bbox_geom(request):
@@ -228,7 +251,7 @@ class MissionOverView(TemplateView):
             "Serializing %s missions to geojson...",
             missions.count(),
         )
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
         self.logger.debug("# of Queries: %d", len(connection.queries))
         self.logger.debug(
             "Size of context['missions']: %d", len(str(context["missions"]))
@@ -284,7 +307,7 @@ class CompilationTableView(FilterView, SingleTableView):
             self.request.GET, queryset=self.get_queryset()
         ).qs
         sort = self.request.GET.get("sort")
-        if sort:
+        if sort and sort in VALID_COMPILATION_SORT:
             compilations = compilations.order_by(sort)
         per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
@@ -298,7 +321,7 @@ class CompilationTableView(FilterView, SingleTableView):
         # Filter to only missions with nav_track (for map display)
         # This ensures the map shows track lines, not just bounding boxes
         missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
         return context
 
 
@@ -338,7 +361,7 @@ class ExpeditionTableView(FilterView, SingleTableView):
             self.request.GET, queryset=self.get_queryset()
         ).qs
         sort = self.request.GET.get("sort")
-        if sort:
+        if sort and sort in VALID_EXPEDITION_SORT:
             expeditions = expeditions.order_by(sort)
         per_page = int(self.request.GET.get("per_page", 10))
         page = int(self.request.GET.get("page", 1))
@@ -352,7 +375,7 @@ class ExpeditionTableView(FilterView, SingleTableView):
         # Filter to only missions with nav_track (for map display)
         # This ensures the map shows track lines, not just bounding boxes
         missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
         return context
 
 
@@ -404,7 +427,7 @@ class MissionTableView(FilterView, SingleTableView):
         missions = self.object_list
 
         sort = self.request.GET.get("sort")
-        if sort:
+        if sort and sort in VALID_MISSION_SORT:
             missions = missions.order_by(sort)
 
         # Only pass missions with track lines to the map serializer.
@@ -434,7 +457,7 @@ class MissionTableView(FilterView, SingleTableView):
         map_page = max(1, map_page)
 
         missions = missions[slice((map_page - 1) * map_per_page, map_page * map_per_page)]
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
         return context
 
 
