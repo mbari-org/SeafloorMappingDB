@@ -9,6 +9,18 @@ body {
   color: #212529;
 }
 
+/* Home page: no body scroll (like Missions page). Only the map area is visible;
+   no scrollbar so no white strip on the right; map does not scroll. */
+body.home-page {
+  overflow: hidden;
+  width: 100%;
+}
+body.home-page #map {
+  width: 100%;
+  height: calc(100vh - 160px - 2.5rem);
+  box-sizing: border-box;
+}
+
 #map {
   top: 160px;
   position: relative;
