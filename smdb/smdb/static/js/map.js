@@ -20,6 +20,28 @@ const options = {
   groupCheckboxes: true,
 };
 
+// Debounced highlight helpers (mirrors map_mission_filter.js pattern).
+var mapClearHighlightsTimeout = null;
+var MAP_CLEAR_DEBOUNCE_MS = 80;
+
+function mapClearAllMissionHighlights() {
+  document.querySelectorAll('.smdb-hover').forEach(function(el) {
+    el.classList.remove('smdb-hover');
+  });
+}
+
+function mapHighlightMission(slug) {
+  if (mapClearHighlightsTimeout) {
+    clearTimeout(mapClearHighlightsTimeout);
+    mapClearHighlightsTimeout = null;
+  }
+  mapClearAllMissionHighlights();
+  if (!slug) return;
+  document.querySelectorAll('[data-mission-slug="' + slug.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"]').forEach(function(el) {
+    el.classList.add('smdb-hover');
+  });
+}
+
 const map = L.map("map", {
   ...options,
   zoomSnap: 0.5,  // Allow fractional zoom levels (0.5 increments: 1, 1.5, 2, 2.5, 3, etc.)
@@ -1336,21 +1358,14 @@ let feature = L.geoJSON(missions, {
       if (this._path) {
         this._path.classList.add('smdb-track-line', 'smdb-geometry-line');
         if (slug) this._path.setAttribute('data-mission-slug', slug);
-        this._path.addEventListener('mouseover', function() {
-          this.classList.add('smdb-hover');
-          document.querySelectorAll('#selection-results-content tr').forEach(function(tr) {
-            if (tr.getAttribute('data-mission-slug') === slug) {
-              tr.classList.add('smdb-hover');
-            }
-          });
-        });
+        this._path.addEventListener('mouseover', function() { mapHighlightMission(slug); });
         this._path.addEventListener('mouseout', function() {
-          this.classList.remove('smdb-hover');
-          document.querySelectorAll('#selection-results-content tr').forEach(function(tr) {
-            if (tr.getAttribute('data-mission-slug') === slug) {
-              tr.classList.remove('smdb-hover');
-            }
-          });
+          // Debounce so moving from path to row doesn't flicker.
+          if (mapClearHighlightsTimeout) clearTimeout(mapClearHighlightsTimeout);
+          mapClearHighlightsTimeout = setTimeout(function() {
+            mapClearHighlightsTimeout = null;
+            mapClearAllMissionHighlights();
+          }, MAP_CLEAR_DEBOUNCE_MS);
         });
       }
     });
@@ -2576,7 +2591,7 @@ function updateResultsPanel(message, missions) {
   missions.forEach(function(mission) {
     var missionSlug = mission.slug ? String(mission.slug) : '';
     html += '<tr' + (missionSlug ? ' data-mission-slug="' + escapeHtml(missionSlug) + '"' : '') + '>';
-    html += '<td><a href="/missions/' + (mission.slug ? encodeURIComponent(mission.slug) : '') + '/">' + escapeHtml(mission.name) + '</a></td>';
+    html += '<td><a href="/missions/' + (missionSlug ? escapeHtml(missionSlug) : '') + '/">' + escapeHtml(mission.name) + '</a></td>';
     html += '<td>' + (mission.start_date || '-') + '</td>';
     html += '<td>' + (mission.region_name || '-') + '</td>';
     html += '<td>' + (mission.track_length || '-') + '</td>';
@@ -2592,21 +2607,17 @@ function updateResultsPanel(message, missions) {
   
   content.innerHTML = html;
 
-  // Bidirectional hover: row hover highlights track (issue #293).
+  // Bidirectional hover: row hover highlights track (issue #293), debounced to prevent flicker.
   content.querySelectorAll('tr[data-mission-slug]').forEach(function(tr) {
     var slug = tr.getAttribute('data-mission-slug');
     if (!slug) return;
-    // Escape for use inside double-quoted attribute selector (same as map_mission_filter.js).
-    var escapedSlug = slug.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    tr.addEventListener('mouseover', function() {
-      tr.classList.add('smdb-hover');
-      var mapEl = document.getElementById('map');
-      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + escapedSlug + '"]').forEach(function(p) { p.classList.add('smdb-hover'); });
-    });
+    tr.addEventListener('mouseover', function() { mapHighlightMission(slug); });
     tr.addEventListener('mouseout', function() {
-      tr.classList.remove('smdb-hover');
-      var mapEl = document.getElementById('map');
-      if (mapEl) mapEl.querySelectorAll('path[data-mission-slug="' + escapedSlug + '"]').forEach(function(p) { p.classList.remove('smdb-hover'); });
+      if (mapClearHighlightsTimeout) clearTimeout(mapClearHighlightsTimeout);
+      mapClearHighlightsTimeout = setTimeout(function() {
+        mapClearHighlightsTimeout = null;
+        mapClearAllMissionHighlights();
+      }, MAP_CLEAR_DEBOUNCE_MS);
     });
   });
   
