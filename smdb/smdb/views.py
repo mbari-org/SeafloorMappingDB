@@ -435,18 +435,19 @@ class MissionTableView(FilterView, SingleTableView):
             nav_track__isnull=False
         ).exclude(nav_track__isempty=True)
 
-        # Map GeoJSON pagination: default 500, cap 2000 (issue #293). Use map_per_page so it does
-        # not conflict with django_tables2's per_page (table pagination, e.g. 25 per page). The map
-        # intentionally shows a larger slice so many tracks are visible; table pages beyond this
-        # slice may show rows that have no track on the map.
-        # Known limitation: the map slice uses the same ordered queryset (including user sort). If
-        # the user sets sort and map_page > 1, the map and table can show different missions
-        # because django_tables2 paginates the table independently (page/per_page).
+        # Map GeoJSON pagination: default 500, hard cap 1000 (issue #293). Use map_per_page so it
+        # does not conflict with django_tables2's per_page (table pagination, e.g. 25 per page).
+        # The map intentionally shows a larger slice so many tracks are visible; table pages beyond
+        # this slice may show rows that have no track on the map.
+        # Cap is kept at 1000 (not user-tunable beyond that) to limit serialization cost on large
+        # querysets; map_page is accepted but intended for internal use only.
+        # Known limitation: if the user sets sort and map_page > 1, the map and table can show
+        # different missions because django_tables2 paginates the table independently.
         try:
             map_per_page = int(self.request.GET.get("map_per_page", 500))
         except (TypeError, ValueError):
             map_per_page = 500
-        map_per_page = max(1, min(map_per_page, 2000))
+        map_per_page = max(1, min(map_per_page, 1000))
 
         # Use a dedicated query parameter for map pagination to avoid conflicts with
         # django_tables2's `page` parameter used for table pagination.

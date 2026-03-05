@@ -948,12 +948,17 @@ function showResultsPanel(loading) {
         e.preventDefault();
       });
     }
-    document.addEventListener("mousemove", function (e) {
+    // Named handlers so hideResultsPanel() can remove them and avoid accumulation.
+    function onPanelDragMove(e) {
       if (!isDragging) return;
       panel.style.left = e.clientX - dragOffX + "px";
       panel.style.top  = e.clientY - dragOffY + "px";
-    });
-    document.addEventListener("mouseup", function () { isDragging = false; });
+    }
+    function onPanelDragUp() { isDragging = false; }
+    document.addEventListener("mousemove", onPanelDragMove);
+    document.addEventListener("mouseup", onPanelDragUp);
+    panel._dragMove = onPanelDragMove;
+    panel._dragUp   = onPanelDragUp;
 
     // Resize handles.
     _attachResizeHandles(panel);
@@ -970,7 +975,12 @@ function showResultsPanel(loading) {
 
 function hideResultsPanel() {
   var panel = document.getElementById("selection-results-panel");
-  if (panel) panel.style.display = "none";
+  if (panel) {
+    panel.style.display = "none";
+    // Remove drag handlers stored during showResultsPanel to prevent accumulation.
+    if (panel._dragMove) { document.removeEventListener("mousemove", panel._dragMove); panel._dragMove = null; }
+    if (panel._dragUp)   { document.removeEventListener("mouseup",   panel._dragUp);   panel._dragUp   = null; }
+  }
   drawnItems.clearLayers();
   window.drawnRectangleBounds = null;
 }
