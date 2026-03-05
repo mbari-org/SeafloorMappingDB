@@ -11,7 +11,9 @@ html {
 }
 
 #map_mission_filter {
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
+  box-sizing: border-box;
   top: 150px;
 }
 

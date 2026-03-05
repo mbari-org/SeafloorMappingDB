@@ -31,8 +31,11 @@ const missions = JSON.parse(
 const hasMissions =
   missions && missions.features && missions.features.length > 0;
 
-// One-world initial view (same as home page fitWorld); whenReady() may then fit to mission bounds.
-map.fitWorld();
+// One-world initial view. Use setView (not fitWorld) because fitWorld calls fitBounds internally
+// which requires the container to have non-zero dimensions — but the container often has size 0
+// at JS initialization time (CSS not yet applied). setView sets center+zoom directly without
+// needing container dimensions, avoiding the invalid-zoom bug.
+map.setView([0, 0], 2, { animate: false });
 
 // Track the currently highlighted mission to avoid full DOM scans on every hover.
 var currentHighlightedSlug = null;
@@ -167,29 +170,32 @@ let feature = L.geoJSON(missions, {
   })
   .addTo(map);
 
-// Fit map to mission bounds once the map is ready.
+// Fit map to mission bounds once the map is ready. Use same fallback as home page (map.js):
+// setView(center, 3) when no missions, invalid bounds, or bounds too large — so initial view matches home.
+var MISSION_MAP_FALLBACK_CENTER = [39.8423, -26.8945];
+var MISSION_MAP_FALLBACK_ZOOM = 3;
 map.whenReady(function () {
   map.invalidateSize();
   setTimeout(function () {
     try {
       if (!hasMissions) {
-        map.fitWorld();
+        map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
         return;
       }
       var featureLayers = feature.getLayers();
       if (!featureLayers || featureLayers.length === 0) {
-        map.fitWorld();
+        map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
         return;
       }
       var bounds;
       try {
         bounds = feature.getBounds();
       } catch (e) {
-        map.fitWorld();
+        map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
         return;
       }
       if (!bounds || !bounds.isValid || !bounds.isValid()) {
-        map.fitWorld();
+        map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
         return;
       }
       var sw = bounds.getSouthWest();
@@ -197,23 +203,28 @@ map.whenReady(function () {
       var latSpan = ne.lat - sw.lat;
       var lngSpan = ne.lng - sw.lng;
       if (
-        lngSpan >= 360 ||
-        latSpan >= 180 ||
         isNaN(latSpan) ||
         isNaN(lngSpan) ||
-        lngSpan > 350 ||
-        latSpan > 170
+        lngSpan >= 360 ||
+        latSpan >= 180
       ) {
-        map.fitWorld();
+        map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
         return;
       }
-      map.fitBounds(bounds, { padding: [100, 100] });
-      // Never zoom out past one-world view (minZoom is 2; clamp in case fitBounds went lower).
-      if (map.getZoom() < 2) {
-        map.setZoom(2);
+      var padding = [100, 100];
+      var zoomWouldBe = map.getBoundsZoom(bounds, false, padding);
+      if (zoomWouldBe < 2 || !isFinite(zoomWouldBe)) {
+        map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
+        return;
+      }
+      map.fitBounds(bounds, { padding: padding, animate: false });
+      // Ensure a minimum zoom of 4 for a useful initial view on the Mission page.
+      // User feedback: two zoom-ins from the global view looks better than a full world overview.
+      if (map.getZoom() < 4) {
+        map.setZoom(4, { animate: false });
       }
     } catch (err) {
-      map.fitWorld();
+      map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
     }
   }, 100);
 });
