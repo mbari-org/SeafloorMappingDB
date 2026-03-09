@@ -942,13 +942,18 @@ function showResultsPanel(loading) {
         if (e.target.classList.contains("btn-close")) return;
         isDragging = true;
         var rect = panel.getBoundingClientRect();
-        dragOffX = e.clientX - rect.left;
-        dragOffY = e.clientY - rect.top;
+        var pixLeft = rect.left;
+        var pixTop  = rect.top;
+        dragOffX = e.clientX - pixLeft;
+        dragOffY = e.clientY - pixTop;
+        // Remove transform and lock in pixel position in one batch so the
+        // panel does not jump when CSS centers it with translate(-50%,-50%).
         panel.style.transform = "none";
+        panel.style.left = pixLeft + "px";
+        panel.style.top  = pixTop  + "px";
         e.preventDefault();
       });
     }
-    // Named handlers so hideResultsPanel() can remove them and avoid accumulation.
     function onPanelDragMove(e) {
       if (!isDragging) return;
       panel.style.left = e.clientX - dragOffX + "px";
@@ -977,9 +982,11 @@ function hideResultsPanel() {
   var panel = document.getElementById("selection-results-panel");
   if (panel) {
     panel.style.display = "none";
-    // Remove drag handlers stored during showResultsPanel to prevent accumulation.
-    if (panel._dragMove) { document.removeEventListener("mousemove", panel._dragMove); panel._dragMove = null; }
-    if (panel._dragUp)   { document.removeEventListener("mouseup",   panel._dragUp);   panel._dragUp   = null; }
+    // Do NOT remove the drag mousemove/mouseup listeners here.  They live on
+    // the panel's closure and are only activated when isDragging is true, so
+    // they are harmless while the panel is hidden.  Removing them broke drag
+    // on every re-open because showResultsPanel only attaches them once (inside
+    // the if (!panel) creation block which is skipped on subsequent calls).
   }
   drawnItems.clearLayers();
   window.drawnRectangleBounds = null;
@@ -1249,6 +1256,11 @@ function _attachResizeHandles(panel) {
       var isSE = handle.classList.contains("resize-handle-se");
       var isSW = handle.classList.contains("resize-handle-sw");
 
+      // Lock pixel position before removing transform so the panel doesn't jump
+      // (East/South/SE handles never set left/top in onMove, so without this the
+      // panel snaps to left:50%;top:50% without the centering translate).
+      panel.style.left = startL + "px";
+      panel.style.top  = startT + "px";
       panel.style.transform = "none";
 
       function onMove(ev) {

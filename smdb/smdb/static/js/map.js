@@ -2477,9 +2477,15 @@ function showResultsPanel(loading) {
         if (e.target.classList.contains("btn-close")) return;
         isDragging = true;
         var rect = panel.getBoundingClientRect();
-        dragOffX = e.clientX - rect.left;
-        dragOffY = e.clientY - rect.top;
+        var pixLeft = rect.left;
+        var pixTop  = rect.top;
+        dragOffX = e.clientX - pixLeft;
+        dragOffY = e.clientY - pixTop;
+        // Lock pixel position before removing transform so the panel does not
+        // jump when CSS centers it with translate(-50%,-50%).
         panel.style.transform = "none";
+        panel.style.left = pixLeft + "px";
+        panel.style.top  = pixTop  + "px";
         e.preventDefault();
       });
     }
@@ -2521,6 +2527,11 @@ function attachResizeHandles(panel) {
       var isSE = handle.classList.contains("resize-handle-se");
       var isSW = handle.classList.contains("resize-handle-sw");
 
+      // Lock pixel position before removing transform so the panel doesn't jump
+      // (East/South/SE handles never set left/top in onMove, so without this the
+      // panel snaps to left:50%;top:50% without the centering translate).
+      panel.style.left = startL + "px";
+      panel.style.top  = startT + "px";
       panel.style.transform = "none";
 
       function onMove(ev) {
