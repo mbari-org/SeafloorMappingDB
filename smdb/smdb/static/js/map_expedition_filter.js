@@ -153,7 +153,7 @@ let feature = L.geoJSON(missions, {
     var expName = (p && p.expedition && p.expedition.name) ? p.expedition.name : "";
     var routeFile = (p && p.route_file) ? p.route_file : "";
     return (
-      "<a target='_blank' href='/missions/" + _escapeHtml(slug) + "'>" +
+      "<a target='_blank' rel='noopener noreferrer' href='/missions/" + _escapeHtml(slug) + "/'>" +
       _escapeHtml(slug) + "</a>: " + _escapeHtml(expName) +
       "<br>Route: " + _escapeHtml(routeFile)
     );
@@ -234,7 +234,7 @@ if (hasMissions && missions.features) {
     var marker = L.marker(anchor, {
       icon: L.divIcon({
         className: "label-mission-name",
-        html: "<a target='_blank' href='/missions/" + _escapeHtml(slug) + "'>" + _escapeHtml(slug) + "</a>",
+        html: "<a target='_blank' rel='noopener noreferrer' href='/missions/" + _escapeHtml(slug) + "/'>" + _escapeHtml(slug) + "</a>",
       }),
     });
     labelEntries.push({ marker: marker, anchor: anchor });
