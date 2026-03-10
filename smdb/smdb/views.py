@@ -309,7 +309,10 @@ class CompilationTableView(FilterView, SingleTableView):
         sort = self.request.GET.get("sort")
         if sort and sort in VALID_COMPILATION_SORT:
             compilations = compilations.order_by(sort)
-        per_page = int(self.request.GET.get("per_page", 10))
+        try:
+            per_page = int(self.request.GET.get("per_page", 10))
+        except (TypeError, ValueError):
+            per_page = 99999
         page = int(self.request.GET.get("page", 1))
         compilations = compilations[slice((page - 1) * per_page, page * per_page)]
         missions = Mission.objects.all()
@@ -363,7 +366,10 @@ class ExpeditionTableView(FilterView, SingleTableView):
         sort = self.request.GET.get("sort")
         if sort and sort in VALID_EXPEDITION_SORT:
             expeditions = expeditions.order_by(sort)
-        per_page = int(self.request.GET.get("per_page", 10))
+        try:
+            per_page = int(self.request.GET.get("per_page", 10))
+        except (TypeError, ValueError):
+            per_page = 99999
         page = int(self.request.GET.get("page", 1))
         expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
         missions = Mission.objects.all()
