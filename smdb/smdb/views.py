@@ -313,7 +313,11 @@ class CompilationTableView(FilterView, SingleTableView):
             per_page = int(self.request.GET.get("per_page", 10))
         except (TypeError, ValueError):
             per_page = 99999
-        page = int(self.request.GET.get("page", 1))
+        try:
+            page = int(self.request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        page = max(1, page)
         compilations = compilations[slice((page - 1) * per_page, page * per_page)]
         missions = Mission.objects.all()
         missions = (
@@ -370,7 +374,11 @@ class ExpeditionTableView(FilterView, SingleTableView):
             per_page = int(self.request.GET.get("per_page", 10))
         except (TypeError, ValueError):
             per_page = 99999
-        page = int(self.request.GET.get("page", 1))
+        try:
+            page = int(self.request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        page = max(1, page)
         expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
         missions = Mission.objects.all()
         missions = (
