@@ -114,7 +114,17 @@
 {% endblock %}
 
 {% block content %}
-<script>document.body.classList.add('home-page');</script>
+<script>
+  (function () {
+    if (document.body) {
+      document.body.classList.add('home-page');
+    } else {
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.add('home-page');
+      });
+    }
+  })();
+</script>
 {#  Number of Missions and Load Log Output #}
 
 <div id="filters" class="row">

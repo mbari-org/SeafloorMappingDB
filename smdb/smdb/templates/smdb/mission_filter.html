@@ -15,7 +15,17 @@
 
 {% block javascript %}
     {{ block.super }}
-    <script>document.body.classList.add('missions-page');</script>
+    <script>
+      (function () {
+        if (document.body) {
+          document.body.classList.add('missions-page');
+        } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('missions-page');
+          });
+        }
+      })();
+    </script>
     <!-- Load Leaflet from CDN -->
     <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
     integrity="sha384-4Dmmo81xejNChaqLOci80VhUcuEAD5pXpCtqtizmdgWEzdETh3zrJvzOhU4T79cN"

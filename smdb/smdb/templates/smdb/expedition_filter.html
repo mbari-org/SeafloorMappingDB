@@ -25,7 +25,17 @@
     <script src="https://unpkg.com/esri-leaflet-vector@3.1.1/dist/esri-leaflet-vector.js"
     integrity="sha512-7rLAors9em7cR3/583gZSvu1mxwPBUjWjdFJ000pc4Wpu+fq84lXF1l4dbG4ShiPQ4pSBUTb4e9xaO6xtMZIlA=="
     crossorigin=""></script>
-    <script>document.body.classList.add('expeditions-page');</script>
+    <script>
+      (function () {
+        if (document.body) {
+          document.body.classList.add('expeditions-page');
+        } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('expeditions-page');
+          });
+        }
+      })();
+    </script>
 {% endblock %}
 
 {% block content %}
