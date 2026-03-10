@@ -466,6 +466,7 @@ class MissionTableView(FilterView, SingleTableView):
 
         missions = missions[slice((map_page - 1) * map_per_page, map_page * map_per_page)]
         context["missions"] = _missions_geojson_list(missions)
+        context["per_page_all_default"] = True  # signals template to highlight ALL when no per_page in URL
         return context
 
 

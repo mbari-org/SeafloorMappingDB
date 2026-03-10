@@ -47,7 +47,7 @@
             | <a href="{% querystring "per_page"=20 %}" {% if request.GET.per_page == "20" %}style="color:#d35400;"{% endif %}>20</a>
             | <a href="{% querystring "per_page"=50 %}" {% if request.GET.per_page == "50" %}style="color:#d35400;"{% endif %}>50</a>
             | <a href="{% querystring "per_page"=500 %}" {% if request.GET.per_page == "500" %}style="color:#d35400;"{% endif %}>500</a>
-            | <a href="{% querystring "per_page"="ALL" %}" {% if request.GET.per_page == "ALL" or not request.GET.per_page %}style="color:#d35400;"{% endif %}>&nbsp;ALL&nbsp;</a>
+            | <a href="{% querystring "per_page"="ALL" %}" {% if request.GET.per_page == "ALL" or not request.GET.per_page and per_page_all_default %}style="color:#d35400;"{% endif %}>&nbsp;ALL&nbsp;</a>
             ] items
         </li>
         </ul>
@@ -150,7 +150,7 @@
                 | <a href="{% querystring "per_page"=20 %}" {% if request.GET.per_page == "20" %}style="color:#d35400;"{% endif %}>20</a>
                 | <a href="{% querystring "per_page"=50 %}" {% if request.GET.per_page == "50" %}style="color:#d35400;"{% endif %}>50</a>
                 | <a href="{% querystring "per_page"=500 %}" {% if request.GET.per_page == "500" %}style="color:#d35400;"{% endif %}>500</a>
-                | <a href="{% querystring "per_page"="ALL" %}" {% if request.GET.per_page == "ALL" or not request.GET.per_page %}style="color:#d35400;"{% endif %}>&nbsp;ALL&nbsp;</a>
+                | <a href="{% querystring "per_page"="ALL" %}" {% if request.GET.per_page == "ALL" or not request.GET.per_page and per_page_all_default %}style="color:#d35400;"{% endif %}>&nbsp;ALL&nbsp;</a>
                 ] items
             </li>
             </ul>
