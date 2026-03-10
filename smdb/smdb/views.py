@@ -426,7 +426,7 @@ class MissionTableView(FilterView, SingleTableView):
         every mission row is present in the DOM. This is intentional: the
         hover-scroll feature (hovering a map label or nav-track scrolls the
         table to that mission) requires every row to be rendered. A bounded
-        cap (e.g. MISSION_MAX_PER_PAGE) would silently break hover-scroll once
+        cap (e.g. MAX_PER_PAGE) would silently break hover-scroll once
         the mission count exceeded the cap, with no visible indication to the
         user. Truly unbounded rendering is therefore the deliberate default.
 
