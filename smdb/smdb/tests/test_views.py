@@ -417,3 +417,53 @@ def test_survey_tally_load_citations(missions_notes_5):
     assert mission.citations.count() == 2
     with_ref = Citation.objects.get(doi="10.5678/def")
     assert with_ref.full_reference == "A reference"
+
+
+# ---------------------------------------------------------------------------
+# per_page=ALL and default pagination tests (PR: Show ALL option)
+# ---------------------------------------------------------------------------
+
+def test_missions_per_page_all(client, missions_notes_5):
+    """?per_page=ALL on the Missions page returns 200 and renders all rows."""
+    from smdb.models import Mission
+    url = reverse("missions")
+    response = client.get(url, {"per_page": "ALL"})
+    assert response.status_code == 200
+    table = response.context["table"]
+    rows = list(table.paginated_rows)
+    assert len(rows) == Mission.objects.count()
+
+
+def test_missions_default_shows_all(client, missions_notes_5):
+    """Missions page with no per_page renders all rows by default (get_table_pagination returns False)."""
+    from smdb.models import Mission
+    url = reverse("missions")
+    response = client.get(url)
+    assert response.status_code == 200
+    table = response.context["table"]
+    rows = list(table.paginated_rows)
+    assert len(rows) == Mission.objects.count()
+
+
+def test_missions_numeric_per_page(client, missions_notes_5):
+    """Explicit ?per_page=2 paginates to 2 rows on the Missions page."""
+    url = reverse("missions")
+    response = client.get(url, {"per_page": "2"})
+    assert response.status_code == 200
+    table = response.context["table"]
+    rows = list(table.paginated_rows)
+    assert len(rows) == 2
+
+
+def test_expeditions_per_page_all_no_500(client):
+    """?per_page=ALL on the Expeditions page must not raise a 500 (no bare int() crash)."""
+    url = reverse("expeditions")
+    response = client.get(url, {"per_page": "ALL"})
+    assert response.status_code == 200
+
+
+def test_compilations_per_page_all_no_500(client):
+    """?per_page=ALL on the Compilations page must not raise a 500 (no bare int() crash)."""
+    url = reverse("compilations")
+    response = client.get(url, {"per_page": "ALL"})
+    assert response.status_code == 200
