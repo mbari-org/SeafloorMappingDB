@@ -421,20 +421,28 @@ class MissionTableView(FilterView, SingleTableView):
 
         Default (no per_page) and per_page=ALL both disable pagination so every
         mission is rendered in one page and hover-scroll works for all rows.
-        Explicit numeric values (e.g. ?per_page=50) paginate normally.
+        Explicit positive numeric values (e.g. ?per_page=50) paginate normally.
+        Invalid or non-positive values fall back to default pagination instead
+        of disabling it, to prevent arbitrary unbounded renders.
+
         Returning False tells django_tables2's RequestConfig to skip pagination
         entirely — no row cap, truly unbounded.
         """
         per_page = self.request.GET.get("per_page", "")
-        if not per_page or per_page.upper() == "ALL":
-            return False  # no pagination — all rows rendered
+        # Missing or explicit ALL: disable pagination (show all rows).
+        if not per_page:
+            return False
+        if per_page.upper() == "ALL":
+            return False
+        # Numeric value: positive → explicit page size; non-positive or
+        # unrecognised → fall back to django_tables2 default pagination.
         try:
             n = int(per_page)
-            if n > 0:
-                return {"per_page": n}
         except (TypeError, ValueError):
-            pass
-        return False  # unrecognised value — fall back to all rows
+            return {}
+        if n <= 0:
+            return {}
+        return {"per_page": n}
 
     def _get_bbox_geom(self):
         """Delegate to the module-level _parse_bbox_geom helper."""
