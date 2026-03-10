@@ -391,6 +391,14 @@ class MissionTableView(FilterView, SingleTableView):
     filterset_class = MissionFilter
     formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
 
+    def get_table(self, **kwargs):
+        """Attach per_page_all_default to the table so the shared table template
+        can highlight ALL on initial load without needing the parent view context
+        (render_table only passes {"table": table} to the sub-template)."""
+        table = super().get_table(**kwargs)
+        table.per_page_all_default = True
+        return table
+
     def get_table_pagination(self, table):
         """
         Control table pagination based on the per_page query parameter.
@@ -486,7 +494,6 @@ class MissionTableView(FilterView, SingleTableView):
 
         missions = missions[slice((map_page - 1) * map_per_page, map_page * map_per_page)]
         context["missions"] = _missions_geojson_list(missions)
-        context["per_page_all_default"] = True  # signals template to highlight ALL when no per_page in URL
         return context
 
 
