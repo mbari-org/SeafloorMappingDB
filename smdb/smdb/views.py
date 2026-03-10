@@ -390,7 +390,27 @@ class MissionTableView(FilterView, SingleTableView):
     queryset = Mission.objects.all().order_by("name")
     filterset_class = MissionFilter
     formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
-    paginate_by = 99999  # show all missions by default so hover-scroll works for every row
+
+    def get_table_pagination(self, table):
+        """
+        Control table pagination based on the per_page query parameter.
+
+        Default (no per_page) and per_page=ALL both disable pagination so every
+        mission is rendered in one page and hover-scroll works for all rows.
+        Explicit numeric values (e.g. ?per_page=50) paginate normally.
+        Returning False tells django_tables2's RequestConfig to skip pagination
+        entirely — no row cap, truly unbounded.
+        """
+        per_page = self.request.GET.get("per_page", "")
+        if not per_page or per_page.upper() == "ALL":
+            return False  # no pagination — all rows rendered
+        try:
+            n = int(per_page)
+            if n > 0:
+                return {"per_page": n}
+        except (TypeError, ValueError):
+            pass
+        return False  # unrecognised value — fall back to all rows
 
     def _get_bbox_geom(self):
         """Delegate to the module-level _parse_bbox_geom helper."""
