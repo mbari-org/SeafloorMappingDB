@@ -312,7 +312,11 @@ class CompilationTableView(FilterView, SingleTableView):
         try:
             per_page = int(self.request.GET.get("per_page", 10))
         except (TypeError, ValueError):
-            per_page = 99999
+            per_page = 10
+        if per_page <= 0:
+            per_page = 10
+        elif per_page > 1000:
+            per_page = 1000
         try:
             page = int(self.request.GET.get("page", 1))
         except (TypeError, ValueError):
@@ -373,7 +377,11 @@ class ExpeditionTableView(FilterView, SingleTableView):
         try:
             per_page = int(self.request.GET.get("per_page", 10))
         except (TypeError, ValueError):
-            per_page = 99999
+            per_page = 10
+        if per_page <= 0:
+            per_page = 10
+        elif per_page > 1000:
+            per_page = 1000
         try:
             page = int(self.request.GET.get("page", 1))
         except (TypeError, ValueError):
