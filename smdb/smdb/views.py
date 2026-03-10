@@ -50,6 +50,9 @@ VALID_COMPILATION_SORT = frozenset([
     "name", "-name", "creation_date", "-creation_date",
     "thumbnail_filename", "-thumbnail_filename",
 ])
+# Upper bound for explicit numeric per_page values. Prevents accidental or
+# malicious URLs like ?per_page=100000 from forcing very large table renders.
+MAX_PER_PAGE = 1000
 
 
 class ExpeditionSerializer(HyperlinkedModelSerializer):
@@ -315,8 +318,8 @@ class CompilationTableView(FilterView, SingleTableView):
             per_page = 10
         if per_page <= 0:
             per_page = 10
-        elif per_page > 1000:
-            per_page = 1000
+        elif per_page > MAX_PER_PAGE:
+            per_page = MAX_PER_PAGE
         try:
             page = int(self.request.GET.get("page", 1))
         except (TypeError, ValueError):
@@ -380,8 +383,8 @@ class ExpeditionTableView(FilterView, SingleTableView):
             per_page = 10
         if per_page <= 0:
             per_page = 10
-        elif per_page > 1000:
-            per_page = 1000
+        elif per_page > MAX_PER_PAGE:
+            per_page = MAX_PER_PAGE
         try:
             page = int(self.request.GET.get("page", 1))
         except (TypeError, ValueError):
@@ -440,7 +443,7 @@ class MissionTableView(FilterView, SingleTableView):
             n = int(per_page)
         except (TypeError, ValueError):
             return {}
-        if n <= 0:
+        if n <= 0 or n > MAX_PER_PAGE:
             return {}
         return {"per_page": n}
 
