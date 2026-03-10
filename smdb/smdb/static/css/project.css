@@ -849,3 +849,9 @@ svg.svg-inline--fa,
 #map .leaflet-mouse-marker {
   display: none !important; /* Remove confusing cursor dot */
 }
+
+/* Active "Show Items" per-page link in the pagination bar */
+a.per-page-active {
+  color: #d35400;
+  text-decoration: underline;
+}
