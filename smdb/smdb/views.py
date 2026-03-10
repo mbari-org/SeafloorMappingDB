@@ -384,6 +384,7 @@ class MissionTableView(FilterView, SingleTableView):
     queryset = Mission.objects.all().order_by("name")
     filterset_class = MissionFilter
     formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
+    paginate_by = 99999  # show all missions by default so hover-scroll works for every row
 
     def _get_bbox_geom(self):
         """Delegate to the module-level _parse_bbox_geom helper."""
