@@ -39,6 +39,9 @@ var highlightedPathEls  = [];
 var highlightedRowEls   = [];
 var clearHighlightsTimeout = null;
 var CLEAR_DEBOUNCE_MS = 80;
+// Pre-built slug → TR[] index so highlightMission() can do an O(1) row lookup
+// instead of scanning all table links on every hover event.
+var slugRowIndex = null;
 
 function clearAllMissionHighlights() {
   if (!currentHighlightedSlug) return;
@@ -86,22 +89,12 @@ function highlightMission(slug) {
     });
   }
 
-  // Expedition table rows don't carry data-mission-slug — find the row that
-  // contains a Missions-column link pointing to this mission instead.
+  // Use the pre-built slug→row index (built once in attachTableRowHover) for an
+  // O(1) lookup — avoids scanning all table links on every hover event.
   highlightedRowEls = [];
-  var tableWrapper = document.getElementById("expedition-table-wrapper");
-  if (tableWrapper) {
-    var targetHref = "/missions/" + slug;
-    tableWrapper.querySelectorAll("td a").forEach(function (link) {
-      var href = (link.getAttribute("href") || "").replace(/\/$/, "");
-      if (href === targetHref) {
-        var row = link.closest("tr");
-        if (row && highlightedRowEls.indexOf(row) === -1) {
-          row.classList.add("smdb-hover");
-          highlightedRowEls.push(row);
-        }
-      }
-    });
+  if (slugRowIndex && slugRowIndex[slug]) {
+    highlightedRowEls = slugRowIndex[slug].slice();
+    highlightedRowEls.forEach(function (tr) { tr.classList.add("smdb-hover"); });
   }
   if (highlightedRowEls.length > 0) {
     highlightedRowEls[0].scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -308,14 +301,23 @@ if (mapElForObserver && typeof ResizeObserver !== "undefined") {
 // in the Missions column so hovering any link fires highlightMission().
 // ---------------------------------------------------------------------------
 function attachTableRowHover() {
+  // Build the slug→TR[] index and wire hover events in a single DOM pass so
+  // highlightMission() can do O(1) row lookups instead of scanning on each hover.
+  slugRowIndex = {};
   var tableWrapper = document.getElementById("expedition-table-wrapper");
   if (!tableWrapper) return;
   tableWrapper.querySelectorAll('td a[href*="/missions/"]').forEach(function (link) {
     var href = (link.getAttribute("href") || "").replace(/\/$/, "");
     var match = href.match(/\/missions\/([^?#]+)$/);
-    if (!match) return;
+    if (!match || !match[1]) return;
     var slug = match[1];
-    if (!slug) return;
+
+    var row = link.closest("tr");
+    if (row) {
+      if (!slugRowIndex[slug]) slugRowIndex[slug] = [];
+      if (slugRowIndex[slug].indexOf(row) === -1) slugRowIndex[slug].push(row);
+    }
+
     link.addEventListener("mouseover", function () { highlightMission(slug); });
     link.addEventListener("mouseout", function () {
       if (clearHighlightsTimeout) clearTimeout(clearHighlightsTimeout);
