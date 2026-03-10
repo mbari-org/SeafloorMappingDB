@@ -422,17 +422,22 @@ class MissionTableView(FilterView, SingleTableView):
         """
         Control table pagination based on the per_page query parameter.
 
-        Default (no per_page) and per_page=ALL both disable pagination so every
-        mission is rendered in one page and hover-scroll works for all rows.
-        Explicit positive numeric values (e.g. ?per_page=50) paginate normally.
-        Invalid or non-positive values fall back to default pagination instead
-        of disabling it, to prevent arbitrary unbounded renders.
+        Returning False disables django_tables2 pagination entirely so that
+        every mission row is present in the DOM. This is intentional: the
+        hover-scroll feature (hovering a map label or nav-track scrolls the
+        table to that mission) requires every row to be rendered. A bounded
+        cap (e.g. MISSION_MAX_PER_PAGE) would silently break hover-scroll once
+        the mission count exceeded the cap, with no visible indication to the
+        user. Truly unbounded rendering is therefore the deliberate default.
 
-        Returning False tells django_tables2's RequestConfig to skip pagination
-        entirely — no row cap, truly unbounded.
+        Explicit positive numeric values (e.g. ?per_page=50) paginate normally.
+        Invalid or non-positive values fall back to django_tables2 default
+        pagination instead of disabling it, to prevent arbitrary unbounded
+        renders via malformed URLs.
         """
         per_page = self.request.GET.get("per_page", "")
-        # Missing or explicit ALL: disable pagination (show all rows).
+        # Missing or explicit ALL: disable pagination so all rows are in the DOM
+        # and hover-scroll works for every mission (see docstring above).
         if not per_page:
             return False
         if per_page.upper() == "ALL":
