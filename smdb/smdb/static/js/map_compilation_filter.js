@@ -86,15 +86,26 @@ function highlightMission(slug) {
     });
   }
 
-  highlightedRowEls = Array.prototype.slice.call(
-    document.querySelectorAll('tr[data-mission-slug="' + escapedSlug + '"]')
-  );
-  highlightedRowEls.forEach(function (tr) { tr.classList.add("smdb-hover"); });
-
-  var mainTableRow = document.querySelector(
-    '#compilation-table-wrapper tr[data-mission-slug="' + escapedSlug + '"]'
-  );
-  if (mainTableRow) mainTableRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  // Compilation table rows don't carry data-mission-slug — find the row that
+  // contains a Missions-column link pointing to this mission instead.
+  highlightedRowEls = [];
+  var tableWrapper = document.getElementById("compilation-table-wrapper");
+  if (tableWrapper) {
+    var targetHref = "/missions/" + slug;
+    tableWrapper.querySelectorAll("td a").forEach(function (link) {
+      var href = (link.getAttribute("href") || "").replace(/\/$/, "");
+      if (href === targetHref) {
+        var row = link.closest("tr");
+        if (row && highlightedRowEls.indexOf(row) === -1) {
+          row.classList.add("smdb-hover");
+          highlightedRowEls.push(row);
+        }
+      }
+    });
+  }
+  if (highlightedRowEls.length > 0) {
+    highlightedRowEls[0].scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -292,14 +303,21 @@ if (mapElForObserver && typeof ResizeObserver !== "undefined") {
 }
 
 // ---------------------------------------------------------------------------
-// Table row hover → highlight map track and label
+// Table hover → highlight map track and label
+// Compilation rows hold multiple missions; wire hover to each mission link
+// in the Missions column so hovering any link fires highlightMission().
 // ---------------------------------------------------------------------------
 function attachTableRowHover() {
-  document.querySelectorAll("tr[data-mission-slug]").forEach(function (tr) {
-    var slug = tr.getAttribute("data-mission-slug");
+  var tableWrapper = document.getElementById("compilation-table-wrapper");
+  if (!tableWrapper) return;
+  tableWrapper.querySelectorAll('td a[href*="/missions/"]').forEach(function (link) {
+    var href = (link.getAttribute("href") || "").replace(/\/$/, "");
+    var match = href.match(/\/missions\/([^?#]+)$/);
+    if (!match) return;
+    var slug = match[1];
     if (!slug) return;
-    tr.addEventListener("mouseover", function () { highlightMission(slug); });
-    tr.addEventListener("mouseout", function () {
+    link.addEventListener("mouseover", function () { highlightMission(slug); });
+    link.addEventListener("mouseout", function () {
       if (clearHighlightsTimeout) clearTimeout(clearHighlightsTimeout);
       clearHighlightsTimeout = setTimeout(function () {
         clearHighlightsTimeout = null;
