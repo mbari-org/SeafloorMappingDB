@@ -1525,7 +1525,12 @@ class Compiler(BaseLoader):
             """,
             re.VERBOSE | re.MULTILINE,
         )
-        with open(cmd_filename, errors="ignore") as fd:
+        try:
+            fd_obj = open(cmd_filename, errors="ignore")
+        except FileNotFoundError as e:
+            self.logger.warning("Skipping missing cmd file (stale locate DB entry): %s", e)
+            return compilations
+        with fd_obj as fd:
             for ma in pattern.finditer(fd.read()):
                 grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
                 try:
