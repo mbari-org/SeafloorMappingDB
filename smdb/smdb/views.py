@@ -278,13 +278,27 @@ class CompilationTableView(FilterView, SingleTableView):
     table_class = CompilationTable
     queryset = Compilation.objects.all().order_by("name")
     filterset_class = CompilationFilter
-    formhelper_class = CompilationFilterFormHelper
+    formhelper_class = CompilationFilterSidebarHelper
 
     def get_filterset(self, filterset_class):
         kwargs = self.get_filterset_kwargs(filterset_class)
         filterset = filterset_class(**kwargs)
         filterset.form.helper = self.formhelper_class()
         return filterset
+
+    def get_queryset(self):
+        qs = Compilation.objects.all().order_by("name")
+        if all(self.request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
+            search_geom = _parse_bbox_geom(self.request)
+            if search_geom:
+                matching_missions = Mission.objects.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+                qs = qs.filter(missions__in=matching_missions).distinct()
+            else:
+                qs = qs.none()
+        return qs
 
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
@@ -325,17 +339,17 @@ class CompilationTableView(FilterView, SingleTableView):
         except (TypeError, ValueError):
             page = 1
         page = max(1, page)
-        compilations = compilations[slice((page - 1) * per_page, page * per_page)]
-        missions = Mission.objects.all()
+        # Build map missions from the full filtered compilations (before pagination slice),
+        # so the map shows all tracks — not just those on the current table page.
         missions = (
-            missions.filter(compilations__in=compilations)
+            Mission.objects.filter(compilations__in=compilations)
             .select_related("expedition")
+            .filter(nav_track__isnull=False)
+            .exclude(nav_track__isempty=True)
             .distinct()
         )
-        # Filter to only missions with nav_track (for map display)
-        # This ensures the map shows track lines, not just bounding boxes
-        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
         context["missions"] = _missions_geojson_list(missions)
+        compilations = compilations[slice((page - 1) * per_page, page * per_page)]
         return context
 
 
@@ -343,13 +357,27 @@ class ExpeditionTableView(FilterView, SingleTableView):
     table_class = ExpeditionTable
     queryset = Expedition.objects.all().order_by("name")
     filterset_class = ExpeditionFilter
-    filterhelper_class = ExpeditionFilterFormHelper
+    filterhelper_class = ExpeditionFilterSidebarHelper
 
     def get_filterset(self, filterset_class):
         kwargs = self.get_filterset_kwargs(filterset_class)
         filterset = filterset_class(**kwargs)
-        filterset.form.helper = ExpeditionFilterFormHelper()
+        filterset.form.helper = ExpeditionFilterSidebarHelper()
         return filterset
+
+    def get_queryset(self):
+        qs = Expedition.objects.all().order_by("name")
+        if all(self.request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
+            search_geom = _parse_bbox_geom(self.request)
+            if search_geom:
+                matching_missions = Mission.objects.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+                qs = qs.filter(mission__in=matching_missions).distinct()
+            else:
+                qs = qs.none()
+        return qs
 
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
@@ -390,17 +418,17 @@ class ExpeditionTableView(FilterView, SingleTableView):
         except (TypeError, ValueError):
             page = 1
         page = max(1, page)
-        expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
-        missions = Mission.objects.all()
+        # Build map missions from the full filtered expeditions (before pagination slice),
+        # so the map shows all tracks — not just those on the current table page.
         missions = (
-            missions.filter(expedition__in=expeditions)
+            Mission.objects.filter(expedition__in=expeditions)
             .select_related("expedition")
+            .filter(nav_track__isnull=False)
+            .exclude(nav_track__isempty=True)
             .distinct()
         )
-        # Filter to only missions with nav_track (for map display)
-        # This ensures the map shows track lines, not just bounding boxes
-        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
         context["missions"] = _missions_geojson_list(missions)
+        expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
         return context
 
 

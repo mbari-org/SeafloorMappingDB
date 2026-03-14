@@ -172,8 +172,8 @@ let feature = L.geoJSON(missions, {
 
 // Fit map to mission bounds once the map is ready. Use same fallback as home page (map.js):
 // setView(center, 3) when no missions, invalid bounds, or bounds too large — so initial view matches home.
-var MISSION_MAP_FALLBACK_CENTER = [39.8423, -26.8945];
-var MISSION_MAP_FALLBACK_ZOOM = 3;
+var MISSION_MAP_FALLBACK_CENTER = [36.6, -122.0];
+var MISSION_MAP_FALLBACK_ZOOM = 6;
 map.whenReady(function () {
   map.invalidateSize();
   setTimeout(function () {
@@ -218,11 +218,8 @@ map.whenReady(function () {
         return;
       }
       map.fitBounds(bounds, { padding: padding, animate: false });
-      // Ensure a minimum zoom of 4 for a useful initial view on the Mission page.
-      // User feedback: two zoom-ins from the global view looks better than a full world overview.
-      if (map.getZoom() < 4) {
-        map.setZoom(4, { animate: false });
-      }
+      map.setZoom(map.getZoom() - 1, { animate: false });
+      if (map.getZoom() < 3) map.setZoom(3, { animate: false });
     } catch (err) {
       map.setView(MISSION_MAP_FALLBACK_CENTER, MISSION_MAP_FALLBACK_ZOOM, { animate: false });
     }

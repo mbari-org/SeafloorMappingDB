@@ -467,3 +467,17 @@ def test_compilations_per_page_all_no_500(client):
     url = reverse("compilations")
     response = client.get(url, {"per_page": "ALL"})
     assert response.status_code == 200
+
+
+def test_expeditions_bbox_no_500(client):
+    """bbox params on the Expeditions page must not raise a FieldError (mission vs missions)."""
+    url = reverse("expeditions")
+    response = client.get(url, {"xmin": "-180", "ymin": "-90", "xmax": "180", "ymax": "90"})
+    assert response.status_code == 200
+
+
+def test_compilations_bbox_no_500(client):
+    """bbox params on the Compilations page must not raise a 500."""
+    url = reverse("compilations")
+    response = client.get(url, {"xmin": "-180", "ymin": "-90", "xmax": "180", "ymax": "90"})
+    assert response.status_code == 200
