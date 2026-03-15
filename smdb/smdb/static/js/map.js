@@ -1395,37 +1395,47 @@ let feature = L.geoJSON(missions, {
   )
   // Popup Mission Info Tooltips
   .bindTooltip(function (layer) {
-    var tooltipInfo = layer.feature.properties.slug;
-    tooltipInfo = tooltipInfo.replace(/.*-/, "");
-    tooltipInfo = tooltipInfo.replace(/(\d)([^\d\s%])/g, "$1 $2");
-    let dateOfMission = tooltipInfo.substring(0, 8);
-    if ((browserName = "firefox") || (browserName = "safari")) {
-      dateOfMission = dateOfMission.replace(
-        /(\d{4})(\d{2})(\d{2})/g,
+    // --- Date: use start_date from GeoJSON first, fall back to slug parsing ---
+    var dateOfMission = "Unknown";
+    var rawStartDate = layer.feature.properties.start_date;
+    if (rawStartDate) {
+      var parsedDate = new Date(rawStartDate);
+      if (!isNaN(parsedDate.getTime())) {
+        dateOfMission = parsedDate.toLocaleDateString("en-us", {
+          weekday: "long",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+    } else {
+      // Fall back to extracting date from slug (e.g. mappingauvops2024-20240201m1)
+      var slugTail = layer.feature.properties.slug.replace(/.*-/, "");
+      slugTail = slugTail.replace(/(\d)([^\d\s%])/g, "$1 $2");
+      var datePart = slugTail.substring(0, 8).replace(
+        /(\d{4})(\d{2})(\d{2})/,
         "$1-$2-$3T00:00:00"
       );
-    } else {
-      dateOfMission = dateOfMission.replace(
-        /(\d{4})(\d{2})(\d{2})/g,
-        "$2-$3-$1"
-      );
+      var slugDate = new Date(datePart);
+      if (!isNaN(slugDate.getTime())) {
+        dateOfMission = slugDate.toLocaleDateString("en-us", {
+          weekday: "long",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
     }
 
-    dateOfMission = new Date(dateOfMission).toLocaleDateString("en-us", {
-      weekday: "long",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    // --- Route: show "Not Available" when no route file is recorded ---
+    var routeFile = layer.feature.properties.route_file || "Not Available";
 
-    let missionInfo = tooltipInfo.substring(tooltipInfo.indexOf(" ") + 1);
-    missionInfo = missionInfo.replace(/^\m/, "Mission ");
-    tooltipInfo =
+    var tooltipInfo =
       layer.feature.properties.slug +
       "<br>Date: " +
       dateOfMission +
       "<br>Route: " +
-      layer.feature.properties.route_file;
+      routeFile;
     return tooltipInfo;
   })
   .addTo(map);
