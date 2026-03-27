@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib.gis.admin import GeoModelAdmin, register
+from django.contrib import admin
 
 from smdb.models import (
     Citation,
@@ -15,9 +17,28 @@ from smdb.models import (
 )
 
 
+class CitationAdminForm(forms.ModelForm):
+    """Allow full_reference to be empty in admin (model allows empty string from tally)."""
+
+    class Meta:
+        model = Citation
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["full_reference"].required = False
+        if not self.fields["full_reference"].initial:
+            self.fields["full_reference"].initial = ""
+
+
 @register(Citation)
-class CitationAdmin(GeoModelAdmin):
-    pass
+class CitationAdmin(admin.ModelAdmin):
+    form = CitationAdminForm
+    list_display = ("doi", "full_reference")
+    list_filter = ()
+    search_fields = ("doi", "full_reference")
+    filter_horizontal = ()
+    fields = ("doi", "full_reference")
 
 
 @register(Compilation)
@@ -94,7 +115,9 @@ class MissionAdmin(GeoModelAdmin):
         "thumbnail_image",
         "kml_filename",
         "quality_categories",
+        "citations",
     ]
+    filter_horizontal = ("quality_categories", "citations")
     readonly_fields = ["image_tag", "area"]
     prepopulated_fields = {"slug": ("name",)}
 

@@ -9,7 +9,14 @@ from django_filters import (
 )
 from django.db.utils import ProgrammingError
 from django.db.models import Q
-from smdb.models import Mission, Expedition, Compilation, Quality_Category
+from smdb.models import (
+    Citation,
+    Mission,
+    Expedition,
+    Compilation,
+    Quality_Category,
+    Platformtype,
+)
 
 from django.forms.widgets import TextInput
 
@@ -26,7 +33,10 @@ class MissionFilter(FilterSet):
             field_name="region_name",
             choices=[
                 (m, m)
-                for m in Mission.objects.values_list("region_name", flat=True).distinct()
+                for m in Mission.objects.exclude(region_name="")
+                .values_list("region_name", flat=True)
+                .distinct()
+                .order_by("region_name")
             ],
             label="",
             empty_label="- region -",
@@ -40,34 +50,37 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
-    vehicle_name = MultipleChoiceFilter(
-        field_name="vehicle_name",
-        choices=[
-            # Vehicle options
-            ("MAUV1", "MAUV1"),
-            ("LASS", "LASS"),
-            ("MAUV2", "MAUV2"),
-            ("Sentry", "Sentry"),
-            ("ABE", "ABE"),
-            # Platform options
-            ("R/V David Packard", "R/V David Packard"),
-            ("Paragon", "R/V Paragon"),
-            ("Iceberg", "Iceberg"),
-            ("", "None"),  # Use empty string for None/null values
-        ],
-        label="",
-        widget=forms.SelectMultiple(
-            attrs={"class": "form-control", "size": 2, "style": "font-size: x-small;"}
-        ),
-    )
+    try:
+        vehicle_name = MultipleChoiceFilter(
+            field_name="vehicle_name",
+            choices=[
+                (m, m)
+                for m in Mission.objects.exclude(vehicle_name__isnull=True)
+                .exclude(vehicle_name="")
+                .values_list("vehicle_name", flat=True)
+                .distinct()
+                .order_by("vehicle_name")
+            ],
+            label="- Vehicle Name -",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
+    try:
+        platformtype = ModelMultipleChoiceFilter(
+            field_name="platform__platformtype",
+            queryset=Platformtype.objects.all().order_by("name"),
+            label="- Platform Type -",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
     quality_categories = ModelMultipleChoiceFilter(
         field_name="quality_categories__name",
         queryset=Quality_Category.objects.all(),
         to_field_name="name",
-        label="",
-        widget=forms.SelectMultiple(
-            attrs={"class": "form-control", "size": 2, "style": "font-size: x-small;"}
-        ),
+        label="- Survey Quality -",
+        widget=forms.CheckboxSelectMultiple(),
     )
     patch_test = ChoiceFilter(
         field_name="patch_test",
@@ -98,9 +111,11 @@ class MissionFilter(FilterSet):
             field_name="mgds_compilation",
             choices=[
                 (m, m)
-                for m in Mission.objects.values_list(
-                    "mgds_compilation", flat=True
-                ).distinct()
+                for m in Mission.objects.exclude(mgds_compilation="")
+                .exclude(mgds_compilation__isnull=True)
+                .values_list("mgds_compilation", flat=True)
+                .distinct()
+                .order_by("mgds_compilation")
             ],
             label="",
             empty_label="- MGDS_compilation -",
@@ -114,6 +129,15 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
+    try:
+        citation = ModelMultipleChoiceFilter(
+            field_name="citations",
+            queryset=Citation.objects.all().order_by("doi"),
+            label="",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
     expedition__name = CharFilter(
         field_name="expedition__name",
         lookup_expr="icontains",
@@ -121,8 +145,16 @@ class MissionFilter(FilterSet):
         widget=TextInput(attrs={"placeholder": "Expedition name contains..."}),
     )
 
+    citation_search = CharFilter(
+        method="filter_citation_search",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Citation (DOI or reference) contains..."}),
+    )
+
     class Meta:
         model = Mission
+        # expedition__name and citation_search are explicit filters (declared above) and
+        # do not need to be in fields; django-filter includes them automatically.
         fields = [
             "name",
             "region_name",
@@ -131,9 +163,17 @@ class MissionFilter(FilterSet):
             "patch_test",
             "repeat_survey",
             "mgds_compilation",
-            "expedition__name",
         ]
-    
+
+    @staticmethod
+    def filter_citation_search(queryset, name, value):
+        """Filter missions that have at least one citation matching DOI or full_reference (icontains)."""
+        if not value or not value.strip():
+            return queryset
+        return queryset.filter(
+            Q(citations__doi__icontains=value) | Q(citations__full_reference__icontains=value)
+        ).distinct()
+
     def filter_queryset(self, queryset):
         """
         Override to use OR logic for name and expedition__name text search fields.

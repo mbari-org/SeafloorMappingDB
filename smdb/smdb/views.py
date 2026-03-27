@@ -36,6 +36,24 @@ from smdb.forms import (
 from smdb.models import Compilation, Expedition, Mission, MBARI_DIR
 from smdb.tables import CompilationTable, ExpeditionTable, MissionTable
 
+# Allowlist for sort query parameter to avoid invalid/unindexed fields (Copilot security).
+VALID_MISSION_SORT = frozenset([
+    "name", "-name", "start_date", "-start_date", "region_name", "-region_name",
+    "track_length", "-track_length", "area", "-area", "start_depth", "-start_depth",
+    "vehicle_name", "-vehicle_name", "mgds_compilation", "-mgds_compilation",
+    "expedition__name", "-expedition__name",
+])
+VALID_EXPEDITION_SORT = frozenset([
+    "name", "-name", "expd_db_id", "-expd_db_id", "start_date", "-start_date",
+])
+VALID_COMPILATION_SORT = frozenset([
+    "name", "-name", "creation_date", "-creation_date",
+    "thumbnail_filename", "-thumbnail_filename",
+])
+# Upper bound for explicit numeric per_page values. Prevents accidental or
+# malicious URLs like ?per_page=100000 from forcing very large table renders.
+MAX_PER_PAGE = 1000
+
 
 class ExpeditionSerializer(HyperlinkedModelSerializer):
     class Meta:
@@ -54,6 +72,7 @@ class MissionSerializer(GeoFeatureModelSerializer):
         geo_field = "nav_track"  # Use nav_track to display track lines, not bounding boxes
         fields = (
             "slug",
+            "name",
             "thumbnail_image",
             "start_date",
             "start_ems",
@@ -73,6 +92,58 @@ class MissionSerializer(GeoFeatureModelSerializer):
         
         # Use nav_track for track lines
         return super().to_representation(instance)
+
+
+def _missions_geojson_list(queryset):
+    """Serialize missions for map GeoJSON; drop None from features so JS never sees null (issue #293)."""
+    data = MissionSerializer(queryset, many=True).data
+    if "features" in data:
+        data["features"] = [f for f in data["features"] if f is not None]
+    return data
+
+
+def _parse_bbox_geom(request):
+    """Parse xmin/xmax/ymin/ymax from a request's GET params into a Polygon.
+
+    Returns None if any parameter is absent, non-numeric, out of valid
+    geographic range (-180≤lon≤180, -90≤lat≤90), or inverted (min > max).
+
+    Uses strict ±180 longitude (WGS84) and rejects out-of-range values instead
+    of clamping. MissionSelectAPIView/MissionExportAPIView accept up to ±360
+    then clamp to ±180; this path is used by MissionTableView (sidebar bbox)
+    and intentionally uses strict bounds so invalid/wrapped coords yield no
+    results rather than potentially confusing clamped results.
+    """
+    # Require all four bbox parameters to be present before parsing.
+    if not all(request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
+        return None
+    try:
+        min_lon = float(request.GET["xmin"])
+        max_lon = float(request.GET["xmax"])
+        min_lat = float(request.GET["ymin"])
+        max_lat = float(request.GET["ymax"])
+    except (TypeError, ValueError):
+        return None
+    # Strict WGS84 bounds: reject lon/lat outside ±180/±90 (see docstring).
+    if not (
+        -180.0 <= min_lon <= 180.0
+        and -180.0 <= max_lon <= 180.0
+        and -90.0 <= min_lat <= 90.0
+        and -90.0 <= max_lat <= 90.0
+        and min_lon <= max_lon
+        and min_lat <= max_lat
+    ):
+        return None
+    return Polygon(
+        (
+            (min_lon, min_lat),
+            (min_lon, max_lat),
+            (max_lon, max_lat),
+            (max_lon, min_lat),
+            (min_lon, min_lat),
+        ),
+        srid=4326,
+    )
 
 
 class MissionOverView(TemplateView):
@@ -104,29 +175,18 @@ class MissionOverView(TemplateView):
         context["filter"] = mission_filter
         
         search_string = context["view"].request.GET.get("q")
-        search_geom = None
-        if context["view"].request.GET.get("xmin"):
-            min_lon = context["view"].request.GET.get("xmin")
-            max_lon = context["view"].request.GET.get("xmax")
-            min_lat = context["view"].request.GET.get("ymin")
-            max_lat = context["view"].request.GET.get("ymax")
-            search_geom = Polygon(
-                (
-                    (float(min_lon), float(min_lat)),
-                    (float(min_lon), float(max_lat)),
-                    (float(max_lon), float(max_lat)),
-                    (float(max_lon), float(min_lat)),
-                    (float(min_lon), float(min_lat)),
-                ),
-                srid=4326,
-            )
+        search_geom = _parse_bbox_geom(context["view"].request)
         # Check which filter type is active based on filter_type parameter or field presence
         filter_type = self.request.GET.get('filter_type', '')
         
         # Check if any filter parameters are present in the request
         has_mission_filter_params = any(
             key in self.request.GET and self.request.GET.get(key)
-            for key in ['region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            for key in [
+                'region_name', 'vehicle_name', 'platformtype',
+                'quality_categories', 'patch_test', 'repeat_survey',
+                'mgds_compilation', 'expedition__name', 'citation', 'citation_search',
+            ]
         ) or (filter_type == 'mission' and 'name' in self.request.GET and self.request.GET.get('name'))
         
         has_expedition_filter_params = filter_type == 'expedition' or (
@@ -167,7 +227,13 @@ class MissionOverView(TemplateView):
                 | Q(expedition__name__icontains=search_string)
             )
         if search_geom:
-            missions = missions.filter(grid_bounds__contained=search_geom)
+            # Same spatial logic as MissionTableView/API: nav_track or start_point in bbox
+            # (exclude grid_bounds — it can be larger than the track and would return missions
+            # whose tracks don't actually pass through the drawn box).
+            missions = missions.filter(
+                Q(nav_track__intersects=search_geom)
+                | Q(start_point__within=search_geom)
+            )
         if context["view"].request.GET.get("tmin"):
             min_date_str = context["view"].request.GET.get("tmin")
             max_date_str = context["view"].request.GET.get("tmax")
@@ -188,7 +254,7 @@ class MissionOverView(TemplateView):
             "Serializing %s missions to geojson...",
             missions.count(),
         )
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
         self.logger.debug("# of Queries: %d", len(connection.queries))
         self.logger.debug(
             "Size of context['missions']: %d", len(str(context["missions"]))
@@ -212,13 +278,27 @@ class CompilationTableView(FilterView, SingleTableView):
     table_class = CompilationTable
     queryset = Compilation.objects.all().order_by("name")
     filterset_class = CompilationFilter
-    formhelper_class = CompilationFilterFormHelper
+    formhelper_class = CompilationFilterSidebarHelper
 
     def get_filterset(self, filterset_class):
         kwargs = self.get_filterset_kwargs(filterset_class)
         filterset = filterset_class(**kwargs)
         filterset.form.helper = self.formhelper_class()
         return filterset
+
+    def get_queryset(self):
+        qs = Compilation.objects.all().order_by("name")
+        if all(self.request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
+            search_geom = _parse_bbox_geom(self.request)
+            if search_geom:
+                matching_missions = Mission.objects.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+                qs = qs.filter(missions__in=matching_missions).distinct()
+            else:
+                qs = qs.none()
+        return qs
 
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
@@ -244,21 +324,32 @@ class CompilationTableView(FilterView, SingleTableView):
             self.request.GET, queryset=self.get_queryset()
         ).qs
         sort = self.request.GET.get("sort")
-        if sort:
+        if sort and sort in VALID_COMPILATION_SORT:
             compilations = compilations.order_by(sort)
-        per_page = int(self.request.GET.get("per_page", 10))
-        page = int(self.request.GET.get("page", 1))
-        compilations = compilations[slice((page - 1) * per_page, page * per_page)]
-        missions = Mission.objects.all()
+        try:
+            per_page = int(self.request.GET.get("per_page", 10))
+        except (TypeError, ValueError):
+            per_page = 10
+        if per_page <= 0:
+            per_page = 10
+        elif per_page > MAX_PER_PAGE:
+            per_page = MAX_PER_PAGE
+        try:
+            page = int(self.request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        page = max(1, page)
+        # Build map missions from the full filtered compilations (before pagination slice),
+        # so the map shows all tracks — not just those on the current table page.
         missions = (
-            missions.filter(compilations__in=compilations)
+            Mission.objects.filter(compilations__in=compilations)
             .select_related("expedition")
+            .filter(nav_track__isnull=False)
+            .exclude(nav_track__isempty=True)
             .distinct()
         )
-        # Filter to only missions with nav_track (for map display)
-        # This ensures the map shows track lines, not just bounding boxes
-        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
+        compilations = compilations[slice((page - 1) * per_page, page * per_page)]
         return context
 
 
@@ -266,13 +357,27 @@ class ExpeditionTableView(FilterView, SingleTableView):
     table_class = ExpeditionTable
     queryset = Expedition.objects.all().order_by("name")
     filterset_class = ExpeditionFilter
-    filterhelper_class = ExpeditionFilterFormHelper
+    filterhelper_class = ExpeditionFilterSidebarHelper
 
     def get_filterset(self, filterset_class):
         kwargs = self.get_filterset_kwargs(filterset_class)
         filterset = filterset_class(**kwargs)
-        filterset.form.helper = ExpeditionFilterFormHelper()
+        filterset.form.helper = ExpeditionFilterSidebarHelper()
         return filterset
+
+    def get_queryset(self):
+        qs = Expedition.objects.all().order_by("name")
+        if all(self.request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
+            search_geom = _parse_bbox_geom(self.request)
+            if search_geom:
+                matching_missions = Mission.objects.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+                qs = qs.filter(mission__in=matching_missions).distinct()
+            else:
+                qs = qs.none()
+        return qs
 
     def get_context_data(self, *args, **kwargs):
         # Call the base implementation first to get a context - then add filtered Missions
@@ -298,21 +403,32 @@ class ExpeditionTableView(FilterView, SingleTableView):
             self.request.GET, queryset=self.get_queryset()
         ).qs
         sort = self.request.GET.get("sort")
-        if sort:
+        if sort and sort in VALID_EXPEDITION_SORT:
             expeditions = expeditions.order_by(sort)
-        per_page = int(self.request.GET.get("per_page", 10))
-        page = int(self.request.GET.get("page", 1))
-        expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
-        missions = Mission.objects.all()
+        try:
+            per_page = int(self.request.GET.get("per_page", 10))
+        except (TypeError, ValueError):
+            per_page = 10
+        if per_page <= 0:
+            per_page = 10
+        elif per_page > MAX_PER_PAGE:
+            per_page = MAX_PER_PAGE
+        try:
+            page = int(self.request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        page = max(1, page)
+        # Build map missions from the full filtered expeditions (before pagination slice),
+        # so the map shows all tracks — not just those on the current table page.
         missions = (
-            missions.filter(expedition__in=expeditions)
+            Mission.objects.filter(expedition__in=expeditions)
             .select_related("expedition")
+            .filter(nav_track__isnull=False)
+            .exclude(nav_track__isempty=True)
             .distinct()
         )
-        # Filter to only missions with nav_track (for map display)
-        # This ensures the map shows track lines, not just bounding boxes
-        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
-        context["missions"] = MissionSerializer(missions, many=True).data
+        context["missions"] = _missions_geojson_list(missions)
+        expeditions = expeditions[slice((page - 1) * per_page, page * per_page)]
         return context
 
 
@@ -320,7 +436,76 @@ class MissionTableView(FilterView, SingleTableView):
     table_class = MissionTable
     queryset = Mission.objects.all().order_by("name")
     filterset_class = MissionFilter
-    formhelper_class = MissionFilterFormHelper
+    formhelper_class = MissionFilterSidebarHelper  # sidebar layout for the collapsible panel
+
+    def get_table(self, **kwargs):
+        """Attach per_page_all_default to the table so the shared table template
+        can highlight ALL on initial load without needing the parent view context
+        (render_table only passes {"table": table} to the sub-template)."""
+        table = super().get_table(**kwargs)
+        table.per_page_all_default = True
+        return table
+
+    def get_table_pagination(self, table):
+        """
+        Control table pagination based on the per_page query parameter.
+
+        Returning False disables django_tables2 pagination entirely so that
+        every mission row is present in the DOM. This is intentional: the
+        hover-scroll feature (hovering a map label or nav-track scrolls the
+        table to that mission) requires every row to be rendered. A bounded
+        cap (e.g. MAX_PER_PAGE) would silently break hover-scroll once
+        the mission count exceeded the cap, with no visible indication to the
+        user. Truly unbounded rendering is therefore the deliberate default.
+
+        Explicit positive numeric values (e.g. ?per_page=50) paginate normally.
+        Invalid or non-positive values fall back to django_tables2 default
+        pagination instead of disabling it, to prevent arbitrary unbounded
+        renders via malformed URLs.
+        """
+        per_page = self.request.GET.get("per_page", "")
+        # Missing or explicit ALL: disable pagination so all rows are in the DOM
+        # and hover-scroll works for every mission (see docstring above).
+        if not per_page:
+            return False
+        if per_page.upper() == "ALL":
+            return False
+        # Numeric value: positive → explicit page size; non-positive or
+        # unrecognised → fall back to django_tables2 default pagination.
+        try:
+            n = int(per_page)
+        except (TypeError, ValueError):
+            return {}
+        if n <= 0 or n > MAX_PER_PAGE:
+            return {}
+        return {"per_page": n}
+
+    def _get_bbox_geom(self):
+        """Delegate to the module-level _parse_bbox_geom helper."""
+        return _parse_bbox_geom(self.request)
+
+    def get_queryset(self):
+        """Return base queryset with optional bbox pre-filter applied.
+
+        Applying the bbox here ensures both the rendered table (via FilterView)
+        and the map serializer in get_context_data() operate on the same rows.
+
+        If all four bbox params are present but the bbox is invalid (e.g. inverted
+        coords), return an empty queryset. Partial bbox (e.g. only xmin) is
+        ignored so the table is not emptied by mistake.
+        """
+        qs = Mission.objects.select_related("expedition").all().order_by("name")
+        if all(self.request.GET.get(k) for k in ("xmin", "xmax", "ymin", "ymax")):
+            search_geom = self._get_bbox_geom()
+            if search_geom:
+                qs = qs.filter(
+                    Q(nav_track__intersects=search_geom)
+                    | Q(start_point__within=search_geom)
+                )
+            else:
+                # xmin was supplied but coords are invalid — return nothing.
+                qs = qs.none()
+        return qs
 
     def get_filterset(self, filterset_class):
         kwargs = self.get_filterset_kwargs(filterset_class)
@@ -329,31 +514,52 @@ class MissionTableView(FilterView, SingleTableView):
         return filterset
 
     def get_context_data(self, *args, **kwargs):
-        # Call the base implementation first to get a context - then add filtered Missions
         context = super().get_context_data(**kwargs)
-        missions = MissionFilter(
-            self.request.GET,
-            queryset=Mission.objects.select_related("expedition").all(),
-        ).qs
+
+        # self.object_list is the filterset-filtered queryset set by FilterView
+        # before get_context_data() is called; it already incorporates both the
+        # MissionFilter fields and the bbox pre-filter from get_queryset().
+        missions = self.object_list
+
         sort = self.request.GET.get("sort")
-        if sort:
+        if sort and sort in VALID_MISSION_SORT:
             missions = missions.order_by(sort)
-        
-        # Filter to only missions with nav_track before pagination (for map display)
-        # This ensures the map shows track lines, not just bounding boxes
-        # Missions without nav_track will be filtered out by the serializer anyway
-        missions = missions.filter(nav_track__isnull=False).exclude(nav_track__isempty=True)
-        
-        per_page = int(self.request.GET.get("per_page", 10))
-        page = int(self.request.GET.get("page", 1))
-        missions = missions[slice((page - 1) * per_page, page * per_page)]
-        context["missions"] = MissionSerializer(missions, many=True).data
+
+        # Only pass missions with track lines to the map serializer.
+        missions = missions.filter(
+            nav_track__isnull=False
+        ).exclude(nav_track__isempty=True)
+
+        # Map GeoJSON pagination: default 500, hard cap 1000 (issue #293). Use map_per_page so it
+        # does not conflict with django_tables2's per_page (table pagination, e.g. 25 per page).
+        # The map intentionally shows a larger slice so many tracks are visible; table pages beyond
+        # this slice may show rows that have no track on the map.
+        # Cap is kept at 1000 (not user-tunable beyond that) to limit serialization cost on large
+        # querysets; map_page is accepted but intended for internal use only.
+        # Known limitation: if the user sets sort and map_page > 1, the map and table can show
+        # different missions because django_tables2 paginates the table independently.
+        try:
+            map_per_page = int(self.request.GET.get("map_per_page", 500))
+        except (TypeError, ValueError):
+            map_per_page = 500
+        map_per_page = max(1, min(map_per_page, 1000))
+
+        # Use a dedicated query parameter for map pagination to avoid conflicts with
+        # django_tables2's `page` parameter used for table pagination.
+        try:
+            map_page = int(self.request.GET.get("map_page", 1))
+        except (TypeError, ValueError):
+            map_page = 1
+        map_page = max(1, map_page)
+
+        missions = missions[slice((map_page - 1) * map_per_page, map_page * map_per_page)]
+        context["missions"] = _missions_geojson_list(missions)
         return context
 
 
 class MissionDetailView(DetailView):
     model = Mission
-    queryset = Mission.objects.all()
+    queryset = Mission.objects.prefetch_related("citations").all()
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -388,7 +594,11 @@ class MissionDetailView(DetailView):
         try:
             obj = super().get_object()
         except Mission.MultipleObjectsReturned:
-            obj = Mission.objects.filter(slug=self.kwargs["slug"]).first()
+            obj = (
+                Mission.objects.prefetch_related("citations")
+                .filter(slug=self.kwargs["slug"])
+                .first()
+            )
             messages.warning(
                 self.request,
                 f"Multiple Missions with slug '{self.kwargs['slug']}'. Using first one.",
@@ -499,10 +709,15 @@ class MissionSelectAPIView(View):
             except (ValueError, TypeError):
                 return JsonResponse({'error': 'Invalid spatial bounds coordinates'}, status=400)
             
-            # Validate coordinate ranges (longitude: -180..180, latitude: -90..90)
-            if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
-                    -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
+            # Clamp to valid WGS84 range (handles floating-point precision from Leaflet
+            # when drawing boxes with many missions). Reject only if wildly out of range.
+            if (abs(xmin_float) > 360 or abs(xmax_float) > 360 or
+                    not (-90 <= ymin_float <= 90) or not (-90 <= ymax_float <= 90)):
                 return JsonResponse({'error': 'Coordinates out of valid range'}, status=400)
+            xmin_float = max(-180, min(180, xmin_float))
+            xmax_float = max(-180, min(180, xmax_float))
+            ymin_float = max(-90, min(90, ymin_float))
+            ymax_float = max(-90, min(90, ymax_float))
             
             # Validate bounding box ordering: xmin <= xmax and ymin <= ymax
             if xmin_float > xmax_float or ymin_float > ymax_float:
@@ -526,17 +741,17 @@ class MissionSelectAPIView(View):
             # Start with base queryset
             missions = Mission.objects.all()
             
-            # Apply spatial filter (missions that intersect with the rectangle)
-            # Include grid_bounds, nav_track, or start_point so missions with only a start point are included
+            # Apply spatial filter: only missions whose nav_track or start_point is in the box.
+            # Exclude grid_bounds — it can be larger than the track (full grid extent) and would
+            # return missions whose tracks don't actually pass through the drawn box.
             missions = missions.filter(
-                Q(grid_bounds__intersects=search_geom)
-                | Q(nav_track__intersects=search_geom)
+                Q(nav_track__intersects=search_geom)
                 | Q(start_point__within=search_geom)
             ).distinct()
             
             # Apply other filters if present (only when request has those filter keys)
             filter_type = filter_params.get('filter_type', '')
-            mission_filter_keys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            mission_filter_keys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'citation', 'citation_search', 'expedition__name']
             has_mission_filters = any(key in filter_params for key in mission_filter_keys)
             
             # Apply mission filter only when we have mission filter params (skip when only bbox/tmin/tmax)
@@ -635,10 +850,14 @@ class MissionExportAPIView(View):
             except (ValueError, TypeError):
                 return HttpResponse('Invalid spatial bounds coordinates', status=400)
             
-            # Validate coordinate ranges (longitude: -180..180, latitude: -90..90)
-            if not (-180 <= xmin_float <= 180 and -180 <= xmax_float <= 180 and
-                    -90 <= ymin_float <= 90 and -90 <= ymax_float <= 90):
+            # Clamp to valid WGS84 range (handles floating-point precision from Leaflet).
+            if (abs(xmin_float) > 360 or abs(xmax_float) > 360 or
+                    not (-90 <= ymin_float <= 90) or not (-90 <= ymax_float <= 90)):
                 return HttpResponse('Coordinates out of valid range', status=400)
+            xmin_float = max(-180, min(180, xmin_float))
+            xmax_float = max(-180, min(180, xmax_float))
+            ymin_float = max(-90, min(90, ymin_float))
+            ymax_float = max(-90, min(90, ymax_float))
             
             # Validate bounding box ordering: xmin <= xmax and ymin <= ymax
             if xmin_float > xmax_float or ymin_float > ymax_float:
@@ -662,16 +881,15 @@ class MissionExportAPIView(View):
             # Start with base queryset
             missions = Mission.objects.all()
             
-            # Apply spatial filter (same as MissionSelectAPIView: bounds, track, or start_point)
+            # Apply spatial filter (same as MissionSelectAPIView: nav_track or start_point only)
             missions = missions.filter(
-                Q(grid_bounds__intersects=search_geom)
-                | Q(nav_track__intersects=search_geom)
+                Q(nav_track__intersects=search_geom)
                 | Q(start_point__within=search_geom)
             ).distinct()
             
             # Apply other filters (same logic as MissionSelectAPIView)
             filter_type = filter_params.get('filter_type', '')
-            mission_filter_keys = ['name', 'region_name', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name']
+            mission_filter_keys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'citation', 'citation_search', 'expedition__name']
             has_mission_filters = any(key in filter_params for key in mission_filter_keys)
             if has_mission_filters and (filter_type == 'mission' or filter_type == ''):
                 mission_filter = MissionFilter(request.GET, queryset=missions)

@@ -36,44 +36,30 @@ jobs:
   ##      uses: pre-commit/action@v2.0.0
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
+  # Run on ubuntu-latest: Docker is pre-installed there; macos-14 runners do not have Docker.
   pytest:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
 
     steps:
       # https://stackoverflow.com/a/65346817/1281657
       - name: Checkout Code Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      # Attempts to get Github runner configured - seems to be missing important tools
-      # https://github.com/actions/runner/issues/1456#issuecomment-1819392344
-      # - name: Install and start Colima
-      #   run: |
-      #    brew install docker
-      #    brew install colima
-      #    colima version
-      #    colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
-
-      # https://github.com/actions/runner/issues/1456#issuecomment-1676495453
-      # - name: Setup docker and docker-compose (missing on macos-14 in Github Actions)
-      #   if: runner.os == 'macos'
-      #   run: |
-      #     brew install docker docker-compose
-      #     # Link the Docker Compose v2 plugin so it's understood by the docker CLI
-      #     mkdir -p ~/.docker/cli-plugins
-      #     ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
-      #     colima start
-
+      # GitHub ubuntu-latest has Docker Compose V2: use "docker compose" (space), not "docker-compose".
+      # Run from smdb/ so compose context and paths resolve correctly.
       - name: Build the Stack
-        run: docker-compose -f smdb/ci.yml up -d --build
+        working-directory: smdb
+        run: docker compose -f ci.yml up -d --build
 
       - name: Run the Migrations
-        run: docker-compose -f smdb/ci.yml run --rm django python manage.py migrate
+        working-directory: smdb
+        run: docker compose -f ci.yml run --rm django python manage.py migrate
 
       - name: Run Pytest Tests
-        run: docker-compose -f smdb/ci.yml run --rm django pytest -s --cov-report term-missing --cov
+        working-directory: smdb
+        run: docker compose -f ci.yml run --rm django pytest -s --cov-report term-missing --cov
 
       - name: Tear down the Stack
         if: always()
-        run: |
-         docker-compose -f smdb/ci.yml down
-
+        working-directory: smdb
+        run: docker compose -f ci.yml down

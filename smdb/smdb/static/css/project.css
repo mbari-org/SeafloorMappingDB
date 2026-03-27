@@ -376,6 +376,18 @@ span:hover {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue;
 }
 
+/* =============================================================================
+   PATH.LEAFLET-INTERACTIVE CLASS TAXONOMY (map.js + project.css + leaflet-measure.css)
+   -----------------------------------------------------------------------------
+   Control path stroke and line styling by baselayer and source. Currently, JS adds:
+   - Source:   .smdb-track-line
+   - Geometry: .smdb-geometry-line
+   Map container: #map.smdb-baselayer-gmrt | #map.smdb-baselayer-google-hybrid
+
+   Note: Additional source/geometry classes for points and polygons may be introduced
+   in the future; this comment reflects only the classes implemented at present.
+   ============================================================================= */
+
 /* General Typography - OVERRIDES leaflet.css*/
 .leaflet-container a {
   color: #0078a8;
@@ -427,14 +439,6 @@ span:hover {
     0 3px 14px 2px rgb(0 0 0 / 12%);
 }
 
-.leaflet-control-measure h3,
-.leaflet-measure-resultpopup h3 {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 1em !important;
-  font-weight: 700;
-  color: #00008b;
-}
-
 .leaflet-top,
 .leaflet-control {
   margin-top: 10px;
@@ -459,11 +463,6 @@ span:hover {
   box-shadow: 0 1px 5px rgb(0 0 0 / 40%);
   background: #fff;
   border-radius: 5px;
-}
-
-.leaflet-control-measure {
-  max-width: 280px;
-  background: #fff;
 }
 
 /* .leaflet-bar {
@@ -549,61 +548,150 @@ div,
   display: block;
 }
 
-.leaflet-interactive {
-  /* rust */
-  stroke: rgb(139, 64, 0);
-  stroke-opacity: 100;
+/* ----- LINES (stroke): track lines only - baselayer-dependent ----- */
+/* GMRT = rust; Google Hybrid = orange. Measure UI overridden to green below. */
+#map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map path.leaflet-interactive.smdb-track-line.smdb-geometry-line {
+  stroke: rgb(139, 64, 0);  /* rust - GMRT / default */
+  stroke-opacity: 1;
   stroke-width: 3.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
 }
 
-.leaflet-interactive:hover {
+#map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line {
+  stroke: rgb(218, 135, 29);  /* orange - Google Hybrid */
+  stroke-opacity: 1;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+/* Hover highlight for nav tracks — three selectors match every basemap state,
+   giving enough specificity to override the SVG presentation attribute
+   without relying on !important. */
+#map path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover,
+#map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover,
+#map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line:hover {
   stroke: yellow;
 }
 
-.leaflet-control-measure {
-  max-width: 280px;
-  background: #fff;
+/* Programmatic hover link (issue #293): track and row highlight together. */
+#map path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover,
+#map.smdb-baselayer-gmrt path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover,
+#map.smdb-baselayer-google-hybrid path.leaflet-interactive.smdb-track-line.smdb-geometry-line.smdb-hover {
+  stroke: yellow;
+}
+#selection-results-panel tbody tr.smdb-hover {
+  background-color: rgba(255, 255, 0, 0.25);
 }
 
-.leaflet-control-measure .leaflet-control-measure-interaction {
-  padding: 10px 12px;
+/* ----- LEAFLET-MEASURE: cursor, vertices, lines, result = green ----- */
+#map path.layer-measuredrag,
+#map circle.layer-measuredrag,
+#map path.layer-measurevertex,
+#map circle.layer-measurevertex,
+#map path.layer-measurearea,
+#map path.layer-measureboundary,
+#map path.layer-measure-resultline,
+#map path.layer-measure-resultarea,
+#map path.layer-measure-resultpoint,
+#map circle.layer-measure-resultpoint,
+#map .layer-measuredrag path,
+#map .layer-measuredrag circle,
+#map .layer-measurevertex path,
+#map .layer-measurevertex circle,
+#map .layer-measure-resultline path,
+#map .layer-measure-resultarea path,
+#map .layer-measure-resultpoint path,
+#map .layer-measure-resultpoint circle,
+#map.smdb-measure-active .leaflet-dragging .leaflet-grab path,
+#map.smdb-measure-active .leaflet-dragging .leaflet-grab circle,
+#map.smdb-measure-active .leaflet-dragging .leaflet-marker-draggable path,
+#map.smdb-measure-active .leaflet-dragging .leaflet-marker-draggable circle,
+#map.smdb-measure-active path.smdb-measurement-path,
+#map.smdb-measure-active path.smdb-capture-path,
+#map.smdb-measure-active circle.leaflet-interactive:not(.smdb-track-line) {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+#map.smdb-measure-active path.smdb-measurement-path {
+  stroke-width: 3.5 !important;
+  fill: none !important;
 }
 
-.layer-measure-resultline {
-  stroke: #0000FF;
+/* Override track-line for measure paths (observer adds smdb-track-line; we force green). */
+#map path.leaflet-interactive.smdb-track-line.layer-measuredrag,
+#map path.leaflet-interactive.smdb-track-line.layer-measurevertex,
+#map path.leaflet-interactive.smdb-track-line.layer-measurearea,
+#map path.leaflet-interactive.smdb-track-line.layer-measureboundary,
+#map path.leaflet-interactive.smdb-track-line.layer-measure-resultline,
+#map path.leaflet-interactive.smdb-track-line.layer-measure-resultarea,
+#map path.leaflet-interactive.smdb-track-line.layer-measure-resultpoint,
+#map path.layer-measuredrag,
+#map path.layer-measurevertex,
+#map path.layer-measurearea,
+#map path.layer-measureboundary,
+#map path.layer-measure-resultline,
+#map path.layer-measure-resultarea,
+#map path.layer-measure-resultpoint,
+#map circle.layer-measure-resultpoint,
+#map .layer-measuredrag path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measuredrag circle.leaflet-interactive.smdb-track-line,
+#map .layer-measurevertex path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measurevertex circle.leaflet-interactive.smdb-track-line,
+#map .layer-measurearea path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measureboundary path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measure-resultline path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measure-resultarea path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measure-resultpoint path.leaflet-interactive.smdb-track-line.smdb-geometry-line,
+#map .layer-measure-resultpoint circle.leaflet-interactive.smdb-track-line {
+  stroke: #ABE67E !important;
+  stroke-width: 2 !important;
+  fill: #ABE67E !important;
+  fill-opacity: 0.5 !important;
+}
+/* Finished polygon/line: stroke for outline, fill none or light green for area */
+#map path.layer-measure-resultline,
+#map path.layer-measure-resultarea,
+#map .layer-measure-resultline path,
+#map .layer-measure-resultarea path {
+  stroke-width: 3.5 !important;
+  fill: none !important;
+}
+#map path.layer-measure-resultarea,
+#map .layer-measure-resultarea path {
+  fill: #ABE67E !important;
+  fill-opacity: 0.2 !important;
 }
 
-.layer-measure-resultarea {
-  stroke: #0000FF;
+/* ----- POLYGONS (stroke/fill): draw rectangle - same on all baselayers ----- */
+#map path.leaflet-interactive.smdb-draw-polygon.smdb-geometry-polygon {
+  stroke: #007bff;
+  stroke-width: 2;
+  stroke-opacity: 1;
+  fill: rgba(0, 123, 255, 0.15);
+  fill-opacity: 1;
 }
 
-/* Leaflet Measure Image   */
-.leaflet-retina .leaflet-control-measure .leaflet-control-measure-toggle,
-.leaflet-retina .leaflet-control-measure .leaflet-control-measure-toggle:hover {
-  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pjxzdmcgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjQgNjQ7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA2NCA2NCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojRkZFRUE5O30KCS5zdDF7ZmlsbDojRDMyNDM2O30KCS5zdDJ7ZmlsbDojOEREMUQzO30KCS5zdDN7ZmlsbDojMzMwRDAwO30KCS5zdDR7ZmlsbDpub25lO3N0cm9rZTojMzMwRDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9Cjwvc3R5bGU+PGcgaWQ9Il94MzRfMC1JZF9DYXJkIi8+PGcgaWQ9Il94MzNfOS1Gb3JtdWxhIi8+PGcgaWQ9Il94MzNfOC1FbGJvdyIvPjxnIGlkPSJfeDMzXzctRGlwbG9tYSIvPjxnIGlkPSJfeDMzXzYtTGFwdG9wIi8+PGcgaWQ9Il94MzNfNS1CcnVzaCIvPjxnIGlkPSJfeDMzXzQtQmFzZWJhbGwiLz48ZyBpZD0iX3gzM18zLVN0dWRlbnQiLz48ZyBpZD0iX3gzM18yLUhpZ2hsaWdodGVyIi8+PGcgaWQ9Il94MzNfMS1SdWxlciIvPjxnIGlkPSJfeDMzXzAtQ2FsaXBlciIvPjxnIGlkPSJfeDMyXzktUnVsZXJfRWxib3ciPjxnPjxnPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0xLjEsNjIuOWg2MS44VjEuMUwxLjEsNjIuOXogTTU0LjEsNTQuMUgyMi41bDMxLjUtMzEuNVY1NC4xeiIvPjwvZz48Zz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNjMuMywwLjFjLTAuNC0wLjItMC45LTAuMS0xLjIsMC4yTDAuMyw2Mi4xYy0wLjMsMC4zLTAuNCwwLjgtMC4yLDEuMnMwLjYsMC43LDEsMC43aDYxLjggICAgICBjMC42LDAsMS4xLTAuNSwxLjEtMS4xVjEuMUM2NCwwLjcsNjMuNywwLjMsNjMuMywwLjF6IE01NS4yLDYxLjh2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNCAgICAgIHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMWMtMC42LDAtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjNjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuMyAgICAgIGMwLTAuNi0wLjUtMS4xLTEuMS0xLjFzLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMXMtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjMgICAgICBjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNIMy44bDU4LTU4djkuNSAgICAgIGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFzMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuM2MtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXMwLjUsMS4xLDEuMSwxLjFoMy4zdjQuNGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFjMCwwLjYsMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuMyAgICAgIGMtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjNjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zVjUzaC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zdjYuNkg1NS4yeiIvPjwvZz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNTQuNSwyMS41Yy0wLjQtMC4yLTAuOS0wLjEtMS4yLDAuMkwyMS44LDUzLjNjLTAuMywwLjMtMC40LDAuOC0wLjIsMS4yczAuNiwwLjcsMSwwLjdoMzEuNSAgICAgIGMwLjYsMCwxLjEtMC41LDEuMS0xLjFWMjIuNUM1NS4yLDIyLjEsNTQuOSwyMS43LDU0LjUsMjEuNXogTTUzLDUzSDI1LjJMNTMsMjUuMlY1M3oiLz48L2c+PC9nPjwvZz48L2c+PGcgaWQ9Il94MzJfOC1BYmFjdXMiLz48ZyBpZD0iX3gzMl83LUlkX0NhcmQiLz48ZyBpZD0iX3gzMl82LUVyYXNlciIvPjxnIGlkPSJfeDMyXzUtUGVuY2lsIi8+PGcgaWQ9Il94MzJfNC1JbmsiLz48ZyBpZD0iX3gzMl8zLUdyYWR1YXRpb25fQ2FwIi8+PGcgaWQ9Il94MzJfMi1fU2xpbmdfQmFnIi8+PGcgaWQ9Il94MzJfMS1SdWdieV9CYWxsIi8+PGcgaWQ9Il94MzJfMC1DbG9jayIvPjxnIGlkPSJfeDMxXzktQ2VydGlmaWNhdGUiLz48ZyBpZD0iX3gzMV84LUlkZWEiLz48ZyBpZD0iX3gzMV83LUJvb2tzaGVsZiIvPjxnIGlkPSJfeDMxXzYtRm9ybXVsYSIvPjxnIGlkPSJfeDMxXzUtQmVsbCIvPjxnIGlkPSJfeDMxXzQtTWFnbmlmeWluZ19HbGFzcyIvPjxnIGlkPSJfeDMxXzMtQ2FsY3VsYXRvciIvPjxnIGlkPSJfeDMxXzItRXllZ2xhc3NlcyIvPjxnIGlkPSJfeDMxXzEtQnVzIi8+PGcgaWQ9Il94MzFfMC1Ucm9waHkiLz48ZyBpZD0iX3gzOV8tR2xvYmUiLz48ZyBpZD0iX3gzOF8tQmFza2V0X0JhbGwiLz48ZyBpZD0iX3gzN18tUGVuIi8+PGcgaWQ9Il94MzZfLUJvYXJkIi8+PGcgaWQ9Il94MzVfLUJhZyIvPjxnIGlkPSJfeDM0Xy1FeGFtIi8+PGcgaWQ9Il94MzNfLUJvb2siLz48ZyBpZD0iX3gzMl8tUnVsZXIiLz48ZyBpZD0iX3gzMV8tQnVpbGRpbmciLz48L3N2Zz4=) !important;
-  /* Icon free from https://www.iconfinder.com/haseba */
-  padding: 0%;
-  background-size: 30px 30px;
-  margin-right: 5px;
+#map path.leaflet-interactive.smdb-draw-polygon.smdb-geometry-polygon:hover {
+  stroke: #0056b3;
+  fill: rgba(0, 123, 255, 0.25);
 }
 
-/* Leaflet Measure Image - Non Retina  */
-.leaflet-control-measure .leaflet-control-measure-toggle,
-.leaflet-control-measure .leaflet-control-measure-toggle:hover {
-  background-size: 30px 30px;
-  margin-right: 5px;
-  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pjxzdmcgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjQgNjQ7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA2NCA2NCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojRkZFRUE5O30KCS5zdDF7ZmlsbDojRDMyNDM2O30KCS5zdDJ7ZmlsbDojOEREMUQzO30KCS5zdDN7ZmlsbDojMzMwRDAwO30KCS5zdDR7ZmlsbDpub25lO3N0cm9rZTojMzMwRDAwO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9Cjwvc3R5bGU+PGcgaWQ9Il94MzRfMC1JZF9DYXJkIi8+PGcgaWQ9Il94MzNfOS1Gb3JtdWxhIi8+PGcgaWQ9Il94MzNfOC1FbGJvdyIvPjxnIGlkPSJfeDMzXzctRGlwbG9tYSIvPjxnIGlkPSJfeDMzXzYtTGFwdG9wIi8+PGcgaWQ9Il94MzNfNS1CcnVzaCIvPjxnIGlkPSJfeDMzXzQtQmFzZWJhbGwiLz48ZyBpZD0iX3gzM18zLVN0dWRlbnQiLz48ZyBpZD0iX3gzM18yLUhpZ2hsaWdodGVyIi8+PGcgaWQ9Il94MzNfMS1SdWxlciIvPjxnIGlkPSJfeDMzXzAtQ2FsaXBlciIvPjxnIGlkPSJfeDMyXzktUnVsZXJfRWxib3ciPjxnPjxnPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0xLjEsNjIuOWg2MS44VjEuMUwxLjEsNjIuOXogTTU0LjEsNTQuMUgyMi41bDMxLjUtMzEuNVY1NC4xeiIvPjwvZz48Zz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNjMuMywwLjFjLTAuNC0wLjItMC45LTAuMS0xLjIsMC4yTDAuMyw2Mi4xYy0wLjMsMC4zLTAuNCwwLjgtMC4yLDEuMnMwLjYsMC43LDEsMC43aDYxLjggICAgICBjMC42LDAsMS4xLTAuNSwxLjEtMS4xVjEuMUM2NCwwLjcsNjMuNywwLjMsNjMuMywwLjF6IE01NS4yLDYxLjh2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNCAgICAgIHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMWMtMC42LDAtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjNjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuMyAgICAgIGMwLTAuNi0wLjUtMS4xLTEuMS0xLjFzLTEuMSwwLjUtMS4xLDEuMXYzLjNoLTQuNHYtMy4zYzAtMC42LTAuNS0xLjEtMS4xLTEuMXMtMS4xLDAuNS0xLjEsMS4xdjMuM2gtNC40di0zLjMgICAgICBjMC0wLjYtMC41LTEuMS0xLjEtMS4xYy0wLjYsMC0xLjEsMC41LTEuMSwxLjF2My4zaC00LjR2LTMuM2MwLTAuNi0wLjUtMS4xLTEuMS0xLjFjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXYzLjNIMy44bDU4LTU4djkuNSAgICAgIGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFzMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuM2MtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMXMwLjUsMS4xLDEuMSwxLjFoMy4zdjQuNGgtMy4zYy0wLjYsMC0xLjEsMC41LTEuMSwxLjFjMCwwLjYsMC41LDEuMSwxLjEsMS4xaDMuM3Y0LjRoLTMuMyAgICAgIGMtMC42LDAtMS4xLDAuNS0xLjEsMS4xYzAsMC42LDAuNSwxLjEsMS4xLDEuMWgzLjN2NC40aC0zLjNjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zVjUzaC0zLjMgICAgICBjLTAuNiwwLTEuMSwwLjUtMS4xLDEuMWMwLDAuNiwwLjUsMS4xLDEuMSwxLjFoMy4zdjYuNkg1NS4yeiIvPjwvZz48Zz48cGF0aCBjbGFzcz0ic3QzIiBkPSJNNTQuNSwyMS41Yy0wLjQtMC4yLTAuOS0wLjEtMS4yLDAuMkwyMS44LDUzLjNjLTAuMywwLjMtMC40LDAuOC0wLjIsMS4yczAuNiwwLjcsMSwwLjdoMzEuNSAgICAgIGMwLjYsMCwxLjEtMC41LDEuMS0xLjFWMjIuNUM1NS4yLDIyLjEsNTQuOSwyMS43LDU0LjUsMjEuNXogTTUzLDUzSDI1LjJMNTMsMjUuMlY1M3oiLz48L2c+PC9nPjwvZz48L2c+PGcgaWQ9Il94MzJfOC1BYmFjdXMiLz48ZyBpZD0iX3gzMl83LUlkX0NhcmQiLz48ZyBpZD0iX3gzMl82LUVyYXNlciIvPjxnIGlkPSJfeDMyXzUtUGVuY2lsIi8+PGcgaWQ9Il94MzJfNC1JbmsiLz48ZyBpZD0iX3gzMl8zLUdyYWR1YXRpb25fQ2FwIi8+PGcgaWQ9Il94MzJfMi1fU2xpbmdfQmFnIi8+PGcgaWQ9Il94MzJfMS1SdWdieV9CYWxsIi8+PGcgaWQ9Il94MzJfMC1DbG9jayIvPjxnIGlkPSJfeDMxXzktQ2VydGlmaWNhdGUiLz48ZyBpZD0iX3gzMV84LUlkZWEiLz48ZyBpZD0iX3gzMV83LUJvb2tzaGVsZiIvPjxnIGlkPSJfeDMxXzYtRm9ybXVsYSIvPjxnIGlkPSJfeDMxXzUtQmVsbCIvPjxnIGlkPSJfeDMxXzQtTWFnbmlmeWluZ19HbGFzcyIvPjxnIGlkPSJfeDMxXzMtQ2FsY3VsYXRvciIvPjxnIGlkPSJfeDMxXzItRXllZ2xhc3NlcyIvPjxnIGlkPSJfeDMxXzEtQnVzIi8+PGcgaWQ9Il94MzFfMC1Ucm9waHkiLz48ZyBpZD0iX3gzOV8tR2xvYmUiLz48ZyBpZD0iX3gzOF8tQmFza2V0X0JhbGwiLz48ZyBpZD0iX3gzN18tUGVuIi8+PGcgaWQ9Il94MzZfLUJvYXJkIi8+PGcgaWQ9Il94MzVfLUJhZyIvPjxnIGlkPSJfeDM0Xy1FeGFtIi8+PGcgaWQ9Il94MzNfLUJvb2siLz48ZyBpZD0iX3gzMl8tUnVsZXIiLz48ZyBpZD0iX3gzMV8tQnVpbGRpbmciLz48L3N2Zz4=) !important;
-  /* Icon free from https://www.iconfinder.com/haseba */
-  padding: 0%;
-  border: 0;
-  border-radius: 4px;
-  text-indent: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-}
+/* ----- POINTS (circle): baselayer-dependent if needed later ----- */
+/* Track points (if any) and measure capture points are styled in leaflet-measure.css when measure active.
+   To style points per baselayer: #map.smdb-baselayer-gmrt circle.leaflet-interactive.smdb-geometry-point { ... } */
+
+/* ----- FUTURE CONTROLS ----- */
+/* To add a new path/point/line/polygon control: (1) In map.js add a source class (e.g. .smdb-my-control)
+   and assign it in the same place as smdb-track-line / smdb-draw-polygon; add geometry class if needed.
+   (2) Here or in a dedicated CSS file add rules: #map path.leaflet-interactive.smdb-my-control.smdb-geometry-line { ... }
+   Use #map.smdb-baselayer-gmrt / #map.smdb-baselayer-google-hybrid for baselayer-specific stroke/fill. */
 
 .noselect {
   -webkit-touch-callout: none;
@@ -730,9 +818,7 @@ fa-xl,
 .fas:hover,
 .fa-draw-polygon:hover,
 .fa-xl:hover {
-  /* color:cornflowerblue; */
-  /* box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px cornflowerblue; */
-  /* background-color: cornflowerblue; */
+  outline: none;
 }
 
 svg.svg-inline--fa,
@@ -757,4 +843,15 @@ svg.svg-inline--fa,
 
 .center {
   text-align: center;
+}
+
+/* Draw Square cursor marker on main map - hide the dot, keep only crosshair cursor */
+#map .leaflet-mouse-marker {
+  display: none !important; /* Remove confusing cursor dot */
+}
+
+/* Active "Show Items" per-page link in the pagination bar */
+a.per-page-active {
+  color: #d35400;
+  text-decoration: underline;
 }

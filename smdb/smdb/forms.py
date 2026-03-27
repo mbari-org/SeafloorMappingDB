@@ -8,10 +8,14 @@ class MissionFilterFormHelper(FormHelper):
         Row(
             Column("name", css_class="form-group col-md mb-0"),
             Column("region_name", css_class="form-group col-md mb-0"),
+            Column("vehicle_name", css_class="form-group col-md mb-0"),
+            Column("platformtype", css_class="form-group col-md mb-0"),
             Column("quality_categories", css_class="form-group col-md mb-0"),
             Column("patch_test", css_class="form-group col-md mb-0"),
             Column("repeat_survey", css_class="form-group col-md mb-0"),
             Column("mgds_compilation", css_class="form-group col-md mb-0"),
+            Column("citation", css_class="form-group col-md mb-0"),
+            Column("citation_search", css_class="form-group col-md mb-0"),
             Column("expedition__name", css_class="form-group col-md mb-0"),
             Column(Submit("submit", "Filter", css_id="missionFilterSubmit", css_class="col-md mb-0 btn-primary")),
             Column(
@@ -86,10 +90,14 @@ class MissionFilterSidebarHelper(FormHelper):
     layout = Layout(
         Div("name", css_class="mb-3"),
         Div("region_name", css_class="mb-3"),
+        Div("vehicle_name", css_class="mb-3"),
+        Div("platformtype", css_class="mb-3"),
         Div("quality_categories", css_class="mb-3"),
         Div("patch_test", css_class="mb-3"),
         Div("repeat_survey", css_class="mb-3"),
         Div("mgds_compilation", css_class="mb-3"),
+        Div("citation", css_class="mb-3"),
+        Div("citation_search", css_class="mb-3"),
         Div("expedition__name", css_class="mb-3"),
         # tmin and tmax are hidden fields, no need to include in layout
         # Buttons are created dynamically by JavaScript in map.js

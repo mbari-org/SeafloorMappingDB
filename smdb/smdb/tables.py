@@ -25,6 +25,7 @@ class MissionTable(Table):
 
     class Meta:
         model = Mission
+        row_attrs = {"data-mission-slug": lambda record: record.slug}
         fields = (
             "name",
             "start_date",

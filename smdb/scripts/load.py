@@ -35,6 +35,7 @@ from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from glob import glob
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import (
+    Citation,
     Compilation,
     Expedition,
     Mission,
@@ -1524,7 +1525,12 @@ class Compiler(BaseLoader):
             """,
             re.VERBOSE | re.MULTILINE,
         )
-        with open(cmd_filename, errors="ignore") as fd:
+        try:
+            fd_obj = open(cmd_filename, errors="ignore")
+        except FileNotFoundError as e:
+            self.logger.warning("Skipping missing cmd file (stale locate DB entry): %s", e)
+            return compilations
+        with fd_obj as fd:
             for ma in pattern.finditer(fd.read()):
                 grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
                 try:
@@ -1819,6 +1825,26 @@ class SurveyTally(BaseLoader):
                 # mission.area = row["Area_km2"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
+                # Replace citations from tally (source of truth)
+                raw = row.get("Citations", "")
+                if "Citations" in row:
+                    mission.citations.clear()
+                    parts = [p.strip() for p in str(raw).split(";") if p.strip()]
+                    for part in parts:
+                        if "|" in part:
+                            doi, _, ref = part.partition("|")
+                            doi, full_reference = doi.strip(), ref.strip()
+                        else:
+                            doi, full_reference = part.strip(), ""
+                        if not doi:
+                            continue
+                        citation, _ = Citation.objects.get_or_create(
+                            doi=doi, defaults={"full_reference": full_reference}
+                        )
+                        if full_reference:
+                            citation.full_reference = full_reference
+                            citation.save()
+                        mission.citations.add(citation)
                 saved_count += 1
                 self.logger.info(f"Updated fields for {mission.name = }")
                 for st in row["Quality_category*"].split(" "):
