@@ -1408,8 +1408,9 @@ let feature = L.geoJSON(missions, {
           day: "numeric",
         });
       }
-    } else {
-      // Fall back to extracting date from slug (e.g. mappingauvops2024-20240201m1)
+    }
+    // Fall back to slug parsing if start_date is missing or unparseable
+    if (dateOfMission === "Unknown") {
       var slugTail = layer.feature.properties.slug.replace(/.*-/, "");
       slugTail = slugTail.replace(/(\d)([^\d\s%])/g, "$1 $2");
       var datePart = slugTail.substring(0, 8).replace(
@@ -1430,12 +1431,13 @@ let feature = L.geoJSON(missions, {
     // --- Route: show "Not Available" when no route file is recorded ---
     var routeFile = layer.feature.properties.route_file || "Not Available";
 
+    // --- Escape DB-backed values before inserting into tooltip HTML ---
     var tooltipInfo =
-      layer.feature.properties.slug +
+      escapeHtml(layer.feature.properties.slug) +
       "<br>Date: " +
       dateOfMission +
       "<br>Route: " +
-      routeFile;
+      escapeHtml(routeFile);
     return tooltipInfo;
   })
   .addTo(map);
