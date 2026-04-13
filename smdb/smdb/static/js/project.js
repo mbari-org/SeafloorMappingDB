@@ -130,3 +130,46 @@ function setupCheckboxDropdowns(formEl, recalcCallback) {
     });
   });
 }
+
+/**
+ * Shared hover/active feedback for sidebar Filter and Clear buttons.
+ * Adds mouseenter/leave/down/up listeners that darken the background,
+ * scale the button, and show a matching box-shadow glow on hover.
+ * Used by map_mission_filter.js, map_expedition_filter.js, and
+ * map_compilation_filter.js.
+ *
+ * @param {HTMLElement} btn        - The button element to enhance.
+ * @param {string}      hoverBg    - Background colour on hover.
+ * @param {string}      hoverBorder - Border colour on hover.
+ * @param {string}      activeBg   - Background colour on mousedown.
+ */
+function _addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
+  var shadowColor = btn.classList.contains("btn-primary")
+    ? "rgba(0, 123, 255, 0.4)"
+    : "rgba(108, 117, 125, 0.4)";
+  var shadowColorActive = btn.classList.contains("btn-primary")
+    ? "rgba(0, 123, 255, 0.5)"
+    : "rgba(108, 117, 125, 0.5)";
+  btn.addEventListener("mouseenter", function () {
+    this.style.setProperty("background-color", hoverBg, "important");
+    this.style.setProperty("border-color", hoverBorder, "important");
+    this.style.setProperty("transform", "scale(1.05)", "important");
+    this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColor, "important");
+  });
+  btn.addEventListener("mouseleave", function () {
+    this.style.removeProperty("background-color");
+    this.style.removeProperty("border-color");
+    this.style.setProperty("transform", "scale(1)", "important");
+    this.style.removeProperty("box-shadow");
+  });
+  btn.addEventListener("mousedown", function () {
+    this.style.setProperty("background-color", activeBg, "important");
+    this.style.setProperty("transform", "scale(0.97)", "important");
+    this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColorActive, "important");
+  });
+  btn.addEventListener("mouseup", function () {
+    this.style.setProperty("background-color", hoverBg, "important");
+    this.style.setProperty("transform", "scale(1.05)", "important");
+    this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColor, "important");
+  });
+}

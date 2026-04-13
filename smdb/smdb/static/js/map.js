@@ -272,7 +272,12 @@ const FilterControl = L.Control.extend({
       sidebarBtnStyle.textContent =
         '#filter-sidebar-body .btn-primary,' +
         '#filter-sidebar-body .btn-secondary {' +
-        '  cursor: pointer !important;' +
+        '  cursor: pointer;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary:disabled,' +
+        '#filter-sidebar-body .btn-secondary:disabled,' +
+        '#filter-sidebar-body .btn[aria-disabled="true"] {' +
+        '  cursor: default;' +
         '}' +
         '#filter-sidebar-body .btn-primary {' +
         '  transition: background-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
