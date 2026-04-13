@@ -133,7 +133,7 @@ class MissionFilter(FilterSet):
         citation = ModelMultipleChoiceFilter(
             field_name="citations",
             queryset=Citation.objects.all().order_by("doi"),
-            label="",
+            label="- Citations -",
             widget=forms.CheckboxSelectMultiple(),
         )
     except ProgrammingError:
