@@ -263,6 +263,55 @@ const FilterControl = L.Control.extend({
     body.style.minHeight = "200px";
     body.style.maxHeight = "calc(80vh - 60px)"; // Account for header height
 
+    // Inject CSS once for sidebar button hover/active states.
+    // CSS :hover is more reliable than JS mouseenter listeners because it
+    // cannot be blocked by inline-style re-application or event timing.
+    if (!document.getElementById('smdb-sidebar-btn-css')) {
+      var sidebarBtnStyle = document.createElement('style');
+      sidebarBtnStyle.id = 'smdb-sidebar-btn-css';
+      sidebarBtnStyle.textContent =
+        '#filter-sidebar-body .btn-primary,' +
+        '#filter-sidebar-body .btn-secondary {' +
+        '  cursor: pointer;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary:disabled,' +
+        '#filter-sidebar-body .btn-secondary:disabled,' +
+        '#filter-sidebar-body .btn[aria-disabled="true"] {' +
+        '  cursor: default;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary {' +
+        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-secondary {' +
+        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary:hover {' +
+        '  background-color: #0069d9 !important;' +
+        '  border-color: #0062cc !important;' +
+        '  transform: scale(1.05) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.4) !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary:active {' +
+        '  background-color: #0062cc !important;' +
+        '  border-color: #0062cc !important;' +
+        '  transform: scale(0.97) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5) !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-secondary:hover {' +
+        '  background-color: #5a6268 !important;' +
+        '  border-color: #5a6268 !important;' +
+        '  transform: scale(1.05) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.4) !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-secondary:active {' +
+        '  background-color: #545b62 !important;' +
+        '  border-color: #545b62 !important;' +
+        '  transform: scale(0.97) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;' +
+        '}';
+      document.head.appendChild(sidebarBtnStyle);
+    }
+
     // -----------------------------------------------------------------------
     // recalcSidebarHeight — recompute sidebar height after a dropdown opens
     // or closes. Use natural height (auto) so collapsed content is measured
@@ -382,13 +431,14 @@ const FilterControl = L.Control.extend({
       filterBtn.style.setProperty("padding-left", "12px", "important");
       filterBtn.style.setProperty("padding-right", "12px", "important");
       filterBtn.style.setProperty("line-height", "26px", "important");
-      filterBtn.style.setProperty("border", "1px solid", "important");
-      filterBtn.style.setProperty("border-color", "#007bff", "important");
       filterBtn.style.setProperty("border-width", "1px", "important");
+      filterBtn.style.setProperty("border-style", "solid", "important");
+      filterBtn.style.setProperty("border-color", "#007bff");
       filterBtn.style.setProperty("box-sizing", "border-box", "important");
       filterBtn.style.setProperty("flex", "1 1 auto", "important");
       filterBtn.style.setProperty("align-self", "center", "important");
-      
+      filterBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+
       const clearBtn = document.createElement("button");
       clearBtn.type = "reset";
       clearBtn.id = filterType + "FilterCancel";
@@ -410,13 +460,14 @@ const FilterControl = L.Control.extend({
       clearBtn.style.setProperty("padding-left", "12px", "important");
       clearBtn.style.setProperty("padding-right", "12px", "important");
       clearBtn.style.setProperty("line-height", "26px", "important");
-      clearBtn.style.setProperty("border", "1px solid", "important");
-      clearBtn.style.setProperty("border-color", "#6c757d", "important");
       clearBtn.style.setProperty("border-width", "1px", "important");
+      clearBtn.style.setProperty("border-style", "solid", "important");
+      clearBtn.style.setProperty("border-color", "#6c757d");
       clearBtn.style.setProperty("box-sizing", "border-box", "important");
       clearBtn.style.setProperty("flex", "1 1 auto", "important");
       clearBtn.style.setProperty("align-self", "center", "important");
-      
+      clearBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
       clonedForm.appendChild(buttonRow);
@@ -463,15 +514,23 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            
-            // Store sidebar open state before reloading
-            sessionStorage.setItem('sidebarOpen', 'true');
-            
-            // Clear all filter parameters and reload current page
+            if (target.dataset.clearing === "true") { return false; }
+            target.dataset.clearing = "true";
+
+            target.textContent = "Clearing\u2026";
+            target.style.setProperty("background-color", "#545b62", "important");
+            target.style.setProperty("border-color", "#545b62", "important");
+            target.disabled = true;
+            target.setAttribute("aria-disabled", "true");
+
             const currentUrl = new URL(window.location.href);
             const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
-            window.location.href = currentUrl.toString();
+            var clearUrl = currentUrl.toString();
+            sessionStorage.setItem('sidebarOpen', 'true');
+            setTimeout(function () {
+              window.location.href = clearUrl;
+            }, 80);
             return false;
           }
         }, true); // Capture phase - intercepts before onclick handlers
@@ -480,6 +539,17 @@ const FilterControl = L.Control.extend({
       // Add form submission handler to actually submit the form
       clonedForm.addEventListener("submit", function(e) {
         e.preventDefault(); // Prevent default submission
+        if (clonedForm.dataset.submitting === "true") { return false; }
+        clonedForm.dataset.submitting = "true";
+        var submitBtn = clonedForm.querySelector('[id$="FilterSubmit"]') ||
+                        clonedForm.querySelector('[type="submit"]');
+        if (submitBtn) {
+          submitBtn.textContent = "Filtering\u2026";
+          submitBtn.style.setProperty("background-color", "#0062cc", "important");
+          submitBtn.style.setProperty("border-color", "#0062cc", "important");
+          submitBtn.disabled = true;
+          submitBtn.setAttribute("aria-disabled", "true");
+        }
         // Get form data
         const formData = new FormData(clonedForm);
         const params = new URLSearchParams(formData);
@@ -496,7 +566,10 @@ const FilterControl = L.Control.extend({
           }
         }
         // Reload page with filter parameters
-        window.location.href = currentUrl.toString();
+        var filterUrl = currentUrl.toString();
+        setTimeout(function () {
+          window.location.href = filterUrl;
+        }, 80);
       });
 
       const fieldCount = body.querySelectorAll(
@@ -832,10 +905,6 @@ const FilterControl = L.Control.extend({
       // Style buttons - find ALL buttons, not just .btn class
       // Make sure to include buttons we just created
       const allButtons = body.querySelectorAll("button");
-      console.log("Found buttons:", allButtons.length);
-      console.log("Button row exists:", body.querySelector(".button-row"));
-      console.log("Filter button exists:", body.querySelector("button[type='submit']"));
-      console.log("Clear button exists:", body.querySelector("button[type='reset']"));
       allButtons.forEach((btn) => {
         // Ensure button is visible
         btn.style.display = "block";
@@ -1158,13 +1227,10 @@ const FilterControl = L.Control.extend({
     const maxRetries = 10;
     const tryCopyForm = function () {
       if (copyForm(currentFilterType)) {
-        console.log(`Form successfully copied to sidebar (${currentFilterType})`);
+        // form copied successfully
       } else {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(
-            `Retrying form copy (attempt ${retryCount}/${maxRetries})...`
-          );
           setTimeout(tryCopyForm, 300);
         } else {
           console.error("Failed to copy form after", maxRetries, "attempts");
@@ -1536,16 +1602,13 @@ map.whenReady(function() {
       // Get the zoom level that fitBounds calculated
       var calculatedZoom = map.getZoom();
       var finalCenter = map.getCenter();
-      console.log("Current map zoom level:", calculatedZoom);
-      console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
-      console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
-      
+
       // Allow fractional zoom for finer control when zooming in
       // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
       // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
     } catch (err) {
       // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-      console.log("Error fitting bounds: " + err.message);
+      console.error("Error fitting bounds: " + err.message);
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
   }, 150);
@@ -1632,30 +1695,18 @@ setTimeout(function() {
       var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
       map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
     }
-    
     // Log the zoom level after fitBounds in fallback setTimeout
     var finalZoom = map.getZoom();
     var finalCenterFallback = map.getCenter();
-    console.log("Current map zoom level (fallback setTimeout):", finalZoom);
-    console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
-    console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
-    
+
     // Fractional zoom enabled - allows 0.5 increments for finer zoom control
     // No zoom constraint - fitBounds determines optimal zoom to show all missions
   } catch (err) {
     // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-    console.log("Error in fallback fitBounds: " + err.message);
+    console.error("Error in fallback fitBounds: " + err.message);
     map.setView([39.8423, -26.8945], 3, { animate: false });
   }
 }, 100);
-
-// Log final zoom level and center after all initialization is complete
-setTimeout(function() {
-  var finalZoomLevel = map.getZoom();
-  var finalMapCenter = map.getCenter();
-  console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
-  console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
-}, 500);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1900,7 +1951,6 @@ function styleDrawSquareControl() {
   const controlContainer = drawSquareButton.getContainer();
   
   if (!controlContainer) {
-    console.log("Control container not found, retrying...");
     setTimeout(styleDrawSquareControl, 100);
     return;
   }
@@ -1933,11 +1983,7 @@ function styleDrawSquareControl() {
     // Add a class and ID for CSS targeting
     leafletControlDiv.classList.add("draw-square-control-wrapper");
     leafletControlDiv.id = "draw-square-control-wrapper";
-    console.log("Applied styles to draw square control wrapper");
-    console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
-    console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
   } else {
-    console.log("Could not find .leaflet-control wrapper, retrying...");
     setTimeout(styleDrawSquareControl, 100);
   }
 }
@@ -2413,7 +2459,6 @@ L.Control.Layers.include({
     this._groupedLayers.forEach(function (obj) {
       // Check if it's an overlay and added to the map
       if (obj.overlay && this._map.hasLayer(obj.layer)) {
-        console.log("OBJECT OVERLAY");
         // Push layer to active array
         active.push(obj.layer);
       }

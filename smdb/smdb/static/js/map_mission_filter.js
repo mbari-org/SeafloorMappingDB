@@ -473,6 +473,7 @@ const FilterControl = L.Control.extend({
       filterBtn.className = "btn btn-primary";
       filterBtn.textContent = "Filter";
       _styleBtn(filterBtn, "#007bff");
+      addBtnHoverFeedback(filterBtn, "#0069d9", "#0062cc", "#0062cc");
 
       const clearBtn = document.createElement("button");
       clearBtn.type = "reset";
@@ -480,6 +481,7 @@ const FilterControl = L.Control.extend({
       clearBtn.className = "btn btn-secondary";
       clearBtn.textContent = "Clear";
       _styleBtn(clearBtn, "#6c757d");
+      addBtnHoverFeedback(clearBtn, "#5a6268", "#545b62", "#545b62");
 
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
@@ -513,7 +515,13 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            sessionStorage.setItem("sidebarOpen", "true");
+            if (tgt.dataset.clearing === "true") { return false; }
+            tgt.dataset.clearing = "true";
+            tgt.textContent = "Clearing\u2026";
+            tgt.style.setProperty("background-color", "#545b62", "important");
+            tgt.style.setProperty("border-color", "#545b62", "important");
+            tgt.disabled = true;
+            tgt.setAttribute("aria-disabled", "true");
             var url = new URL(window.location.href);
             [
               "name", "region_name", "vehicle_name", "platformtype",
@@ -522,7 +530,11 @@ const FilterControl = L.Control.extend({
               "filter_type", "q", "xmin", "xmax", "ymin", "ymax",
               "tmin", "tmax",
             ].forEach(function (k) { url.searchParams.delete(k); });
-            window.location.href = url.toString();
+            var clearUrl = url.toString();
+            sessionStorage.setItem("sidebarOpen", "true");
+            setTimeout(function () {
+              window.location.href = clearUrl;
+            }, 80);
             return false;
           }
         },
@@ -533,6 +545,17 @@ const FilterControl = L.Control.extend({
       // Form submit: reload Missions page with filter params in URL.
       clonedForm.addEventListener("submit", function (e) {
         e.preventDefault();
+        if (clonedForm.dataset.submitting === "true") { return false; }
+        clonedForm.dataset.submitting = "true";
+        var submitBtn = clonedForm.querySelector('[id$="FilterSubmit"]') ||
+                        clonedForm.querySelector('[type="submit"]');
+        if (submitBtn) {
+          submitBtn.textContent = "Filtering\u2026";
+          submitBtn.style.setProperty("background-color", "#0062cc", "important");
+          submitBtn.style.setProperty("border-color", "#0062cc", "important");
+          submitBtn.disabled = true;
+          submitBtn.setAttribute("aria-disabled", "true");
+        }
         var params = new URLSearchParams(new FormData(clonedForm));
         var url = new URL(window.location.href);
         [
@@ -545,7 +568,10 @@ const FilterControl = L.Control.extend({
         params.forEach(function (val, key) {
           if (val) url.searchParams.append(key, val);
         });
-        window.location.href = url.toString();
+        var filterUrl = url.toString();
+        setTimeout(function () {
+          window.location.href = filterUrl;
+        }, 80);
       });
 
       // Style form inputs for the dark sidebar theme.
@@ -1169,7 +1195,9 @@ function _styleBtn(btn, borderColor) {
   btn.style.setProperty("box-sizing", "border-box", "important");
   btn.style.setProperty("flex", "1 1 auto", "important");
   btn.style.setProperty("align-self", "center", "important");
+  btn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 }
+
 
 // ---------------------------------------------------------------------------
 // initTableLayout — pins #mission-table-wrapper to the viewport as a fixed

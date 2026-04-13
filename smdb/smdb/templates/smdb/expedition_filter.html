@@ -75,7 +75,7 @@
 
     {{ missions|json_script:"missions-data" }}
     <div id="map_expedition_filter" style="height: 50vh; min-height: 300px;"></div>
-    <script src="{% static 'js/map_expedition_filter.js' %}"></script>
+    <script defer src="{% static 'js/map_expedition_filter.js' %}"></script>
 
     <div id="expedition-table-wrapper">
       {% if table %}
