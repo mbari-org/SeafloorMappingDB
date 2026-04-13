@@ -490,3 +490,156 @@ body.home-page #map {
 .quality-dropdown-menu.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* ============================================================
+   Citation Select2 — dark sidebar theme
+   Matches: bg #2d2d2d, inputs #1e1e1e, text #e0e0e0,
+            border #555, accent #007bff, radius 4px, font 0.8rem
+   ============================================================ */
+
+/* Container (replaces the <select>) */
+.citation-select2-container.select2-container {
+  width: 100% !important;
+  font-size: 0.8rem;
+}
+
+/* Main selection box */
+.citation-select2-container .select2-selection--multiple {
+  background-color: #1e1e1e !important;
+  border: 1px solid #555 !important;
+  border-radius: 4px !important;
+  min-height: 30px !important;
+  cursor: text;
+}
+
+.citation-select2-container.select2-container--focus .select2-selection--multiple,
+.citation-select2-container.select2-container--open .select2-selection--multiple {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+  outline: none !important;
+}
+
+/* Inline search input (the text the user types) */
+.citation-select2-container .select2-search--inline .select2-search__field {
+  color: #e0e0e0 !important;
+  font-size: 0.8rem !important;
+  background: transparent !important;
+  margin-top: 4px !important;
+}
+
+.citation-select2-container .select2-search--inline .select2-search__field::placeholder {
+  color: #888 !important;
+}
+
+/* Selected citation tags/pills */
+.citation-select2-container .select2-selection__choice {
+  background-color: #007bff !important;
+  border: 1px solid #0056b3 !important;
+  color: #fff !important;
+  border-radius: 3px !important;
+  font-size: 0.75rem !important;
+  padding: 1px 6px !important;
+  margin-top: 3px !important;
+}
+
+.citation-select2-container .select2-selection__choice__remove {
+  color: rgba(255, 255, 255, 0.75) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding-right: 4px !important;
+  margin-right: 4px !important;
+}
+
+.citation-select2-container .select2-selection__choice__remove:hover {
+  color: #fff !important;
+  background-color: transparent !important;
+}
+
+/* "×" clear-all button */
+.citation-select2-container .select2-selection__clear {
+  color: #aaa !important;
+  font-size: 1rem !important;
+  margin-right: 4px !important;
+}
+
+.citation-select2-container .select2-selection__clear:hover {
+  color: #fff !important;
+}
+
+/* ---- Dropdown panel ---- */
+.citation-select2-dropdown.select2-dropdown {
+  background-color: #2d2d2d !important;
+  border: 1px solid #555 !important;
+  border-radius: 4px !important;
+  z-index: 9999 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Search box inside the dropdown */
+.citation-select2-dropdown .select2-search--dropdown {
+  padding: 6px !important;
+}
+
+.citation-select2-dropdown .select2-search--dropdown .select2-search__field {
+  background-color: #1e1e1e !important;
+  border: 1px solid #555 !important;
+  border-radius: 4px !important;
+  color: #e0e0e0 !important;
+  font-size: 0.8rem !important;
+  padding: 4px 6px !important;
+  width: 100% !important;
+}
+
+.citation-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+  border-color: #007bff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+}
+
+/* Option list */
+.citation-select2-dropdown .select2-results__options {
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #007bff #1e1e1e;
+}
+
+.citation-select2-dropdown .select2-results__options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.citation-select2-dropdown .select2-results__options::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.citation-select2-dropdown .select2-results__options::-webkit-scrollbar-thumb {
+  background: #007bff;
+  border-radius: 3px;
+}
+
+/* Individual options */
+.citation-select2-dropdown .select2-results__option {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
+  font-size: 0.8rem !important;
+  padding: 5px 8px !important;
+}
+
+/* Hover / keyboard-highlighted option */
+.citation-select2-dropdown .select2-results__option--highlighted {
+  background-color: #007bff !important;
+  color: #fff !important;
+}
+
+/* Already-selected options shown in list */
+.citation-select2-dropdown .select2-results__option[aria-selected="true"] {
+  background-color: #0056b3 !important;
+  color: #fff !important;
+}
+
+/* "No results" message */
+.citation-select2-dropdown .select2-results__message {
+  color: #888 !important;
+  font-size: 0.8rem !important;
+  font-style: italic;
+  padding: 6px 8px !important;
+}

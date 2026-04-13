@@ -204,11 +204,17 @@ function setupCitationSelect2(formEl) {
   if (!formEl || typeof $ === "undefined" || !$.fn.select2) return;
   var sel = $(formEl).find("select.citation-select2");
   if (!sel.length) return;
+  // Destroy any existing Select2 instance before re-initializing
+  if (sel.hasClass("select2-hidden-accessible")) {
+    sel.select2("destroy");
+  }
   sel.select2({
-    theme: "bootstrap-5",
+    theme: "default",
     placeholder: sel.data("placeholder") || "Type to search citations\u2026",
     allowClear: true,
     width: "100%",
     dropdownParent: $(formEl),
+    containerCssClass: "citation-select2-container",
+    dropdownCssClass: "citation-select2-dropdown",
   });
 }
