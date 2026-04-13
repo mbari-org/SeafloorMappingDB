@@ -1,15 +1,28 @@
 #!/bin/bash
 # Full SMDB data load with hang detection, auto-restart, and guaranteed
 # spreadsheets_load() as a final step regardless of interruptions.
-# Run inside a screen session: screen -dmS full_load /home/docker_user/run_full_load.sh
+# Run inside a screen session: screen -dmS full_load /path/to/run_full_load.sh
+#
+# Required environment:
+#   DATABASE_URL — Postgres connection URI, e.g.
+#     export DATABASE_URL='postgres://USER:PASSWORD@postgres:5432/default'
+#
+# Optional environment:
+#   SMDB_DJANGO_CONTAINER   (default: smdb-django-1)
+#   SMDB_POSTGRES_CONTAINER (default: smdb-postgres-1)
 
-DB_URL="postgres://VfWWmNjOAZnLwrPXRCfqpTQEzfSGKKBV:LMBp8yaATEKbyuv62lsEoAYxLxKoOnMXWSHBSKvT5jVHDmbnuSSwVlcIEYjruevC@postgres:5432/default"
-CONTAINER="smdb-django-1"
-LOG="/home/docker_user/mission_load.log"
-STALL_LOG="/home/docker_user/mission_load_stall.log"
-SPREADSHEET_LOG="/home/docker_user/spreadsheet_load.log"
-STALL_MINUTES=15
-MAX_RESTARTS=10
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "ERROR: DATABASE_URL must be set. Do not hardcode credentials in this script." >&2
+  exit 1
+fi
+
+CONTAINER="${SMDB_DJANGO_CONTAINER:-smdb-django-1}"
+POSTGRES_CONTAINER="${SMDB_POSTGRES_CONTAINER:-smdb-postgres-1}"
+LOG="${LOG:-/home/docker_user/mission_load.log}"
+STALL_LOG="${STALL_LOG:-/home/docker_user/mission_load_stall.log}"
+SPREADSHEET_LOG="${SPREADSHEET_LOG:-/home/docker_user/spreadsheet_load.log}"
+STALL_MINUTES="${STALL_MINUTES:-15}"
+MAX_RESTARTS="${MAX_RESTARTS:-10}"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$STALL_LOG"; }
 
@@ -20,7 +33,7 @@ restart_count=0
 while true; do
     log "Load attempt $((restart_count+1)) of $MAX_RESTARTS..."
 
-    docker exec -e DATABASE_URL="$DB_URL" "$CONTAINER" \
+    docker exec -e DATABASE_URL="$DATABASE_URL" "$CONTAINER" \
         bash -c "cd /app && python manage.py runscript load >> $LOG 2>&1" &
     LOAD_PID=$!
 
@@ -64,21 +77,21 @@ done
 
 # Step 2: ALWAYS run spreadsheets_load() regardless of above outcome
 log "Running spreadsheets_load() - guaranteed final step"
-docker exec -e DATABASE_URL="$DB_URL" "$CONTAINER" \
+docker exec -e DATABASE_URL="$DATABASE_URL" "$CONTAINER" \
     bash -c "cd /app && python run_spreadsheets.py" >> "$SPREADSHEET_LOG" 2>&1
 SPREADSHEET_EXIT=$?
 log "spreadsheets_load() finished with exit code $SPREADSHEET_EXIT"
 
 # Step 3: Deduplication
 log "Running deduplication"
-docker exec -e DATABASE_URL="$DB_URL" "$CONTAINER" \
+docker exec -e DATABASE_URL="$DATABASE_URL" "$CONTAINER" \
     bash -c "cd /app && python dedup_missions.py" | tee -a "$STALL_LOG"
 
-# Step 4: Database backup
+# Step 4: Database backup (connection URI passed into container; no credentials in repo)
 log "Running database backup"
 BACKUP_FILE="/home/docker_user/smdb_backup_$(date +%Y%m%d_%H%M%S).sql.gz"
-docker exec smdb-postgres-1 \
-    bash -c "pg_dump -U VfWWmNjOAZnLwrPXRCfqpTQEzfSGKKBV default | gzip" > "$BACKUP_FILE"
+docker exec -e DATABASE_URL="$DATABASE_URL" "$POSTGRES_CONTAINER" \
+    bash -c 'pg_dump "$DATABASE_URL" | gzip' > "$BACKUP_FILE"
 log "Backup saved to $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1))"
 
 log "All steps complete"
