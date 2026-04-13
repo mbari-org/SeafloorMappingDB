@@ -312,7 +312,7 @@ class Citation(models.Model):
     uuid = models.UUIDField(db_index=True, default=uuid_lib.uuid4, editable=False)
     missions = models.ManyToManyField(Mission)
     doi = models.CharField(max_length=256, db_index=True)
-    full_reference = models.CharField(max_length=256, db_index=True)
+    full_reference = models.CharField(max_length=512, db_index=True)
 
     def __str__(self):
         return self.doi
