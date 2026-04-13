@@ -401,7 +401,7 @@ const FilterControl = L.Control.extend({
       filterBtn.className = "btn btn-primary";
       filterBtn.textContent = "Filter";
       _styleBtn(filterBtn, "#007bff");
-      _addBtnHoverFeedback(filterBtn, "#0069d9", "#0062cc", "#0062cc");
+      addBtnHoverFeedback(filterBtn, "#0069d9", "#0062cc", "#0062cc");
 
       const clearBtn = document.createElement("button");
       clearBtn.type = "reset";
@@ -409,7 +409,7 @@ const FilterControl = L.Control.extend({
       clearBtn.className = "btn btn-secondary";
       clearBtn.textContent = "Clear";
       _styleBtn(clearBtn, "#6c757d");
-      _addBtnHoverFeedback(clearBtn, "#5a6268", "#545b62", "#545b62");
+      addBtnHoverFeedback(clearBtn, "#5a6268", "#545b62", "#545b62");
 
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
@@ -441,6 +441,7 @@ const FilterControl = L.Control.extend({
               tgt.dataset.clearing = "true";
               tgt.textContent = "Clearing\u2026";
               tgt.style.setProperty("background-color", "#545b62", "important");
+              tgt.style.setProperty("border-color", "#545b62", "important");
               tgt.disabled = true;
               tgt.setAttribute("aria-disabled", "true");
               var url = new URL(window.location.href);
@@ -468,6 +469,7 @@ const FilterControl = L.Control.extend({
         if (submitBtn) {
           submitBtn.textContent = "Filtering\u2026";
           submitBtn.style.setProperty("background-color", "#0062cc", "important");
+          submitBtn.style.setProperty("border-color", "#0062cc", "important");
           submitBtn.disabled = true;
           submitBtn.setAttribute("aria-disabled", "true");
         }

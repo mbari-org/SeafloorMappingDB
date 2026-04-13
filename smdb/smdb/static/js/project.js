@@ -138,12 +138,12 @@ function setupCheckboxDropdowns(formEl, recalcCallback) {
  * Used by map_mission_filter.js, map_expedition_filter.js, and
  * map_compilation_filter.js.
  *
- * @param {HTMLElement} btn        - The button element to enhance.
- * @param {string}      hoverBg    - Background colour on hover.
- * @param {string}      hoverBorder - Border colour on hover.
- * @param {string}      activeBg   - Background colour on mousedown.
+ * @param {HTMLElement} btn         - The button element to enhance.
+ * @param {string}      hoverBg     - Background color on hover.
+ * @param {string}      hoverBorder - Border color on hover.
+ * @param {string}      activeBg    - Background color on mousedown.
  */
-function _addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
+function addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
   var shadowColor = btn.classList.contains("btn-primary")
     ? "rgba(0, 123, 255, 0.4)"
     : "rgba(108, 117, 125, 0.4)";
@@ -164,11 +164,13 @@ function _addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
   });
   btn.addEventListener("mousedown", function () {
     this.style.setProperty("background-color", activeBg, "important");
+    this.style.setProperty("border-color", hoverBorder, "important");
     this.style.setProperty("transform", "scale(0.97)", "important");
     this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColorActive, "important");
   });
   btn.addEventListener("mouseup", function () {
     this.style.setProperty("background-color", hoverBg, "important");
+    this.style.setProperty("border-color", hoverBorder, "important");
     this.style.setProperty("transform", "scale(1.05)", "important");
     this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColor, "important");
   });

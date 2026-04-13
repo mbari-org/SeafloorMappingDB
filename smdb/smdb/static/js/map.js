@@ -280,28 +280,32 @@ const FilterControl = L.Control.extend({
         '  cursor: default;' +
         '}' +
         '#filter-sidebar-body .btn-primary {' +
-        '  transition: background-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary {' +
-        '  transition: background-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
         '}' +
         '#filter-sidebar-body .btn-primary:hover {' +
         '  background-color: #0069d9 !important;' +
+        '  border-color: #0062cc !important;' +
         '  transform: scale(1.05) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.4) !important;' +
         '}' +
         '#filter-sidebar-body .btn-primary:active {' +
         '  background-color: #0062cc !important;' +
+        '  border-color: #005cbf !important;' +
         '  transform: scale(0.97) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5) !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary:hover {' +
         '  background-color: #5a6268 !important;' +
+        '  border-color: #545b62 !important;' +
         '  transform: scale(1.05) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.4) !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary:active {' +
         '  background-color: #545b62 !important;' +
+        '  border-color: #4e555b !important;' +
         '  transform: scale(0.97) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;' +
         '}';
@@ -433,7 +437,7 @@ const FilterControl = L.Control.extend({
       filterBtn.style.setProperty("box-sizing", "border-box", "important");
       filterBtn.style.setProperty("flex", "1 1 auto", "important");
       filterBtn.style.setProperty("align-self", "center", "important");
-      filterBtn.style.setProperty("cursor", "pointer", "important");
+      filterBtn.style.setProperty("cursor", "pointer");
       filterBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 
       const clearBtn = document.createElement("button");
@@ -463,7 +467,7 @@ const FilterControl = L.Control.extend({
       clearBtn.style.setProperty("box-sizing", "border-box", "important");
       clearBtn.style.setProperty("flex", "1 1 auto", "important");
       clearBtn.style.setProperty("align-self", "center", "important");
-      clearBtn.style.setProperty("cursor", "pointer", "important");
+      clearBtn.style.setProperty("cursor", "pointer");
       clearBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 
       buttonRow.appendChild(filterBtn);
@@ -517,6 +521,7 @@ const FilterControl = L.Control.extend({
 
             target.textContent = "Clearing\u2026";
             target.style.setProperty("background-color", "#545b62", "important");
+            target.style.setProperty("border-color", "#545b62", "important");
             target.disabled = true;
             target.setAttribute("aria-disabled", "true");
 
@@ -543,6 +548,7 @@ const FilterControl = L.Control.extend({
         if (submitBtn) {
           submitBtn.textContent = "Filtering\u2026";
           submitBtn.style.setProperty("background-color", "#0062cc", "important");
+          submitBtn.style.setProperty("border-color", "#0062cc", "important");
           submitBtn.disabled = true;
           submitBtn.setAttribute("aria-disabled", "true");
         }
