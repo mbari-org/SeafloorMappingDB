@@ -519,7 +519,6 @@ const FilterControl = L.Control.extend({
             tgt.dataset.clearing = "true";
             tgt.textContent = "Clearing\u2026";
             tgt.style.setProperty("background-color", "#545b62", "important");
-            tgt.style.setProperty("cursor", "not-allowed", "important");
             tgt.disabled = true;
             tgt.setAttribute("aria-disabled", "true");
             var url = new URL(window.location.href);
@@ -552,7 +551,6 @@ const FilterControl = L.Control.extend({
         if (submitBtn) {
           submitBtn.textContent = "Filtering\u2026";
           submitBtn.style.setProperty("background-color", "#0062cc", "important");
-          submitBtn.style.setProperty("cursor", "not-allowed", "important");
           submitBtn.disabled = true;
           submitBtn.setAttribute("aria-disabled", "true");
         }

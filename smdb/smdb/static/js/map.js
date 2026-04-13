@@ -512,7 +512,6 @@ const FilterControl = L.Control.extend({
 
             target.textContent = "Clearing\u2026";
             target.style.setProperty("background-color", "#545b62", "important");
-            target.style.setProperty("cursor", "not-allowed", "important");
             target.disabled = true;
             target.setAttribute("aria-disabled", "true");
 
@@ -539,7 +538,6 @@ const FilterControl = L.Control.extend({
         if (submitBtn) {
           submitBtn.textContent = "Filtering\u2026";
           submitBtn.style.setProperty("background-color", "#0062cc", "important");
-          submitBtn.style.setProperty("cursor", "not-allowed", "important");
           submitBtn.disabled = true;
           submitBtn.setAttribute("aria-disabled", "true");
         }
