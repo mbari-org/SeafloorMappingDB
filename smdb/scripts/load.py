@@ -1825,9 +1825,13 @@ class SurveyTally(BaseLoader):
                 # mission.area = row["Area_km2"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
-                # Replace citations from tally (source of truth)
-                raw = row.get("Citations", "")
+                # Replace citations from tally (source of truth).
+                # Supports two spreadsheet formats:
+                #   - New "Citations" column: semicolon-separated "doi|full_reference" pairs
+                #   - Legacy "Citation_1" / "Citation_2" columns: full reference strings
+                #     that may contain an embedded DOI (extracted by regex)
                 if "Citations" in row:
+                    raw = row.get("Citations", "")
                     mission.citations.clear()
                     parts = [p.strip() for p in str(raw).split(";") if p.strip()]
                     for part in parts:
@@ -1836,12 +1840,39 @@ class SurveyTally(BaseLoader):
                             doi, full_reference = doi.strip(), ref.strip()
                         else:
                             doi, full_reference = part.strip(), ""
+                        doi = doi[:256]
+                        full_reference = full_reference[:512]
                         if not doi:
                             continue
                         citation, _ = Citation.objects.get_or_create(
                             doi=doi, defaults={"full_reference": full_reference}
                         )
-                        if full_reference:
+                        if full_reference and citation.full_reference != full_reference:
+                            citation.full_reference = full_reference
+                            citation.save()
+                        mission.citations.add(citation)
+                elif "Citation_1" in row:
+                    mission.citations.clear()
+                    for col in ("Citation_1", "Citation_2"):
+                        ref_str = str(row.get(col, "")).strip() if col in row else ""
+                        if not ref_str:
+                            continue
+                        # Extract DOI from embedded patterns like
+                        # "https://doi.org/10.xxxx/..." or "doi: 10.xxxx/..."
+                        doi_match = re.search(
+                            r"(?:https?://doi\.org/|doi:\s*)([^\s,]+\.[\w/\-]+)",
+                            ref_str,
+                            re.IGNORECASE,
+                        )
+                        doi = doi_match.group(1).rstrip(".") if doi_match else ref_str[:256]
+                        doi = doi[:256]
+                        full_reference = ref_str[:512]
+                        if not doi:
+                            continue
+                        citation, _ = Citation.objects.get_or_create(
+                            doi=doi, defaults={"full_reference": full_reference}
+                        )
+                        if citation.full_reference != full_reference:
                             citation.full_reference = full_reference
                             citation.save()
                         mission.citations.add(citation)

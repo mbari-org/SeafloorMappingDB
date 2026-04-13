@@ -4,6 +4,13 @@ volumes:
   production_traefik: {}
   local_media_files: {}
 
+# Host-specific path overrides — set these in smdb/.env (never commit that file).
+# Defaults work on macOS with the standard developer layout.
+# On smdb-dev (Linux) create smdb/.env containing:
+#   SEAFLOOR_MAPPING_DIR=/mbari/SeafloorMapping
+#   SSH_DIR=/home/docker_user/.ssh
+#   SMDB_ETC_DIR=/Users/mccann/docker_smdb_vol/etc   # already exists on smdb-dev
+
 services:
   django:
     build:
@@ -16,7 +23,7 @@ services:
       - postgres
       - redis
     env_file:
-      # In smdb/.envs/.production/.djang add the following for Mac M1/M2 Arm:
+      # In smdb/.envs/.production/.django add the following for Mac M1/M2 Arm:
       # GEOS_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgeos_c.so
       # GDAL_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/libgdal.so
       - ./.envs/.production/.django
@@ -24,9 +31,9 @@ services:
     command: /start
     restart: always
     volumes:
-      - /Users/mccann/.ssh:/home/docker_user/.ssh:z
-      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
-      - /Users/mccann/docker_smdb_vol/etc:/etc/smdb:z
+      - ${SSH_DIR:-/Users/mccann/.ssh}:/home/docker_user/.ssh:z
+      - ${SEAFLOOR_MAPPING_DIR:-/Volumes/SeafloorMapping}:/mbari/SeafloorMapping:z
+      - ${SMDB_ETC_DIR:-/Users/mccann/docker_smdb_vol/etc}:/etc/smdb:z
       - local_media_files:/media:z
 
   postgres:
@@ -59,10 +66,8 @@ services:
     container_name: mb-system
     restart: always
     volumes:
-      # Edit source path to use directories from *your* host
-      # Copy your public key to your ~/.ssh/authorized_keys file
-      - /Users/mccann/.ssh:/home/docker_user/.ssh:z
-      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+      - ${SSH_DIR:-/Users/mccann/.ssh}:/home/docker_user/.ssh:z
+      - ${SEAFLOOR_MAPPING_DIR:-/Volumes/SeafloorMapping}:/mbari/SeafloorMapping:z
     command: /usr/sbin/sshd -D
 
   nginx:
@@ -77,7 +82,7 @@ services:
     container_name: nginx
     volumes:
       # User with $DOCKER_USER_ID needs read permissions on this share
-      - /Volumes/SeafloorMapping:/srv/SeafloorMapping:ro
+      - ${SEAFLOOR_MAPPING_DIR:-/Volumes/SeafloorMapping}:/srv/SeafloorMapping:ro
       - local_media_files:/media
     ports:
       - "0.0.0.0:80:80"

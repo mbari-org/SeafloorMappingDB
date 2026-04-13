@@ -63,6 +63,23 @@ function setupCheckboxDropdowns(formEl, recalcCallback) {
     if (toggleEl.dataset.dropdownInit) return;
     toggleEl.dataset.dropdownInit = "1";
 
+    // Ensure the toggle always has a visible, readable label and an
+    // accessible name. If the label text is empty, derive one from the
+    // field's div id (e.g. "div_id_citation" → "Filter by citation").
+    var toggleLabel = toggleEl.textContent.trim();
+    if (!toggleLabel) {
+      var fieldId = outerDiv.id || "";            // e.g. "div_id_citation"
+      var fieldName = fieldId.replace(/^div_id_/, "").replace(/_/g, " ");
+      if (fieldName) {
+        toggleLabel = "Filter by " + fieldName;
+        toggleEl.textContent = toggleLabel;
+      }
+    }
+    if (toggleLabel) {
+      toggleEl.setAttribute("aria-label", toggleLabel);
+      toggleEl.title = toggleLabel;
+    }
+
     var TOGGLE_BG = "#1e1e1e";
     var TOGGLE_BORDER = "#555";
 

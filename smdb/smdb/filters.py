@@ -10,7 +10,6 @@ from django_filters import (
 from django.db.utils import ProgrammingError
 from django.db.models import Q
 from smdb.models import (
-    Citation,
     Mission,
     Expedition,
     Compilation,
@@ -129,15 +128,14 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
-    try:
-        citation = ModelMultipleChoiceFilter(
-            field_name="citations",
-            queryset=Citation.objects.all().order_by("doi"),
-            label="",
-            widget=forms.CheckboxSelectMultiple(),
-        )
-    except ProgrammingError:
-        pass
+    citation_search = CharFilter(
+        method="filter_citation_search",
+        label="",
+        widget=TextInput(attrs={
+            "placeholder": "Citation DOI or reference contains...",
+            "title": "Search by DOI (e.g. 10.1016/…) or any word from the full citation reference",
+        }),
+    )
     expedition__name = CharFilter(
         field_name="expedition__name",
         lookup_expr="icontains",
@@ -145,16 +143,10 @@ class MissionFilter(FilterSet):
         widget=TextInput(attrs={"placeholder": "Expedition name contains..."}),
     )
 
-    citation_search = CharFilter(
-        method="filter_citation_search",
-        label="",
-        widget=TextInput(attrs={"placeholder": "Citation (DOI or reference) contains..."}),
-    )
-
     class Meta:
         model = Mission
-        # expedition__name and citation_search are explicit filters (declared above) and
-        # do not need to be in fields; django-filter includes them automatically.
+        # expedition__name is an explicit filter (declared above) and
+        # does not need to be in fields; django-filter includes it automatically.
         fields = [
             "name",
             "region_name",
@@ -167,11 +159,12 @@ class MissionFilter(FilterSet):
 
     @staticmethod
     def filter_citation_search(queryset, name, value):
-        """Filter missions that have at least one citation matching DOI or full_reference (icontains)."""
+        """Filter missions whose linked citations contain value in DOI or full reference."""
         if not value or not value.strip():
             return queryset
         return queryset.filter(
-            Q(citations__doi__icontains=value) | Q(citations__full_reference__icontains=value)
+            Q(citations__doi__icontains=value)
+            | Q(citations__full_reference__icontains=value)
         ).distinct()
 
     def filter_queryset(self, queryset):
