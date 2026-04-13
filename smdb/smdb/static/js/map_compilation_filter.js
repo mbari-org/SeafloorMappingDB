@@ -401,6 +401,7 @@ const FilterControl = L.Control.extend({
       filterBtn.className = "btn btn-primary";
       filterBtn.textContent = "Filter";
       _styleBtn(filterBtn, "#007bff");
+      _addBtnHoverFeedback(filterBtn, "#0069d9", "#0062cc", "#0062cc");
 
       const clearBtn = document.createElement("button");
       clearBtn.type = "reset";
@@ -408,6 +409,7 @@ const FilterControl = L.Control.extend({
       clearBtn.className = "btn btn-secondary";
       clearBtn.textContent = "Clear";
       _styleBtn(clearBtn, "#6c757d");
+      _addBtnHoverFeedback(clearBtn, "#5a6268", "#545b62", "#545b62");
 
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
@@ -435,12 +437,18 @@ const FilterControl = L.Control.extend({
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
-              sessionStorage.setItem("sidebarOpen", "true");
+              tgt.textContent = "Clearing\u2026";
+              tgt.style.setProperty("background-color", "#545b62", "important");
+              tgt.style.setProperty("cursor", "not-allowed", "important");
               var url = new URL(window.location.href);
               ["name", "filter_type", "xmin", "xmax", "ymin", "ymax"].forEach(function (k) {
                 url.searchParams.delete(k);
               });
-              window.location.href = url.toString();
+              var clearUrl = url.toString();
+              setTimeout(function () {
+                sessionStorage.setItem("sidebarOpen", "true");
+                window.location.href = clearUrl;
+              }, 80);
               return false;
             }
           },
@@ -450,13 +458,23 @@ const FilterControl = L.Control.extend({
 
       clonedForm.addEventListener("submit", function (e) {
         e.preventDefault();
+        var submitBtn = clonedForm.querySelector('[id$="FilterSubmit"]') ||
+                        clonedForm.querySelector('[type="submit"]');
+        if (submitBtn) {
+          submitBtn.textContent = "Filtering\u2026";
+          submitBtn.style.setProperty("background-color", "#0062cc", "important");
+          submitBtn.style.setProperty("cursor", "not-allowed", "important");
+        }
         var params = new URLSearchParams(new FormData(clonedForm));
         var url = new URL(window.location.href);
         ["name", "filter_type"].forEach(function (k) { url.searchParams.delete(k); });
         params.forEach(function (val, key) {
           if (val) url.searchParams.append(key, val);
         });
-        window.location.href = url.toString();
+        var filterUrl = url.toString();
+        setTimeout(function () {
+          window.location.href = filterUrl;
+        }, 80);
       });
 
       body
@@ -874,4 +892,27 @@ function _styleBtn(btn, borderColor) {
   btn.style.setProperty("box-sizing", "border-box", "important");
   btn.style.setProperty("flex", "1 1 auto", "important");
   btn.style.setProperty("align-self", "center", "important");
+  btn.style.setProperty("cursor", "pointer", "important");
+  btn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+}
+
+function _addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
+  btn.addEventListener("mouseenter", function () {
+    this.style.setProperty("background-color", hoverBg, "important");
+    this.style.setProperty("border-color", hoverBorder, "important");
+    this.style.setProperty("transform", "scale(1.05)", "important");
+  });
+  btn.addEventListener("mouseleave", function () {
+    this.style.removeProperty("background-color");
+    this.style.removeProperty("border-color");
+    this.style.setProperty("transform", "scale(1)", "important");
+  });
+  btn.addEventListener("mousedown", function () {
+    this.style.setProperty("background-color", activeBg, "important");
+    this.style.setProperty("transform", "scale(0.97)", "important");
+  });
+  btn.addEventListener("mouseup", function () {
+    this.style.setProperty("background-color", hoverBg, "important");
+    this.style.setProperty("transform", "scale(1.05)", "important");
+  });
 }

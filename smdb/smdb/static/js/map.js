@@ -263,6 +263,42 @@ const FilterControl = L.Control.extend({
     body.style.minHeight = "200px";
     body.style.maxHeight = "calc(80vh - 60px)"; // Account for header height
 
+    // Inject CSS once for sidebar button hover/active states.
+    // CSS :hover is more reliable than JS mouseenter listeners because it
+    // cannot be blocked by inline-style re-application or event timing.
+    if (!document.getElementById('smdb-sidebar-btn-css')) {
+      var sidebarBtnStyle = document.createElement('style');
+      sidebarBtnStyle.id = 'smdb-sidebar-btn-css';
+      sidebarBtnStyle.textContent =
+        '#filter-sidebar-body .btn-primary,' +
+        '#filter-sidebar-body .btn-secondary {' +
+        '  cursor: pointer !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary {' +
+        '  transition: background-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-secondary {' +
+        '  transition: background-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary:hover {' +
+        '  background-color: #0069d9 !important;' +
+        '  transform: scale(1.05) !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-primary:active {' +
+        '  background-color: #0062cc !important;' +
+        '  transform: scale(0.97) !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-secondary:hover {' +
+        '  background-color: #5a6268 !important;' +
+        '  transform: scale(1.05) !important;' +
+        '}' +
+        '#filter-sidebar-body .btn-secondary:active {' +
+        '  background-color: #545b62 !important;' +
+        '  transform: scale(0.97) !important;' +
+        '}';
+      document.head.appendChild(sidebarBtnStyle);
+    }
+
     // -----------------------------------------------------------------------
     // recalcSidebarHeight — recompute sidebar height after a dropdown opens
     // or closes. Use natural height (auto) so collapsed content is measured
@@ -388,7 +424,9 @@ const FilterControl = L.Control.extend({
       filterBtn.style.setProperty("box-sizing", "border-box", "important");
       filterBtn.style.setProperty("flex", "1 1 auto", "important");
       filterBtn.style.setProperty("align-self", "center", "important");
-      
+      filterBtn.style.setProperty("cursor", "pointer", "important");
+      filterBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+
       const clearBtn = document.createElement("button");
       clearBtn.type = "reset";
       clearBtn.id = filterType + "FilterCancel";
@@ -416,7 +454,35 @@ const FilterControl = L.Control.extend({
       clearBtn.style.setProperty("box-sizing", "border-box", "important");
       clearBtn.style.setProperty("flex", "1 1 auto", "important");
       clearBtn.style.setProperty("align-self", "center", "important");
-      
+      clearBtn.style.setProperty("cursor", "pointer", "important");
+      clearBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+
+      // Hover / active feedback for both buttons
+      [
+        [filterBtn, "#0069d9", "#0062cc", "#0062cc"],
+        [clearBtn,  "#5a6268", "#545b62", "#545b62"],
+      ].forEach(function(args) {
+        var btn = args[0], hoverBg = args[1], hoverBorder = args[2], activeBg = args[3];
+        btn.addEventListener("mouseenter", function () {
+          this.style.setProperty("background-color", hoverBg, "important");
+          this.style.setProperty("border-color", hoverBorder, "important");
+          this.style.setProperty("transform", "scale(1.05)", "important");
+        });
+        btn.addEventListener("mouseleave", function () {
+          this.style.removeProperty("background-color");
+          this.style.removeProperty("border-color");
+          this.style.setProperty("transform", "scale(1)", "important");
+        });
+        btn.addEventListener("mousedown", function () {
+          this.style.setProperty("background-color", activeBg, "important");
+          this.style.setProperty("transform", "scale(0.97)", "important");
+        });
+        btn.addEventListener("mouseup", function () {
+          this.style.setProperty("background-color", hoverBg, "important");
+          this.style.setProperty("transform", "scale(1.05)", "important");
+        });
+      });
+
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
       clonedForm.appendChild(buttonRow);
@@ -463,15 +529,20 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            
+
+            target.textContent = "Clearing\u2026";
+            target.style.setProperty("background-color", "#545b62", "important");
+            target.style.setProperty("cursor", "not-allowed", "important");
+
             // Store sidebar open state before reloading
-            sessionStorage.setItem('sidebarOpen', 'true');
-            
-            // Clear all filter parameters and reload current page
             const currentUrl = new URL(window.location.href);
             const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
-            window.location.href = currentUrl.toString();
+            var clearUrl = currentUrl.toString();
+            setTimeout(function () {
+              sessionStorage.setItem('sidebarOpen', 'true');
+              window.location.href = clearUrl;
+            }, 80);
             return false;
           }
         }, true); // Capture phase - intercepts before onclick handlers
@@ -480,6 +551,13 @@ const FilterControl = L.Control.extend({
       // Add form submission handler to actually submit the form
       clonedForm.addEventListener("submit", function(e) {
         e.preventDefault(); // Prevent default submission
+        var submitBtn = clonedForm.querySelector('[id$="FilterSubmit"]') ||
+                        clonedForm.querySelector('[type="submit"]');
+        if (submitBtn) {
+          submitBtn.textContent = "Filtering\u2026";
+          submitBtn.style.setProperty("background-color", "#0062cc", "important");
+          submitBtn.style.setProperty("cursor", "not-allowed", "important");
+        }
         // Get form data
         const formData = new FormData(clonedForm);
         const params = new URLSearchParams(formData);
@@ -496,7 +574,10 @@ const FilterControl = L.Control.extend({
           }
         }
         // Reload page with filter parameters
-        window.location.href = currentUrl.toString();
+        var filterUrl = currentUrl.toString();
+        setTimeout(function () {
+          window.location.href = filterUrl;
+        }, 80);
       });
 
       const fieldCount = body.querySelectorAll(
