@@ -641,7 +641,6 @@ const FilterControl = L.Control.extend({
 
       // Convert CheckboxSelectMultiple groups into collapsible accordions.
       setupCheckboxDropdowns(clonedForm, recalcSidebarHeight);
-      setupCitationSelect2(clonedForm);
 
       // Auto-adjust sidebar height.
       setTimeout(function () {

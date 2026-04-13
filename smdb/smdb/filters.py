@@ -1,5 +1,4 @@
 from django import forms
-from django.forms import ModelMultipleChoiceField
 from django.http import QueryDict
 from django_filters import (
     FilterSet,
@@ -11,7 +10,6 @@ from django_filters import (
 from django.db.utils import ProgrammingError
 from django.db.models import Q
 from smdb.models import (
-    Citation,
     Mission,
     Expedition,
     Compilation,
@@ -20,21 +18,6 @@ from smdb.models import (
 )
 
 from django.forms.widgets import TextInput
-
-
-class ReadableCitationField(ModelMultipleChoiceField):
-    """ModelMultipleChoiceField that labels each Citation with a truncated
-    human-readable reference string instead of the raw DOI."""
-
-    def label_from_instance(self, obj):
-        label = obj.full_reference if obj.full_reference else obj.doi
-        if len(label) > 100:
-            return label[:100] + "…"
-        return label
-
-
-class ReadableCitationFilter(ModelMultipleChoiceFilter):
-    field_class = ReadableCitationField
 
 
 class MissionFilter(FilterSet):
@@ -145,19 +128,14 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
-    try:
-        citation = ReadableCitationFilter(
-            field_name="citations",
-            queryset=Citation.objects.all().order_by("full_reference"),
-            label="Citations",
-            widget=forms.SelectMultiple(attrs={
-                "class": "citation-select2",
-                "data-placeholder": "Type to search citations…",
-                "style": "width: 100%;",
-            }),
-        )
-    except ProgrammingError:
-        pass
+    citation_search = CharFilter(
+        method="filter_citation_search",
+        label="",
+        widget=TextInput(attrs={
+            "placeholder": "Citation DOI or reference contains...",
+            "title": "Search by DOI (e.g. 10.1016/…) or any word from the full citation reference",
+        }),
+    )
     expedition__name = CharFilter(
         field_name="expedition__name",
         lookup_expr="icontains",
@@ -178,6 +156,14 @@ class MissionFilter(FilterSet):
             "repeat_survey",
             "mgds_compilation",
         ]
+
+    @staticmethod
+    def filter_citation_search(queryset, name, value):
+        """Filter missions whose linked citations contain value in DOI or full reference."""
+        return queryset.filter(
+            Q(citations__doi__icontains=value)
+            | Q(citations__full_reference__icontains=value)
+        ).distinct()
 
     def filter_queryset(self, queryset):
         """

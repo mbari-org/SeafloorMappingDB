@@ -549,7 +549,6 @@ const FilterControl = L.Control.extend({
 
       if (typeof setupCheckboxDropdowns === "function") {
         setupCheckboxDropdowns(clonedForm, recalcSidebarHeight);
-        setupCitationSelect2(clonedForm);
       }
 
       setTimeout(function () {
