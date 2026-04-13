@@ -461,32 +461,6 @@ const FilterControl = L.Control.extend({
       clearBtn.style.setProperty("cursor", "pointer", "important");
       clearBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 
-      // Hover / active feedback for both buttons
-      [
-        [filterBtn, "#0069d9", "#0062cc", "#0062cc"],
-        [clearBtn,  "#5a6268", "#545b62", "#545b62"],
-      ].forEach(function(args) {
-        var btn = args[0], hoverBg = args[1], hoverBorder = args[2], activeBg = args[3];
-        btn.addEventListener("mouseenter", function () {
-          this.style.setProperty("background-color", hoverBg, "important");
-          this.style.setProperty("border-color", hoverBorder, "important");
-          this.style.setProperty("transform", "scale(1.05)", "important");
-        });
-        btn.addEventListener("mouseleave", function () {
-          this.style.removeProperty("background-color");
-          this.style.removeProperty("border-color");
-          this.style.setProperty("transform", "scale(1)", "important");
-        });
-        btn.addEventListener("mousedown", function () {
-          this.style.setProperty("background-color", activeBg, "important");
-          this.style.setProperty("transform", "scale(0.97)", "important");
-        });
-        btn.addEventListener("mouseup", function () {
-          this.style.setProperty("background-color", hoverBg, "important");
-          this.style.setProperty("transform", "scale(1.05)", "important");
-        });
-      });
-
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
       clonedForm.appendChild(buttonRow);
@@ -533,18 +507,21 @@ const FilterControl = L.Control.extend({
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            if (target.dataset.clearing === "true") { return false; }
+            target.dataset.clearing = "true";
 
             target.textContent = "Clearing\u2026";
             target.style.setProperty("background-color", "#545b62", "important");
             target.style.setProperty("cursor", "not-allowed", "important");
+            target.disabled = true;
+            target.setAttribute("aria-disabled", "true");
 
-            // Store sidebar open state before reloading
             const currentUrl = new URL(window.location.href);
             const filterKeys = ['name', 'region_name', 'vehicle_name', 'platformtype', 'quality_categories', 'patch_test', 'repeat_survey', 'mgds_compilation', 'expedition__name', 'citation', 'citation_search', 'filter_type', 'q', 'xmin', 'xmax', 'ymin', 'ymax', 'tmin', 'tmax'];
             filterKeys.forEach(key => currentUrl.searchParams.delete(key));
             var clearUrl = currentUrl.toString();
+            sessionStorage.setItem('sidebarOpen', 'true');
             setTimeout(function () {
-              sessionStorage.setItem('sidebarOpen', 'true');
               window.location.href = clearUrl;
             }, 80);
             return false;
@@ -555,12 +532,16 @@ const FilterControl = L.Control.extend({
       // Add form submission handler to actually submit the form
       clonedForm.addEventListener("submit", function(e) {
         e.preventDefault(); // Prevent default submission
+        if (clonedForm.dataset.submitting === "true") { return false; }
+        clonedForm.dataset.submitting = "true";
         var submitBtn = clonedForm.querySelector('[id$="FilterSubmit"]') ||
                         clonedForm.querySelector('[type="submit"]');
         if (submitBtn) {
           submitBtn.textContent = "Filtering\u2026";
           submitBtn.style.setProperty("background-color", "#0062cc", "important");
           submitBtn.style.setProperty("cursor", "not-allowed", "important");
+          submitBtn.disabled = true;
+          submitBtn.setAttribute("aria-disabled", "true");
         }
         // Get form data
         const formData = new FormData(clonedForm);

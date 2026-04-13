@@ -437,16 +437,20 @@ const FilterControl = L.Control.extend({
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
+              if (tgt.dataset.clearing === "true") { return false; }
+              tgt.dataset.clearing = "true";
               tgt.textContent = "Clearing\u2026";
               tgt.style.setProperty("background-color", "#545b62", "important");
               tgt.style.setProperty("cursor", "not-allowed", "important");
+              tgt.disabled = true;
+              tgt.setAttribute("aria-disabled", "true");
               var url = new URL(window.location.href);
               ["name", "filter_type", "xmin", "xmax", "ymin", "ymax"].forEach(function (k) {
                 url.searchParams.delete(k);
               });
               var clearUrl = url.toString();
+              sessionStorage.setItem("sidebarOpen", "true");
               setTimeout(function () {
-                sessionStorage.setItem("sidebarOpen", "true");
                 window.location.href = clearUrl;
               }, 80);
               return false;
@@ -458,12 +462,16 @@ const FilterControl = L.Control.extend({
 
       clonedForm.addEventListener("submit", function (e) {
         e.preventDefault();
+        if (clonedForm.dataset.submitting === "true") { return false; }
+        clonedForm.dataset.submitting = "true";
         var submitBtn = clonedForm.querySelector('[id$="FilterSubmit"]') ||
                         clonedForm.querySelector('[type="submit"]');
         if (submitBtn) {
           submitBtn.textContent = "Filtering\u2026";
           submitBtn.style.setProperty("background-color", "#0062cc", "important");
           submitBtn.style.setProperty("cursor", "not-allowed", "important");
+          submitBtn.disabled = true;
+          submitBtn.setAttribute("aria-disabled", "true");
         }
         var params = new URLSearchParams(new FormData(clonedForm));
         var url = new URL(window.location.href);
