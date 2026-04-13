@@ -63,6 +63,16 @@ function setupCheckboxDropdowns(formEl, recalcCallback) {
     if (toggleEl.dataset.dropdownInit) return;
     toggleEl.dataset.dropdownInit = "1";
 
+    // If the label text is empty, derive a tooltip from the field's div id
+    // (e.g. "div_id_citation" → "Filter by citation")
+    if (!toggleEl.textContent.trim()) {
+      var fieldId = outerDiv.id || "";            // e.g. "div_id_citation"
+      var fieldName = fieldId.replace(/^div_id_/, "").replace(/_/g, " ");
+      if (fieldName) {
+        toggleEl.title = "Filter by " + fieldName;
+      }
+    }
+
     var TOGGLE_BG = "#1e1e1e";
     var TOGGLE_BORDER = "#555";
 
