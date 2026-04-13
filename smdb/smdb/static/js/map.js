@@ -1094,6 +1094,7 @@ const FilterControl = L.Control.extend({
       // (vehicle_name, platformtype, quality_categories) — must run last so it
       // wins over any earlier display:block applied to .form-label elements.
       setupCheckboxDropdowns(clonedForm, recalcSidebarHeight);
+      setupCitationSelect2(clonedForm);
 
       // Auto-adjust sidebar height after form is copied
       setTimeout(function () {
@@ -1211,7 +1212,10 @@ const FilterControl = L.Control.extend({
           // Re-apply collapsible dropdown transforms after form-label styling
           // (which would have overridden display:flex on the legend toggles).
           const switchedForm = body.querySelector("form");
-          if (switchedForm) setupCheckboxDropdowns(switchedForm, recalcSidebarHeight);
+          if (switchedForm) {
+            setupCheckboxDropdowns(switchedForm, recalcSidebarHeight);
+            setupCitationSelect2(switchedForm);
+          }
         }, 100);
       }
     };

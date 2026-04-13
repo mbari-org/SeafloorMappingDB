@@ -28,8 +28,8 @@ class ReadableCitationField(ModelMultipleChoiceField):
 
     def label_from_instance(self, obj):
         label = obj.full_reference if obj.full_reference else obj.doi
-        if len(label) > 80:
-            return label[:80] + "…"
+        if len(label) > 100:
+            return label[:100] + "…"
         return label
 
 
@@ -149,8 +149,12 @@ class MissionFilter(FilterSet):
         citation = ReadableCitationFilter(
             field_name="citations",
             queryset=Citation.objects.all().order_by("full_reference"),
-            label="",
-            widget=forms.CheckboxSelectMultiple(),
+            label="Citations",
+            widget=forms.SelectMultiple(attrs={
+                "class": "citation-select2",
+                "data-placeholder": "Type to search citations…",
+                "style": "width: 100%;",
+            }),
         )
     except ProgrammingError:
         pass
@@ -161,19 +165,10 @@ class MissionFilter(FilterSet):
         widget=TextInput(attrs={"placeholder": "Expedition name contains..."}),
     )
 
-    citation_search = CharFilter(
-        method="filter_citation_search",
-        label="",
-        widget=TextInput(attrs={
-            "placeholder": "Citation (DOI or reference) contains...",
-            "title": "Search missions by DOI or any text from the full citation reference",
-        }),
-    )
-
     class Meta:
         model = Mission
-        # expedition__name and citation_search are explicit filters (declared above) and
-        # do not need to be in fields; django-filter includes them automatically.
+        # expedition__name is an explicit filter (declared above) and
+        # does not need to be in fields; django-filter includes it automatically.
         fields = [
             "name",
             "region_name",
@@ -183,15 +178,6 @@ class MissionFilter(FilterSet):
             "repeat_survey",
             "mgds_compilation",
         ]
-
-    @staticmethod
-    def filter_citation_search(queryset, name, value):
-        """Filter missions that have at least one citation matching DOI or full_reference (icontains)."""
-        if not value or not value.strip():
-            return queryset
-        return queryset.filter(
-            Q(citations__doi__icontains=value) | Q(citations__full_reference__icontains=value)
-        ).distinct()
 
     def filter_queryset(self, queryset):
         """

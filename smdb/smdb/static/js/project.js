@@ -192,3 +192,23 @@ function addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
     this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColor, "important");
   });
 }
+
+/**
+ * Initialize Select2 on citation filter elements.
+ * Called by map.js and filter JS files after the filter form is rendered.
+ * Requires jQuery and the Select2 library (loaded via CDN in base.html).
+ *
+ * @param {HTMLElement} formEl - the filter form element to scope the search
+ */
+function setupCitationSelect2(formEl) {
+  if (!formEl || typeof $ === "undefined" || !$.fn.select2) return;
+  var sel = $(formEl).find("select.citation-select2");
+  if (!sel.length) return;
+  sel.select2({
+    theme: "bootstrap-5",
+    placeholder: sel.data("placeholder") || "Type to search citations\u2026",
+    allowClear: true,
+    width: "100%",
+    dropdownParent: $(formEl),
+  });
+}
