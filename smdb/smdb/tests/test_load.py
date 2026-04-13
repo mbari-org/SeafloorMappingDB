@@ -22,6 +22,7 @@ BASE_ROW = {
     "Route": "",
     "Location": "",
     "Vehicle": "",
+    "Quality_category*": "",
     "Quality_comment": "",
     "Patch_test": "",
     "Repeat_survey": "",
