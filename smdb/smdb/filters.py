@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import ModelMultipleChoiceField
 from django.http import QueryDict
 from django_filters import (
     FilterSet,
@@ -19,6 +20,21 @@ from smdb.models import (
 )
 
 from django.forms.widgets import TextInput
+
+
+class ReadableCitationField(ModelMultipleChoiceField):
+    """ModelMultipleChoiceField that labels each Citation with a truncated
+    human-readable reference string instead of the raw DOI."""
+
+    def label_from_instance(self, obj):
+        label = obj.full_reference if obj.full_reference else obj.doi
+        if len(label) > 80:
+            return label[:80] + "…"
+        return label
+
+
+class ReadableCitationFilter(ModelMultipleChoiceFilter):
+    field_class = ReadableCitationField
 
 
 class MissionFilter(FilterSet):
@@ -130,9 +146,9 @@ class MissionFilter(FilterSet):
         # Likely error on initial migrate done with start command creating the smdb database
         pass
     try:
-        citation = ModelMultipleChoiceFilter(
+        citation = ReadableCitationFilter(
             field_name="citations",
-            queryset=Citation.objects.all().order_by("doi"),
+            queryset=Citation.objects.all().order_by("full_reference"),
             label="",
             widget=forms.CheckboxSelectMultiple(),
         )
