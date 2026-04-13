@@ -1195,7 +1195,7 @@ function _styleBtn(btn, borderColor) {
   btn.style.setProperty("box-sizing", "border-box", "important");
   btn.style.setProperty("flex", "1 1 auto", "important");
   btn.style.setProperty("align-self", "center", "important");
-  btn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+  btn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 }
 
 
