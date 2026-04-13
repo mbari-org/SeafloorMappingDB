@@ -148,7 +148,10 @@ class MissionFilter(FilterSet):
     citation_search = CharFilter(
         method="filter_citation_search",
         label="",
-        widget=TextInput(attrs={"placeholder": "Citation (DOI or reference) contains..."}),
+        widget=TextInput(attrs={
+            "placeholder": "Citation (DOI or reference) contains...",
+            "title": "Search missions by DOI or any text from the full citation reference",
+        }),
     )
 
     class Meta:
