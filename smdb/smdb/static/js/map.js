@@ -283,18 +283,22 @@ const FilterControl = L.Control.extend({
         '#filter-sidebar-body .btn-primary:hover {' +
         '  background-color: #0069d9 !important;' +
         '  transform: scale(1.05) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.4) !important;' +
         '}' +
         '#filter-sidebar-body .btn-primary:active {' +
         '  background-color: #0062cc !important;' +
         '  transform: scale(0.97) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5) !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary:hover {' +
         '  background-color: #5a6268 !important;' +
         '  transform: scale(1.05) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.4) !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary:active {' +
         '  background-color: #545b62 !important;' +
         '  transform: scale(0.97) !important;' +
+        '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;' +
         '}';
       document.head.appendChild(sidebarBtnStyle);
     }

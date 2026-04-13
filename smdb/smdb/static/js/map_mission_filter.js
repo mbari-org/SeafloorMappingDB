@@ -1192,23 +1192,33 @@ function _styleBtn(btn, borderColor) {
 }
 
 function _addBtnHoverFeedback(btn, hoverBg, hoverBorder, activeBg) {
+  var shadowColor = btn.classList.contains("btn-primary")
+    ? "rgba(0, 123, 255, 0.4)"
+    : "rgba(108, 117, 125, 0.4)";
+  var shadowColorActive = btn.classList.contains("btn-primary")
+    ? "rgba(0, 123, 255, 0.5)"
+    : "rgba(108, 117, 125, 0.5)";
   btn.addEventListener("mouseenter", function () {
     this.style.setProperty("background-color", hoverBg, "important");
     this.style.setProperty("border-color", hoverBorder, "important");
     this.style.setProperty("transform", "scale(1.05)", "important");
+    this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColor, "important");
   });
   btn.addEventListener("mouseleave", function () {
     this.style.removeProperty("background-color");
     this.style.removeProperty("border-color");
     this.style.setProperty("transform", "scale(1)", "important");
+    this.style.removeProperty("box-shadow");
   });
   btn.addEventListener("mousedown", function () {
     this.style.setProperty("background-color", activeBg, "important");
     this.style.setProperty("transform", "scale(0.97)", "important");
+    this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColorActive, "important");
   });
   btn.addEventListener("mouseup", function () {
     this.style.setProperty("background-color", hoverBg, "important");
     this.style.setProperty("transform", "scale(1.05)", "important");
+    this.style.setProperty("box-shadow", "0 0 0 0.2rem " + shadowColor, "important");
   });
 }
 
