@@ -1,0 +1,117 @@
+# debug.yml.template — Local development compose file template.
+#
+# To use: copy this file to debug.yml (gitignored) and replace
+# YOUR_USERNAME with your macOS username (e.g. salamy, mccann).
+#
+#   cp debug.yml.template debug.yml
+#   sed -i '' 's/YOUR_USERNAME/$(whoami)/g' debug.yml
+#
+# Requires /Volumes/SeafloorMapping to be mounted first:
+#   Finder → Go → Connect to Server → smb://titan.shore.mbari.org/SeafloorMapping
+#
+# To start the stack:
+#   export DOCKER_USER_ID=$(id -u)
+#   docker compose -f debug.yml up -d django postgres mailhog nginx
+
+services:
+  django:
+    build:
+      context: ./smdb
+      dockerfile: ./compose/debug/django/Dockerfile
+      ulimits:
+        nofile:
+          soft: 1000000
+          hard: 1048576
+    image: smdb_debug_django
+    container_name: django
+    depends_on:
+      - postgres
+      - mailhog
+    volumes:
+      - /Users/YOUR_USERNAME/docker_smdb_vol/etc:/etc/smdb:z
+      - /Users/YOUR_USERNAME/.ssh:/root/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+      - .:/app:z
+      - /Users/YOUR_USERNAME/docker_smdb_vol/media_files:/media:z
+    env_file:
+      - ./smdb/.envs/.local/.django
+      - ./smdb/.envs/.local/.postgres
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    command: /start
+
+  postgres:
+    build:
+      context: ./smdb
+      dockerfile: ./compose/debug/postgres/Dockerfile
+    image: smdb_production_postgres
+    container_name: postgres
+    volumes:
+      - /Users/YOUR_USERNAME/docker_smdb_vol/pg_data:/var/lib/postgresql/data:Z
+      - /Users/YOUR_USERNAME/docker_smdb_vol/pg_data_backups:/backups:z
+    env_file:
+      - ./smdb/.envs/.local/.postgres
+
+  mailhog:
+    image: jcalonso/mailhog:v1.0.1
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+
+  mb-system:
+    image: mbari/mbsystem:latest
+    container_name: mb-system
+    volumes:
+      - /Users/YOUR_USERNAME/.ssh:/root/.ssh:z
+      - /Volumes/SeafloorMapping:/mbari/SeafloorMapping:z
+    command: /usr/sbin/sshd -D
+
+  nginx:
+    image: smdb_debug_nginx
+    build:
+      context: ./smdb
+      dockerfile: ./compose/debug/nginx/Dockerfile
+      args:
+        - DOCKER_USER_ID=$DOCKER_USER_ID
+    container_name: nginx
+    volumes:
+      - /Volumes/SeafloorMapping:/usr/share/nginx/html/SeafloorMapping:ro
+    ports:
+      - "80:80"
+
+  chrome:
+    image: seleniarm/node-chromium:117.0
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      - "7900:7900"
+    tmpfs:
+      - /tmp
+
+  firefox:
+    image: seleniarm/node-firefox:117.0
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      - "7902:7900"
+    tmpfs:
+      - /tmp
+
+  selenium-hub:
+    image: seleniarm/hub:4.10.0
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
