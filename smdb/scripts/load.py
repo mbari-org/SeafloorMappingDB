@@ -1840,12 +1840,14 @@ class SurveyTally(BaseLoader):
                             doi, full_reference = doi.strip(), ref.strip()
                         else:
                             doi, full_reference = part.strip(), ""
+                        doi = doi[:256]
+                        full_reference = full_reference[:512]
                         if not doi:
                             continue
                         citation, _ = Citation.objects.get_or_create(
                             doi=doi, defaults={"full_reference": full_reference}
                         )
-                        if full_reference:
+                        if full_reference and citation.full_reference != full_reference:
                             citation.full_reference = full_reference
                             citation.save()
                         mission.citations.add(citation)
