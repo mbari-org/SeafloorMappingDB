@@ -280,28 +280,32 @@ const FilterControl = L.Control.extend({
         '  cursor: default;' +
         '}' +
         '#filter-sidebar-body .btn-primary {' +
-        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary {' +
-        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
+        '  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out !important;' +
         '}' +
         '#filter-sidebar-body .btn-primary:hover {' +
         '  background-color: #0069d9 !important;' +
+        '  border-color: #0069d9 !important;' +
         '  transform: scale(1.05) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.4) !important;' +
         '}' +
         '#filter-sidebar-body .btn-primary:active {' +
         '  background-color: #0062cc !important;' +
+        '  border-color: #0062cc !important;' +
         '  transform: scale(0.97) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5) !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary:hover {' +
         '  background-color: #5a6268 !important;' +
+        '  border-color: #5a6268 !important;' +
         '  transform: scale(1.05) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.4) !important;' +
         '}' +
         '#filter-sidebar-body .btn-secondary:active {' +
         '  background-color: #545b62 !important;' +
+        '  border-color: #545b62 !important;' +
         '  transform: scale(0.97) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5) !important;' +
         '}';
@@ -428,12 +432,12 @@ const FilterControl = L.Control.extend({
       filterBtn.style.setProperty("padding-right", "12px", "important");
       filterBtn.style.setProperty("line-height", "26px", "important");
       filterBtn.style.setProperty("border", "1px solid", "important");
-      filterBtn.style.setProperty("border-color", "#007bff", "important");
+      filterBtn.style.setProperty("border-color", "#007bff");
       filterBtn.style.setProperty("border-width", "1px", "important");
       filterBtn.style.setProperty("box-sizing", "border-box", "important");
       filterBtn.style.setProperty("flex", "1 1 auto", "important");
       filterBtn.style.setProperty("align-self", "center", "important");
-      filterBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+      filterBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 
       const clearBtn = document.createElement("button");
       clearBtn.type = "reset";
@@ -457,12 +461,12 @@ const FilterControl = L.Control.extend({
       clearBtn.style.setProperty("padding-right", "12px", "important");
       clearBtn.style.setProperty("line-height", "26px", "important");
       clearBtn.style.setProperty("border", "1px solid", "important");
-      clearBtn.style.setProperty("border-color", "#6c757d", "important");
+      clearBtn.style.setProperty("border-color", "#6c757d");
       clearBtn.style.setProperty("border-width", "1px", "important");
       clearBtn.style.setProperty("box-sizing", "border-box", "important");
       clearBtn.style.setProperty("flex", "1 1 auto", "important");
       clearBtn.style.setProperty("align-self", "center", "important");
-      clearBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
+      clearBtn.style.setProperty("transition", "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.12s ease-in-out", "important");
 
       buttonRow.appendChild(filterBtn);
       buttonRow.appendChild(clearBtn);
