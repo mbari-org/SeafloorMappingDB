@@ -913,10 +913,6 @@ const FilterControl = L.Control.extend({
       // Style buttons - find ALL buttons, not just .btn class
       // Make sure to include buttons we just created
       const allButtons = body.querySelectorAll("button");
-      console.log("Found buttons:", allButtons.length);
-      console.log("Button row exists:", body.querySelector(".button-row"));
-      console.log("Filter button exists:", body.querySelector("button[type='submit']"));
-      console.log("Clear button exists:", body.querySelector("button[type='reset']"));
       allButtons.forEach((btn) => {
         // Ensure button is visible
         btn.style.display = "block";
@@ -1239,13 +1235,10 @@ const FilterControl = L.Control.extend({
     const maxRetries = 10;
     const tryCopyForm = function () {
       if (copyForm(currentFilterType)) {
-        console.log(`Form successfully copied to sidebar (${currentFilterType})`);
+        // form copied successfully
       } else {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(
-            `Retrying form copy (attempt ${retryCount}/${maxRetries})...`
-          );
           setTimeout(tryCopyForm, 300);
         } else {
           console.error("Failed to copy form after", maxRetries, "attempts");
@@ -1617,16 +1610,13 @@ map.whenReady(function() {
       // Get the zoom level that fitBounds calculated
       var calculatedZoom = map.getZoom();
       var finalCenter = map.getCenter();
-      console.log("Current map zoom level:", calculatedZoom);
-      console.log("Map center (Lat, Lng):", finalCenter.lat.toFixed(4), ",", finalCenter.lng.toFixed(4));
-      console.log("Mission bounds center (Lat, Lng):", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
-      
+
       // Allow fractional zoom for finer control when zooming in
       // No constraint on zooming out - let fitBounds determine optimal zoom to show all missions
       // Fractional zoom (0.5 increments) allows more precise zoom levels when user zooms in
     } catch (err) {
       // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-      console.log("Error fitting bounds: " + err.message);
+      console.error("Error fitting bounds: " + err.message);
       map.setView([39.8423, -26.8945], 3, { animate: false });
     }
   }, 150);
@@ -1713,30 +1703,18 @@ setTimeout(function() {
       var adjustedLat = missionCenterLat - (ne.lat - missionCenterLat) * 0.1; // Shift 10% of upper half southward
       map.setView([adjustedLat, currentCenter.lng], map.getZoom(), { animate: false });
     }
-    
     // Log the zoom level after fitBounds in fallback setTimeout
     var finalZoom = map.getZoom();
     var finalCenterFallback = map.getCenter();
-    console.log("Current map zoom level (fallback setTimeout):", finalZoom);
-    console.log("Map center (Lat, Lng) - fallback:", finalCenterFallback.lat.toFixed(4), ",", finalCenterFallback.lng.toFixed(4));
-    console.log("Mission bounds center (Lat, Lng) - fallback:", ((sw.lat + ne.lat) / 2).toFixed(4), ",", ((sw.lng + ne.lng) / 2).toFixed(4));
-    
+
     // Fractional zoom enabled - allows 0.5 increments for finer zoom control
     // No zoom constraint - fitBounds determines optimal zoom to show all missions
   } catch (err) {
     // If getBounds fails (e.g., no features), set to default zoom level 3 and center
-    console.log("Error in fallback fitBounds: " + err.message);
+    console.error("Error in fallback fitBounds: " + err.message);
     map.setView([39.8423, -26.8945], 3, { animate: false });
   }
 }, 100);
-
-// Log final zoom level and center after all initialization is complete
-setTimeout(function() {
-  var finalZoomLevel = map.getZoom();
-  var finalMapCenter = map.getCenter();
-  console.log("=== FINAL MAP ZOOM LEVEL:", finalZoomLevel, "===");
-  console.log("=== FINAL MAP CENTER (Lat, Lng):", finalMapCenter.lat.toFixed(4), ",", finalMapCenter.lng.toFixed(4), "===");
-}, 500);
 
 /* --------------------------------------------------  */
 // Set up SIDEBAR
@@ -1981,7 +1959,6 @@ function styleDrawSquareControl() {
   const controlContainer = drawSquareButton.getContainer();
   
   if (!controlContainer) {
-    console.log("Control container not found, retrying...");
     setTimeout(styleDrawSquareControl, 100);
     return;
   }
@@ -2014,11 +1991,7 @@ function styleDrawSquareControl() {
     // Add a class and ID for CSS targeting
     leafletControlDiv.classList.add("draw-square-control-wrapper");
     leafletControlDiv.id = "draw-square-control-wrapper";
-    console.log("Applied styles to draw square control wrapper");
-    console.log("Current margin-left:", leafletControlDiv.style.marginLeft);
-    console.log("Computed margin-left:", window.getComputedStyle(leafletControlDiv).marginLeft);
   } else {
-    console.log("Could not find .leaflet-control wrapper, retrying...");
     setTimeout(styleDrawSquareControl, 100);
   }
 }
@@ -2494,7 +2467,6 @@ L.Control.Layers.include({
     this._groupedLayers.forEach(function (obj) {
       // Check if it's an overlay and added to the map
       if (obj.overlay && this._map.hasLayer(obj.layer)) {
-        console.log("OBJECT OVERLAY");
         // Push layer to active array
         active.push(obj.layer);
       }
