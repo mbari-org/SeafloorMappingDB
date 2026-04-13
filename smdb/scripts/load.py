@@ -1865,6 +1865,7 @@ class SurveyTally(BaseLoader):
                             re.IGNORECASE,
                         )
                         doi = doi_match.group(1).rstrip(".") if doi_match else ref_str[:256]
+                        doi = doi[:256]
                         full_reference = ref_str[:512]
                         if not doi:
                             continue

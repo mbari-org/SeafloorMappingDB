@@ -160,6 +160,8 @@ class MissionFilter(FilterSet):
     @staticmethod
     def filter_citation_search(queryset, name, value):
         """Filter missions whose linked citations contain value in DOI or full reference."""
+        if not value or not value.strip():
+            return queryset
         return queryset.filter(
             Q(citations__doi__icontains=value)
             | Q(citations__full_reference__icontains=value)
