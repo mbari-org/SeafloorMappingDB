@@ -287,7 +287,7 @@ const FilterControl = L.Control.extend({
         '}' +
         '#filter-sidebar-body .btn-primary:hover {' +
         '  background-color: #0069d9 !important;' +
-        '  border-color: #0069d9 !important;' +
+        '  border-color: #0062cc !important;' +
         '  transform: scale(1.05) !important;' +
         '  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.4) !important;' +
         '}' +
@@ -431,9 +431,9 @@ const FilterControl = L.Control.extend({
       filterBtn.style.setProperty("padding-left", "12px", "important");
       filterBtn.style.setProperty("padding-right", "12px", "important");
       filterBtn.style.setProperty("line-height", "26px", "important");
-      filterBtn.style.setProperty("border", "1px solid", "important");
-      filterBtn.style.setProperty("border-color", "#007bff");
       filterBtn.style.setProperty("border-width", "1px", "important");
+      filterBtn.style.setProperty("border-style", "solid", "important");
+      filterBtn.style.setProperty("border-color", "#007bff");
       filterBtn.style.setProperty("box-sizing", "border-box", "important");
       filterBtn.style.setProperty("flex", "1 1 auto", "important");
       filterBtn.style.setProperty("align-self", "center", "important");
@@ -460,9 +460,9 @@ const FilterControl = L.Control.extend({
       clearBtn.style.setProperty("padding-left", "12px", "important");
       clearBtn.style.setProperty("padding-right", "12px", "important");
       clearBtn.style.setProperty("line-height", "26px", "important");
-      clearBtn.style.setProperty("border", "1px solid", "important");
-      clearBtn.style.setProperty("border-color", "#6c757d");
       clearBtn.style.setProperty("border-width", "1px", "important");
+      clearBtn.style.setProperty("border-style", "solid", "important");
+      clearBtn.style.setProperty("border-color", "#6c757d");
       clearBtn.style.setProperty("box-sizing", "border-box", "important");
       clearBtn.style.setProperty("flex", "1 1 auto", "important");
       clearBtn.style.setProperty("align-self", "center", "important");
