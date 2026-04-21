@@ -4,7 +4,7 @@ Exits non-zero if any migrations are unapplied, printing a clear list.
 """
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.executor import MigrationExecutor
 
@@ -35,14 +35,11 @@ class Command(BaseCommand):
 
         if options["apply"]:
             self.stdout.write("Applying migrations...")
-            call_command("migrate", "--noinput", verbosity=1)
+            call_command("migrate", interactive=False, verbosity=1)
             self.stdout.write(self.style.SUCCESS("Done."))
             return
 
-        self.stdout.write(
-            self.style.ERROR(
-                "Run 'python manage.py migrate --noinput' or "
-                "'python manage.py check_migration_health --apply' to fix."
-            )
+        raise CommandError(
+            "Run 'python manage.py migrate --noinput' or "
+            "'python manage.py check_migration_health --apply' to fix."
         )
-        raise SystemExit(1)
