@@ -53,11 +53,19 @@ jobs:
 
       - name: Run the Migrations
         working-directory: smdb
-        run: docker compose -f ci.yml run --rm django python manage.py migrate
+        run: >
+          docker compose -f ci.yml run --rm
+          -e GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
+          -e GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
+          django python manage.py migrate
 
       - name: Run Pytest Tests
         working-directory: smdb
-        run: docker compose -f ci.yml run --rm django pytest -s --cov-report term-missing --cov
+        run: >
+          docker compose -f ci.yml run --rm
+          -e GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
+          -e GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
+          django pytest -s --cov-report term-missing --cov
 
       - name: Tear down the Stack
         if: always()
