@@ -25,13 +25,13 @@ jobs:
           docker compose -f ci.yml build django
       - name: Run the Migrations
         working-directory: smdb
-        run: >
-          docker compose -f ci.yml run --rm
-        # Pin amd64 GIS library paths for GitHub ubuntu runners.
-        # Prevent accidental ARM path injection from inherited environment.
-          -e GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
-          -e GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
-          django python manage.py migrate
+        run: |
+          # Pin amd64 GIS library paths for GitHub ubuntu runners.
+          # Prevent accidental ARM path injection from inherited environment.
+          docker compose -f ci.yml run --rm \
+            -e GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so \
+            -e GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so \
+            django python manage.py migrate
       - name: Run Pytest Tests
         working-directory: smdb
         run: >

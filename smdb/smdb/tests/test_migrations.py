@@ -9,12 +9,21 @@ from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
+pytestmark = pytest.mark.django_db
+
 
 def test_no_missing_migration_files():
     """Fail if any model change is missing a corresponding migration file."""
     out = StringIO()
     try:
-        call_command("makemigrations", "--check", "--dry-run", stdout=out, stderr=out)
+        call_command(
+            "makemigrations",
+            "--check",
+            "--dry-run",
+            interactive=False,
+            stdout=out,
+            stderr=out,
+        )
     except SystemExit:
         pytest.fail(
             "Model changes exist without a migration file. "
