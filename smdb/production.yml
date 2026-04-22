@@ -83,6 +83,8 @@ services:
       # User with $DOCKER_USER_ID needs read permissions on this share
       - /mbari/SeafloorMapping:/srv/SeafloorMapping:ro
       - local_media_files:/media
+      # SSL certs managed by acme.sh on the host
+      - /etc/ssl/acme-certs:/etc/ssl/acme-certs:ro
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
