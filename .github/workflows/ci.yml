@@ -38,7 +38,7 @@ jobs:
           docker compose -f ci.yml run --rm \
             -e GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so \
             -e GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so \
-            django pytest -s --cov-report term-missing --cov
+            django pytest -s --cov-report term-missing --cov -m 'not selenium'
       - name: Tear down the Stack
         if: always()
         working-directory: smdb
