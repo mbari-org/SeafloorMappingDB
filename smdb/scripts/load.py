@@ -892,7 +892,14 @@ class FNVLoader(BaseLoader):
     def fnv_points_tolinestring(
         self,
         fnv_list: list,
-        interval: timedelta = timedelta(seconds=30),
+        # Changed from 30 to 5 seconds in May 2026 as explained by Jenny:
+        #   In more recent surveys, we have made a single concatenated .fnv file for the whole survey,
+        #   named like missionName_p.fnv, which is used to merge navigation together with the .jsf Edgetech
+        #   data (sidescan and sub bottom) in post-processing. Early surveys wouldn't have needed that step
+        #   because the Edgetech data were logged together with the multibeam data, so if there isn't one
+        #   of those concatenated files present, you'd have to still look for the individual .fnv files or
+        #   make a concatenated one.
+        interval: timedelta = timedelta(seconds=5),
         tolerance: float = 0.00001,
     ) -> Tuple[int, LineString, float]:
         """Can tune the quality of simplified LineString by adjusting
