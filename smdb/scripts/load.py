@@ -786,25 +786,28 @@ class FNVLoader(BaseLoader):
             raise ParserError(f"Could not get start_dt from {fh.name}")
         for fnv_file in reversed(fnv_list):
             with open(fnv_file) as fh:
-                try:
-                    # Assume no comments at end of file
-                    line = fh.readlines()[-1]
-                except IndexError:
-                    self.logger.debug("Cannot read last record from %s", fnv_file)
-                    continue
-                try:
-                    end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-                except IndexError:
-                    self.logger.debug("Failed to parse datetime from %s", line)
-                    continue
-                try:
-                    lon = float(line.split()[7])
-                    lat = float(line.split()[8])
-                except IndexError:
-                    self.logger.debug("Failed to parse lon or lat from %s", line)
-                    continue
-                end_point = Point((lon, lat), srid=4326)
-                end_depth = float(line.split()[11])
+                lines = fh.readlines()
+            line = None
+            for candidate in reversed(lines):
+                if not candidate.startswith("#") and candidate.strip():
+                    line = candidate
+                    break
+            if line is None:
+                self.logger.debug("Cannot read last record from %s", fnv_file)
+                continue
+            try:
+                end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+            except IndexError:
+                self.logger.debug("Failed to parse datetime from %s", line)
+                continue
+            try:
+                lon = float(line.split()[7])
+                lat = float(line.split()[8])
+            except IndexError:
+                self.logger.debug("Failed to parse lon or lat from %s", line)
+                continue
+            end_point = Point((lon, lat), srid=4326)
+            end_depth = float(line.split()[11])
             break
         if "end_dt" not in locals():
             raise ParserError(f"Could not get end_dt from {fh.name}")

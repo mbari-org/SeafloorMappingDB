@@ -71,7 +71,8 @@
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2020/20200804m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2023/20230310m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "swathdata/surveys/NOAA/AHI-06-05"]
-      "args": ["--fnv", "-v", "1"],
+      "args": ["--fnv", "-v", "2", "--limit", "1", "--skipuntil", "2026/20260301m2"]
+      //"args": ["--fnv", "-v", "1"],
       //"args": [ "--compilation", "-v", "1", "--skipuntil", "swathdata/surveys/UH/kok0714", "--log_file", "compilation.txt" ],
       // Supporting Compilation load testing, first mission found in --compilation: 2019/20190627d1/multibeam
       // execute next line to build a fresh database, then the --compilation one can be used for testing
@@ -93,6 +94,7 @@
       //"args": [ "-v", "2", "--skipuntil_regex", "--regex", "Packard/2025/DP2025_01/RogueCanyonLeg1/ZTopo.grd$", "--limit", "1", "--noinput" ],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "2019/20190628d1/lidar/ZTopo.grd$", "--limit", "1", "--noinput" ],
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2026/20260322m1/ZTopo.grd$", "--limit", "1", "--noinput" ]
+      //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "2026/20260301m2/ZTopo.grd$", "--limit", "1", "--noinput" ]
     }
   ]
 }
