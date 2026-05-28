@@ -153,8 +153,8 @@ class MissionFilter(FilterSet):
 
     class Meta:
         model = Mission
-        # expedition__name and citation_search are explicit filters (declared above) and
-        # do not need to be in fields; django-filter includes them automatically.
+        # expedition__name is an explicit filter (declared above) and
+        # does not need to be in fields; django-filter includes it automatically.
         fields = [
             "name",
             "region_name",
@@ -170,11 +170,12 @@ class MissionFilter(FilterSet):
 
     @staticmethod
     def filter_citation_search(queryset, name, value):
-        """Filter missions that have at least one citation matching DOI or full_reference (icontains)."""
+        """Filter missions whose linked citations contain value in DOI or full reference."""
         if not value or not value.strip():
             return queryset
         return queryset.filter(
-            Q(citations__doi__icontains=value) | Q(citations__full_reference__icontains=value)
+            Q(citations__doi__icontains=value)
+            | Q(citations__full_reference__icontains=value)
         ).distinct()
 
     def filter_queryset(self, queryset):
