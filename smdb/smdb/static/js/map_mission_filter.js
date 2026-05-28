@@ -158,7 +158,7 @@ let feature = L.geoJSON(missions, {
     var expName = (p && p.expedition && p.expedition.name) ? p.expedition.name : "";
     var routeFile = (p && p.route_file) ? p.route_file : "";
     return (
-      "<a target='_blank' rel='noopener noreferrer' href='/missions/" +
+      "<a target='_blank' rel='noopener noreferrer' href='" + window.location.origin + '/missions/' +
       _escapeHtml(slug) +
       "/'>" +
       _escapeHtml(slug) +
@@ -273,7 +273,7 @@ if (hasMissions && missions.features) {
       icon: L.divIcon({
         className: "label-mission-name",
         html:
-          "<a target='_blank' rel='noopener noreferrer' href='/missions/" +
+          "<a target='_blank' rel='noopener noreferrer' href='" + window.location.origin + '/missions/' +
           (mission.properties.slug ? _escapeHtml(mission.properties.slug) : "") +
           "/'>" +
           (mission.properties.slug ? _escapeHtml(mission.properties.slug) : "") +
@@ -1051,7 +1051,7 @@ function updateResultsPanel(message, missions) {
     var missionSlug = m.slug ? String(m.slug) : "";
     html +=
       "<tr" + (missionSlug ? ' data-mission-slug="' + _escapeHtml(missionSlug) + '"' : "") + ">" +
-      '<td><a href="/missions/' +
+      '<td><a href="' + window.location.origin + '/missions/' +
       (m.slug ? _escapeHtml(m.slug) : "") +
       '/">' +
       _escapeHtml(m.name) +

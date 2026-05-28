@@ -133,7 +133,7 @@ class MissionFilter(FilterSet):
         citation = ModelMultipleChoiceFilter(
             field_name="citations",
             queryset=Citation.objects.all().order_by("doi"),
-            label="",
+            label="Citation",
             widget=forms.CheckboxSelectMultiple(),
         )
     except ProgrammingError:
@@ -159,10 +159,13 @@ class MissionFilter(FilterSet):
             "name",
             "region_name",
             "vehicle_name",
+            "platformtype",
             "quality_categories",
             "patch_test",
             "repeat_survey",
             "mgds_compilation",
+            "citation",
+            "expedition__name",
         ]
 
     @staticmethod
