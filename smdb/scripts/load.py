@@ -1843,7 +1843,9 @@ class SurveyTally(BaseLoader):
                 if "Citations" in row:
                     raw = row.get("Citations", "")
                     mission.citations.clear()
-                    parts = [p.strip() for p in str(raw).split(";") if p.strip()]
+                    # pandas reads empty cells as NaN (float); skip splitting in that case
+                    # so we don't create a bogus Citation with DOI "nan".
+                    parts = [] if pd.isna(raw) else [p.strip() for p in str(raw).split(";") if p.strip()]
                     for part in parts:
                         if "|" in part:
                             doi, _, ref = part.partition("|")

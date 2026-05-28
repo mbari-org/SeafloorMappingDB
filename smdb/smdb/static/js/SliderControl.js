@@ -25,9 +25,11 @@ L.Control.SliderControl = L.Control.extend({
 
   extractTimestamp: function (time, options) {
     if (options.isEpoch) {
-      //time = new Date(parseInt(time)).toUTCShortFormat();  // not a function ?
-      time = new Date(parseInt(time)).toISOString();
+      var ms = parseInt(time);
+      if (isNaN(ms)) { return ''; }
+      time = new Date(ms).toISOString();
     }
+    if (!time) { return ''; }
     return time.substr(
       options.startTimeIdx,
       options.startTimeIdx + options.timeStrLength
@@ -130,7 +132,9 @@ L.Control.SliderControl = L.Control.extend({
       // Add tics to slider
       this.setSliderMarks(options.markers, options.minValue, options.maxValue);
     } else {
-      // Layer not specified via new SliderControl({ layer: your_layer })
+      // console.log(
+      //   "Error: You have to specify a layer via new SliderControl({layer: your_layer});"
+      // );
     }
     $("#slider-min", sliderContainer).html(
       this.extractTimestamp(

@@ -1448,7 +1448,7 @@ let feature = L.geoJSON(missions, {
         image_url = "static/images/No_ZTopoSlopeNav_image.jpg";
       }
       return (
-        "<a target='_blank' href='/missions/" +
+        "<a target='_blank' href='" + window.location.origin + '/missions/' +
         layer.feature.properties.slug +
         "'>" +
         "<img src='" +
@@ -2125,7 +2125,11 @@ var sliderControl = L.control.sliderControl({
 });
 map.addControl(sliderControl);
 $("#filter-center").html(sliderControl.getContainer());
-sliderControl.startSlider();
+try {
+  sliderControl.startSlider();
+} catch (e) {
+  console.warn('SliderControl.startSlider failed (likely null start_ems in data):', e);
+}
 
 // Determine which browser you are using and indicate and issue if needed using that browser
 function fnBrowserDetect() {
@@ -2661,7 +2665,7 @@ function updateResultsPanel(message, missions) {
   missions.forEach(function(mission) {
     var missionSlug = mission.slug ? String(mission.slug) : '';
     html += '<tr' + (missionSlug ? ' data-mission-slug="' + escapeHtml(missionSlug) + '"' : '') + '>';
-    html += '<td><a href="/missions/' + (missionSlug ? escapeHtml(missionSlug) : '') + '/">' + escapeHtml(mission.name) + '</a></td>';
+    html += '<td><a href="' + window.location.origin + '/missions/' + (missionSlug ? escapeHtml(missionSlug) : '') + '/">' + escapeHtml(mission.name) + '</a></td>';
     html += '<td>' + (mission.start_date || '-') + '</td>';
     html += '<td>' + (mission.region_name || '-') + '</td>';
     html += '<td>' + (mission.track_length || '-') + '</td>';
