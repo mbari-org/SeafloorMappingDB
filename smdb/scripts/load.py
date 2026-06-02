@@ -922,7 +922,13 @@ class FNVLoader(BaseLoader):
         for fnv in fnv_list:
             try:
                 with open(fnv) as fh:
-                    for line_count, line in enumerate(fh.readlines(), start=1):
+                    line_count = 0
+                    for line in fh.readlines():
+                        if line.startswith("#"):
+                            continue
+                        if not line.strip():
+                            continue
+                        line_count += 1
                         if line_count % subsample:
                             continue
                         # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
