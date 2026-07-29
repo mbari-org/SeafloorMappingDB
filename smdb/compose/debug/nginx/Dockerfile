@@ -7,3 +7,6 @@ ARG DOCKER_USER_ID
 RUN useradd --uid $DOCKER_USER_ID docker_user 
 
 ADD compose/debug/nginx/nginx.conf /etc/nginx/
+# Remove the default welcome-page config before adding ours
+RUN rm -f /etc/nginx/conf.d/default.conf
+ADD compose/debug/nginx/conf.d/smdb.conf /etc/nginx/conf.d/
