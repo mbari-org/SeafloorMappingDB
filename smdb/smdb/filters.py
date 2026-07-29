@@ -153,8 +153,8 @@ class MissionFilter(FilterSet):
 
     class Meta:
         model = Mission
-        # expedition__name is an explicit filter (declared above) and
-        # does not need to be in fields; django-filter includes it automatically.
+        # expedition__name is declared explicitly above as a CharFilter.
+        # It is also listed here so django-filter respects the field ordering.
         fields = [
             "name",
             "region_name",

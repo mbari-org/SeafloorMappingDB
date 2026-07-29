@@ -1448,7 +1448,7 @@ let feature = L.geoJSON(missions, {
         image_url = "static/images/No_ZTopoSlopeNav_image.jpg";
       }
       return (
-        "<a target='_blank' href='" + window.location.origin + '/missions/' +
+        "<a target='_blank' rel='noopener noreferrer' href='" + window.location.origin + '/missions/' +
         layer.feature.properties.slug +
         "'>" +
         "<img src='" +
