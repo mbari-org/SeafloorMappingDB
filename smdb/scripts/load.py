@@ -756,6 +756,30 @@ class FNVLoader(BaseLoader):
                     fnv_list.append(fnv_file)
         return fnv_list, fnv_type
 
+    def fnv_parse_datetime(self, line: str, fnv_file: str) -> datetime:
+        """Parse a datetime from a .fnv data line.
+
+        Traditional MB-System format has 6 space-separated tokens at the start:
+            year month day hour minute second.fraction ...
+        The modified MB-System for Kongsberg Hugin EM2040 may use a different
+        layout (e.g. ISO 8601 timestamp in a single column, or reordered fields).
+        Try the traditional format first, then fall back to parsing the first token.
+        """
+        tokens = line.split()
+        # Traditional mblist -OtMXYHSc format: year month day hour min sec ...
+        try:
+            return parse("{}-{}-{} {}:{}:{}".format(*tokens[:6]))
+        except (ParserError, ValueError, IndexError):
+            pass
+        # Fallback: first token may already be a parseable ISO-style timestamp
+        try:
+            return parse(tokens[0])
+        except (ParserError, ValueError, IndexError):
+            pass
+        raise ParserError(
+            f"Cannot parse datetime from .fnv line in {fnv_file}: {line.rstrip()!r}"
+        )
+
     def fnv_start_and_end_data(
         self, fnv_list: list
     ) -> Tuple[datetime, datetime, float, float, Point, Point]:
@@ -773,14 +797,22 @@ class FNVLoader(BaseLoader):
                     self.logger.debug("Cannot read first record from %s", fnv_file)
                     continue
                 try:
-                    start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-                except NameError:
-                    self.logger.debug("No line read from file %s", fnv_file)
+                    start_dt = self.fnv_parse_datetime(line, fnv_file)
+                except (NameError, ParserError) as e:
+                    self.logger.debug(
+                        "Could not parse start datetime from %s: %s", fnv_file, e
+                    )
                     continue
-                lon = float(line.split()[7])
-                lat = float(line.split()[8])
+                try:
+                    lon = float(line.split()[7])
+                    lat = float(line.split()[8])
+                    start_depth = float(line.split()[11])
+                except (IndexError, ValueError) as e:
+                    self.logger.debug(
+                        "Could not parse lon/lat/depth from %s: %s", fnv_file, e
+                    )
+                    continue
                 start_point = Point((lon, lat), srid=4326)
-                start_depth = float(line.split()[11])
             break
         if "start_dt" not in locals():
             raise ParserError(f"Could not get start_dt from {fh.name}")
@@ -796,9 +828,9 @@ class FNVLoader(BaseLoader):
                 self.logger.debug("Cannot read last record from %s", fnv_file)
                 continue
             try:
-                end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-            except IndexError:
-                self.logger.debug("Failed to parse datetime from %s", line)
+                end_dt = self.fnv_parse_datetime(line, fnv_file)
+            except (ParserError, ValueError) as e:
+                self.logger.debug("Failed to parse end datetime from %s: %s", line, e)
                 continue
             try:
                 lon = float(line.split()[7])
@@ -831,10 +863,10 @@ class FNVLoader(BaseLoader):
                 line_count += 1
                 interval_count += 1
                 try:
-                    dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+                    dt = self.fnv_parse_datetime(line, fnv_file)
                 except ParserError as e:
                     raise ParserError(
-                        f"Could not parse datetime from line number {line_count} in file {fnv_file}"
+                        f"Could not parse datetime from line number {line_count} in file {fnv_file}: {line.rstrip()!r}"
                     )
                 if "last_dt" not in locals():
                     last_dt = dt
@@ -1849,7 +1881,9 @@ class SurveyTally(BaseLoader):
                 if "Citations" in row:
                     raw = row.get("Citations", "")
                     mission.citations.clear()
-                    parts = [p.strip() for p in str(raw).split(";") if p.strip()]
+                    # pandas reads empty cells as NaN (float); skip splitting in that case
+                    # so we don't create a bogus Citation with DOI "nan".
+                    parts = [] if pd.isna(raw) else [p.strip() for p in str(raw).split(";") if p.strip()]
                     for part in parts:
                         if "|" in part:
                             doi, _, ref = part.partition("|")
@@ -1870,7 +1904,8 @@ class SurveyTally(BaseLoader):
                 elif "Citation_1" in row:
                     mission.citations.clear()
                     for col in ("Citation_1", "Citation_2"):
-                        ref_str = str(row.get(col, "")).strip() if col in row else ""
+                        raw_val = row.get(col, "") if col in row else ""
+                        ref_str = "" if pd.isna(raw_val) else str(raw_val).strip()
                         if not ref_str:
                             continue
                         # Extract DOI from embedded patterns like
@@ -1907,9 +1942,23 @@ class SurveyTally(BaseLoader):
                             )
                         self.logger.debug(f"Added {quality_category.name = }")
             except Mission.DoesNotExist:
-                self.logger.warning(
-                    f"Not found in database: {parent_dir}/{row['Mission']}"
-                )
+                missing_name = f"{parent_dir}/{row['Mission']}"
+                self.logger.warning(f"Not found in database: {missing_name}")
+                # Look for similarly-named missions (e.g. after a directory rename).
+                # Sort candidates by how many characters differ from the missing name.
+                candidates = Mission.objects.filter(
+                    name__startswith=f"{parent_dir}/"
+                ).values_list("name", flat=True)
+                close = sorted(
+                    (n for n in candidates if n != missing_name),
+                    key=lambda n: sum(
+                        a != b for a, b in zip(n, missing_name)
+                    ) + abs(len(n) - len(missing_name)),
+                )[:3]
+                if close:
+                    self.logger.warning(
+                        f"  Possible renamed mission(s) in DB: {list(close)}"
+                    )
             except KeyError as e:
                 self.logger.warning(f"KeyError: {e}")
 

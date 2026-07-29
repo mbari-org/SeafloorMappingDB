@@ -10,6 +10,7 @@ from django_filters import (
 from django.db.utils import ProgrammingError
 from django.db.models import Q
 from smdb.models import (
+    Citation,
     Mission,
     Expedition,
     Compilation,
@@ -128,14 +129,15 @@ class MissionFilter(FilterSet):
     except ProgrammingError as e:
         # Likely error on initial migrate done with start command creating the smdb database
         pass
-    citation_search = CharFilter(
-        method="filter_citation_search",
-        label="",
-        widget=TextInput(attrs={
-            "placeholder": "Citation DOI or reference contains...",
-            "title": "Search by DOI (e.g. 10.1016/…) or any word from the full citation reference",
-        }),
-    )
+    try:
+        citation = ModelMultipleChoiceFilter(
+            field_name="citations",
+            queryset=Citation.objects.all().order_by("doi"),
+            label="Citation",
+            widget=forms.CheckboxSelectMultiple(),
+        )
+    except ProgrammingError:
+        pass
     expedition__name = CharFilter(
         field_name="expedition__name",
         lookup_expr="icontains",
@@ -143,18 +145,27 @@ class MissionFilter(FilterSet):
         widget=TextInput(attrs={"placeholder": "Expedition name contains..."}),
     )
 
+    citation_search = CharFilter(
+        method="filter_citation_search",
+        label="",
+        widget=TextInput(attrs={"placeholder": "Citation (DOI or reference) contains..."}),
+    )
+
     class Meta:
         model = Mission
-        # expedition__name is an explicit filter (declared above) and
-        # does not need to be in fields; django-filter includes it automatically.
+        # expedition__name is declared explicitly above as a CharFilter.
+        # It is also listed here so django-filter respects the field ordering.
         fields = [
             "name",
             "region_name",
             "vehicle_name",
+            "platformtype",
             "quality_categories",
             "patch_test",
             "repeat_survey",
             "mgds_compilation",
+            "citation",
+            "expedition__name",
         ]
 
     @staticmethod

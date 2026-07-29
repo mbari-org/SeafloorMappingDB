@@ -17,6 +17,7 @@ html {
   top: 150px;
 }
 
+
 /* No body scrollbar on Missions page so the map uses full viewport width
    (no space reserved to the right). Only the table wrapper scrolls. */
 body.missions-page {
@@ -33,6 +34,7 @@ body.missions-page #footer {
   z-index: 2;
   background-color: #fff;
 }
+
 
 /* Reset Leaflet's default margin on control wrappers (mirrors map.css) */
 .leaflet-control {

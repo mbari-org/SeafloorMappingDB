@@ -71,17 +71,139 @@ def test_leaflet_measure_tool_opens(chrome, live_server_url_for_selenium, missio
     assert len(measure_options) > 0, "Measure tool options should be visible"
 
 
-# ---------------------------------------------------------------------------
-# REMOVED (block PRs): two Leaflet measure completion tests — THEY FAIL in
-# current Selenium/headless and would block production merges.
-#
-#   - test_leaflet_measure_completes_measurement  (result popup does not appear)
-#   - test_leaflet_measure_color_persists          (depends on completion)
-#
-# We know they fail. They were removed so the suite passes and PRs can merge.
-# To restore when measure tool or test env is fixed: see commit d0cee05 or
-# "Add comprehensive Selenium tests for leaflet-measure functionality".
-# ---------------------------------------------------------------------------
+# Previously removed as a known failing test. Root cause was fixed: SliderControl.js
+# now guards against NaN timestamps (missions with null start_ems), preventing a
+# RangeError that halted map.js before the popup handler registered. See the NaN
+# guard in SliderControl.extractTimestamp and the try-catch around startSlider()
+# in map.js. Both tests are reliably green with those fixes in place.
+@pytest.mark.django_db
+@pytest.mark.selenium
+def test_leaflet_measure_completes_measurement(chrome, live_server_url_for_selenium, missions_notes_5):
+    """User can complete a measurement and see the result popup."""
+    chrome.get(live_server_url_for_selenium)
+
+    # Wait for map to load
+    map_element = WebDriverWait(chrome, 10).until(
+        EC.presence_of_element_located((By.ID, "map"))
+    )
+
+    # Open measure control
+    measure_control = WebDriverWait(chrome, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".leaflet-control-measure"))
+    )
+    measure_control.find_element(By.CSS_SELECTOR, "a").click()
+    time.sleep(0.5)
+
+    # Click "Start measuring" (first task link)
+    start_options = chrome.find_elements(By.CSS_SELECTOR, ".leaflet-control-measure .tasks a")
+    assert start_options, "Measure start options should be visible"
+    start_options[0].click()
+    time.sleep(0.5)
+
+    # Derive click offsets from the map size so the test adapts to viewport changes.
+    map_rect = chrome.execute_script("""
+        const rect = document.getElementById('map').getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+    """)
+    offset1_x = int(map_rect["width"] * 0.25)
+    offset1_y = int(map_rect["height"] * 0.25)
+    offset2_x = int(map_rect["width"] * 0.40)
+
+    # Place two points on the map (each in a fresh ActionChains to avoid state carry-over)
+    ActionChains(chrome).move_to_element_with_offset(map_element, offset1_x, offset1_y).click().perform()
+    time.sleep(0.3)
+    ActionChains(chrome).move_to_element_with_offset(map_element, offset2_x, offset1_y).click().perform()
+    time.sleep(0.3)
+
+    # Click the leaflet-measure "Finish measurement" button (.js-finish) — more reliable
+    # than double-clicking the map, which targets the invisible _captureMarker overlay.
+    finish_btn = WebDriverWait(chrome, 5).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".leaflet-control-measure .js-finish"))
+    )
+    finish_btn.click()
+
+    # Wait for the result popup (leaflet-measure opens a standard Leaflet popup)
+    popup = WebDriverWait(chrome, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".leaflet-popup-content"))
+    )
+    assert popup is not None, "Measurement result popup should appear"
+
+
+@pytest.mark.django_db
+@pytest.mark.selenium
+def test_leaflet_measure_color_persists(chrome, live_server_url_for_selenium, missions_notes_5):
+    """Changed measurement color persists and is not overridden by auto-styling."""
+    chrome.get(live_server_url_for_selenium)
+
+    # Wait for map to load
+    map_element = WebDriverWait(chrome, 10).until(
+        EC.presence_of_element_located((By.ID, "map"))
+    )
+
+    # Open measure control
+    measure_control = WebDriverWait(chrome, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".leaflet-control-measure"))
+    )
+    measure_control.find_element(By.CSS_SELECTOR, "a").click()
+    time.sleep(0.5)
+
+    # Click "Start measuring" (first task link)
+    start_options = chrome.find_elements(By.CSS_SELECTOR, ".leaflet-control-measure .tasks a")
+    assert start_options, "Measure start options should be visible"
+    start_options[0].click()
+    time.sleep(0.5)
+
+    # Place two points, then click the Finish button
+    ActionChains(chrome).move_to_element_with_offset(map_element, 100, 100).click().perform()
+    time.sleep(0.3)
+    ActionChains(chrome).move_to_element_with_offset(map_element, 200, 100).click().perform()
+    time.sleep(0.3)
+
+    finish_btn = WebDriverWait(chrome, 5).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".leaflet-control-measure .js-finish"))
+    )
+    finish_btn.click()
+
+    # Wait for popup (leaflet-measure opens a standard Leaflet popup)
+    WebDriverWait(chrome, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".leaflet-popup-content"))
+    )
+    # Give the map.js popupopen handler a moment to inject the paintbrush icon
+    time.sleep(0.5)
+
+    paintbrush = WebDriverWait(chrome, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".measure-color-picker-btn"))
+    )
+    assert paintbrush, "Measure color paintbrush button should be present after completing a measurement"
+    paintbrush.click()
+    time.sleep(0.5)
+
+    # Click red preset button
+    red_preset = chrome.find_elements(By.CSS_SELECTOR, '.color-preset[data-color="#ff0000"]')
+    assert red_preset, "Red color preset (#ff0000) should be present in the color picker"
+    red_preset[0].click()
+    time.sleep(0.3)
+
+    # Click Apply button
+    apply_button = chrome.find_element(By.ID, "applyColorBtn")
+    apply_button.click()
+    time.sleep(1)
+
+    # Verify the measurement path has red color and user-color marker
+    has_user_color = chrome.execute_script("""
+        const paths = document.querySelectorAll('path.leaflet-interactive');
+        for (let path of paths) {
+            const container = path.closest('.smdb-measure-user-color');
+            if (container) {
+                const stroke = path.style.stroke || path.getAttribute('stroke');
+                if (stroke && (stroke.includes('255, 0, 0') || stroke.includes('#ff0000') || stroke.includes('rgb(255, 0, 0)'))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    """)
+    assert has_user_color, "User-chosen red color should persist on the measurement"
 
 
 # ---------------------------------------------------------------------------
