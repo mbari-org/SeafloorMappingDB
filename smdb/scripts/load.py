@@ -766,9 +766,11 @@ class FNVLoader(BaseLoader):
             with open(fnv_file) as fh:
                 try:
                     for line in fh.readlines():
-                        # Get first non-comment line
+                        # Get first non-comment line and skip blank lines
                         if not line.startswith("#"):
                             break
+                        if not line.strip():
+                            continue
                 except IndexError:
                     self.logger.debug("Cannot read first record from %s", fnv_file)
                     continue
@@ -776,6 +778,9 @@ class FNVLoader(BaseLoader):
                     start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
                 except NameError:
                     self.logger.debug("No line read from file %s", fnv_file)
+                    continue
+                except ParserError:
+                    self.logger.debug("Failed to parse datetime from %s in %s", line, fnv_file)
                     continue
                 lon = float(line.split()[7])
                 lat = float(line.split()[8])
