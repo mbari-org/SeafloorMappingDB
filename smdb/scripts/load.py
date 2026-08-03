@@ -35,6 +35,7 @@ from django.contrib.gis.geos import Point, Polygon, LineString  # noqa F402
 from glob import glob
 from PIL import Image, UnidentifiedImageError  # noqa F402
 from smdb.models import (
+    Citation,
     Compilation,
     Expedition,
     Mission,
@@ -765,9 +766,11 @@ class FNVLoader(BaseLoader):
             with open(fnv_file) as fh:
                 try:
                     for line in fh.readlines():
-                        # Get first non-comment line
+                        # Get first non-comment line and skip blank lines
                         if not line.startswith("#"):
                             break
+                        if not line.strip():
+                            continue
                 except IndexError:
                     self.logger.debug("Cannot read first record from %s", fnv_file)
                     continue
@@ -775,6 +778,9 @@ class FNVLoader(BaseLoader):
                     start_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
                 except NameError:
                     self.logger.debug("No line read from file %s", fnv_file)
+                    continue
+                except ParserError:
+                    self.logger.debug("Failed to parse datetime from %s in %s", line, fnv_file)
                     continue
                 lon = float(line.split()[7])
                 lat = float(line.split()[8])
@@ -785,25 +791,28 @@ class FNVLoader(BaseLoader):
             raise ParserError(f"Could not get start_dt from {fh.name}")
         for fnv_file in reversed(fnv_list):
             with open(fnv_file) as fh:
-                try:
-                    # Assume no comments at end of file
-                    line = fh.readlines()[-1]
-                except IndexError:
-                    self.logger.debug("Cannot read last record from %s", fnv_file)
-                    continue
-                try:
-                    end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
-                except IndexError:
-                    self.logger.debug("Failed to parse datetime from %s", line)
-                    continue
-                try:
-                    lon = float(line.split()[7])
-                    lat = float(line.split()[8])
-                except IndexError:
-                    self.logger.debug("Failed to parse lon or lat from %s", line)
-                    continue
-                end_point = Point((lon, lat), srid=4326)
-                end_depth = float(line.split()[11])
+                lines = fh.readlines()
+            line = None
+            for candidate in reversed(lines):
+                if not candidate.startswith("#") and candidate.strip():
+                    line = candidate
+                    break
+            if line is None:
+                self.logger.debug("Cannot read last record from %s", fnv_file)
+                continue
+            try:
+                end_dt = parse("{}-{}-{} {}:{}:{}".format(*line.split()[:6]))
+            except IndexError:
+                self.logger.debug("Failed to parse datetime from %s", line)
+                continue
+            try:
+                lon = float(line.split()[7])
+                lat = float(line.split()[8])
+            except IndexError:
+                self.logger.debug("Failed to parse lon or lat from %s", line)
+                continue
+            end_point = Point((lon, lat), srid=4326)
+            end_depth = float(line.split()[11])
             break
         if "end_dt" not in locals():
             raise ParserError(f"Could not get end_dt from {fh.name}")
@@ -891,7 +900,14 @@ class FNVLoader(BaseLoader):
     def fnv_points_tolinestring(
         self,
         fnv_list: list,
-        interval: timedelta = timedelta(seconds=30),
+        # Changed from 30 to 5 seconds in May 2026 as explained by Jenny:
+        #   In more recent surveys, we have made a single concatenated .fnv file for the whole survey,
+        #   named like missionName_p.fnv, which is used to merge navigation together with the .jsf Edgetech
+        #   data (sidescan and sub bottom) in post-processing. Early surveys wouldn't have needed that step
+        #   because the Edgetech data were logged together with the multibeam data, so if there isn't one
+        #   of those concatenated files present, you'd have to still look for the individual .fnv files or
+        #   make a concatenated one.
+        interval: timedelta = timedelta(seconds=5),
         tolerance: float = 0.00001,
     ) -> Tuple[int, LineString, float]:
         """Can tune the quality of simplified LineString by adjusting
@@ -911,12 +927,22 @@ class FNVLoader(BaseLoader):
         for fnv in fnv_list:
             try:
                 with open(fnv) as fh:
-                    for line_count, line in enumerate(fh.readlines(), start=1):
+                    line_count = 0
+                    for line in fh.readlines():
+                        if line.startswith("#"):
+                            continue
+                        if not line.strip():
+                            continue
+                        line_count += 1
                         if line_count % subsample:
                             continue
                         # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
-                        lon = float(line.split()[7])
-                        lat = float(line.split()[8])
+                        try:
+                            lon = float(line.split()[7])
+                            lat = float(line.split()[8])
+                        except (ValueError, IndexError):
+                            self.logger.debug("Skipping malformed line in %s: %s", fnv, line.strip())
+                            continue
                         point_list.append(Point((lon, lat), srid=4326))
             except UnicodeDecodeError:
                 self.logger.debug("UnicodeDecodeError with file %s", fnv)
@@ -1524,7 +1550,12 @@ class Compiler(BaseLoader):
             """,
             re.VERBOSE | re.MULTILINE,
         )
-        with open(cmd_filename, errors="ignore") as fd:
+        try:
+            fd_obj = open(cmd_filename, errors="ignore")
+        except FileNotFoundError as e:
+            self.logger.warning("Skipping missing cmd file (stale locate DB entry): %s", e)
+            return compilations
+        with fd_obj as fd:
             for ma in pattern.finditer(fd.read()):
                 grd_filename = os.path.join(comp_dir, ma.group(2)) + ".grd"
                 try:
@@ -1819,6 +1850,57 @@ class SurveyTally(BaseLoader):
                 # mission.area = row["Area_km2"]  # Do not update database with this field
                 mission.mgds_compilation = row["MGDS_compilation"]
                 mission.save()
+                # Replace citations from tally (source of truth).
+                # Supports two spreadsheet formats:
+                #   - New "Citations" column: semicolon-separated "doi|full_reference" pairs
+                #   - Legacy "Citation_1" / "Citation_2" columns: full reference strings
+                #     that may contain an embedded DOI (extracted by regex)
+                if "Citations" in row:
+                    raw = row.get("Citations", "")
+                    mission.citations.clear()
+                    parts = [p.strip() for p in str(raw).split(";") if p.strip()]
+                    for part in parts:
+                        if "|" in part:
+                            doi, _, ref = part.partition("|")
+                            doi, full_reference = doi.strip(), ref.strip()
+                        else:
+                            doi, full_reference = part.strip(), ""
+                        doi = doi[:256]
+                        full_reference = full_reference[:512]
+                        if not doi:
+                            continue
+                        citation, _ = Citation.objects.get_or_create(
+                            doi=doi, defaults={"full_reference": full_reference}
+                        )
+                        if full_reference and citation.full_reference != full_reference:
+                            citation.full_reference = full_reference
+                            citation.save()
+                        mission.citations.add(citation)
+                elif "Citation_1" in row:
+                    mission.citations.clear()
+                    for col in ("Citation_1", "Citation_2"):
+                        ref_str = str(row.get(col, "")).strip() if col in row else ""
+                        if not ref_str:
+                            continue
+                        # Extract DOI from embedded patterns like
+                        # "https://doi.org/10.xxxx/..." or "doi: 10.xxxx/..."
+                        doi_match = re.search(
+                            r"(?:https?://doi\.org/|doi:\s*)([^\s,]+\.[\w/\-]+)",
+                            ref_str,
+                            re.IGNORECASE,
+                        )
+                        doi = doi_match.group(1).rstrip(".") if doi_match else ref_str[:256]
+                        doi = doi[:256]
+                        full_reference = ref_str[:512]
+                        if not doi:
+                            continue
+                        citation, _ = Citation.objects.get_or_create(
+                            doi=doi, defaults={"full_reference": full_reference}
+                        )
+                        if citation.full_reference != full_reference:
+                            citation.full_reference = full_reference
+                            citation.save()
+                        mission.citations.add(citation)
                 saved_count += 1
                 self.logger.info(f"Updated fields for {mission.name = }")
                 for st in row["Quality_category*"].split(" "):
