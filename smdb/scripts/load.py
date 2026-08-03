@@ -937,8 +937,14 @@ class FNVLoader(BaseLoader):
                         if line_count % subsample:
                             continue
                         # 2019 01 24 18 12 32.236999      1548353552.236999       -121.9451060788   36.6959160254  65.819  4.354  48.2750 -4.032   2.946   0.0000 -121.9455617494   36.6968155796 -121.9445069464   36.6949795110
-                        lon = float(line.split()[7])
-                        lat = float(line.split()[8])
+                        
+                        # Skip malformed lines (e.g. XML-style headers with '<epoch>') - KS
+                        try:
+                            lon = float(line.split()[7])
+                            lat = float(line.split()[8])
+                        except (ValueError, IndexError):
+                            self.logger.debug("Skipping malformed line in %s: %s", fnv, line.strip())
+                            continue
                         point_list.append(Point((lon, lat), srid=4326))
             except UnicodeDecodeError:
                 self.logger.debug("UnicodeDecodeError with file %s", fnv)
