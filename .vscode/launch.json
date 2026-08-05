@@ -50,6 +50,7 @@
       //"args": [ "-v", "1", "--skipuntil_regex", "--regex", "swathdata/surveys/NOAA/AHI-06-05ZTopo.grd$", "--limit", "2" ],
       //"args": [ "-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "Packard/2026/DPKD027_LowerMonterey/ZTopo.grd$", "--limit", "1" ],
       //"args": [ "-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "2026/FKt260517/CruiseData/Vehicles/Empress/FKt260517_E0011/MBARI/em2040/ZTopo.grd$", "--limit", "1" ],
+      //"args": [ "-v", "1", "--bootstrap", "--skipuntil_regex", "--regex", "2026/20260716d1/multibeam/ZTopo.grd$", "--limit", "16", "--notes" ],
       //"args": ["-v", "1", "--limit", "5", "--clobber", "--noinput"],
       //"args": ["--bootstrap", "-v", "1", "--clobber", "--limit", "5", "--noinput"],
       //"args": ["--bootstrap", "-v", "2", "--limit", "10" "--clobber", "--noinput"],
@@ -74,7 +75,7 @@
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "2023/20230310m1"]
       //"args": ["--fnv", "-v", "2", "--limit", "2", "--skipuntil", "swathdata/surveys/NOAA/AHI-06-05"]
       //"args": ["--fnv", "-v", "2", "--limit", "1", "--skipuntil", "Packard/2026/DPKD027_LowerMonterey"]
-      "args": ["--fnv", "-v", "2", "--limit", "1", "--skipuntil", "2026/FKt260517/CruiseData/Vehicles/Empress/FKt260517_E0011/MBARI/em2040"]
+      //"args": ["--fnv", "-v", "2", "--limit", "1", "--skipuntil", "2026/FKt260517/CruiseData/Vehicles/Empress/FKt260517_E0011/MBARI/em2040"]
       //"args": ["--fnv", "-v", "1"],
       //"args": [ "--compilation", "-v", "1", "--skipuntil", "swathdata/surveys/UH/kok0714", "--log_file", "compilation.txt" ],
       // Supporting Compilation load testing, first mission found in --compilation: 2019/20190627d1/multibeam
@@ -92,7 +93,7 @@
       //"args": ["--spreadsheets", "-v", "1"],
       //"args": ["-v", "2", "--last_n_days", "0.5"],
       //"args": ["-v", "1", "--spreadsheets", "--parent_dir", "2024", "--append_to_log_file"],
-      //"args": ["-v", "1", "--spreadsheets"],
+      "args": ["-v", "1", "--spreadsheets"],
       //"args": ["-v", "1", "--compilation", "--last_n_days", "30"],
       //"args": [ "-v", "2", "--skipuntil_regex", "--regex", "Packard/2025/DP2025_01/RogueCanyonLeg1/ZTopo.grd$", "--limit", "1", "--noinput" ],
       //"args": [ "-v", "2", "--bootstrap", "--skipuntil_regex", "--regex", "2019/20190628d1/lidar/ZTopo.grd$", "--limit", "1", "--noinput" ],
