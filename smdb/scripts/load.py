@@ -1921,7 +1921,11 @@ class SurveyTally(BaseLoader):
                             mission.citations.add(citation)
                     saved_count += 1
                     self.logger.info(f"Updated fields for {mission.name = }")
-                    for st in row["Quality_category*"].split(" "):
+                    quality_categories_value = row.get(
+                        "Quality_category*",
+                        row.get("Quality_category", ""),
+                    )
+                    for st in str(quality_categories_value).split(" "):
                         if st:
                             try:
                                 quality_category, _ = (
@@ -1930,7 +1934,7 @@ class SurveyTally(BaseLoader):
                                 mission.quality_categories.add(quality_category)
                             except ValueError:
                                 self.logger.warning(
-                                    f"Quality_category* {quality_category} not in {[st[0] for st in Quality_Category.CHOICES]}"
+                                    f"Quality_category {quality_category} not in {[st[0] for st in Quality_Category.CHOICES]}"
                                 )
                             self.logger.debug(f"Added {quality_category.name = }")
             except Mission.DoesNotExist:
