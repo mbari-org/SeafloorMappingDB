@@ -766,11 +766,9 @@ class FNVLoader(BaseLoader):
             with open(fnv_file) as fh:
                 try:
                     for line in fh.readlines():
-                        # Get first non-comment line and skip blank lines
-                        if not line.startswith("#"):
+                        # Get first non-comment line that has data
+                        if not line.startswith("#") and line.strip():
                             break
-                        if not line.strip():
-                            continue
                 except IndexError:
                     self.logger.debug("Cannot read first record from %s", fnv_file)
                     continue
@@ -1819,98 +1817,122 @@ class SurveyTally(BaseLoader):
                 continue
             try:
                 count += 1
-                # Get the Mission object for this row
+                # Resolve the Mission object(s) for this row.
+                # Normally rows name a mission either as a relative path under parent_dir
+                # or as a full path including the parent_dir.
+                # If the spreadsheet row does not exactly match a DB name but the mission
+                # is stored under sensor subdirectories (e.g. /multibeam and /lidar), use
+                # a partial path lookup and update all matching candidates.
                 if row["Mission"].startswith(f"{parent_dir}/"):
-                    mission = Mission.objects.get(name=row["Mission"])
+                    exact_name = row["Mission"]
                 else:
-                    mission = Mission.objects.get(name=f"{parent_dir}/{row['Mission']}")
-                # Update the fields, mapping the column names to the Mission field names
-                mission.route_file = row["Route"]
-                mission.region_name = row["Location"]
-                mission.vehicle_name = row["Vehicle"]
-                mission.quality_comment = row["Quality_comment"]
+                    exact_name = f"{parent_dir}/{row['Mission']}"
+
                 try:
-                    mission.auv = row["AUV"] == "x"
-                except KeyError:
-                    pass
-                try:
-                    mission.lass = row["LASS"] == "x"
-                except KeyError:
-                    pass
-                # If anything is in the Patch_test or Repeat_survey columns, set the field to True
-                if row["Patch_test"]:
-                    mission.patch_test = True
-                if row["Repeat_survey"]:
-                    mission.repeat_survey = True
-                # mission.track_length = row["Trackline_km"]  # Do not update database with this field
-                # mission.area = row["Area_km2"]  # Do not update database with this field
-                mission.mgds_compilation = row["MGDS_compilation"]
-                mission.save()
-                # Replace citations from tally (source of truth).
-                # Supports two spreadsheet formats:
-                #   - New "Citations" column: semicolon-separated "doi|full_reference" pairs
-                #   - Legacy "Citation_1" / "Citation_2" columns: full reference strings
-                #     that may contain an embedded DOI (extracted by regex)
-                if "Citations" in row:
-                    raw = row.get("Citations", "")
-                    mission.citations.clear()
-                    parts = [p.strip() for p in str(raw).split(";") if p.strip()]
-                    for part in parts:
-                        if "|" in part:
-                            doi, _, ref = part.partition("|")
-                            doi, full_reference = doi.strip(), ref.strip()
-                        else:
-                            doi, full_reference = part.strip(), ""
-                        doi = doi[:256]
-                        full_reference = full_reference[:512]
-                        if not doi:
-                            continue
-                        citation, _ = Citation.objects.get_or_create(
-                            doi=doi, defaults={"full_reference": full_reference}
+                    missions_to_update = [Mission.objects.get(name=exact_name)]
+                except Mission.DoesNotExist:
+                    candidates = list(
+                        Mission.objects.filter(name__contains=f"/{row['Mission']}/")
+                    )
+                    if candidates:
+                        self.logger.info(
+                            f"Partial path match for {row['Mission']}: {[m.name for m in candidates]}"
                         )
-                        if full_reference and citation.full_reference != full_reference:
-                            citation.full_reference = full_reference
-                            citation.save()
-                        mission.citations.add(citation)
-                elif "Citation_1" in row:
-                    mission.citations.clear()
-                    for col in ("Citation_1", "Citation_2"):
-                        ref_str = str(row.get(col, "")).strip() if col in row else ""
-                        if not ref_str:
-                            continue
-                        # Extract DOI from embedded patterns like
-                        # "https://doi.org/10.xxxx/..." or "doi: 10.xxxx/..."
-                        doi_match = re.search(
-                            r"(?:https?://doi\.org/|doi:\s*)([^\s,]+\.[\w/\-]+)",
-                            ref_str,
-                            re.IGNORECASE,
+                        missions_to_update = candidates
+                    else:
+                        self.logger.warning(
+                            f"Not found in database: {parent_dir}/{row['Mission']}"
                         )
-                        doi = doi_match.group(1).rstrip(".") if doi_match else ref_str[:256]
-                        doi = doi[:256]
-                        full_reference = ref_str[:512]
-                        if not doi:
-                            continue
-                        citation, _ = Citation.objects.get_or_create(
-                            doi=doi, defaults={"full_reference": full_reference}
-                        )
-                        if citation.full_reference != full_reference:
-                            citation.full_reference = full_reference
-                            citation.save()
-                        mission.citations.add(citation)
-                saved_count += 1
-                self.logger.info(f"Updated fields for {mission.name = }")
-                for st in row["Quality_category*"].split(" "):
-                    if st:
-                        try:
-                            quality_category, _ = (
-                                Quality_Category.objects.get_or_create(name=st)
+                        continue
+
+                for mission in missions_to_update:
+                    # Update the fields, mapping the column names to the Mission field names
+                    mission.route_file = row["Route"]
+                    mission.region_name = row["Location"]
+                    mission.vehicle_name = row["Vehicle"]
+                    mission.quality_comment = row["Quality_comment"]
+                    try:
+                        mission.auv = row["AUV"] == "x"
+                    except KeyError:
+                        pass
+                    try:
+                        mission.lass = row["LASS"] == "x"
+                    except KeyError:
+                        pass
+                    # If anything is in the Patch_test or Repeat_survey columns, set the field to True
+                    if row["Patch_test"]:
+                        mission.patch_test = True
+                    if row["Repeat_survey"]:
+                        mission.repeat_survey = True
+                    # mission.track_length = row["Trackline_km"]  # Do not update database with this field
+                    # mission.area = row["Area_km2"]  # Do not update database with this field
+                    mission.mgds_compilation = row["MGDS_compilation"]
+                    mission.save()
+                    # Replace citations from tally (source of truth).
+                    # Supports two spreadsheet formats:
+                    #   - New "Citations" column: semicolon-separated "doi|full_reference" pairs
+                    #   - Legacy "Citation_1" / "Citation_2" columns: full reference strings
+                    #     that may contain an embedded DOI (extracted by regex)
+                    if "Citations" in row:
+                        raw = row.get("Citations", "")
+                        mission.citations.clear()
+                        parts = [p.strip() for p in str(raw).split(";") if p.strip()]
+                        for part in parts:
+                            if "|" in part:
+                                doi, _, ref = part.partition("|")
+                                doi, full_reference = doi.strip(), ref.strip()
+                            else:
+                                doi, full_reference = part.strip(), ""
+                            doi = doi[:256]
+                            full_reference = full_reference[:512]
+                            if not doi:
+                                continue
+                            citation, _ = Citation.objects.get_or_create(
+                                doi=doi, defaults={"full_reference": full_reference}
                             )
-                            mission.quality_categories.add(quality_category)
-                        except ValueError:
-                            self.logger.warning(
-                                f"Quality_category* {quality_category} not in {[st[0] for st in Quality_Category.CHOICES]}"
+                            if full_reference and citation.full_reference != full_reference:
+                                citation.full_reference = full_reference
+                                citation.save()
+                            mission.citations.add(citation)
+                    elif "Citation_1" in row:
+                        mission.citations.clear()
+                        for col in ("Citation_1", "Citation_2"):
+                            ref_str = str(row.get(col, "")).strip() if col in row else ""
+                            if not ref_str:
+                                continue
+                            # Extract DOI from embedded patterns like
+                            # "https://doi.org/10.xxxx/..." or "doi: 10.xxxx/..."
+                            doi_match = re.search(
+                                r"(?:https?://doi\.org/|doi:\s*)([^\s,]+\.[\w/\-]+)",
+                                ref_str,
+                                re.IGNORECASE,
                             )
-                        self.logger.debug(f"Added {quality_category.name = }")
+                            doi = doi_match.group(1).rstrip(".") if doi_match else ref_str[:256]
+                            doi = doi[:256]
+                            full_reference = ref_str[:512]
+                            if not doi:
+                                continue
+                            citation, _ = Citation.objects.get_or_create(
+                                doi=doi, defaults={"full_reference": full_reference}
+                            )
+                            if citation.full_reference != full_reference:
+                                citation.full_reference = full_reference
+                                citation.save()
+                            mission.citations.add(citation)
+                    saved_count += 1
+                    self.logger.info(f"Updated fields for {mission.name = }")
+                    for st in row["Quality_category*"].split(" "):
+                        if st:
+                            try:
+                                quality_category, _ = (
+                                    Quality_Category.objects.get_or_create(name=st)
+                                )
+                                mission.quality_categories.add(quality_category)
+                            except ValueError:
+                                self.logger.warning(
+                                    f"Quality_category* {quality_category} not in {[st[0] for st in Quality_Category.CHOICES]}"
+                                )
+                            self.logger.debug(f"Added {quality_category.name = }")
             except Mission.DoesNotExist:
                 self.logger.warning(
                     f"Not found in database: {parent_dir}/{row['Mission']}"
